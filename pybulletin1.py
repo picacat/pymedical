@@ -1,0 +1,396 @@
+# -*- coding: UTF-8 -*-
+
+import sys
+import pygame
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QDesktopWidget
+from PyQt5.QtCore import Qt
+from pygame import mixer
+import os
+import datetime
+import json
+
+if sys.platform == 'win32':
+    os.environ["PYTHON_VLC_MODULE_PATH"] = './vlc'
+
+import vlc
+import yt_dlp
+
+import configparser
+
+from libs import class_utils
+from libs import ui_utils
+from libs import system_utils
+from libs import registration_utils
+from libs import date_utils
+from libs import string_utils
+from libs import number_utils
+
+
+# 主程式
+class PyBulletin1(QtWidgets.QMainWindow):
+    # 初始化
+    def __init__(self, parent=None, *args):
+        super(PyBulletin1, self).__init__(parent)
+        self.args = args
+
+        self._set_db()
+        if not self.database.connected():
+            sys.exit(0)
+
+        self.system_settings = class_utils.get_system_settings(self.database, self.config_file)
+        self.ui = None
+
+        self.waiting_number = [0 for x in range(100)]
+        self.audio_timer = QtCore.QTimer(self)
+        self.volume = number_utils.get_integer(self.system_settings.field('媒體播放音量'))
+        self.url = self.system_settings.field('媒體播放位址')
+
+        self.period1 = self.system_settings.field('早班時間')
+        self.period2 = self.system_settings.field('午班時間')
+        self.period3 = self.system_settings.field('晚班時間')
+
+        self._set_ui()
+        self._set_udp_server()
+        self._set_signal()
+        self._start_udp_server()
+
+        monitor_number = self.get_monitor_number()
+        monitor = QDesktopWidget().screenGeometry(monitor_number)
+        self.move(monitor.left(), monitor.top())
+        self.showMaximized()
+
+    def _set_udp_server(self):
+        self.socket_server = class_utils.get_socket_server(self, 8880)
+        self.voice_server = class_utils.get_voice_server(self, 9990)
+
+    def get_monitor_number(self):
+        return number_utils.get_integer(self.system_settings.field('候診系統顯示器編號'))
+
+    def _set_db(self):
+        self.host = None
+        try:
+            config_file = self.args[0][1]
+        except IndexError:
+            config_file = None
+
+        if config_file is not None:
+            self.config_file = config_file
+            config_dict = self._parse_config_file(self.config_file)
+            self.host = config_dict['host']
+            self.database = class_utils.get_db(
+                host=self.host,
+                user=config_dict['user'],
+                database=config_dict['database'],
+                password=config_dict['password'],
+                charset=config_dict['charset'],
+                buffered=config_dict['buffered'],
+            )
+            self.server_ip = config_dict['host']
+        else:
+            self.database = class_utils.get_db()
+            self.config_file = self.database.CONFIG_FILE
+            self.host = self.database.host
+
+    def show_bulletin(self):
+        self._show_title()
+        self._play_media()
+        self._play_marquee()
+        self._show_waiting_list()
+
+    def _show_title(self):
+        title = self.system_settings.field('院所名稱') + ' 候診資訊系統'
+        self.ui.label_title.setText(title)
+
+    @staticmethod
+    def _parse_config_file(config_file, db_section='db'):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+
+        config_dict = {
+            'host': config[db_section]['host'],
+            'user': config[db_section]['user'],
+            'database': config[db_section]['database'],
+            'password': config[db_section]['password'],
+            'charset': config[db_section]['charset'],
+            'buffered': True
+        }
+
+        return config_dict
+
+    # 解構
+    def __del__(self):
+        self.mediaplayer.stop()
+        self.mediaplayer.release()
+
+    def _close_socket(self):
+        self.socket_server.stop_thread()
+        self.voice_server.stop_thread()
+
+    # 設定GUI
+    def _set_ui(self):
+        self.ui = ui_utils.load_ui_file(ui_utils.UI_PY_BULLETIN1, self)
+        self.ui.setWindowFlags(Qt.FramelessWindowHint)  # 無視窗邊框
+        self.setCursor(Qt.BlankCursor)
+
+    # 設定信號
+    def _set_signal(self):
+        self.voice_server.update_signal.connect(self._broadcast_speech)
+
+    def _close(self):
+        self.close()
+
+    # 設定 css style
+    def _set_style(self):
+        system_utils.set_background_image(
+            self.ui.tab_home, self.system_settings)
+        system_utils.set_css(self, self.system_settings)
+        system_utils.center_window(self)
+        system_utils.set_theme(self.ui, self.system_settings)
+
+    def _start_udp_server(self):
+        self.socket_server.start()
+        self.voice_server.start()
+
+    @staticmethod
+    def _notify_wait_arrive():
+        try:
+            mixer.init()
+            mixer.music.load('./icq.mp3')
+            mixer.music.play()
+        except pygame.error:
+            pass
+
+    def _set_lower_audio(self):
+        if self.url in ['', None]:
+            return
+
+        self.mediaplayer.audio_set_volume(5)
+
+        self.audio_timer.start(6000)
+        self.audio_timer.timeout.connect(self._normal_audio)
+
+    def _normal_audio(self):
+        self.mediaplayer.audio_set_volume(self.volume)
+        self.audio_timer.stop()
+
+    # 廣播叫號
+    def _broadcast_speech(self, json_data):
+        voice_dict = json.loads(json_data)
+
+        regist_no = number_utils.get_integer(voice_dict['regist_no'])
+        room = number_utils.get_integer(voice_dict['room'])
+        sentence = voice_dict['sentence']
+
+        self.waiting_number[room] = regist_no
+
+        self._show_waiting_list()
+        QtWidgets.qApp.processEvents()
+        self._set_lower_audio()
+        system_utils.speak(sentence)
+
+    def _play_media(self):
+        if self.url in ['', None]:
+            return
+
+        self.vlc_instance = vlc.Instance()
+        self.mediaplayer = self.vlc_instance.media_player_new()
+
+        win_id = int(self.ui.frame_youtube.winId())
+        if sys.platform == 'win32':
+            self.mediaplayer.set_hwnd(win_id)
+        elif sys.platform == 'linux':
+            self.mediaplayer.set_xwindow(win_id)
+        elif sys.platform == 'darwin':
+            self.mediaplayer.set_nsobject(win_id)
+
+        # 獲取視頻的播放地址
+        ydl_opts = {'format': 'best'}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(self.url, download=False)
+            video_url = info['url']
+
+        self.media = self.vlc_instance.media_new(video_url)
+        self.media.get_mrl()
+
+        self.mediaplayer.set_media(self.media)
+
+        # 添加事件監聽器以在播放完成時重新播放
+        self.mediaplayer.event_manager().event_attach(vlc.EventType.MediaPlayerEndReached, self._on_end_reached)
+
+        self.mediaplayer.play()
+        self.mediaplayer.audio_set_volume(self.volume)
+    
+    def _on_end_reached(self, event):
+        print('到底了')
+        # 重新播放媒體
+        self.mediaplayer.stop()
+        self.mediaplayer.play()
+
+    # def _play_media(self):
+    #     if self.url in ['', None]:
+    #         return
+
+    #     self.vlc_instance = vlc.Instance()
+    #     self.mediaplayer = self.vlc_instance.media_player_new()
+
+    #     win_id = int(self.ui.frame_youtube.winId())
+    #     if sys.platform == 'win32':
+    #         self.mediaplayer.set_hwnd(win_id)
+    #     elif sys.platform == 'linux':
+    #         self.mediaplayer.set_xwindow(win_id)
+    #     elif sys.platform == 'darwin':
+    #         self.mediaplayer.set_nsobject(win_id)
+
+    #     try:
+    #         video = pafy.new(self.url)
+    #         best = video.getbest()
+    #         self.media = self.vlc_instance.media_new(best.url)
+    #     except Exception:
+    #         try:
+    #             self.media.release()
+    #         except Exception:
+    #             pass
+
+    #         self._play_media()
+
+    #     self.media.get_mrl()
+    #     self.mediaplayer.set_media(self.media)
+    #     self.mediaplayer.play()
+    #     self.mediaplayer.audio_set_volume(self.volume)
+
+    def _set_marquee_list(self):
+        self.marquee_list = []
+        sql = '''
+            SELECT * FROM system_settings
+            WHERE
+                Field LIKE "跑馬燈訊息-%"
+            ORDER BY Field
+        '''
+        rows = self.database.select_record(sql)
+        if len(rows) <= 0:
+            marquee = self.system_settings.field('院所名稱') + ' 關心您的健康'
+            self.marquee_list.append(marquee)
+            return
+
+        for row in rows:
+            self.marquee_list.append(string_utils.xstr(row['Value']))
+
+    def _play_marquee(self):
+        self._set_marquee_list()
+        self.marquee_index = 0
+        self.marquee_start = QtWidgets.QDesktopWidget().screenGeometry(-1).width() + 100
+
+        self._set_marquee_text()
+
+        self.current_x = self.marquee_start
+        self.ui.label_marquee.move(self.current_x, 0)
+        self._set_timer()
+
+    def _set_timer(self):
+        self.timer = QtCore.QTimer(self)
+        self.timer.start(9)
+        self.timer.timeout.connect(self._timeout)
+
+    def _timeout(self):
+        current_time = datetime.datetime.now().strftime('%H:%M')
+        if current_time in [self.period1, self.period2, self.period3]:
+            self._show_waiting_list()
+
+        self.current_x -= 1
+        if self.current_x <= -self.marquee_text_width:
+            self.current_x = self.marquee_start
+            self.marquee_index += 1
+            if self.marquee_index >= len(self.marquee_list):
+                self.marquee_index = 0
+
+            self._set_marquee_text()
+
+        self.ui.label_marquee.move(self.current_x, 0)
+
+    def _set_marquee_text(self):
+        self.ui.label_marquee.setText(self.marquee_list[self.marquee_index])
+        self.ui.label_marquee.adjustSize()
+        self.marquee_text_width = self.ui.label_marquee.width() + 100
+
+    def _get_current_room_rows(self):
+        period = registration_utils.get_current_period(self.system_settings)
+        weekday = date_utils.WEEK_DAY_LIST[datetime.datetime.now().weekday()]
+
+        sql = f'''
+            SELECT * FROM doctor_schedule
+            WHERE
+                Period = "{period}" AND
+                {weekday} IS NOT NULL AND
+                LENGTH({weekday}) > 0
+            GROUP BY Room
+            ORDER BY Room
+        '''
+        rows = self.database.select_record(sql)
+
+        return rows
+
+    def _get_waiting_html(self):
+        rows = self._get_current_room_rows()
+        weekday = date_utils.WEEK_DAY_LIST[datetime.datetime.now().weekday()]
+
+        html = ''
+        for row in rows:
+            room = number_utils.get_integer(row['Room'])
+            doctor = string_utils.xstr(row[weekday])
+            html += f'''
+                <tr>
+                    <td>
+                        <table width="98%" style="font-weight:bold; font-family:Microsoft JhengHei">
+                            <thead>
+                                <tr bgcolor="Navy" style="color: white">
+                                    <th style="font-size: 48px; font-weight: bold;"
+                                     text-align: center; padding-left: 8px>
+                                        {room}診 {doctor}醫師
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr bgcolor="LightCyan" style="color: red">
+                                    <td style="font-size: 128px; font-weight: bold" align="center">
+                                        {self.waiting_number[room]}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            '''
+
+        return html
+
+    def _show_waiting_list(self):
+        waiting_html = self._get_waiting_html()
+
+        html = f'''
+            <table align=center cellpadding="2" cellspacing="2" width="98%"
+                style=" background-color: #ccc;
+                        -moz-border-radius: 5px;
+                        -webkit-border-radius: 5px;
+                        border: 1px solid #000;
+                        padding: 10px;">
+                <tbody>
+                    {waiting_html}
+                </tbody>
+            </table>
+        '''
+        self.ui.textBrowser_waiting_list.setHtml(html)
+
+
+# 主程式
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+    py_bulletin = PyBulletin1(None, sys.argv)
+    py_bulletin.show_bulletin()
+
+    sys.exit(app.exec_())
+
+
+# 程式開始
+if __name__ == '__main__':
+    main()

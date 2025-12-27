@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowCheckTreat</class>
+ <widget class="QMainWindow" name="WindowCheckTreat">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>處置檢查</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QToolButton" name="toolButton_find_error">
+        <property name="text">
+         <string>尋找錯誤</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../icons/edit-find.png</normaloff>../icons/edit-find.png</iconset>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextBesideIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QTableWidget" name="tableWidget_prescript">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>case_key</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>門診日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>病歷號碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>姓名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主診斷</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>診斷名稱</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>卡序</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>療程</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>處置名稱</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>處置手法或穴位</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>處置簽章</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主治醫師</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>錯誤訊息</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

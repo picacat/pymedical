@@ -1,0 +1,13 @@
+# Project exclude paths
+__pycache__/
+*.pyc
+*.log
+*.sqlite
+.env
+venv/
+.idea/
+*.zip
+install/
+documents/
+history/
+

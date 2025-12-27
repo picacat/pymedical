@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog_patient_medical_record</class>
+ <widget class="QDialog" name="Dialog_patient_medical_record">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1229</width>
+    <height>810</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="acceptDrops">
+   <bool>false</bool>
+  </property>
+  <property name="windowTitle">
+   <string>病歷資料</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>病歷資料</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTableWidget" name="tableWidget_medical_record">
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::SingleSelection</enum>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <column>
+        <property name="text">
+         <string>case_key</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>門診日期</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>病歷號</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>姓名</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>保險</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>門診類別</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>卡序</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>療程</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>藥日</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>主診斷</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>主治醫師</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>掛號費</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>門診負擔</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>藥品負擔</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>診察費</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>健保藥費</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>調劑費</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>處置費</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>健保申報</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>Dialog_patient_medical_record</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog_patient_medical_record</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowStatisticsCommissionAmount</class>
+ <widget class="QMainWindow" name="WindowStatisticsCommissionAmount">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>醫師銷售業績統計</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QToolButton" name="toolButton_print_seller">
+          <property name="text">
+           <string>列印抽成總表</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_export_seller">
+          <property name="text">
+           <string>匯出銷售總表 Excel</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_seller">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QToolButton" name="toolButton_print_self_prescript">
+          <property name="text">
+           <string>列印銷售明細</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_export_prescript">
+          <property name="text">
+           <string>匯出銷售明細 Excel</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_self_prescript">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>prescript_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>case_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>medicine_set</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>medicine_type</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>medicine_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>銷售日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退換貨日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>保險</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單據編號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>促銷</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>產品名稱</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>數量</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單位</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>日份</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>總量</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單價</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>折扣</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>應收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>實收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠款</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還款</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還款日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退貨金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>醫師</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>傷助推薦</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>護佐</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>經手人</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>備註</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>33</height>
+    </rect>
+   </property>
+  </widget>
+  <action name="action_export_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出Excel</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

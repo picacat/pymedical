@@ -1,0 +1,1651 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MedicalRecordWindow</class>
+ <widget class="QMainWindow" name="MedicalRecordWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1636</width>
+    <height>959</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>病歷內容</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <property name="leftMargin">
+     <number>5</number>
+    </property>
+    <property name="topMargin">
+     <number>10</number>
+    </property>
+    <property name="rightMargin">
+     <number>5</number>
+    </property>
+    <property name="bottomMargin">
+     <number>10</number>
+    </property>
+    <item>
+     <widget class="QTabWidget" name="tabWidget_medical">
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab_medical_record">
+       <attribute name="title">
+        <string>診療資料</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_symptom">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_symptom_panel">
+              <property name="spacing">
+               <number>1</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="pushButton_symptom">
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="text">
+                 <string>主訴</string>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_symptom">
+                <property name="toolTip">
+                 <string>開啟主訴詞庫 [F1]</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/help-contents.svg</normaloff>../icons/help-contents.svg</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_today">
+                <property name="toolTip">
+                 <string>插入今天的日期</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/appointment-new.svg</normaloff>../icons/appointment-new.svg</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_calendar">
+                <property name="toolTip">
+                 <string>插入選擇的日期</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/calendar.svg</normaloff>../icons/calendar.svg</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_add_symptom_dict">
+                <property name="toolTip">
+                 <string>將選取的文字新增至主訴詞庫 (最多40個字)</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/address-book-new.svg</normaloff>../icons/address-book-new.svg</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_symptom_kt">
+                <property name="toolTip">
+                 <string>開啟主訴詞庫2</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/dialog-question.png</normaloff>../icons/dialog-question.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_symptom_picker">
+                <property name="toolTip">
+                 <string>常用主訴詞庫</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/bookmark_add.svg</normaloff>../icons/bookmark_add.svg</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_blood_measure">
+                <property name="toolTip">
+                 <string>讀取血壓計資料</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/application-x-love-game.png</normaloff>../icons/application-x-love-game.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="checkBox_complaint_injury">
+                <property name="toolTip">
+                 <string>可以申報健保職傷案件</string>
+                </property>
+                <property name="text">
+                 <string>主訴職災</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="checkBox_reference">
+                <property name="toolTip">
+                 <string>將此病歷儲存為參考用病歷</string>
+                </property>
+                <property name="text">
+                 <string>參考病歷</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTextEdit" name="textEdit_symptom">
+              <property name="focusPolicy">
+               <enum>Qt::StrongFocus</enum>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="acceptRichText">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_tongue">
+              <property name="spacing">
+               <number>1</number>
+              </property>
+              <property name="topMargin">
+               <number>2</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>2</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="pushButton_tongue">
+                <property name="minimumSize">
+                 <size>
+                  <width>60</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="text">
+                 <string>舌診</string>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_tongue">
+                <property name="toolTip">
+                 <string>開啟舌診詞庫 [F1]</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/help-contents.svg</normaloff>../icons/help-contents.svg</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_tongue_picker">
+                <property name="toolTip">
+                 <string>常用舌診詞庫</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/bookmark_add.svg</normaloff>../icons/bookmark_add.svg</iconset>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTextEdit" name="textEdit_tongue">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>60</height>
+               </size>
+              </property>
+              <property name="acceptRichText">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_pulse">
+              <property name="spacing">
+               <number>1</number>
+              </property>
+              <property name="topMargin">
+               <number>2</number>
+              </property>
+              <property name="bottomMargin">
+               <number>2</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="pushButton_pulse">
+                <property name="minimumSize">
+                 <size>
+                  <width>60</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="text">
+                 <string>脈象</string>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_pulse">
+                <property name="toolTip">
+                 <string>開啟脈象詞庫 [F1]</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/help-contents.svg</normaloff>../icons/help-contents.svg</iconset>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTextEdit" name="textEdit_pulse">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>60</height>
+               </size>
+              </property>
+              <property name="acceptRichText">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <property name="spacing">
+               <number>1</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="pushButton_remark">
+                <property name="minimumSize">
+                 <size>
+                  <width>60</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="text">
+                 <string>備註</string>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_remark">
+                <property name="toolTip">
+                 <string>開啟備註詞庫 [F1]</string>
+                </property>
+                <property name="text">
+                 <string>...</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/help-contents.svg</normaloff>../icons/help-contents.svg</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_7">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTextEdit" name="textEdit_remark">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>80</height>
+               </size>
+              </property>
+              <property name="acceptRichText">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <property name="spacing">
+               <number>1</number>
+              </property>
+              <property name="leftMargin">
+               <number>12</number>
+              </property>
+              <property name="topMargin">
+               <number>6</number>
+              </property>
+              <property name="bottomMargin">
+               <number>6</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_patient_remark">
+                <property name="text">
+                 <string>病患備註</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTextEdit" name="textEdit_patient_remark">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>80</height>
+               </size>
+              </property>
+              <property name="acceptRichText">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QFrame" name="verticalFrame_prescript">
+            <property name="maximumSize">
+             <size>
+              <width>720</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_diagnostic">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>3</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QGroupBox" name="groupBox_diagnostic">
+               <property name="title">
+                <string>診斷</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout">
+                <property name="leftMargin">
+                 <number>3</number>
+                </property>
+                <property name="topMargin">
+                 <number>2</number>
+                </property>
+                <property name="rightMargin">
+                 <number>3</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>2</number>
+                </property>
+                <property name="spacing">
+                 <number>2</number>
+                </property>
+                <item row="3" column="0">
+                 <widget class="QPushButton" name="pushButton_disease4">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="cursor">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>開啟病名詞庫</string>
+                  </property>
+                  <property name="text">
+                   <string>次診斷3</string>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0">
+                 <widget class="QPushButton" name="pushButton_cure">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="cursor">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>開啟治則詞庫</string>
+                  </property>
+                  <property name="text">
+                   <string>治則</string>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="4">
+                 <widget class="QToolButton" name="toolButton_distincts">
+                  <property name="toolTip">
+                   <string>開啟辨證詞庫 [F1]</string>
+                  </property>
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/help-hint.svg</normaloff>../icons/help-hint.svg</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QLineEdit" name="lineEdit_disease_code1">
+                  <property name="maximumSize">
+                   <size>
+                    <width>150</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="maxLength">
+                   <number>10</number>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QPushButton" name="pushButton_disease3">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="cursor">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>開啟病名詞庫</string>
+                  </property>
+                  <property name="text">
+                   <string>次診斷2</string>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="3">
+                 <widget class="QLineEdit" name="lineEdit_disease_name2">
+                  <property name="focusPolicy">
+                   <enum>Qt::NoFocus</enum>
+                  </property>
+                  <property name="maxLength">
+                   <number>40</number>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QPushButton" name="pushButton_disease1">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="cursor">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>開啟病名詞庫</string>
+                  </property>
+                  <property name="text">
+                   <string>主診斷</string>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="2" colspan="2">
+                 <widget class="QLineEdit" name="lineEdit_distinguish">
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QPushButton" name="pushButton_disease2">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="cursor">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>開啟病名詞庫</string>
+                  </property>
+                  <property name="text">
+                   <string>次診斷1</string>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QPushButton" name="pushButton_distincts">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="cursor">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>開啟辨證詞庫</string>
+                  </property>
+                  <property name="text">
+                   <string>辨證</string>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="4">
+                 <widget class="QToolButton" name="toolButton_disease3">
+                  <property name="toolTip">
+                   <string>開啟病名詞庫 [F1]</string>
+                  </property>
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/help-contents.svg</normaloff>../icons/help-contents.svg</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="4">
+                 <widget class="QToolButton" name="toolButton_disease4">
+                  <property name="toolTip">
+                   <string>開啟病名詞庫 [F1]</string>
+                  </property>
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/help-contents.svg</normaloff>../icons/help-contents.svg</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="4">
+                 <widget class="QToolButton" name="toolButton_cure">
+                  <property name="toolTip">
+                   <string>開啟治則詞庫 [F1]</string>
+                  </property>
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/help-hint.svg</normaloff>../icons/help-hint.svg</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="2">
+                 <widget class="QLineEdit" name="lineEdit_disease_code4">
+                  <property name="maximumSize">
+                   <size>
+                    <width>150</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="maxLength">
+                   <number>10</number>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="3">
+                 <widget class="QLineEdit" name="lineEdit_disease_name1">
+                  <property name="focusPolicy">
+                   <enum>Qt::NoFocus</enum>
+                  </property>
+                  <property name="maxLength">
+                   <number>40</number>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="3">
+                 <widget class="QLineEdit" name="lineEdit_disease_name3">
+                  <property name="focusPolicy">
+                   <enum>Qt::NoFocus</enum>
+                  </property>
+                  <property name="maxLength">
+                   <number>40</number>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="3">
+                 <widget class="QLineEdit" name="lineEdit_disease_name4">
+                  <property name="focusPolicy">
+                   <enum>Qt::NoFocus</enum>
+                  </property>
+                  <property name="maxLength">
+                   <number>40</number>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="4">
+                 <widget class="QToolButton" name="toolButton_disease2">
+                  <property name="toolTip">
+                   <string>開啟病名詞庫 [F1]</string>
+                  </property>
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/software-update-urgent.png</normaloff>../icons/software-update-urgent.png</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="2">
+                 <widget class="QLineEdit" name="lineEdit_disease_code2">
+                  <property name="maximumSize">
+                   <size>
+                    <width>150</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="maxLength">
+                   <number>10</number>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="2" colspan="2">
+                 <widget class="QLineEdit" name="lineEdit_cure">
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="2">
+                 <widget class="QLineEdit" name="lineEdit_disease_code3">
+                  <property name="maximumSize">
+                   <size>
+                    <width>150</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="maxLength">
+                   <number>10</number>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="4">
+                 <widget class="QToolButton" name="toolButton_disease1">
+                  <property name="toolTip">
+                   <string>開啟病名詞庫 [F1]</string>
+                  </property>
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/help-contents.svg</normaloff>../icons/help-contents.svg</iconset>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTabWidget" name="tabWidget_prescript">
+               <property name="minimumSize">
+                <size>
+                 <width>720</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>70</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="tabShape">
+                <enum>QTabWidget::Rounded</enum>
+               </property>
+               <property name="currentIndex">
+                <number>-1</number>
+               </property>
+               <property name="documentMode">
+                <bool>false</bool>
+               </property>
+               <property name="tabsClosable">
+                <bool>true</bool>
+               </property>
+               <property name="movable">
+                <bool>false</bool>
+               </property>
+               <property name="tabBarAutoHide">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QFrame" name="verticalFrame_past_history">
+            <property name="maximumSize">
+             <size>
+              <width>450</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <property name="spacing">
+              <number>6</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>3</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QGroupBox" name="groupBox_patient">
+               <property name="title">
+                <string>病患基本資料</string>
+               </property>
+               <property name="checkable">
+                <bool>false</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_2">
+                <property name="topMargin">
+                 <number>2</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>2</number>
+                </property>
+                <property name="horizontalSpacing">
+                 <number>2</number>
+                </property>
+                <property name="verticalSpacing">
+                 <number>0</number>
+                </property>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="label_case_date">
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLabel" name="label_patient_name">
+                  <property name="font">
+                   <font>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">color: blue</string>
+                  </property>
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="3">
+                 <widget class="QLabel" name="label_regist_no">
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QLabel" name="label_15">
+                  <property name="font">
+                   <font>
+                    <weight>50</weight>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>門診:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="4">
+                 <spacer name="horizontalSpacer_3">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="2" column="4">
+                 <spacer name="horizontalSpacer_4">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="1" column="2">
+                 <widget class="QLabel" name="label_12">
+                  <property name="font">
+                   <font>
+                    <weight>50</weight>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>診號:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_9">
+                  <property name="font">
+                   <font>
+                    <weight>50</weight>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>身份:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="4">
+                 <spacer name="horizontalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="2" column="3">
+                 <widget class="QLabel" name="label_card">
+                  <property name="font">
+                   <font>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">color: rgb(0, 170, 0)</string>
+                  </property>
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="2">
+                 <widget class="QLabel" name="label_11">
+                  <property name="font">
+                   <font>
+                    <weight>50</weight>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>卡序:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="3">
+                 <widget class="QLabel" name="label_ins_type">
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLabel" name="label_share_type">
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_7">
+                  <property name="font">
+                   <font>
+                    <weight>50</weight>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>日期:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_6">
+                  <property name="font">
+                   <font>
+                    <weight>50</weight>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>姓名:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTabWidget" name="tabWidget_past_record">
+               <property name="currentIndex">
+                <number>-1</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_past_history"/>
+   <addaction name="action_patient"/>
+   <addaction name="action_med_vpn"/>
+   <addaction name="action_conflict_drug"/>
+   <addaction name="action_capture_image"/>
+   <addaction name="action_broadcast_voice"/>
+   <addaction name="separator"/>
+   <addaction name="action_reference"/>
+   <addaction name="action_medical_record_collection"/>
+   <addaction name="action_open_hosts"/>
+   <addaction name="action_exam_result"/>
+   <addaction name="separator"/>
+   <addaction name="action_reservation"/>
+   <addaction name="action_append_self_medical_record"/>
+   <addaction name="separator"/>
+   <addaction name="action_save_and_print"/>
+   <addaction name="action_save"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1636</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+    <addaction name="action_save_and_print_prescript"/>
+    <addaction name="action_save_and_print_receipt"/>
+    <addaction name="action_save_and_print_misc"/>
+    <addaction name="separator"/>
+    <addaction name="action_save_and_pdf"/>
+    <addaction name="action_force_save"/>
+    <addaction name="separator"/>
+    <addaction name="action_close_without_saving"/>
+    <addaction name="separator"/>
+    <addaction name="action_medical_record_version_history"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>功能</string>
+    </property>
+    <addaction name="action_dictionary"/>
+    <addaction name="action_switch_page"/>
+    <addaction name="action_open_memo"/>
+    <addaction name="separator"/>
+    <addaction name="action_exam_precheck"/>
+    <addaction name="separator"/>
+    <addaction name="action_reference_prescript"/>
+    <addaction name="action_medical_record_experience"/>
+    <addaction name="separator"/>
+    <addaction name="action_medicine_to_herb"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+  </widget>
+  <action name="action_save_and_print">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>存檔列印</string>
+   </property>
+   <property name="toolTip">
+    <string>存檔後列印處方箋</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
+  <action name="action_dictionary">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/address-book-new.svg</normaloff>../icons/address-book-new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>開啟詞庫</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉病歷</string>
+   </property>
+  </action>
+  <action name="action_patient">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/user-info.png</normaloff>../icons/user-info.png</iconset>
+   </property>
+   <property name="text">
+    <string>病患資料</string>
+   </property>
+   <property name="toolTip">
+    <string>顯示病患資料</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
+  <action name="action_past_history">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/folder-documents.png</normaloff>../icons/folder-documents.png</iconset>
+   </property>
+   <property name="text">
+    <string>過去病歷</string>
+   </property>
+   <property name="toolTip">
+    <string>顯示完整的過去病歷</string>
+   </property>
+   <property name="shortcut">
+    <string>F12</string>
+   </property>
+  </action>
+  <action name="action_save">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/filesave.svg</normaloff>../icons/filesave.svg</iconset>
+   </property>
+   <property name="text">
+    <string>存檔不印</string>
+   </property>
+   <property name="toolTip">
+    <string>僅存檔, 不印任何的單據</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
+   </property>
+  </action>
+  <action name="action_reference">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-documents.png</normaloff>../icons/emblem-documents.png</iconset>
+   </property>
+   <property name="text">
+    <string>參考病歷</string>
+   </property>
+  </action>
+  <action name="action_append_self_medical_record">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/stock_help-add-bookmark.svg</normaloff>../icons/stock_help-add-bookmark.svg</iconset>
+   </property>
+   <property name="text">
+    <string>新增自費</string>
+   </property>
+  </action>
+  <action name="action_open_hosts">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/network-workgroup.png</normaloff>../icons/network-workgroup.png</iconset>
+   </property>
+   <property name="text">
+    <string>分院病歷</string>
+   </property>
+  </action>
+  <action name="action_save_and_print_prescript">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>存檔後選擇列印處方</string>
+   </property>
+   <property name="toolTip">
+    <string>存檔後選擇列印處方</string>
+   </property>
+  </action>
+  <action name="action_save_and_print_receipt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>存檔後選擇列印費用收據</string>
+   </property>
+   <property name="toolTip">
+    <string>存檔後選擇列印費用收據</string>
+   </property>
+  </action>
+  <action name="action_save_and_print_misc">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>存檔後選擇列印其他收據</string>
+   </property>
+   <property name="toolTip">
+    <string>存檔後選擇列印其他收據</string>
+   </property>
+  </action>
+  <action name="action_reservation">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/appointment-new.png</normaloff>../icons/appointment-new.png</iconset>
+   </property>
+   <property name="text">
+    <string>預約門診</string>
+   </property>
+   <property name="toolTip">
+    <string>預約門診</string>
+   </property>
+  </action>
+  <action name="action_medical_record_collection">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-dictionary.png</normaloff>../icons/accessories-dictionary.png</iconset>
+   </property>
+   <property name="text">
+    <string>處方集</string>
+   </property>
+   <property name="toolTip">
+    <string>處方集</string>
+   </property>
+  </action>
+  <action name="action_switch_page">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-revert-to-saved-ltr.svg</normaloff>../icons/gtk-revert-to-saved-ltr.svg</iconset>
+   </property>
+   <property name="text">
+    <string>切換版面</string>
+   </property>
+   <property name="toolTip">
+    <string>切換主訴與病名頁面</string>
+   </property>
+  </action>
+  <action name="action_capture_image">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/camera-photo.png</normaloff>../icons/camera-photo.png</iconset>
+   </property>
+   <property name="text">
+    <string>拍攝照片</string>
+   </property>
+   <property name="toolTip">
+    <string>拍攝照片</string>
+   </property>
+  </action>
+  <action name="action_exam_result">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applications-science.png</normaloff>../icons/applications-science.png</iconset>
+   </property>
+   <property name="text">
+    <string>檢驗所報告</string>
+   </property>
+   <property name="toolTip">
+    <string>檢驗所報告</string>
+   </property>
+  </action>
+  <action name="action_med_vpn">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applications-internet.png</normaloff>../icons/applications-internet.png</iconset>
+   </property>
+   <property name="text">
+    <string>雲端藥歷</string>
+   </property>
+   <property name="toolTip">
+    <string>開啟雲端藥歷</string>
+   </property>
+  </action>
+  <action name="action_exam_precheck">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applications-science.png</normaloff>../icons/applications-science.png</iconset>
+   </property>
+   <property name="text">
+    <string>診前檢查</string>
+   </property>
+  </action>
+  <action name="action_medical_record_experience">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/start-here.png</normaloff>../icons/start-here.png</iconset>
+   </property>
+   <property name="text">
+    <string>經驗方</string>
+   </property>
+   <property name="toolTip">
+    <string>經驗方</string>
+   </property>
+  </action>
+  <action name="action_conflict_drug">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-important.png</normaloff>../icons/emblem-important.png</iconset>
+   </property>
+   <property name="text">
+    <string>中西藥交互</string>
+   </property>
+   <property name="toolTip">
+    <string>需驗證過醫事人員卡</string>
+   </property>
+  </action>
+  <action name="action_close_without_saving">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/button_cancel.svg</normaloff>../icons/button_cancel.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉病歷不存檔</string>
+   </property>
+   <property name="toolTip">
+    <string>關閉病歷不存檔</string>
+   </property>
+  </action>
+  <action name="action_medical_record_version_history">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-documents.png</normaloff>../icons/emblem-documents.png</iconset>
+   </property>
+   <property name="text">
+    <string>病歷版本記錄</string>
+   </property>
+   <property name="toolTip">
+    <string>病歷版本記錄</string>
+   </property>
+  </action>
+  <action name="action_force_save">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/software-update-available.png</normaloff>../icons/software-update-available.png</iconset>
+   </property>
+   <property name="text">
+    <string>強制存檔</string>
+   </property>
+   <property name="toolTip">
+    <string>強制存檔</string>
+   </property>
+  </action>
+  <action name="action_medicine_to_herb">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/view-refresh.png</normaloff>../icons/view-refresh.png</iconset>
+   </property>
+   <property name="text">
+    <string>科中轉水藥</string>
+   </property>
+   <property name="toolTip">
+    <string>科中轉水藥</string>
+   </property>
+  </action>
+  <action name="action_reference_prescript">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/address-book-new.png</normaloff>../icons/address-book-new.png</iconset>
+   </property>
+   <property name="text">
+    <string>參考處方</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="action_broadcast_voice">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/kblogger.png</normaloff>../icons/kblogger.png</iconset>
+   </property>
+   <property name="text">
+    <string>廣播叫號</string>
+   </property>
+   <property name="toolTip">
+    <string>廣播叫號</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="action_open_memo">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-open-folder.png</normaloff>../icons/document-open-folder.png</iconset>
+   </property>
+   <property name="text">
+    <string>開啟備忘錄</string>
+   </property>
+   <property name="toolTip">
+    <string>開啟備忘錄</string>
+   </property>
+   <property name="shortcut">
+    <string>F6</string>
+   </property>
+  </action>
+  <action name="action_save_and_pdf">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+   </property>
+   <property name="text">
+    <string>存檔列印並匯出PDF</string>
+   </property>
+   <property name="toolTip">
+    <string>存檔列印並匯出PDF</string>
+   </property>
+  </action>
+ </widget>
+ <tabstops>
+  <tabstop>textEdit_symptom</tabstop>
+  <tabstop>textEdit_tongue</tabstop>
+  <tabstop>textEdit_pulse</tabstop>
+  <tabstop>textEdit_remark</tabstop>
+  <tabstop>lineEdit_disease_code1</tabstop>
+  <tabstop>lineEdit_disease_code2</tabstop>
+  <tabstop>lineEdit_disease_code3</tabstop>
+  <tabstop>lineEdit_distinguish</tabstop>
+  <tabstop>lineEdit_cure</tabstop>
+  <tabstop>tabWidget_prescript</tabstop>
+  <tabstop>pushButton_symptom</tabstop>
+  <tabstop>pushButton_pulse</tabstop>
+  <tabstop>toolButton_pulse</tabstop>
+  <tabstop>toolButton_symptom</tabstop>
+  <tabstop>pushButton_remark</tabstop>
+  <tabstop>toolButton_remark</tabstop>
+  <tabstop>toolButton_today</tabstop>
+  <tabstop>toolButton_disease3</tabstop>
+  <tabstop>toolButton_add_symptom_dict</tabstop>
+  <tabstop>checkBox_reference</tabstop>
+  <tabstop>pushButton_disease3</tabstop>
+  <tabstop>pushButton_cure</tabstop>
+  <tabstop>pushButton_disease1</tabstop>
+  <tabstop>toolButton_disease2</tabstop>
+  <tabstop>toolButton_cure</tabstop>
+  <tabstop>pushButton_tongue</tabstop>
+  <tabstop>tabWidget_medical</tabstop>
+  <tabstop>toolButton_distincts</tabstop>
+  <tabstop>pushButton_disease2</tabstop>
+  <tabstop>pushButton_distincts</tabstop>
+  <tabstop>toolButton_disease1</tabstop>
+  <tabstop>toolButton_symptom_kt</tabstop>
+  <tabstop>tabWidget_past_record</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

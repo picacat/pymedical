@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowCheckPrescriptDays</class>
+ <widget class="QMainWindow" name="WindowCheckPrescriptDays">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>用藥檢查</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QToolButton" name="toolButton_find_error">
+          <property name="text">
+           <string>尋找錯誤</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/edit-find.png</normaloff>../icons/edit-find.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableWidget_medical_record">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>case_key</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>門診日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>班別</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>病歷號碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>姓名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>負擔類別</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>卡序</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>療程</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>就醫類別</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>給藥</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主診斷碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>診斷名稱</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主治醫師</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>藥費</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>調劑費</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>錯誤訊息</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_message">
+          <property name="text">
+           <string>用藥重複率</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>28</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

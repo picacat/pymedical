@@ -1,0 +1,46 @@
+#!/bin/bash
+ls |grep -E "中醫" | xargs -d"\n" rm
+current_date=PyMed$(date '+%Y%m%d')
+sed -i -r "s/PyMed(20[0-9][0-9][0-9][0-9][0-9][0-9])/$current_date/g" bulletin.html
+
+source_dir="pymedical/"
+dest_dir="$HOME/Dropbox/python_update/"
+temp_dir="$HOME/"
+if [ ! -d $dest_dir ]; then
+	mkdir $dest_dir
+fi
+
+dest_zip_file_name="$dest_dir""pymedical.zip"
+zip_file_name="$temp_dir""pymedical.zip"
+rm -f "$zip_file_name"
+cd ..
+zip -r "$zip_file_name" pymedical/*.py
+zip -r "$zip_file_name" pymedical/*.qm
+zip -r "$zip_file_name" pymedical/*.mp3
+# zip -r "$zip_file_name" pymedical/complicated_treatment_disease.json
+zip -r "$zip_file_name" pymedical/chronic_condition.json
+zip -r "$zip_file_name" pymedical/compound.json
+zip -r "$zip_file_name" pymedical/mysqldump.exe
+zip -r "$zip_file_name" pymedical/mysqldump50.exe
+zip -r "$zip_file_name" pymedical/2023_ICD10.json
+zip -r "$zip_file_name" pymedical/2023_ICD10_disable.json
+zip -r "$zip_file_name" pymedical/2023_ICD_MAP.json
+zip -r "$zip_file_name" pymedical/icd10_external_causes.json
+zip -r "$zip_file_name" pymedical/reset_smart_card.bat
+zip -r "$zip_file_name" pymedical/classes/*.py
+zip -r "$zip_file_name" pymedical/convert/*.py
+zip -r "$zip_file_name" pymedical/css/*.css
+zip -r "$zip_file_name" pymedical/dialog/*.py
+zip -r "$zip_file_name" pymedical/libs/*.py
+zip -r "$zip_file_name" pymedical/slot_machine/*.py
+zip -r "$zip_file_name" pymedical/payment_machine/*.*
+zip -r "$zip_file_name" pymedical/kiosk/*.*
+zip -r "$zip_file_name" pymedical/mysql/*.sql
+zip -r "$zip_file_name" pymedical/mysql/default/*.*
+zip -r "$zip_file_name" pymedical/printer/*.py
+zip -r "$zip_file_name" pymedical/ui/*.ui
+zip -r "$zip_file_name" pymedical/images/*.*
+zip -r "$zip_file_name" pymedical/icons/*.*
+zip -r "$zip_file_name" pymedical/tables/*.*
+
+cp "$zip_file_name" "$dest_zip_file_name"

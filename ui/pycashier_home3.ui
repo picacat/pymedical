@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowHome</class>
+ <widget class="QMainWindow" name="WindowHome">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1080</width>
+    <height>1920</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>主畫面</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="label_doctor1">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>220</y>
+      <width>671</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微軟正黑體</family>
+      <pointsize>88</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 127);
+font:88pt &quot;微軟正黑體&quot;;
+font-weight: bold;</string>
+    </property>
+    <property name="text">
+     <string>陳士源</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_doctor2">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>410</y>
+      <width>671</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微軟正黑體</family>
+      <pointsize>88</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 127);
+font:88pt &quot;微軟正黑體&quot;;
+font-weight: bold;</string>
+    </property>
+    <property name="text">
+     <string>陳士源</string>
+    </property>
+   </widget>
+   <widget class="QToolButton" name="toolButton_quit">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>1890</y>
+      <width>23</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="toolButtonStyle">
+     <enum>Qt::ToolButtonIconOnly</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_doctor3">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>590</y>
+      <width>671</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微軟正黑體</family>
+      <pointsize>88</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 127);
+font:88pt &quot;微軟正黑體&quot;;
+font-weight: bold;</string>
+    </property>
+    <property name="text">
+     <string>陳士源</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_doctor5">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>820</y>
+      <width>681</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微軟正黑體</family>
+      <pointsize>88</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 127);
+font:88pt &quot;微軟正黑體&quot;;
+font-weight: bold;</string>
+    </property>
+    <property name="text">
+     <string>陳士源</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_reservation">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>1110</y>
+      <width>591</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微軟正黑體</family>
+      <pointsize>42</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string>預約請按我</string>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

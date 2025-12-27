@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowCheckPrescript</class>
+ <widget class="QMainWindow" name="WindowCheckPrescript">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>健保藥碼檢查</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QToolButton" name="toolButton_find_error">
+            <property name="text">
+             <string>尋找錯誤</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/edit-find.png</normaloff>../icons/edit-find.png</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_update_ins_code">
+            <property name="text">
+             <string>自動更新健保碼</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/gtk-yes.svg</normaloff>../icons/gtk-yes.svg</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableWidget_prescript">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>case_key</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>prescript_key</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>medicine_key</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>門診日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>病歷號碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>姓名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主治醫師</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>類別</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>藥品名稱</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>健保藥碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>藥廠名稱</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>健保藥名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>有效期限</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>醫令簽章</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>錯誤訊息</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

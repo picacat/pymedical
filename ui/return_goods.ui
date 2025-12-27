@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowReturnGoods</class>
+ <widget class="QMainWindow" name="WindowReturnGoods">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1115</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>退貨作業</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_return_goods">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>ReturnGoodKey</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退貨日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退貨品項名稱</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退貨數量</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退貨金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退貨原因</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>經手人</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_return_goods"/>
+   <addaction name="separator"/>
+   <addaction name="action_modify_return_goods"/>
+   <addaction name="action_remove_return_goods"/>
+   <addaction name="separator"/>
+   <addaction name="action_export_to_excel"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1115</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <action name="action_return_goods">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-new.svg</normaloff>../icons/document-new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>新增退貨</string>
+   </property>
+   <property name="toolTip">
+    <string>新增退貨</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_remove_return_goods">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/cancel.svg</normaloff>../icons/cancel.svg</iconset>
+   </property>
+   <property name="text">
+    <string>刪除退貨</string>
+   </property>
+   <property name="toolTip">
+    <string>刪除退貨</string>
+   </property>
+  </action>
+  <action name="action_modify_return_goods">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-edit.svg</normaloff>../icons/gtk-edit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>更改退貨</string>
+   </property>
+   <property name="toolTip">
+    <string>更改退貨</string>
+   </property>
+  </action>
+  <action name="action_export_to_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出Excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出Excel</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,3872 @@
+[
+    {
+        "ICDCode": "H40.11X0",
+        "Use": 1,
+        "EnglishName": "Primary open-angle glaucoma, stage unspecified",
+        "ChineseName": "原發性隅角開放性青光眼，未明示期別"
+    },
+    {
+        "ICDCode": "H40.11X1",
+        "Use": 1,
+        "EnglishName": "Primary open-angle glaucoma, mild stage",
+        "ChineseName": "原發性隅角開放性青光眼，輕度期別"
+    },
+    {
+        "ICDCode": "H40.11X2",
+        "Use": 1,
+        "EnglishName": "Primary open-angle glaucoma, moderate stage",
+        "ChineseName": "原發性隅角開放性青光眼，中度期別"
+    },
+    {
+        "ICDCode": "H40.11X3",
+        "Use": 1,
+        "EnglishName": "Primary open-angle glaucoma, severe stage",
+        "ChineseName": "原發性隅角開放性青光眼，嚴重期別"
+    },
+    {
+        "ICDCode": "H40.11X4",
+        "Use": 1,
+        "EnglishName": "Primary open-angle glaucoma, indeterminate stage",
+        "ChineseName": "原發性隅角開放性青光眼，不確定期別"
+    },
+    {
+        "ICDCode": "H81.41",
+        "Use": 1,
+        "EnglishName": "Vertigo of central origin, right ear",
+        "ChineseName": "右側耳中樞性眩暈"
+    },
+    {
+        "ICDCode": "H81.42",
+        "Use": 1,
+        "EnglishName": "Vertigo of central origin, left ear",
+        "ChineseName": "左側耳中樞性眩暈"
+    },
+    {
+        "ICDCode": "H81.43",
+        "Use": 1,
+        "EnglishName": "Vertigo of central origin, bilateral",
+        "ChineseName": "雙側中樞性眩暈"
+    },
+    {
+        "ICDCode": "H81.49",
+        "Use": 1,
+        "EnglishName": "Vertigo of central origin, unspecified ear",
+        "ChineseName": "未明示側性之中樞性眩暈"
+    },
+    {
+        "ICDCode": "I60.20",
+        "Use": 1,
+        "EnglishName": "Nontraumatic subarachnoid hemorrhage from unspecified anterior communicating artery",
+        "ChineseName": "未明示側性前交通動脈非創傷性蜘蛛網膜下腔出血"
+    },
+    {
+        "ICDCode": "I60.21",
+        "Use": 1,
+        "EnglishName": "Nontraumatic subarachnoid hemorrhage from right anterior communicating artery",
+        "ChineseName": "右側前交通動脈非創傷性蜘蛛網膜下腔出血"
+    },
+    {
+        "ICDCode": "I60.22",
+        "Use": 1,
+        "EnglishName": "Nontraumatic subarachnoid hemorrhage from left anterior communicating artery",
+        "ChineseName": "左側前交通動脈非創傷性蜘蛛網膜下腔出血"
+    },
+    {
+        "ICDCode": "O35.0XX0",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) central nervous system malformation in fetus, not applicable or unspecified",
+        "ChineseName": "不適用或未明示(疑似)胎兒中樞神經系統畸形的母體照護"
+    },
+    {
+        "ICDCode": "O35.0XX1",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) central nervous system malformation in fetus, fetus 1",
+        "ChineseName": "第一個胎兒(疑似)中樞神經系統畸形的母體照護"
+    },
+    {
+        "ICDCode": "O35.0XX2",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) central nervous system malformation in fetus, fetus 2",
+        "ChineseName": "第二個胎兒(疑似)中樞神經系統畸形的母體照護"
+    },
+    {
+        "ICDCode": "O35.0XX3",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) central nervous system malformation in fetus, fetus 3",
+        "ChineseName": "第三個胎兒(疑似)中樞神經系統畸形的母體照護"
+    },
+    {
+        "ICDCode": "O35.0XX4",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) central nervous system malformation in fetus, fetus 4",
+        "ChineseName": "第四個胎兒(疑似)中樞神經系統畸形的母體照護"
+    },
+    {
+        "ICDCode": "O35.0XX5",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) central nervous system malformation in fetus, fetus 5",
+        "ChineseName": "第五個胎兒(疑似)中樞神經系統畸形的母體照護"
+    },
+    {
+        "ICDCode": "O35.0XX9",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) central nervous system malformation in fetus, other fetus",
+        "ChineseName": "其他個胎兒(疑似)中樞神經系統畸形的母體照護"
+    },
+    {
+        "ICDCode": "O35.1XX0",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) chromosomal abnormality in fetus, not applicable or unspecified",
+        "ChineseName": "不適用或未明示(疑似)胎兒染色體異常的母體照護"
+    },
+    {
+        "ICDCode": "O35.1XX1",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) chromosomal abnormality in fetus, fetus 1",
+        "ChineseName": "第一個胎兒(疑似)染色體異常的母體照護"
+    },
+    {
+        "ICDCode": "O35.1XX2",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) chromosomal abnormality in fetus, fetus 2",
+        "ChineseName": "第二個胎兒(疑似)染色體異常的母體照護"
+    },
+    {
+        "ICDCode": "O35.1XX3",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) chromosomal abnormality in fetus, fetus 3",
+        "ChineseName": "第三個胎兒(疑似)染色體異常的母體照護"
+    },
+    {
+        "ICDCode": "O35.1XX4",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) chromosomal abnormality in fetus, fetus 4",
+        "ChineseName": "第四個胎兒(疑似)染色體異常的母體照護"
+    },
+    {
+        "ICDCode": "O35.1XX5",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) chromosomal abnormality in fetus, fetus 5",
+        "ChineseName": "第五個胎兒(疑似)染色體異常的母體照護"
+    },
+    {
+        "ICDCode": "O35.1XX9",
+        "Use": 1,
+        "EnglishName": "Maternal care for (suspected) chromosomal abnormality in fetus, other fetus",
+        "ChineseName": "其他個胎兒(疑似)染色體異常的母體照護"
+    },
+    {
+        "ICDCode": "S02.10XA",
+        "Use": 1,
+        "EnglishName": "Unspecified fracture of base of skull, initial encounter for closed fracture",
+        "ChineseName": "顱骨底部閉鎖性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.10XB",
+        "Use": 1,
+        "EnglishName": "Unspecified fracture of base of skull, initial encounter for open fracture",
+        "ChineseName": "顱骨底部開放性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.10XD",
+        "Use": 1,
+        "EnglishName": "Unspecified fracture of base of skull, subsequent encounter for fracture with routine healing",
+        "ChineseName": "顱骨底部骨折癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.10XG",
+        "Use": 1,
+        "EnglishName": "Unspecified fracture of base of skull, subsequent encounter for fracture with delayed healing",
+        "ChineseName": "顱骨底部骨折延遲癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.10XK",
+        "Use": 1,
+        "EnglishName": "Unspecified fracture of base of skull, subsequent encounter for fracture with nonunion",
+        "ChineseName": "顱骨底部骨折未癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.10XS",
+        "Use": 1,
+        "EnglishName": "Unspecified fracture of base of skull, sequela",
+        "ChineseName": "顱骨底部骨折之後遺症"
+    },
+    {
+        "ICDCode": "S02.3XXA",
+        "Use": 1,
+        "EnglishName": "Fracture of orbital floor, initial encounter for closed fracture",
+        "ChineseName": "眶底閉鎖性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.3XXB",
+        "Use": 1,
+        "EnglishName": "Fracture of orbital floor, initial encounter for open fracture",
+        "ChineseName": "眶底開放性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.3XXD",
+        "Use": 1,
+        "EnglishName": "Fracture of orbital floor, subsequent encounter for fracture with routine healing",
+        "ChineseName": "眶底骨折癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.3XXG",
+        "Use": 1,
+        "EnglishName": "Fracture of orbital floor, subsequent encounter for fracture with delayed healing",
+        "ChineseName": "眶底骨折延遲癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.3XXK",
+        "Use": 1,
+        "EnglishName": "Fracture of orbital floor, subsequent encounter for fracture with nonunion",
+        "ChineseName": "眶底骨折未癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.3XXS",
+        "Use": 1,
+        "EnglishName": "Fracture of orbital floor, sequela",
+        "ChineseName": "眶底骨折之後遺症"
+    },
+    {
+        "ICDCode": "S02.61XA",
+        "Use": 1,
+        "EnglishName": "Fracture of condylar process of mandible, initial encounter for closed fracture",
+        "ChineseName": "下頷骨髁狀突閉鎖性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.61XB",
+        "Use": 1,
+        "EnglishName": "Fracture of condylar process of mandible, initial encounter for open fracture",
+        "ChineseName": "下頷骨髁狀突開放性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.61XD",
+        "Use": 1,
+        "EnglishName": "Fracture of condylar process of mandible, subsequent encounter for fracture with routine healing",
+        "ChineseName": "下頷骨髁狀突骨折癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.61XG",
+        "Use": 1,
+        "EnglishName": "Fracture of condylar process of mandible, subsequent encounter for fracture with delayed healing",
+        "ChineseName": "下頷骨髁狀突骨折延遲癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.61XK",
+        "Use": 1,
+        "EnglishName": "Fracture of condylar process of mandible, subsequent encounter for fracture with nonunion",
+        "ChineseName": "下頷骨髁狀突骨折未癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.61XS",
+        "Use": 1,
+        "EnglishName": "Fracture of condylar process of mandible, sequela",
+        "ChineseName": "下頷骨髁狀突骨折之後遺症"
+    },
+    {
+        "ICDCode": "S02.62XA",
+        "Use": 1,
+        "EnglishName": "Fracture of subcondylar process of mandible, initial encounter for closed fracture",
+        "ChineseName": "下頷骨下髁閉鎖性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.62XB",
+        "Use": 1,
+        "EnglishName": "Fracture of subcondylar process of mandible, initial encounter for open fracture",
+        "ChineseName": "下頷骨下髁開放性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.62XD",
+        "Use": 1,
+        "EnglishName": "Fracture of subcondylar process of mandible, subsequent encounter for fracture with routine healing",
+        "ChineseName": "下頷骨下髁骨折癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.62XG",
+        "Use": 1,
+        "EnglishName": "Fracture of subcondylar process of mandible, subsequent encounter for fracture with delayed healing",
+        "ChineseName": "下頷骨下髁骨折延遲癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.62XK",
+        "Use": 1,
+        "EnglishName": "Fracture of subcondylar process of mandible, subsequent encounter for fracture with nonunion",
+        "ChineseName": "下頷骨下髁骨折未癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.62XS",
+        "Use": 1,
+        "EnglishName": "Fracture of subcondylar process of mandible, sequela",
+        "ChineseName": "下頷骨下髁骨折之後遺症"
+    },
+    {
+        "ICDCode": "S02.63XA",
+        "Use": 1,
+        "EnglishName": "Fracture of coronoid process of mandible, initial encounter for closed fracture",
+        "ChineseName": "下頷骨喙狀突閉鎖性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.63XB",
+        "Use": 1,
+        "EnglishName": "Fracture of coronoid process of mandible, initial encounter for open fracture",
+        "ChineseName": "下頷骨喙狀突開放性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.63XD",
+        "Use": 1,
+        "EnglishName": "Fracture of coronoid process of mandible, subsequent encounter for fracture with routine healing",
+        "ChineseName": "下頷骨喙狀突骨折癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.63XG",
+        "Use": 1,
+        "EnglishName": "Fracture of coronoid process of mandible, subsequent encounter for fracture with delayed healing",
+        "ChineseName": "下頷骨喙狀突骨折延遲癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.63XK",
+        "Use": 1,
+        "EnglishName": "Fracture of coronoid process of mandible, subsequent encounter for fracture with nonunion",
+        "ChineseName": "下頷骨喙狀突骨折未癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.63XS",
+        "Use": 1,
+        "EnglishName": "Fracture of coronoid process of mandible, sequela",
+        "ChineseName": "下頷骨喙狀突骨折之後遺症"
+    },
+    {
+        "ICDCode": "S02.64XA",
+        "Use": 1,
+        "EnglishName": "Fracture of ramus of mandible, initial encounter for closed fracture",
+        "ChineseName": "下頷骨枝閉鎖性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.64XB",
+        "Use": 1,
+        "EnglishName": "Fracture of ramus of mandible, initial encounter for open fracture",
+        "ChineseName": "下頷骨枝開放性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.64XD",
+        "Use": 1,
+        "EnglishName": "Fracture of ramus of mandible, subsequent encounter for fracture with routine healing",
+        "ChineseName": "下頷骨枝骨折癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.64XG",
+        "Use": 1,
+        "EnglishName": "Fracture of ramus of mandible, subsequent encounter for fracture with delayed healing",
+        "ChineseName": "下頷骨枝骨折延遲癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.64XK",
+        "Use": 1,
+        "EnglishName": "Fracture of ramus of mandible, subsequent encounter for fracture with nonunion",
+        "ChineseName": "下頷骨枝骨折未癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.64XS",
+        "Use": 1,
+        "EnglishName": "Fracture of ramus of mandible, sequela",
+        "ChineseName": "下頷骨枝骨折之後遺症"
+    },
+    {
+        "ICDCode": "S02.65XA",
+        "Use": 1,
+        "EnglishName": "Fracture of angle of mandible, initial encounter for closed fracture",
+        "ChineseName": "頷角閉鎖性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.65XB",
+        "Use": 1,
+        "EnglishName": "Fracture of angle of mandible, initial encounter for open fracture",
+        "ChineseName": "頷角開放性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.65XD",
+        "Use": 1,
+        "EnglishName": "Fracture of angle of mandible, subsequent encounter for fracture with routine healing",
+        "ChineseName": "頷角骨折，癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.65XG",
+        "Use": 1,
+        "EnglishName": "Fracture of angle of mandible, subsequent encounter for fracture with delayed healing",
+        "ChineseName": "頷角骨折延遲癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.65XK",
+        "Use": 1,
+        "EnglishName": "Fracture of angle of mandible, subsequent encounter for fracture with nonunion",
+        "ChineseName": "頷角骨折未癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.65XS",
+        "Use": 1,
+        "EnglishName": "Fracture of angle of mandible, sequela",
+        "ChineseName": "頷角骨折之後遺症"
+    },
+    {
+        "ICDCode": "S02.67XA",
+        "Use": 1,
+        "EnglishName": "Fracture of alveolus of mandible, initial encounter for closed fracture",
+        "ChineseName": "下頷骨齒槽閉鎖性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.67XB",
+        "Use": 1,
+        "EnglishName": "Fracture of alveolus of mandible, initial encounter for open fracture",
+        "ChineseName": "下頷骨齒槽開放性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.67XD",
+        "Use": 1,
+        "EnglishName": "Fracture of alveolus of mandible, subsequent encounter for fracture with routine healing",
+        "ChineseName": "下頷骨齒槽骨折癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.67XG",
+        "Use": 1,
+        "EnglishName": "Fracture of alveolus of mandible, subsequent encounter for fracture with delayed healing",
+        "ChineseName": "下頷骨齒槽骨折延遲癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.67XK",
+        "Use": 1,
+        "EnglishName": "Fracture of alveolus of mandible, subsequent encounter for fracture with nonunion",
+        "ChineseName": "下頷骨齒槽骨折未癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.67XS",
+        "Use": 1,
+        "EnglishName": "Fracture of alveolus of mandible, sequela",
+        "ChineseName": "下頷骨齒槽骨折之後遺症"
+    },
+    {
+        "ICDCode": "S02.8XXA",
+        "Use": 1,
+        "EnglishName": "Fractures of other specified skull and facial bones, initial encounter for closed fracture",
+        "ChineseName": "其他特定部位顱骨及顏面骨閉鎖性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.8XXB",
+        "Use": 1,
+        "EnglishName": "Fractures of other specified skull and facial bones, initial encounter for open fracture",
+        "ChineseName": "其他特定部位顱骨及顏面骨開放性骨折之初期照護"
+    },
+    {
+        "ICDCode": "S02.8XXD",
+        "Use": 1,
+        "EnglishName": "Fractures of other specified skull and facial bones, subsequent encounter for fracture with routine healing",
+        "ChineseName": "其他特定部位顱骨及顏面骨癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.8XXG",
+        "Use": 1,
+        "EnglishName": "Fractures of other specified skull and facial bones, subsequent encounter for fracture with delayed healing",
+        "ChineseName": "其他特定部位顱骨及顏面骨延遲癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.8XXK",
+        "Use": 1,
+        "EnglishName": "Fractures of other specified skull and facial bones, subsequent encounter for fracture with nonunion",
+        "ChineseName": "其他特定部位顱骨及顏面骨未癒合之後續照護"
+    },
+    {
+        "ICDCode": "S02.8XXS",
+        "Use": 1,
+        "EnglishName": "Fractures of other specified skull and facial bones, sequela",
+        "ChineseName": "其他特定部位顱骨及顏面骨之後遺症"
+    },
+    {
+        "ICDCode": "S03.0XXA",
+        "Use": 1,
+        "EnglishName": "Dislocation of jaw, initial encounter",
+        "ChineseName": "頷骨脫臼之初期照護"
+    },
+    {
+        "ICDCode": "S03.0XXD",
+        "Use": 1,
+        "EnglishName": "Dislocation of jaw, subsequent encounter",
+        "ChineseName": "頷骨脫臼之後續照護"
+    },
+    {
+        "ICDCode": "S03.0XXS",
+        "Use": 1,
+        "EnglishName": "Dislocation of jaw, sequela",
+        "ChineseName": "頷骨脫臼之後遺症"
+    },
+    {
+        "ICDCode": "S03.4XXA",
+        "Use": 1,
+        "EnglishName": "Sprain of jaw, initial encounter",
+        "ChineseName": "下頷扭傷之初期照護"
+    },
+    {
+        "ICDCode": "S03.4XXD",
+        "Use": 1,
+        "EnglishName": "Sprain of jaw, subsequent encounter",
+        "ChineseName": "下頷扭傷之後續照護"
+    },
+    {
+        "ICDCode": "S03.4XXS",
+        "Use": 1,
+        "EnglishName": "Sprain of jaw, sequela",
+        "ChineseName": "下頷扭傷之後遺症"
+    },
+    {
+        "ICDCode": "S06.0X2",
+        "Use": 0,
+        "EnglishName": "Concussion with loss of consciousness of 31 minutes to 59 minutes",
+        "ChineseName": "腦震盪，伴有31分鐘-59分鐘意識喪失"
+    },
+    {
+        "ICDCode": "S06.0X2A",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of 31 minutes to 59 minutes, initial encounter",
+        "ChineseName": "腦震盪，伴有31分鐘-59分鐘意識喪失之初期照護"
+    },
+    {
+        "ICDCode": "S06.0X2D",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of 31 minutes to 59 minutes, subsequent encounter",
+        "ChineseName": "腦震盪，伴有31分鐘-59分鐘意識喪失之後續照護"
+    },
+    {
+        "ICDCode": "S06.0X2S",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of 31 minutes to 59 minutes, sequela",
+        "ChineseName": "腦震盪，伴有31分鐘-59分鐘意識喪失之後遺症"
+    },
+    {
+        "ICDCode": "S06.0X3",
+        "Use": 0,
+        "EnglishName": "Concussion with loss of consciousness of 1 hour to 5 hours 59 minutes",
+        "ChineseName": "腦震盪，伴有1小時-5小時59分鐘意識喪失"
+    },
+    {
+        "ICDCode": "S06.0X3A",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of 1 hour to 5 hours 59 minutes, initial encounter",
+        "ChineseName": "腦震盪，伴有1小時-5小時59分鐘意識喪失之初期照護"
+    },
+    {
+        "ICDCode": "S06.0X3D",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of 1 hour to 5 hours 59 minutes, subsequent encounter",
+        "ChineseName": "腦震盪，伴有1小時-5小時59分鐘意識喪失之後續照護"
+    },
+    {
+        "ICDCode": "S06.0X3S",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of 1 hour to 5 hours 59 minutes, sequela",
+        "ChineseName": "腦震盪，伴有1小時-5小時59分鐘意識喪失之後遺症"
+    },
+    {
+        "ICDCode": "S06.0X4",
+        "Use": 0,
+        "EnglishName": "Concussion with loss of consciousness of 6 hours to 24 hours",
+        "ChineseName": "腦震盪，伴有6小時-24小時意識喪失"
+    },
+    {
+        "ICDCode": "S06.0X4A",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of 6 hours to 24 hours, initial encounter",
+        "ChineseName": "腦震盪，伴有6小時-24小時意識喪失之初期照護"
+    },
+    {
+        "ICDCode": "S06.0X4D",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of 6 hours to 24 hours, subsequent encounter",
+        "ChineseName": "腦震盪，伴有6小時-24小時意識喪失之後續照護"
+    },
+    {
+        "ICDCode": "S06.0X4S",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of 6 hours to 24 hours, sequela",
+        "ChineseName": "腦震盪，伴有6小時-24小時意識喪失之後遺症"
+    },
+    {
+        "ICDCode": "S06.0X5",
+        "Use": 0,
+        "EnglishName": "Concussion with loss of consciousness greater than 24 hours with return to pre-existing conscious level",
+        "ChineseName": "腦震盪，伴有24小時以上意識喪失，回復到先前之意識狀態"
+    },
+    {
+        "ICDCode": "S06.0X5A",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness greater than 24 hours with return to pre-existing conscious level, initial encounter",
+        "ChineseName": "腦震盪，伴有24小時以上意識喪失，回復到先前之意識狀態之初期照護"
+    },
+    {
+        "ICDCode": "S06.0X5D",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness greater than 24 hours with return to pre-existing conscious level, subsequent encounter",
+        "ChineseName": "腦震盪，伴有24小時以上意識喪失，回復到先前之意識狀態之後續照護"
+    },
+    {
+        "ICDCode": "S06.0X5S",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness greater than 24 hours with return to pre-existing conscious level, sequela",
+        "ChineseName": "腦震盪，伴有24小時以上意識喪失，回復到先前之意識狀態之後遺症"
+    },
+    {
+        "ICDCode": "S06.0X6",
+        "Use": 0,
+        "EnglishName": "Concussion with loss of consciousness greater than 24 hours without return to pre-existing conscious level with patient surviving",
+        "ChineseName": "腦震盪，伴有24小時以上意識喪失，未回復到先前之意識狀態"
+    },
+    {
+        "ICDCode": "S06.0X6A",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness greater than 24 hours without return to pre-existing conscious level with patient surviving, initial encounter",
+        "ChineseName": "腦震盪，伴有24小時以上意識喪失，未回復到先前之意識狀態之初期照護"
+    },
+    {
+        "ICDCode": "S06.0X6D",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness greater than 24 hours without return to pre-existing conscious level with patient surviving, subsequent encounter",
+        "ChineseName": "腦震盪，伴有24小時以上意識喪失，未回復到先前之意識狀態之後續照護"
+    },
+    {
+        "ICDCode": "S06.0X6S",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness greater than 24 hours without return to pre-existing conscious level with patient surviving, sequela",
+        "ChineseName": "腦震盪，伴有24小時以上意識喪失，未回復到先前之意識狀態之後遺症"
+    },
+    {
+        "ICDCode": "S06.0X7",
+        "Use": 0,
+        "EnglishName": "Concussion with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness",
+        "ChineseName": "腦震盪，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡"
+    },
+    {
+        "ICDCode": "S06.0X7A",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, initial encounter",
+        "ChineseName": "腦震盪，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡之初期照護"
+    },
+    {
+        "ICDCode": "S06.0X7D",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "腦震盪，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.0X7S",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "腦震盪，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.0X8",
+        "Use": 0,
+        "EnglishName": "Concussion with loss of consciousness of any duration with death due to other cause prior to regaining consciousness",
+        "ChineseName": "腦震盪，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡"
+    },
+    {
+        "ICDCode": "S06.0X8A",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, initial encounter",
+        "ChineseName": "腦震盪，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡之初期照護"
+    },
+    {
+        "ICDCode": "S06.0X8D",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "腦震盪，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.0X8S",
+        "Use": 1,
+        "EnglishName": "Concussion with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "腦震盪，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.1X7D",
+        "Use": 1,
+        "EnglishName": "Traumatic cerebral edema with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "創傷性腦水腫，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.1X7S",
+        "Use": 1,
+        "EnglishName": "Traumatic cerebral edema with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "創傷性腦水腫，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.1X8D",
+        "Use": 1,
+        "EnglishName": "Traumatic cerebral edema with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "創傷性腦水腫，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.1X8S",
+        "Use": 1,
+        "EnglishName": "Traumatic cerebral edema with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "創傷性腦水腫，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.2X7D",
+        "Use": 1,
+        "EnglishName": "Diffuse traumatic brain injury with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "瀰漫性腦損傷，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.2X7S",
+        "Use": 1,
+        "EnglishName": "Diffuse traumatic brain injury with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "瀰漫性腦損傷，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.2X8D",
+        "Use": 1,
+        "EnglishName": "Diffuse traumatic brain injury with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "瀰漫性腦損傷，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.2X8S",
+        "Use": 1,
+        "EnglishName": "Diffuse traumatic brain injury with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "瀰漫性腦損傷，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.307D",
+        "Use": 1,
+        "EnglishName": "Unspecified focal traumatic brain injury with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "局部腦損傷，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.307S",
+        "Use": 1,
+        "EnglishName": "Unspecified focal traumatic brain injury with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "局部腦損傷，伴有任何期間之意識喪失，且於甦醒前因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.308D",
+        "Use": 1,
+        "EnglishName": "Unspecified focal traumatic brain injury with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "局部腦損傷，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.308S",
+        "Use": 1,
+        "EnglishName": "Unspecified focal traumatic brain injury with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "局部腦損傷，伴有任何期間之意識喪失，且於甦醒前因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.317D",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of right cerebrum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "右側大腦挫傷及裂傷，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.317S",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of right cerebrum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "右側大腦挫傷及裂傷，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.318D",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of right cerebrum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "右側大腦挫傷及裂傷，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.318S",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of right cerebrum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "右側大腦挫傷及裂傷，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.327D",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of left cerebrum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "左側大腦挫傷及裂傷，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.327S",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of left cerebrum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "左側大腦挫傷及裂傷，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.328D",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of left cerebrum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "左側大腦挫傷及裂傷，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.328S",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of left cerebrum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "左側大腦挫傷及裂傷，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.337D",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of cerebrum, unspecified, with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "大腦挫傷及裂傷，未明示側性伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.337S",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of cerebrum, unspecified, with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "大腦挫傷及裂傷，未明示側性伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.338D",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of cerebrum, unspecified, with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "大腦挫傷及裂傷，未明示側性伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.338S",
+        "Use": 1,
+        "EnglishName": "Contusion and laceration of cerebrum, unspecified, with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "大腦挫傷及裂傷，未明示側性伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.347D",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of right cerebrum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "右側大腦創傷性出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.347S",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of right cerebrum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "右側大腦創傷性出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.348D",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of right cerebrum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "右側大腦創傷性出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.348S",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of right cerebrum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "右側大腦創傷性出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.357D",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of left cerebrum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "左側大腦創傷性出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.357S",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of left cerebrum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "左側大腦創傷性出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.358D",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of left cerebrum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "左側大腦創傷性出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.358S",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of left cerebrum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "左側大腦創傷性出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.367D",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of cerebrum, unspecified, with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "大腦創傷性出血，未明示側性伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.367S",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of cerebrum, unspecified, with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "大腦創傷性出血，未明示側性伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.368D",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of cerebrum, unspecified, with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "大腦創傷性出血，未明示側性伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.368S",
+        "Use": 1,
+        "EnglishName": "Traumatic hemorrhage of cerebrum, unspecified, with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "大腦創傷性出血，未明示側性伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.377D",
+        "Use": 1,
+        "EnglishName": "Contusion, laceration, and hemorrhage of cerebellum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "小腦挫傷，裂傷及出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.377S",
+        "Use": 1,
+        "EnglishName": "Contusion, laceration, and hemorrhage of cerebellum with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "小腦挫傷，裂傷及出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.378D",
+        "Use": 1,
+        "EnglishName": "Contusion, laceration, and hemorrhage of cerebellum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "小腦挫傷，裂傷及出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.378S",
+        "Use": 1,
+        "EnglishName": "Contusion, laceration, and hemorrhage of cerebellum with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "小腦挫傷，裂傷及出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.387D",
+        "Use": 1,
+        "EnglishName": "Contusion, laceration, and hemorrhage of brainstem with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "腦幹挫傷，裂傷及出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.387S",
+        "Use": 1,
+        "EnglishName": "Contusion, laceration, and hemorrhage of brainstem with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "腦幹挫傷，裂傷及出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.388D",
+        "Use": 1,
+        "EnglishName": "Contusion, laceration, and hemorrhage of brainstem with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "腦幹挫傷，裂傷及出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.388S",
+        "Use": 1,
+        "EnglishName": "Contusion, laceration, and hemorrhage of brainstem with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "腦幹挫傷，裂傷及出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.4X7D",
+        "Use": 1,
+        "EnglishName": "Epidural hemorrhage with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "硬膜上出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.4X7S",
+        "Use": 1,
+        "EnglishName": "Epidural hemorrhage with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "硬膜上出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.4X8D",
+        "Use": 1,
+        "EnglishName": "Epidural hemorrhage with loss of consciousness of any duration with death due to other causes prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "硬膜上出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.4X8S",
+        "Use": 1,
+        "EnglishName": "Epidural hemorrhage with loss of consciousness of any duration with death due to other causes prior to regaining consciousness, sequela",
+        "ChineseName": "硬膜上出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.5X7D",
+        "Use": 1,
+        "EnglishName": "Traumatic subdural hemorrhage with loss of consciousness of any duration with death due to brain injury before regaining consciousness, subsequent encounter",
+        "ChineseName": "創傷性硬腦膜下出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.5X7S",
+        "Use": 1,
+        "EnglishName": "Traumatic subdural hemorrhage with loss of consciousness of any duration with death due to brain injury before regaining consciousness, sequela",
+        "ChineseName": "創傷性硬腦膜下出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.5X8D",
+        "Use": 1,
+        "EnglishName": "Traumatic subdural hemorrhage with loss of consciousness of any duration with death due to other cause before regaining consciousness, subsequent encounter",
+        "ChineseName": "創傷性硬腦膜下出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.5X8S",
+        "Use": 1,
+        "EnglishName": "Traumatic subdural hemorrhage with loss of consciousness of any duration with death due to other cause before regaining consciousness, sequela",
+        "ChineseName": "創傷性硬腦膜下出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.6X7D",
+        "Use": 1,
+        "EnglishName": "Traumatic subarachnoid hemorrhage with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "創傷性蜘蛛網膜下出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.6X7S",
+        "Use": 1,
+        "EnglishName": "Traumatic subarachnoid hemorrhage with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "創傷性蜘蛛網膜下出血，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.6X8D",
+        "Use": 1,
+        "EnglishName": "Traumatic subarachnoid hemorrhage with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "創傷性蜘蛛網膜下出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.6X8S",
+        "Use": 1,
+        "EnglishName": "Traumatic subarachnoid hemorrhage with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "創傷性蜘蛛網膜下出血，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.817D",
+        "Use": 1,
+        "EnglishName": "Injury of right internal carotid artery, intracranial portion, not elsewhere classified with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "右側內頸動脈顱內部分損傷，他處未歸類，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.817S",
+        "Use": 1,
+        "EnglishName": "Injury of right internal carotid artery, intracranial portion, not elsewhere classified with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "右側內頸動脈顱內部分損傷，他處未歸類，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.818D",
+        "Use": 1,
+        "EnglishName": "Injury of right internal carotid artery, intracranial portion, not elsewhere classified with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "右側內頸動脈顱內部分損傷，他處未歸類，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.818S",
+        "Use": 1,
+        "EnglishName": "Injury of right internal carotid artery, intracranial portion, not elsewhere classified with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "右側內頸動脈顱內部分損傷，他處未歸類，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.827D",
+        "Use": 1,
+        "EnglishName": "Injury of left internal carotid artery, intracranial portion, not elsewhere classified with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "左側內頸動脈顱內部分損傷，他處未歸類，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.827S",
+        "Use": 1,
+        "EnglishName": "Injury of left internal carotid artery, intracranial portion, not elsewhere classified with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "左側內頸動脈顱內部分損傷，他處未歸類，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.828D",
+        "Use": 1,
+        "EnglishName": "Injury of left internal carotid artery, intracranial portion, not elsewhere classified with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "左側內頸動脈顱內部分損傷，他處未歸類，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.828S",
+        "Use": 1,
+        "EnglishName": "Injury of left internal carotid artery, intracranial portion, not elsewhere classified with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "左側內頸動脈顱內部分損傷，他處未歸類，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.897D",
+        "Use": 1,
+        "EnglishName": "Other specified intracranial injury with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "其他特定顱內損傷，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.897S",
+        "Use": 1,
+        "EnglishName": "Other specified intracranial injury with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "其他特定顱內損傷，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.898D",
+        "Use": 1,
+        "EnglishName": "Other specified intracranial injury with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "其他特定顱內損傷，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.898S",
+        "Use": 1,
+        "EnglishName": "Other specified intracranial injury with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "其他特定顱內損傷，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.9X7D",
+        "Use": 1,
+        "EnglishName": "Unspecified intracranial injury with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "顱內損傷，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.9X7S",
+        "Use": 1,
+        "EnglishName": "Unspecified intracranial injury with loss of consciousness of any duration with death due to brain injury prior to regaining consciousness, sequela",
+        "ChineseName": "顱內損傷，伴有任意時間意識喪失，且於甦醒前即因腦損傷而死亡之後遺症"
+    },
+    {
+        "ICDCode": "S06.9X8D",
+        "Use": 1,
+        "EnglishName": "Unspecified intracranial injury with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, subsequent encounter",
+        "ChineseName": "顱內損傷，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後續照護"
+    },
+    {
+        "ICDCode": "S06.9X8S",
+        "Use": 1,
+        "EnglishName": "Unspecified intracranial injury with loss of consciousness of any duration with death due to other cause prior to regaining consciousness, sequela",
+        "ChineseName": "顱內損傷，伴有任意時間意識喪失，且於甦醒前即因其他原因死亡之後遺症"
+    },
+    {
+        "ICDCode": "S63.13",
+        "Use": 0,
+        "EnglishName": "Subluxation and dislocation of proximal interphalangeal joint of thumb",
+        "ChineseName": "拇指近端指骨間關節半脫位及脫臼"
+    },
+    {
+        "ICDCode": "S63.131",
+        "Use": 0,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of right thumb",
+        "ChineseName": "右側拇指近端指骨間關節半脫位"
+    },
+    {
+        "ICDCode": "S63.131A",
+        "Use": 1,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of right thumb, initial encounter",
+        "ChineseName": "右側拇指近端指骨間關節半脫位之初期照護"
+    },
+    {
+        "ICDCode": "S63.131D",
+        "Use": 1,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of right thumb, subsequent encounter",
+        "ChineseName": "右側拇指近端指骨間關節半脫位之後續照護"
+    },
+    {
+        "ICDCode": "S63.131S",
+        "Use": 1,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of right thumb, sequela",
+        "ChineseName": "右側拇指近端指骨間關節半脫位之後遺症"
+    },
+    {
+        "ICDCode": "S63.132",
+        "Use": 0,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of left thumb",
+        "ChineseName": "左側拇指近端指骨間關節半脫位"
+    },
+    {
+        "ICDCode": "S63.132A",
+        "Use": 1,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of left thumb, initial encounter",
+        "ChineseName": "左側拇指近端指骨間關節半脫位之初期照護"
+    },
+    {
+        "ICDCode": "S63.132D",
+        "Use": 1,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of left thumb, subsequent encounter",
+        "ChineseName": "左側拇指近端指骨間關節半脫位之後續照護"
+    },
+    {
+        "ICDCode": "S63.132S",
+        "Use": 1,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of left thumb, sequela",
+        "ChineseName": "左側拇指近端指骨間關節半脫位之後遺症"
+    },
+    {
+        "ICDCode": "S63.133",
+        "Use": 0,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of unspecified thumb",
+        "ChineseName": "未明示側性拇指近端指骨間關節半脫位"
+    },
+    {
+        "ICDCode": "S63.133A",
+        "Use": 1,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of unspecified thumb, initial encounter",
+        "ChineseName": "未明示側性拇指近端指骨間關節半脫位之初期照護"
+    },
+    {
+        "ICDCode": "S63.133D",
+        "Use": 1,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of unspecified thumb, subsequent encounter",
+        "ChineseName": "未明示側性拇指近端指骨間關節半脫位之後續照護"
+    },
+    {
+        "ICDCode": "S63.133S",
+        "Use": 1,
+        "EnglishName": "Subluxation of proximal interphalangeal joint of unspecified thumb, sequela",
+        "ChineseName": "未明示側性拇指近端指骨間關節半脫位之後遺症"
+    },
+    {
+        "ICDCode": "S63.134",
+        "Use": 0,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of right thumb",
+        "ChineseName": "右側拇指近端指骨間關節脫臼"
+    },
+    {
+        "ICDCode": "S63.134A",
+        "Use": 1,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of right thumb, initial encounter",
+        "ChineseName": "右側拇指近端指骨間關節脫臼之初期照護"
+    },
+    {
+        "ICDCode": "S63.134D",
+        "Use": 1,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of right thumb, subsequent encounter",
+        "ChineseName": "右側拇指近端指骨間關節脫臼之後續照護"
+    },
+    {
+        "ICDCode": "S63.134S",
+        "Use": 1,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of right thumb, sequela",
+        "ChineseName": "右側拇指近端指骨間關節脫臼之後遺症"
+    },
+    {
+        "ICDCode": "S63.135",
+        "Use": 0,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of left thumb",
+        "ChineseName": "左側拇指近端指骨間關節脫臼"
+    },
+    {
+        "ICDCode": "S63.135A",
+        "Use": 1,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of left thumb, initial encounter",
+        "ChineseName": "左側拇指近端指骨間關節脫臼之初期照護"
+    },
+    {
+        "ICDCode": "S63.135D",
+        "Use": 1,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of left thumb, subsequent encounter",
+        "ChineseName": "左側拇指近端指骨間關節脫臼之後續照護"
+    },
+    {
+        "ICDCode": "S63.135S",
+        "Use": 1,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of left thumb, sequela",
+        "ChineseName": "左側拇指近端指骨間關節脫臼之後遺症"
+    },
+    {
+        "ICDCode": "S63.136",
+        "Use": 0,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of unspecified thumb",
+        "ChineseName": "未明示側性拇指近端指骨間關節脫臼"
+    },
+    {
+        "ICDCode": "S63.136A",
+        "Use": 1,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of unspecified thumb, initial encounter",
+        "ChineseName": "未明示側性拇指近端指骨間關節脫臼之初期照護"
+    },
+    {
+        "ICDCode": "S63.136D",
+        "Use": 1,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of unspecified thumb, subsequent encounter",
+        "ChineseName": "未明示側性拇指近端指骨間關節脫臼之後續照護"
+    },
+    {
+        "ICDCode": "S63.136S",
+        "Use": 1,
+        "EnglishName": "Dislocation of proximal interphalangeal joint of unspecified thumb, sequela",
+        "ChineseName": "未明示側性拇指近端指骨間關節脫臼之後遺症"
+    },
+    {
+        "ICDCode": "S63.14",
+        "Use": 0,
+        "EnglishName": "Subluxation and dislocation of distal interphalangeal joint of thumb",
+        "ChineseName": "拇指遠端指骨間關節半脫位及脫臼"
+    },
+    {
+        "ICDCode": "S63.141",
+        "Use": 0,
+        "EnglishName": "Subluxation of distal interphalangeal joint of right thumb",
+        "ChineseName": "右側拇指遠端指骨間關節半脫位"
+    },
+    {
+        "ICDCode": "S63.141A",
+        "Use": 1,
+        "EnglishName": "Subluxation of distal interphalangeal joint of right thumb, initial encounter",
+        "ChineseName": "右側拇指遠端指骨間關節半脫位之初期照護"
+    },
+    {
+        "ICDCode": "S63.141D",
+        "Use": 1,
+        "EnglishName": "Subluxation of distal interphalangeal joint of right thumb, subsequent encounter",
+        "ChineseName": "右側拇指遠端指骨間關節半脫位之後續照護"
+    },
+    {
+        "ICDCode": "S63.141S",
+        "Use": 1,
+        "EnglishName": "Subluxation of distal interphalangeal joint of right thumb, sequela",
+        "ChineseName": "右側拇指遠端指骨間關節半脫位之後遺症"
+    },
+    {
+        "ICDCode": "S63.142",
+        "Use": 0,
+        "EnglishName": "Subluxation of distal interphalangeal joint of left thumb",
+        "ChineseName": "左側拇指遠端指骨間關節半脫位"
+    },
+    {
+        "ICDCode": "S63.142A",
+        "Use": 1,
+        "EnglishName": "Subluxation of distal interphalangeal joint of left thumb, initial encounter",
+        "ChineseName": "左側拇指遠端指骨間關節半脫位之初期照護"
+    },
+    {
+        "ICDCode": "S63.142D",
+        "Use": 1,
+        "EnglishName": "Subluxation of distal interphalangeal joint of left thumb, subsequent encounter",
+        "ChineseName": "左側拇指遠端指骨間關節半脫位之後續照護"
+    },
+    {
+        "ICDCode": "S63.142S",
+        "Use": 1,
+        "EnglishName": "Subluxation of distal interphalangeal joint of left thumb, sequela",
+        "ChineseName": "左側性拇指遠端指骨間關節半脫位之後遺症"
+    },
+    {
+        "ICDCode": "S63.143",
+        "Use": 0,
+        "EnglishName": "Subluxation of distal interphalangeal joint of unspecified thumb",
+        "ChineseName": "未明示側性拇指遠端指骨間關節半脫位"
+    },
+    {
+        "ICDCode": "S63.143A",
+        "Use": 1,
+        "EnglishName": "Subluxation of distal interphalangeal joint of unspecified thumb, initial encounter",
+        "ChineseName": "未明示側性拇指遠端指骨間關節半脫位之初期照護"
+    },
+    {
+        "ICDCode": "S63.143D",
+        "Use": 1,
+        "EnglishName": "Subluxation of distal interphalangeal joint of unspecified thumb, subsequent encounter",
+        "ChineseName": "未明示側性拇指遠端指骨間關節半脫位之後續照護"
+    },
+    {
+        "ICDCode": "S63.143S",
+        "Use": 1,
+        "EnglishName": "Subluxation of distal interphalangeal joint of unspecified thumb, sequela",
+        "ChineseName": "未明示側性拇指遠端指骨間關節半脫位之後遺症"
+    },
+    {
+        "ICDCode": "S63.144",
+        "Use": 0,
+        "EnglishName": "Dislocation of distal interphalangeal joint of right thumb",
+        "ChineseName": "右側拇指遠端指骨間關節脫臼"
+    },
+    {
+        "ICDCode": "S63.144A",
+        "Use": 1,
+        "EnglishName": "Dislocation of distal interphalangeal joint of right thumb, initial encounter",
+        "ChineseName": "右側拇指遠端指骨間關節脫臼之初期照護"
+    },
+    {
+        "ICDCode": "S63.144D",
+        "Use": 1,
+        "EnglishName": "Dislocation of distal interphalangeal joint of right thumb, subsequent encounter",
+        "ChineseName": "右側拇指遠端指骨間關節脫臼之後續照護"
+    },
+    {
+        "ICDCode": "S63.144S",
+        "Use": 1,
+        "EnglishName": "Dislocation of distal interphalangeal joint of right thumb, sequela",
+        "ChineseName": "右側拇指遠端指骨間關節脫臼之後遺症"
+    },
+    {
+        "ICDCode": "S63.145",
+        "Use": 0,
+        "EnglishName": "Dislocation of distal interphalangeal joint of left thumb",
+        "ChineseName": "左側拇指遠端指骨間關節脫臼"
+    },
+    {
+        "ICDCode": "S63.145A",
+        "Use": 1,
+        "EnglishName": "Dislocation of distal interphalangeal joint of left thumb, initial encounter",
+        "ChineseName": "左側拇指遠端指骨間關節脫臼之初期照護"
+    },
+    {
+        "ICDCode": "S63.145D",
+        "Use": 1,
+        "EnglishName": "Dislocation of distal interphalangeal joint of left thumb, subsequent encounter",
+        "ChineseName": "左側拇指遠端指骨間關節脫臼之後續照護"
+    },
+    {
+        "ICDCode": "S63.145S",
+        "Use": 1,
+        "EnglishName": "Dislocation of distal interphalangeal joint of left thumb, sequela",
+        "ChineseName": "左側拇指遠端指骨間關節脫臼之後遺症"
+    },
+    {
+        "ICDCode": "S63.146",
+        "Use": 0,
+        "EnglishName": "Dislocation of distal interphalangeal joint of unspecified thumb",
+        "ChineseName": "未明示側性拇指遠端指骨間關節脫臼"
+    },
+    {
+        "ICDCode": "S63.146A",
+        "Use": 1,
+        "EnglishName": "Dislocation of distal interphalangeal joint of unspecified thumb, initial encounter",
+        "ChineseName": "未明示側性拇指遠端指骨間關節脫臼之初期照護"
+    },
+    {
+        "ICDCode": "S63.146D",
+        "Use": 1,
+        "EnglishName": "Dislocation of distal interphalangeal joint of unspecified thumb, subsequent encounter",
+        "ChineseName": "未明示側性拇指遠端指骨間關節脫臼之後續照護"
+    },
+    {
+        "ICDCode": "S63.146S",
+        "Use": 1,
+        "EnglishName": "Dislocation of distal interphalangeal joint of unspecified thumb, sequela",
+        "ChineseName": "未明示側性拇指遠端指骨間關節脫臼之後遺症"
+    },
+    {
+        "ICDCode": "T40.4X",
+        "Use": 0,
+        "EnglishName": "Poisoning by, adverse effect of and underdosing of other synthetic narcotics",
+        "ChineseName": "其他合成性麻醉劑中毒、不良反應或劑量不足"
+    },
+    {
+        "ICDCode": "T40.4X1",
+        "Use": 0,
+        "EnglishName": "Poisoning by other synthetic narcotics, accidental (unintentional)",
+        "ChineseName": "其他合成性麻醉劑意外中毒"
+    },
+    {
+        "ICDCode": "T40.4X1A",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, accidental (unintentional), initial encounter",
+        "ChineseName": "合成性麻醉劑意外中毒之初期照護"
+    },
+    {
+        "ICDCode": "T40.4X1D",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, accidental (unintentional), subsequent encounter",
+        "ChineseName": "合成性麻醉劑意外中毒之後續照護"
+    },
+    {
+        "ICDCode": "T40.4X1S",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, accidental (unintentional), sequela",
+        "ChineseName": "合成性麻醉劑意外中毒之後遺症"
+    },
+    {
+        "ICDCode": "T40.4X2",
+        "Use": 0,
+        "EnglishName": "Poisoning by other synthetic narcotics, intentional self-harm",
+        "ChineseName": "其他合成性麻醉劑故意自我傷害中毒"
+    },
+    {
+        "ICDCode": "T40.4X2A",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, intentional self-harm, initial encounter",
+        "ChineseName": "合成性麻醉劑故意自我傷害中毒之初期照護"
+    },
+    {
+        "ICDCode": "T40.4X2D",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, intentional self-harm, subsequent encounter",
+        "ChineseName": "合成性麻醉劑故意自我傷害中毒之後續照護"
+    },
+    {
+        "ICDCode": "T40.4X2S",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, intentional self-harm, sequela",
+        "ChineseName": "合成性麻醉劑故意自我傷害中毒之後遺症"
+    },
+    {
+        "ICDCode": "T40.4X3",
+        "Use": 0,
+        "EnglishName": "Poisoning by other synthetic narcotics, assault",
+        "ChineseName": "其他合成性麻醉劑被加害中毒"
+    },
+    {
+        "ICDCode": "T40.4X3A",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, assault, initial encounter",
+        "ChineseName": "合成性麻醉劑被加害中毒之初期照護"
+    },
+    {
+        "ICDCode": "T40.4X3D",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, assault, subsequent encounter",
+        "ChineseName": "合成性麻醉劑藥物被加害中毒之後續照護"
+    },
+    {
+        "ICDCode": "T40.4X3S",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, assault, sequela",
+        "ChineseName": "合成性麻醉劑被加害中毒之後遺症"
+    },
+    {
+        "ICDCode": "T40.4X4",
+        "Use": 0,
+        "EnglishName": "Poisoning by other synthetic narcotics, undetermined",
+        "ChineseName": "其他合成性麻醉劑意圖未明中毒"
+    },
+    {
+        "ICDCode": "T40.4X4A",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, undetermined, initial encounter",
+        "ChineseName": "合成性麻醉劑意圖未明中毒之初期照護"
+    },
+    {
+        "ICDCode": "T40.4X4D",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, undetermined, subsequent encounter",
+        "ChineseName": "合成性麻醉劑意圖未明中毒之後續照護"
+    },
+    {
+        "ICDCode": "T40.4X4S",
+        "Use": 1,
+        "EnglishName": "Poisoning by other synthetic narcotics, undetermined, sequela",
+        "ChineseName": "合成性麻醉劑意圖未明中毒之後遺症"
+    },
+    {
+        "ICDCode": "T40.4X5",
+        "Use": 0,
+        "EnglishName": "Adverse effect of other synthetic narcotics",
+        "ChineseName": "其他合成性麻醉劑不良反應"
+    },
+    {
+        "ICDCode": "T40.4X5A",
+        "Use": 1,
+        "EnglishName": "Adverse effect of other synthetic narcotics, initial encounter",
+        "ChineseName": "合成性麻醉劑不良反應之初期照護"
+    },
+    {
+        "ICDCode": "T40.4X5D",
+        "Use": 1,
+        "EnglishName": "Adverse effect of other synthetic narcotics, subsequent encounter",
+        "ChineseName": "合成性麻醉劑不良反應之後續照護"
+    },
+    {
+        "ICDCode": "T40.4X5S",
+        "Use": 1,
+        "EnglishName": "Adverse effect of other synthetic narcotics, sequela",
+        "ChineseName": "合成性麻醉劑不良反應之後遺症"
+    },
+    {
+        "ICDCode": "T40.4X6",
+        "Use": 0,
+        "EnglishName": "Underdosing of other synthetic narcotics",
+        "ChineseName": "其他合成性麻醉劑劑量不足"
+    },
+    {
+        "ICDCode": "T40.4X6A",
+        "Use": 1,
+        "EnglishName": "Underdosing of other synthetic narcotics, initial encounter",
+        "ChineseName": "合成性麻醉劑劑量不足之初期照護"
+    },
+    {
+        "ICDCode": "T40.4X6D",
+        "Use": 1,
+        "EnglishName": "Underdosing of other synthetic narcotics, subsequent encounter",
+        "ChineseName": "合成性麻醉劑劑量不足之後續照護"
+    },
+    {
+        "ICDCode": "T40.4X6S",
+        "Use": 1,
+        "EnglishName": "Underdosing of other synthetic narcotics, sequela",
+        "ChineseName": "合成性麻醉劑劑量不足之後遺症"
+    },
+    {
+        "ICDCode": "T40.7X",
+        "Use": 0,
+        "EnglishName": "Poisoning by, adverse effect of and underdosing of cannabis (derivatives)",
+        "ChineseName": "大麻﹝衍生物﹞中毒、不良反應或劑量不足"
+    },
+    {
+        "ICDCode": "T40.7X1",
+        "Use": 0,
+        "EnglishName": "Poisoning by cannabis (derivatives), accidental (unintentional)",
+        "ChineseName": "大麻﹝衍生物﹞意外中毒"
+    },
+    {
+        "ICDCode": "T40.7X1A",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), accidental (unintentional), initial encounter",
+        "ChineseName": "大麻﹝衍生物﹞意外中毒之初期照護"
+    },
+    {
+        "ICDCode": "T40.7X1D",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), accidental (unintentional), subsequent encounter",
+        "ChineseName": "大麻﹝衍生物﹞意外中毒之後續照護"
+    },
+    {
+        "ICDCode": "T40.7X1S",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), accidental (unintentional), sequela",
+        "ChineseName": "大麻﹝衍生物﹞意外中毒之後遺症"
+    },
+    {
+        "ICDCode": "T40.7X2",
+        "Use": 0,
+        "EnglishName": "Poisoning by cannabis (derivatives), intentional self-harm",
+        "ChineseName": "大麻﹝衍生物﹞故意自我傷害中毒"
+    },
+    {
+        "ICDCode": "T40.7X2A",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), intentional self-harm, initial encounter",
+        "ChineseName": "大麻﹝衍生物﹞故意自我傷害中毒之初期照護"
+    },
+    {
+        "ICDCode": "T40.7X2D",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), intentional self-harm, subsequent encounter",
+        "ChineseName": "大麻﹝衍生物﹞故意自我傷害中毒之後續照護"
+    },
+    {
+        "ICDCode": "T40.7X2S",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), intentional self-harm, sequela",
+        "ChineseName": "大麻﹝衍生物﹞故意自我傷害中毒之後遺症"
+    },
+    {
+        "ICDCode": "T40.7X3",
+        "Use": 0,
+        "EnglishName": "Poisoning by cannabis (derivatives), assault",
+        "ChineseName": "大麻﹝衍生物﹞被加害中毒"
+    },
+    {
+        "ICDCode": "T40.7X3A",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), assault, initial encounter",
+        "ChineseName": "大麻﹝衍生物﹞被加害中毒之初期照護"
+    },
+    {
+        "ICDCode": "T40.7X3D",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), assault, subsequent encounter",
+        "ChineseName": "大麻﹝衍生物﹞被加害中毒之後續照護"
+    },
+    {
+        "ICDCode": "T40.7X3S",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), assault, sequela",
+        "ChineseName": "大麻﹝衍生物﹞被加害中毒之後遺症"
+    },
+    {
+        "ICDCode": "T40.7X4",
+        "Use": 0,
+        "EnglishName": "Poisoning by cannabis (derivatives), undetermined",
+        "ChineseName": "大麻﹝衍生物﹞意圖未明中毒"
+    },
+    {
+        "ICDCode": "T40.7X4A",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), undetermined, initial encounter",
+        "ChineseName": "大麻﹝衍生物﹞意圖未明中毒之初期照護"
+    },
+    {
+        "ICDCode": "T40.7X4D",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), undetermined, subsequent encounter",
+        "ChineseName": "大麻﹝衍生物﹞意圖未明中毒之後續照護"
+    },
+    {
+        "ICDCode": "T40.7X4S",
+        "Use": 1,
+        "EnglishName": "Poisoning by cannabis (derivatives), undetermined, sequela",
+        "ChineseName": "大麻﹝衍生物﹞意圖未明中毒之後遺症"
+    },
+    {
+        "ICDCode": "T40.7X5",
+        "Use": 0,
+        "EnglishName": "Adverse effect of cannabis (derivatives)",
+        "ChineseName": "大麻﹝衍生物﹞不良反應"
+    },
+    {
+        "ICDCode": "T40.7X5A",
+        "Use": 1,
+        "EnglishName": "Adverse effect of cannabis (derivatives), initial encounter",
+        "ChineseName": "大麻﹝衍生物﹞不良反應之初期照護"
+    },
+    {
+        "ICDCode": "T40.7X5D",
+        "Use": 1,
+        "EnglishName": "Adverse effect of cannabis (derivatives), subsequent encounter",
+        "ChineseName": "大麻﹝衍生物﹞不良反應之後續照護"
+    },
+    {
+        "ICDCode": "T40.7X5S",
+        "Use": 1,
+        "EnglishName": "Adverse effect of cannabis (derivatives), sequela",
+        "ChineseName": "大麻﹝衍生物﹞不良反應之後遺症"
+    },
+    {
+        "ICDCode": "T40.7X6",
+        "Use": 0,
+        "EnglishName": "Underdosing of cannabis (derivatives)",
+        "ChineseName": "大麻﹝衍生物﹞劑量不足"
+    },
+    {
+        "ICDCode": "T40.7X6A",
+        "Use": 1,
+        "EnglishName": "Underdosing of cannabis (derivatives), initial encounter",
+        "ChineseName": "大麻﹝衍生物﹞劑量不足之初期照護"
+    },
+    {
+        "ICDCode": "T40.7X6D",
+        "Use": 1,
+        "EnglishName": "Underdosing of cannabis (derivatives), subsequent encounter",
+        "ChineseName": "大麻﹝衍生物﹞劑量不足之後續照護"
+    },
+    {
+        "ICDCode": "T40.7X6S",
+        "Use": 1,
+        "EnglishName": "Underdosing of cannabis (derivatives), sequela",
+        "ChineseName": "大麻﹝衍生物﹞劑量不足之後遺症"
+    },
+    {
+        "ICDCode": "T67.0XXA",
+        "Use": 1,
+        "EnglishName": "Heatstroke and sunstroke, initial encounter",
+        "ChineseName": "熱中暑及日中暑之初期照護"
+    },
+    {
+        "ICDCode": "T67.0XXD",
+        "Use": 1,
+        "EnglishName": "Heatstroke and sunstroke, subsequent encounter",
+        "ChineseName": "熱中暑及日中暑之後續照護"
+    },
+    {
+        "ICDCode": "T67.0XXS",
+        "Use": 1,
+        "EnglishName": "Heatstroke and sunstroke, sequela",
+        "ChineseName": "熱中暑及日中暑之後遺症"
+    },
+    {
+        "ICDCode": "T81.4XXA",
+        "Use": 1,
+        "EnglishName": "Infection following a procedure, initial encounter",
+        "ChineseName": "處置後感染之初期照護"
+    },
+    {
+        "ICDCode": "T81.4XXD",
+        "Use": 1,
+        "EnglishName": "Infection following a procedure, subsequent encounter",
+        "ChineseName": "處置後感染之後續照護"
+    },
+    {
+        "ICDCode": "T81.4XXS",
+        "Use": 1,
+        "EnglishName": "Infection following a procedure, sequela",
+        "ChineseName": "處置後感染之後遺症"
+    },
+    {
+        "ICDCode": "T83.51XA",
+        "Use": 1,
+        "EnglishName": "Infection and inflammatory reaction due to indwelling urinary catheter, initial encounter",
+        "ChineseName": "泌尿道留置導尿管所致之感染症及發炎性反應之初期照護"
+    },
+    {
+        "ICDCode": "T83.51XD",
+        "Use": 1,
+        "EnglishName": "Infection and inflammatory reaction due to indwelling urinary catheter, subsequent encounter",
+        "ChineseName": "泌尿道留置導尿管所致之感染症及發炎性反應之後續照護"
+    },
+    {
+        "ICDCode": "T83.51XS",
+        "Use": 1,
+        "EnglishName": "Infection and inflammatory reaction due to indwelling urinary catheter, sequela",
+        "ChineseName": "泌尿道留置導尿管所致之感染症及發炎性反應之後遺症"
+    },
+    {
+        "ICDCode": "T83.59XA",
+        "Use": 1,
+        "EnglishName": "Infection and inflammatory reaction due to prosthetic device, implant and graft in urinary system, initial encounter",
+        "ChineseName": "泌尿道人工置換裝置、植入物及移植物所致之感染症及發炎性反應之初期照護"
+    },
+    {
+        "ICDCode": "T83.59XD",
+        "Use": 1,
+        "EnglishName": "Infection and inflammatory reaction due to prosthetic device, implant and graft in urinary system, subsequent encounter",
+        "ChineseName": "泌尿道人工置換裝置、植入物及移植物所致之感染症及發炎性反應之後續照護"
+    },
+    {
+        "ICDCode": "T83.59XS",
+        "Use": 1,
+        "EnglishName": "Infection and inflammatory reaction due to prosthetic device, implant and graft in urinary system, sequela",
+        "ChineseName": "泌尿道人工置換裝置、植入物及移植物所致之感染症及發炎性反應之後遺症"
+    },
+    {
+        "ICDCode": "T83.6XXA",
+        "Use": 1,
+        "EnglishName": "Infection and inflammatory reaction due to prosthetic device, implant and graft in genital tract, initial encounter",
+        "ChineseName": "生殖道人工置換裝置、植入物及移植物所致之感染症及發炎性反應之初期照護"
+    },
+    {
+        "ICDCode": "T83.6XXD",
+        "Use": 1,
+        "EnglishName": "Infection and inflammatory reaction due to prosthetic device, implant and graft in genital tract, subsequent encounter",
+        "ChineseName": "生殖道人工置換裝置、植入物及移植物所致之感染症及發炎性反應之後續照護"
+    },
+    {
+        "ICDCode": "T83.6XXS",
+        "Use": 1,
+        "EnglishName": "Infection and inflammatory reaction due to prosthetic device, implant and graft in genital tract, sequela",
+        "ChineseName": "生殖道人工置換裝置、植入物及移植物所致之感染症及發炎性反應之後遺症"
+    },
+    {
+        "ICDCode": "T84.04",
+        "Use": 0,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic joint",
+        "ChineseName": "內人工關節附近人工置換裝置周圍骨折"
+    },
+    {
+        "ICDCode": "T84.040",
+        "Use": 0,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic right hip joint",
+        "ChineseName": "右側內人工髖關節附近人工置換裝置周圍骨折"
+    },
+    {
+        "ICDCode": "T84.040A",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic right hip joint, initial encounter",
+        "ChineseName": "右側內人工髖關節附近人工置換裝置周圍骨折之初期照護"
+    },
+    {
+        "ICDCode": "T84.040D",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic right hip joint, subsequent encounter",
+        "ChineseName": "右側內人工髖關節附近人工置換裝置周圍骨折之後續照護"
+    },
+    {
+        "ICDCode": "T84.040S",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic right hip joint, sequela",
+        "ChineseName": "右側內人工髖關節附近人工置換裝置周圍骨折之後遺症"
+    },
+    {
+        "ICDCode": "T84.041",
+        "Use": 0,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic left hip joint",
+        "ChineseName": "左側內人工髖關節附近人工置換裝置周圍骨折"
+    },
+    {
+        "ICDCode": "T84.041A",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic left hip joint, initial encounter",
+        "ChineseName": "左側內人工髖關節附近人工置換裝置周圍骨折之初期照護"
+    },
+    {
+        "ICDCode": "T84.041D",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic left hip joint, subsequent encounter",
+        "ChineseName": "左側內人工髖關節附近人工置換裝置周圍骨折之後續照護"
+    },
+    {
+        "ICDCode": "T84.041S",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic left hip joint, sequela",
+        "ChineseName": "左側內人工髖關節附近人工置換裝置周圍骨折之後遺症"
+    },
+    {
+        "ICDCode": "T84.042",
+        "Use": 0,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic right knee joint",
+        "ChineseName": "右側內人工膝關節附近人工置換裝置周圍骨折"
+    },
+    {
+        "ICDCode": "T84.042A",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic right knee joint, initial encounter",
+        "ChineseName": "右側內人工膝關節附近人工置換裝置周圍骨折之初期照護"
+    },
+    {
+        "ICDCode": "T84.042D",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic right knee joint, subsequent encounter",
+        "ChineseName": "右側內人工膝關節附近人工置換裝置周圍骨折之後續照護"
+    },
+    {
+        "ICDCode": "T84.042S",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic right knee joint, sequela",
+        "ChineseName": "右側內人工膝關節附近人工置換裝置周圍骨折之後遺症"
+    },
+    {
+        "ICDCode": "T84.043",
+        "Use": 0,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic left knee joint",
+        "ChineseName": "左側內人工膝關節附近人工置換裝置周圍骨折"
+    },
+    {
+        "ICDCode": "T84.043A",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic left knee joint, initial encounter",
+        "ChineseName": "左側內人工膝關節附近人工置換裝置周圍骨折之初期照護"
+    },
+    {
+        "ICDCode": "T84.043D",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic left knee joint, subsequent encounter",
+        "ChineseName": "左側內人工膝關節附近人工置換裝置周圍骨折之後續照護"
+    },
+    {
+        "ICDCode": "T84.043S",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around internal prosthetic left knee joint, sequela",
+        "ChineseName": "左側內人工膝關節附近人工置換裝置周圍骨折之後遺症"
+    },
+    {
+        "ICDCode": "T84.048",
+        "Use": 0,
+        "EnglishName": "Periprosthetic fracture around other internal prosthetic joint",
+        "ChineseName": "其他部位內人工關節附近人工置換裝置周圍骨折"
+    },
+    {
+        "ICDCode": "T84.048A",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around other internal prosthetic joint, initial encounter",
+        "ChineseName": "其他部位內人工關節附近人工置換裝置周圍骨折之初期照護"
+    },
+    {
+        "ICDCode": "T84.048D",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around other internal prosthetic joint, subsequent encounter",
+        "ChineseName": "其他部位內人工關節附近人工置換裝置周圍骨折之後續照護"
+    },
+    {
+        "ICDCode": "T84.048S",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around other internal prosthetic joint, sequela",
+        "ChineseName": "其他部位內人工關節附近人工置換裝置周圍骨折之後遺症"
+    },
+    {
+        "ICDCode": "T84.049",
+        "Use": 0,
+        "EnglishName": "Periprosthetic fracture around unspecified internal prosthetic joint",
+        "ChineseName": "未明示部位內人工關節附近人工置換裝置周圍骨折"
+    },
+    {
+        "ICDCode": "T84.049A",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around unspecified internal prosthetic joint, initial encounter",
+        "ChineseName": "未明示部位內人工關節附近人工置換裝置周圍骨折之初期照護"
+    },
+    {
+        "ICDCode": "T84.049D",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around unspecified internal prosthetic joint, subsequent encounter",
+        "ChineseName": "未明示部位內人工關節附近人工置換裝置周圍骨折之後續照護"
+    },
+    {
+        "ICDCode": "T84.049S",
+        "Use": 1,
+        "EnglishName": "Periprosthetic fracture around unspecified internal prosthetic joint, sequela",
+        "ChineseName": "未明示部位內人工關節附近人工置換裝置周圍骨折之後遺症"
+    },
+    {
+        "ICDCode": "T85.81XA",
+        "Use": 1,
+        "EnglishName": "Embolism due to internal prosthetic devices, implants and grafts, not elsewhere classified, initial encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之栓塞，他處未歸類之初期照護"
+    },
+    {
+        "ICDCode": "T85.81XD",
+        "Use": 1,
+        "EnglishName": "Embolism due to internal prosthetic devices, implants and grafts, not elsewhere classified, subsequent encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之栓塞，他處未歸類之後續照護"
+    },
+    {
+        "ICDCode": "T85.81XS",
+        "Use": 1,
+        "EnglishName": "Embolism due to internal prosthetic devices, implants and grafts, not elsewhere classified, sequela",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之栓塞，他處未歸類之後遺症"
+    },
+    {
+        "ICDCode": "T85.82XA",
+        "Use": 1,
+        "EnglishName": "Fibrosis due to internal prosthetic devices, implants and grafts, not elsewhere classified, initial encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之纖維化，他處未歸類之初期照護"
+    },
+    {
+        "ICDCode": "T85.82XD",
+        "Use": 1,
+        "EnglishName": "Fibrosis due to internal prosthetic devices, implants and grafts, not elsewhere classified, subsequent encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之纖維化，他處未歸類之後續照護"
+    },
+    {
+        "ICDCode": "T85.82XS",
+        "Use": 1,
+        "EnglishName": "Fibrosis due to internal prosthetic devices, implants and grafts, not elsewhere classified, sequela",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之纖維化，他處未歸類之後遺症"
+    },
+    {
+        "ICDCode": "T85.83XA",
+        "Use": 1,
+        "EnglishName": "Hemorrhage due to internal prosthetic devices, implants and grafts, not elsewhere classified, initial encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之出血，他處未歸類之初期照護"
+    },
+    {
+        "ICDCode": "T85.83XD",
+        "Use": 1,
+        "EnglishName": "Hemorrhage due to internal prosthetic devices, implants and grafts, not elsewhere classified, subsequent encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之出血，他處未歸類之後續照護"
+    },
+    {
+        "ICDCode": "T85.83XS",
+        "Use": 1,
+        "EnglishName": "Hemorrhage due to internal prosthetic devices, implants and grafts, not elsewhere classified, sequela",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之出血，他處未歸類之後遺症"
+    },
+    {
+        "ICDCode": "T85.84XA",
+        "Use": 1,
+        "EnglishName": "Pain due to internal prosthetic devices, implants and grafts, not elsewhere classified, initial encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之疼痛，他處未歸類之初期照護"
+    },
+    {
+        "ICDCode": "T85.84XD",
+        "Use": 1,
+        "EnglishName": "Pain due to internal prosthetic devices, implants and grafts, not elsewhere classified, subsequent encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之疼痛，他處未歸類之後續照護"
+    },
+    {
+        "ICDCode": "T85.84XS",
+        "Use": 1,
+        "EnglishName": "Pain due to internal prosthetic devices, implants and grafts, not elsewhere classified, sequela",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之疼痛，他處未歸類之後遺症"
+    },
+    {
+        "ICDCode": "T85.85XA",
+        "Use": 1,
+        "EnglishName": "Stenosis due to internal prosthetic devices, implants and grafts, not elsewhere classified, initial encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之狹窄，他處未歸類之初期照護"
+    },
+    {
+        "ICDCode": "T85.85XD",
+        "Use": 1,
+        "EnglishName": "Stenosis due to internal prosthetic devices, implants and grafts, not elsewhere classified, subsequent encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之狹窄，他處未歸類之後續照護"
+    },
+    {
+        "ICDCode": "T85.85XS",
+        "Use": 1,
+        "EnglishName": "Stenosis due to internal prosthetic devices, implants and grafts, not elsewhere classified, sequela",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之狹窄，他處未歸類之後遺症"
+    },
+    {
+        "ICDCode": "T85.86XA",
+        "Use": 1,
+        "EnglishName": "Thrombosis due to internal prosthetic devices, implants and grafts, not elsewhere classified, initial encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之血栓形成 ，他處未歸類之初期照護"
+    },
+    {
+        "ICDCode": "T85.86XD",
+        "Use": 1,
+        "EnglishName": "Thrombosis due to internal prosthetic devices, implants and grafts, not elsewhere classified, subsequent encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之血栓形成 ，他處未歸類之後續照護"
+    },
+    {
+        "ICDCode": "T85.86XS",
+        "Use": 1,
+        "EnglishName": "Thrombosis due to internal prosthetic devices, implants and grafts, not elsewhere classified, sequela",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之血栓形成 ，他處未歸類之後遺症"
+    },
+    {
+        "ICDCode": "T85.89XA",
+        "Use": 1,
+        "EnglishName": "Other specified complication of internal prosthetic devices, implants and grafts, not elsewhere classified, initial encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之其他特定併發症，他處未歸類之初期照護"
+    },
+    {
+        "ICDCode": "T85.89XD",
+        "Use": 1,
+        "EnglishName": "Other specified complication of internal prosthetic devices, implants and grafts, not elsewhere classified, subsequent encounter",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之其他特定併發症，他處未歸類之後續照護"
+    },
+    {
+        "ICDCode": "T85.89XS",
+        "Use": 1,
+        "EnglishName": "Other specified complication of internal prosthetic devices, implants and grafts, not elsewhere classified, sequela",
+        "ChineseName": "內人工置換裝置、植入物及移植物所致之其他特定併發症，他處未歸類之後遺症"
+    },
+    {
+        "ICDCode": "V20.0XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedestrian or animal in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與行人或動物碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V20.0XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedestrian or animal in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與行人或動物碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V20.0XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedestrian or animal in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與行人或動物碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V20.1XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedestrian or animal in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與行人或動物碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V20.1XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedestrian or animal in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與行人或動物碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V20.1XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedestrian or animal in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與行人或動物碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V20.2XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedestrian or animal in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與行人或動物碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V20.2XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedestrian or animal in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與行人或動物碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V20.2XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedestrian or animal in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與行人或動物碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V20.3XXA",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with pedestrian or animal, initial encounter",
+        "ChineseName": "人員在上下摩拖車時與行人或動物碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V20.3XXD",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with pedestrian or animal, subsequent encounter",
+        "ChineseName": "人員在上下摩拖車時與行人或動物碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V20.3XXS",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with pedestrian or animal, sequela",
+        "ChineseName": "人員在上下摩拖車時與行人或動物碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V20.4XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedestrian or animal in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與行人或動物碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V20.4XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedestrian or animal in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與行人或動物碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V20.4XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedestrian or animal in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與行人或動物碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V20.5XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedestrian or animal in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與行人或動物碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V20.5XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedestrian or animal in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與行人或動物碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V20.5XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedestrian or animal in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與行人或動物碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V20.9XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedestrian or animal in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與行人或動物碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V20.9XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedestrian or animal in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與行人或動物碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V20.9XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedestrian or animal in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與行人或動物碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V21.0XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedal cycle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與腳踏車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V21.0XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedal cycle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與腳踏車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V21.0XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedal cycle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與腳踏車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V21.1XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedal cycle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與腳踏車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V21.1XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedal cycle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與腳踏車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V21.1XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedal cycle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與腳踏車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V21.2XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedal cycle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與腳踏車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V21.2XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedal cycle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與腳踏車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V21.2XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedal cycle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與腳踏車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V21.3XXA",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with pedal cycle, initial encounter",
+        "ChineseName": "人員在上下摩拖車時與腳踏車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V21.3XXD",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with pedal cycle, subsequent encounter",
+        "ChineseName": "人員在上下摩拖車時與腳踏車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V21.3XXS",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with pedal cycle, sequela",
+        "ChineseName": "人員在上下摩拖車時與腳踏車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V21.4XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedal cycle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與腳踏車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V21.4XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedal cycle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與腳踏車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V21.4XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with pedal cycle in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與腳踏車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V21.5XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedal cycle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與腳踏車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V21.5XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedal cycle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與腳踏車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V21.5XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with pedal cycle in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與腳踏車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V21.9XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedal cycle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與腳踏車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V21.9XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedal cycle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與腳踏車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V21.9XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with pedal cycle in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與腳踏車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V22.0XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with two- or three-wheeled motor vehicle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與兩輪或三輪機動車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V22.0XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with two- or three-wheeled motor vehicle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與兩輪或三輪機動車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V22.0XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with two- or three-wheeled motor vehicle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與兩輪或三輪機動車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V22.1XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with two- or three-wheeled motor vehicle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與兩輪或三輪機動車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V22.1XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with two- or three-wheeled motor vehicle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與兩輪或三輪機動車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V22.1XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with two- or three-wheeled motor vehicle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與兩輪或三輪機動車碰撞受之後遺症"
+    },
+    {
+        "ICDCode": "V22.2XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with two- or three-wheeled motor vehicle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與兩輪或三輪機動車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V22.2XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with two- or three-wheeled motor vehicle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與兩輪或三輪機動車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V22.2XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with two- or three-wheeled motor vehicle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與兩輪或三輪機動車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V22.3XXA",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with two- or three-wheeled motor vehicle, initial encounter",
+        "ChineseName": "人員在上下摩拖車時與與兩輪或三輪機動車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V22.3XXD",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with two- or three-wheeled motor vehicle, subsequent encounter",
+        "ChineseName": "人員在上下摩拖車時與兩輪或三輪機動車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V22.3XXS",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with two- or three-wheeled motor vehicle, sequela",
+        "ChineseName": "人員在上下摩拖車時與兩輪或三輪機動車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V22.4XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with two- or three-wheeled motor vehicle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與兩輪或三輪機動車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V22.4XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with two- or three-wheeled motor vehicle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與兩輪或三輪機動車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V22.4XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with two- or three-wheeled motor vehicle in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與兩輪或三輪機動車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V22.5XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with two- or three-wheeled motor vehicle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與兩輪或三輪機動車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V22.5XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with two- or three-wheeled motor vehicle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與兩輪或三輪機動車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V22.5XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with two- or three-wheeled motor vehicle in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與兩輪或三輪機動車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V22.9XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with two- or three-wheeled motor vehicle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與兩輪或三輪機動車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V22.9XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with two- or three-wheeled motor vehicle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與兩輪或三輪機動車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V22.9XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with two- or three-wheeled motor vehicle in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與兩輪或三輪機動車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V23.0XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with car, pick-up truck or van in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與汽車，小貨車或箱型車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V23.0XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with car, pick-up truck or van in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V23.0XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with car, pick-up truck or van in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V23.1XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with car, pick-up truck or van in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與汽車，小貨車或箱型車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V23.1XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with car, pick-up truck or van in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V23.1XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with car, pick-up truck or van in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V23.2XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with car, pick-up truck or van in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與汽車，小貨車或箱型車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V23.2XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with car, pick-up truck or van in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V23.2XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with car, pick-up truck or van in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V23.3XXA",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with car, pick-up truck or van, initial encounter",
+        "ChineseName": "人員在上下摩拖車時與汽車，小貨車或箱型車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V23.3XXD",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with car, pick-up truck or van, subsequent encounter",
+        "ChineseName": "人員在上下摩拖車時與汽車，小貨車或箱型車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V23.3XXS",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with car, pick-up truck or van, sequela",
+        "ChineseName": "人員在上下摩拖車時與汽車，小貨車或箱型車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V23.4XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with car, pick-up truck or van in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與汽車，小貨車或箱型車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V23.4XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with car, pick-up truck or van in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V23.4XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with car, pick-up truck or van in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V23.5XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with car, pick-up truck or van in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與汽車，小貨車或箱型車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V23.5XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with car, pick-up truck or van in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V23.5XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with car, pick-up truck or van in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V23.9XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with car, pick-up truck or van in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與汽車，小貨車或箱型車碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V23.9XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with car, pick-up truck or van in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V23.9XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with car, pick-up truck or van in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與汽車，小貨車或箱型車碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V24.0XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with heavy transport vehicle or bus in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與重型運輸車輛或巴士碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V24.0XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with heavy transport vehicle or bus in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與重型運輸車輛或巴士碰撞受傷故之後續照護"
+    },
+    {
+        "ICDCode": "V24.0XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with heavy transport vehicle or bus in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與重型運輸車輛或巴士碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V24.1XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with heavy transport vehicle or bus in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與重型運輸車輛或巴士碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V24.1XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with heavy transport vehicle or bus in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與重型運輸車輛或巴士碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V24.1XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with heavy transport vehicle or bus in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與重型運輸車輛或巴士碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V24.2XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with heavy transport vehicle or bus in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與重型運輸車輛或巴士碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V24.2XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with heavy transport vehicle or bus in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與重型運輸車輛或巴士碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V24.2XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with heavy transport vehicle or bus in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與重型運輸車輛或巴士碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V24.3XXA",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with heavy transport vehicle or bus, initial encounter",
+        "ChineseName": "人員在上下摩拖車時與重型運輸車輛或巴士碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V24.3XXD",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with heavy transport vehicle or bus, subsequent encounter",
+        "ChineseName": "人員在上下摩拖車時與重型運輸車輛或巴士碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V24.3XXS",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with heavy transport vehicle or bus, sequela",
+        "ChineseName": "人員在上下摩拖車時與重型運輸車輛或巴士碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V24.4XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with heavy transport vehicle or bus in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與重型運輸車輛或巴士碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V24.4XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with heavy transport vehicle or bus in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與重型運輸車輛或巴士碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V24.4XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with heavy transport vehicle or bus in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與重型運輸車輛或巴士碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V24.5XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with heavy transport vehicle or bus in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與重型運輸車輛或巴士碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V24.5XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with heavy transport vehicle or bus in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與重型運輸車輛或巴士碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V24.5XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with heavy transport vehicle or bus in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與重型運輸車輛或巴士碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V24.9XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with heavy transport vehicle or bus in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與重型運輸車輛或巴士碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V24.9XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with heavy transport vehicle or bus in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與重型運輸車輛或巴士碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V24.9XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with heavy transport vehicle or bus in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與重型運輸車輛或巴士碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V25.0XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with railway train or railway vehicle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與火車或鐵路車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V25.0XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with railway train or railway vehicle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與火車或鐵路車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V25.0XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with railway train or railway vehicle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與火車或鐵路車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V25.1XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with railway train or railway vehicle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與火車或鐵路車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V25.1XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with railway train or railway vehicle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與火車或鐵路車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V25.1XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with railway train or railway vehicle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與火車或鐵路車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V25.2XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with railway train or railway vehicle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與火車或鐵路車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V25.2XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with railway train or railway vehicle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與火車或鐵路車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V25.2XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with railway train or railway vehicle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與火車或鐵路車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V25.3XXA",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with railway train or railway vehicle, initial encounter",
+        "ChineseName": "人員在上下摩拖車時與火車或鐵路車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V25.3XXD",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with railway train or railway vehicle, subsequent encounter",
+        "ChineseName": "人員在上下摩拖車時與火車或鐵路車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V25.3XXS",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with railway train or railway vehicle, sequela",
+        "ChineseName": "人員在上下摩拖車時與火車或鐵路車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V25.4XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with railway train or railway vehicle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與火車或鐵路車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V25.4XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with railway train or railway vehicle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與火車或鐵路車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V25.4XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with railway train or railway vehicle in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與火車或鐵路車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V25.5XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with railway train or railway vehicle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與火車或鐵路車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V25.5XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with railway train or railway vehicle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與火車或鐵路車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V25.5XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with railway train or railway vehicle in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與火車或鐵路車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V25.9XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with railway train or railway vehicle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與火車或鐵路車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V25.9XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with railway train or railway vehicle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與火車或鐵路車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V25.9XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with railway train or railway vehicle in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與火車或鐵路車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V26.0XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other nonmotor vehicle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與其他非機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V26.0XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other nonmotor vehicle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與其他非機動車輛碰撞受傷之初期照護之後續照護"
+    },
+    {
+        "ICDCode": "V26.0XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other nonmotor vehicle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與其他非機動車輛碰撞受傷之初期照護之後遺症"
+    },
+    {
+        "ICDCode": "V26.1XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other nonmotor vehicle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與其他非機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V26.1XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other nonmotor vehicle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與其他非機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V26.1XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other nonmotor vehicle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與其他非機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V26.2XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other nonmotor vehicle in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與其他非機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V26.2XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other nonmotor vehicle in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與其他非機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V26.2XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other nonmotor vehicle in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與其他非機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V26.3XXA",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with other nonmotor vehicle, initial encounter",
+        "ChineseName": "人員在上下摩拖車時與其他非機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V26.3XXD",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with other nonmotor vehicle, subsequent encounter",
+        "ChineseName": "人員在上下摩拖車時與其他非機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V26.3XXS",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with other nonmotor vehicle, sequela",
+        "ChineseName": "人員在上下摩拖車時與其他非機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V26.4XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other nonmotor vehicle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與其他非機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V26.4XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other nonmotor vehicle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與其他非機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V26.4XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other nonmotor vehicle in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與其他非機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V26.5XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other nonmotor vehicle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與其他非機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V26.5XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other nonmotor vehicle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與其他非機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V26.5XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other nonmotor vehicle in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與其他非機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V26.9XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other nonmotor vehicle in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與其他非機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V26.9XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other nonmotor vehicle in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與其他非機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V26.9XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other nonmotor vehicle in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與其他非機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V27.0XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with fixed or stationary object in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與固定或靜止物體碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V27.0XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with fixed or stationary object in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與固定或靜止物體碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V27.0XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with fixed or stationary object in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與固定或靜止物體碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V27.1XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with fixed or stationary object in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與固定或靜止物體碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V27.1XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with fixed or stationary object in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與固定或靜止物體碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V27.1XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with fixed or stationary object in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與固定或靜止物體碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V27.2XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with fixed or stationary object in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與固定或靜止物體碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V27.2XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with fixed or stationary object in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與固定或靜止物體碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V27.2XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with fixed or stationary object in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與固定或靜止物體碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V27.3XXA",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with fixed or stationary object, initial encounter",
+        "ChineseName": "人員在上下摩拖車時與固定或靜止物體碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V27.3XXD",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with fixed or stationary object, subsequent encounter",
+        "ChineseName": "人員在上下摩拖車時與固定或靜止物體碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V27.3XXS",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in collision with fixed or stationary object, sequela",
+        "ChineseName": "人員在上下摩拖車時與固定或靜止物體碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V27.4XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with fixed or stationary object in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與固定或靜止物體碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V27.4XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with fixed or stationary object in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與固定或靜止物體碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V27.4XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with fixed or stationary object in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與固定或靜止物體碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V27.5XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with fixed or stationary object in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與固定或靜止物體碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V27.5XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with fixed or stationary object in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與固定或靜止物體碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V27.5XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with fixed or stationary object in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與固定或靜止物體碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V27.9XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with fixed or stationary object in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與固定或靜止物體碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V27.9XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with fixed or stationary object in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與固定或靜止物體碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V27.9XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with fixed or stationary object in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與固定或靜止物體碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V28.0XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in noncollision transport accident in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非碰撞運輸意外中受傷之非交通意外事故之初期照護"
+    },
+    {
+        "ICDCode": "V28.0XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in noncollision transport accident in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非碰撞運輸意外中受傷之非交通意外事故之後續照護"
+    },
+    {
+        "ICDCode": "V28.0XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in noncollision transport accident in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非碰撞運輸意外中受傷之非交通意外事故之後遺症"
+    },
+    {
+        "ICDCode": "V28.1XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in noncollision transport accident in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非碰撞運輸意外中受傷之非交通意外事故之初期照護"
+    },
+    {
+        "ICDCode": "V28.1XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in noncollision transport accident in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非碰撞運輸意外中受傷之非交通意外事故之後續照護"
+    },
+    {
+        "ICDCode": "V28.1XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in noncollision transport accident in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非碰撞運輸意外中受傷之非交通意外事故之後遺症"
+    },
+    {
+        "ICDCode": "V28.2XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in noncollision transport accident in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非碰撞運輸意外中受傷之非交通意外事故之初期照護"
+    },
+    {
+        "ICDCode": "V28.2XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in noncollision transport accident in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非碰撞運輸意外中受傷之非交通意外事故之後續照護"
+    },
+    {
+        "ICDCode": "V28.2XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in noncollision transport accident in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非碰撞運輸意外中受傷之非交通意外事故之後遺症"
+    },
+    {
+        "ICDCode": "V28.3XXA",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in noncollision transport accident, initial encounter",
+        "ChineseName": "人員上下摩拖車時士在非碰撞運輸意外中受傷之初期照護"
+    },
+    {
+        "ICDCode": "V28.3XXD",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in noncollision transport accident, subsequent encounter",
+        "ChineseName": "人員上下摩拖車時士在非碰撞運輸意外中受傷之後續照護"
+    },
+    {
+        "ICDCode": "V28.3XXS",
+        "Use": 1,
+        "EnglishName": "Person boarding or alighting a motorcycle injured in noncollision transport accident, sequela",
+        "ChineseName": "人員上下摩拖車時士在非碰撞運輸意外中受傷之後遺症"
+    },
+    {
+        "ICDCode": "V28.4XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in noncollision transport accident in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非碰撞運輸意外中受傷之交通意外事故之初期照護"
+    },
+    {
+        "ICDCode": "V28.4XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in noncollision transport accident in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非碰撞運輸意外中受傷之交通意外事故之後續照護"
+    },
+    {
+        "ICDCode": "V28.4XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in noncollision transport accident in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非碰撞運輸意外中受傷之交通意外事故之後遺症"
+    },
+    {
+        "ICDCode": "V28.5XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in noncollision transport accident in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非碰撞運輸意外中受傷之交通意外事故之初期照護"
+    },
+    {
+        "ICDCode": "V28.5XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in noncollision transport accident in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非碰撞運輸意外中受傷之交通意外事故之後續照護"
+    },
+    {
+        "ICDCode": "V28.5XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in noncollision transport accident in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非碰撞運輸意外中受傷之交通意外事故之後遺症"
+    },
+    {
+        "ICDCode": "V28.9XXA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in noncollision transport accident in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非碰撞運輸意外中受傷之交通意外事故之初期照護"
+    },
+    {
+        "ICDCode": "V28.9XXD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in noncollision transport accident in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非碰撞運輸意外中受傷之交通意外事故之後續照護"
+    },
+    {
+        "ICDCode": "V28.9XXS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in noncollision transport accident in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非碰撞運輸意外中受傷之交通意外事故之後遺症"
+    },
+    {
+        "ICDCode": "V29.00XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with unspecified motor vehicles in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與未明示之動力車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.00XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with unspecified motor vehicles in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與未明示之動力車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.00XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with unspecified motor vehicles in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與未明示之動力車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.09XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other motor vehicles in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與其他動力車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.09XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other motor vehicles in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與其他動力車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.09XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other motor vehicles in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎士在非交通意外事故中與其他動力車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.10XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with unspecified motor vehicles in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與未明示之動力車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.10XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with unspecified motor vehicles in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與未明示之動力車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.10XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with unspecified motor vehicles in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與未明示之動力車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.19XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other motor vehicles in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與其他動力車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.19XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other motor vehicles in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與其他動力車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.19XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other motor vehicles in nontraffic accident, sequela",
+        "ChineseName": "摩拖車乘客在非交通意外事故中與其他動力車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.20XA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with unspecified motor vehicles in nontraffic accident, initial encounter",
+        "ChineseName": "未明示之摩拖車騎乘者在非交通意外事故中與未明示之機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.20XD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with unspecified motor vehicles in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與未明示之機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.20XS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with unspecified motor vehicles in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與未明示之機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.29XA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other motor vehicles in nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與其他機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.29XD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other motor vehicles in nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與其他機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.29XS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other motor vehicles in nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在非交通意外事故中與其他機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.3XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in unspecified nontraffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在未明示之交通意外事故中受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.3XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in unspecified nontraffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在未明示之交通意外事故中受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.3XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in unspecified nontraffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在未明示之交通意外事中受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.40XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with unspecified motor vehicles in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與未明示之機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.40XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with unspecified motor vehicles in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與未明示之機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.40XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with unspecified motor vehicles in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與未明示之機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.49XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other motor vehicles in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與其他機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.49XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other motor vehicles in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎士在交通意外事故中與其他機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.49XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle driver injured in collision with other motor vehicles in traffic accident, sequela",
+        "ChineseName": "摩拖車騎士在交通意外事故中與其他機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.50XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with unspecified motor vehicles in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與未明示之機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.50XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with unspecified motor vehicles in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與未明示之機動車輛碰撞受傷故之後續照護"
+    },
+    {
+        "ICDCode": "V29.50XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with unspecified motor vehicles in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與未明示之機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.59XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other motor vehicles in traffic accident, initial encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與其他機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.59XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other motor vehicles in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車乘客在交通意外事故中與其他機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.59XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle passenger injured in collision with other motor vehicles in traffic accident, sequela",
+        "ChineseName": "摩拖車乘客在交通意外事故中與其他機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.60XA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with unspecified motor vehicles in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與未明示之機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.60XD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with unspecified motor vehicles in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與未明示之機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.60XS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with unspecified motor vehicles in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與未明示之機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.69XA",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other motor vehicles in traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與其他機動車輛碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.69XD",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other motor vehicles in traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與其他機動車輛碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.69XS",
+        "Use": 1,
+        "EnglishName": "Unspecified motorcycle rider injured in collision with other motor vehicles in traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者在交通意外事故中與其他機動車輛碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.81XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in transport accident with military vehicle, initial encounter",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在軍用車輛之運輸意外事故中受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.81XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in transport accident with military vehicle, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在軍用車輛之運輸意外事故中受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.81XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in transport accident with military vehicle, sequela",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在軍用車輛之運輸意外事故中受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.88XA",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in other specified transport accidents, initial encounter",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在其他特定之運輸意外事故中受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.88XD",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in other specified transport accidents, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在其他特定之運輸意外事故中受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.88XS",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in other specified transport accidents, sequela",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在其他特定之運輸意外事故中受傷之後遺症"
+    },
+    {
+        "ICDCode": "V29.9XXA",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in unspecified traffic accident, initial encounter",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在未明示之交通意外事故中受傷之初期照護"
+    },
+    {
+        "ICDCode": "V29.9XXD",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in unspecified traffic accident, subsequent encounter",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在未明示之交通意外事故中受傷之後續照護"
+    },
+    {
+        "ICDCode": "V29.9XXS",
+        "Use": 1,
+        "EnglishName": "Motorcycle rider (driver) (passenger) injured in unspecified traffic accident, sequela",
+        "ChineseName": "摩拖車騎乘者（騎士）（乘客）在未明示之交通意外事故中受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.01",
+        "Use": 0,
+        "EnglishName": "Driver of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident",
+        "ChineseName": "休旅車駕駛在非交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.01XA",
+        "Use": 1,
+        "EnglishName": "Driver of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident, initial encounter",
+        "ChineseName": "休旅車駕駛在非交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.01XD",
+        "Use": 1,
+        "EnglishName": "Driver of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident, subsequent encounter",
+        "ChineseName": "休旅車駕駛在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.01XS",
+        "Use": 1,
+        "EnglishName": "Driver of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident, sequela",
+        "ChineseName": "休旅車駕駛在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.02",
+        "Use": 0,
+        "EnglishName": "Driver of other type car injured in collision with fixed or stationary object in nontraffic accident",
+        "ChineseName": "其他類型車駕駛在非交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.02XA",
+        "Use": 1,
+        "EnglishName": "Driver of other type car injured in collision with fixed or stationary object in nontraffic accident, initial encounter",
+        "ChineseName": "其他類型車駕駛在非交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.02XD",
+        "Use": 1,
+        "EnglishName": "Driver of other type car injured in collision with fixed or stationary object in nontraffic accident, subsequent encounter",
+        "ChineseName": "其他類型車駕駛在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.02XS",
+        "Use": 1,
+        "EnglishName": "Driver of other type car injured in collision with fixed or stationary object in nontraffic accident, sequela",
+        "ChineseName": "其他類型車駕駛在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.11",
+        "Use": 0,
+        "EnglishName": "Passenger of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident",
+        "ChineseName": "休旅車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.11XA",
+        "Use": 1,
+        "EnglishName": "Passenger of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident, initial encounter",
+        "ChineseName": "休旅車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.11XD",
+        "Use": 1,
+        "EnglishName": "Passenger of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident, subsequent encounter",
+        "ChineseName": "休旅車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.11XS",
+        "Use": 1,
+        "EnglishName": "Passenger of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident, sequela",
+        "ChineseName": "休旅車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.12",
+        "Use": 0,
+        "EnglishName": "Passenger of other type car injured in collision with fixed or stationary object in nontraffic accident",
+        "ChineseName": "其他類型車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.12XA",
+        "Use": 1,
+        "EnglishName": "Passenger of other type car injured in collision with fixed or stationary object in nontraffic accident, initial encounter",
+        "ChineseName": "其他類型車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.12XD",
+        "Use": 1,
+        "EnglishName": "Passenger of other type car injured in collision with fixed or stationary object in nontraffic accident, subsequent encounter",
+        "ChineseName": "其他類型車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.12XS",
+        "Use": 1,
+        "EnglishName": "Passenger of other type car injured in collision with fixed or stationary object in nontraffic accident, sequela",
+        "ChineseName": "其他類型車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.31",
+        "Use": 0,
+        "EnglishName": "Unspecified occupant of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident",
+        "ChineseName": "未明示之休旅車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.31XA",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident, initial encounter",
+        "ChineseName": "未明示之休旅車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.31XD",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident, subsequent encounter",
+        "ChineseName": "未明示之休旅車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.31XS",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of sport utility vehicle injured in collision with fixed or stationary object in nontraffic accident, sequela",
+        "ChineseName": "未明示之休旅車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.32",
+        "Use": 0,
+        "EnglishName": "Unspecified occupant of other type car injured in collision with fixed or stationary object in nontraffic accident",
+        "ChineseName": "未明示之其他類型車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.32XA",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of other type car injured in collision with fixed or stationary object in nontraffic accident, initial encounter",
+        "ChineseName": "未明示之其他類型車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.32XD",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of other type car injured in collision with fixed or stationary object in nontraffic accident, subsequent encounter",
+        "ChineseName": "未明示之其他類型車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.32XS",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of other type car injured in collision with fixed or stationary object in nontraffic accident, sequela",
+        "ChineseName": "未明示之其他類型車乘客在非交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.51",
+        "Use": 0,
+        "EnglishName": "Driver of sport utility vehicle injured in collision with fixed or stationary object in traffic accident",
+        "ChineseName": "休旅車駕駛在交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.51XA",
+        "Use": 1,
+        "EnglishName": "Driver of sport utility vehicle injured in collision with fixed or stationary object in traffic accident, initial encounter",
+        "ChineseName": "休旅車駕駛在交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.51XD",
+        "Use": 1,
+        "EnglishName": "Driver of sport utility vehicle injured in collision with fixed or stationary object in traffic accident, subsequent encounter",
+        "ChineseName": "休旅車駕駛在交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.51XS",
+        "Use": 1,
+        "EnglishName": "Driver of sport utility vehicle injured in collision with fixed or stationary object in traffic accident, sequela",
+        "ChineseName": "休旅車駕駛在交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.52",
+        "Use": 0,
+        "EnglishName": "Driver of other type car injured in collision with fixed or stationary object in traffic accident",
+        "ChineseName": "其他類型車駕駛與固定或靜態物件在交通意外事故中碰撞受傷"
+    },
+    {
+        "ICDCode": "V47.52XA",
+        "Use": 1,
+        "EnglishName": "Driver of other type car injured in collision with fixed or stationary object in traffic accident, initial encounter",
+        "ChineseName": "其他類型車駕駛與固定或靜態物件在交通意外事故中碰撞受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.52XD",
+        "Use": 1,
+        "EnglishName": "Driver of other type car injured in collision with fixed or stationary object in traffic accident, subsequent encounter",
+        "ChineseName": "其他類型車駕駛與固定或靜態物件在交通意外事故中碰撞受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.52XS",
+        "Use": 1,
+        "EnglishName": "Driver of other type car injured in collision with fixed or stationary object in traffic accident, sequela",
+        "ChineseName": "其他類型車駕駛與固定或靜態物件在交通意外事故中碰撞受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.61",
+        "Use": 0,
+        "EnglishName": "Passenger of sport utility vehicle injured in collision with fixed or stationary object in traffic accident",
+        "ChineseName": "休旅車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.61XA",
+        "Use": 1,
+        "EnglishName": "Passenger of sport utility vehicle injured in collision with fixed or stationary object in traffic accident, initial encounter",
+        "ChineseName": "休旅車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.61XD",
+        "Use": 1,
+        "EnglishName": "Passenger of sport utility vehicle injured in collision with fixed or stationary object in traffic accident, subsequent encounter",
+        "ChineseName": "休旅車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.61XS",
+        "Use": 1,
+        "EnglishName": "Passenger of sport utility vehicle injured in collision with fixed or stationary object in traffic accident, sequela",
+        "ChineseName": "休旅車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.62",
+        "Use": 0,
+        "EnglishName": "Passenger of other type car injured in collision with fixed or stationary object in traffic accident",
+        "ChineseName": "其他類型車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.62XA",
+        "Use": 1,
+        "EnglishName": "Passenger of other type car injured in collision with fixed or stationary object in traffic accident, initial encounter",
+        "ChineseName": "其他類型車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.62XD",
+        "Use": 1,
+        "EnglishName": "Passenger of other type car injured in collision with fixed or stationary object in traffic accident, subsequent encounter",
+        "ChineseName": "其他類型車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.62XS",
+        "Use": 1,
+        "EnglishName": "Passenger of other type car injured in collision with fixed or stationary object in traffic accident, sequela",
+        "ChineseName": "其他類型車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.91",
+        "Use": 0,
+        "EnglishName": "Unspecified occupant of sport utility vehicle injured in collision with fixed or stationary object in traffic accident",
+        "ChineseName": "未明示之休旅車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.91XA",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of sport utility vehicle injured in collision with fixed or stationary object in traffic accident, initial encounter",
+        "ChineseName": "未明示之休旅車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.91XD",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of sport utility vehicle injured in collision with fixed or stationary object in traffic accident, subsequent encounter",
+        "ChineseName": "未明示之休旅車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.91XS",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of sport utility vehicle injured in collision with fixed or stationary object in traffic accident, sequela",
+        "ChineseName": "未明示之休旅車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "V47.92",
+        "Use": 0,
+        "EnglishName": "Unspecified occupant of other type car injured in collision with fixed or stationary object in traffic accident",
+        "ChineseName": "未明示之其他類型車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷"
+    },
+    {
+        "ICDCode": "V47.92XA",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of other type car injured in collision with fixed or stationary object in traffic accident, initial encounter",
+        "ChineseName": "未明示之其他類型車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之初期照護"
+    },
+    {
+        "ICDCode": "V47.92XD",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of other type car injured in collision with fixed or stationary object in traffic accident, subsequent encounter",
+        "ChineseName": "未明示之其他類型車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之後續照護"
+    },
+    {
+        "ICDCode": "V47.92XS",
+        "Use": 1,
+        "EnglishName": "Unspecified occupant of other type car injured in collision with fixed or stationary object in traffic accident, sequela",
+        "ChineseName": "未明示之其他類型車乘客在交通意外事故中其車與固定或靜態物件碰撞時受傷之後遺症"
+    },
+    {
+        "ICDCode": "W45.1",
+        "Use": 0,
+        "EnglishName": "Paper entering through skin",
+        "ChineseName": "紙經（透過）皮膚進入"
+    },
+    {
+        "ICDCode": "W45.1XXA",
+        "Use": 1,
+        "EnglishName": "Paper entering through skin, initial encounter",
+        "ChineseName": "紙經（透過）皮膚進入之初期照護"
+    },
+    {
+        "ICDCode": "W45.1XXD",
+        "Use": 1,
+        "EnglishName": "Paper entering through skin, subsequent encounter",
+        "ChineseName": "紙經（透過）皮膚進入之後續照護"
+    },
+    {
+        "ICDCode": "W45.1XXS",
+        "Use": 1,
+        "EnglishName": "Paper entering through skin, sequela",
+        "ChineseName": "紙經（透過）皮膚進入之後遺症"
+    },
+    {
+        "ICDCode": "W45.2",
+        "Use": 0,
+        "EnglishName": "Lid of can entering through skin",
+        "ChineseName": "罐頭蓋子經（透過）皮膚進入"
+    },
+    {
+        "ICDCode": "W45.2XXA",
+        "Use": 1,
+        "EnglishName": "Lid of can entering through skin, initial encounter",
+        "ChineseName": "罐頭蓋子經（透過）皮膚進入之初期照護"
+    },
+    {
+        "ICDCode": "W45.2XXD",
+        "Use": 1,
+        "EnglishName": "Lid of can entering through skin, subsequent encounter",
+        "ChineseName": "罐頭蓋子經（透過）皮膚進入之後續照護"
+    },
+    {
+        "ICDCode": "W45.2XXS",
+        "Use": 1,
+        "EnglishName": "Lid of can entering through skin, sequela",
+        "ChineseName": "罐頭蓋子經（透過）皮膚進入之後遺症"
+    },
+    {
+        "ICDCode": "Z22.5",
+        "Use": 0,
+        "EnglishName": "Carrier of viral hepatitis",
+        "ChineseName": "病毒性肝炎之帶原者"
+    },
+    {
+        "ICDCode": "Z22.50",
+        "Use": 1,
+        "EnglishName": "Carrier of unspecified viral hepatitis",
+        "ChineseName": "未明示之病毒性肝炎之帶原者"
+    },
+    {
+        "ICDCode": "Z22.51",
+        "Use": 1,
+        "EnglishName": "Carrier of viral hepatitis B",
+        "ChineseName": "B型病毒性肝炎之帶原者"
+    },
+    {
+        "ICDCode": "Z22.52",
+        "Use": 1,
+        "EnglishName": "Carrier of viral hepatitis C",
+        "ChineseName": "C型病毒性肝炎之帶原者"
+    },
+    {
+        "ICDCode": "Z22.59",
+        "Use": 1,
+        "EnglishName": "Carrier of other viral hepatitis",
+        "ChineseName": "其他病毒性肝炎之帶原者"
+    }
+]

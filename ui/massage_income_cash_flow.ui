@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowIncome</class>
+ <widget class="QMainWindow" name="WindowIncome">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1115</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>養生館櫃台結帳</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+       <number>9</number>
+      </property>
+      <property name="topMargin">
+       <number>9</number>
+      </property>
+      <property name="rightMargin">
+       <number>9</number>
+      </property>
+      <property name="bottomMargin">
+       <number>9</number>
+      </property>
+      <item row="2" column="0">
+       <widget class="QTableWidget" name="tableWidget_massage">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>massage_case_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>服務日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>服務時間</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>顧客編號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>服務項目</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>應收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>實收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>推拿師父</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>掛號人員</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>備註</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item row="2" column="1" rowspan="3">
+       <widget class="QTableWidget" name="tableWidget_total">
+        <property name="maximumSize">
+         <size>
+          <width>300</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::NoSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>收費項目</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>合計金額</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_registration">
+          <property name="text">
+           <string>養生館服務</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>統計期間: </string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_income_date">
+          <property name="text">
+           <string>2018-03-19</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_income_period">
+          <property name="text">
+           <string>全部</string>
+          </property>
+          <property name="wordWrap">
+           <bool>false</bool>
+          </property>
+          <property name="margin">
+           <number>0</number>
+          </property>
+          <property name="indent">
+           <number>-1</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_charge">
+        <property name="text">
+         <string>購買商品</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>合計金額</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QTableWidget" name="tableWidget_purchase">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>massage_case_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>購買日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>顧客編號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>購買項目</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>應收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>實收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>推拿師父</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>櫃台人員</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>備註</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

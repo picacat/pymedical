@@ -1,0 +1,1306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CaseListWindow</class>
+ <widget class="QMainWindow" name="CaseListWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1057</width>
+    <height>844</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>病歷查詢</string>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonTextUnderIcon</enum>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>10</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <property name="leftMargin">
+         <number>10</number>
+        </property>
+        <item>
+         <widget class="QRadioButton" name="radioButton_normal">
+          <property name="text">
+           <string>詳細檢視</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_simple">
+          <property name="text">
+           <string>精簡檢視</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_medical_record_list">
+        <property name="mouseTracking">
+         <bool>false</bool>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>CaseKey</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>註</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>影像</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>異動</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>門診日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignLeading|AlignVCenter</set>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>完診</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>時間</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>批價</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>診別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>診號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignLeading|AlignVCenter</set>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病患姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>身份證號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>性別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>出生日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>年齡</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>初複診</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>掛號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>地點</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>門診</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>申報別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>調劑別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>負擔類別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>就醫類別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>卡序</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>療程</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>藥日</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>主治醫師</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>推拿師</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>掛號費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>門診負擔</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>藥品負擔</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>自費金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>折扣</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>診察費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>藥費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>調劑費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>處置費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>健保申報</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病患電話</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病患地址</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病患備註</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單據編號</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QPushButton" name="pushButton_top">
+          <property name="text">
+           <string>頁首</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_prev">
+          <property name="text">
+           <string>&lt; 上一頁</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_current_page">
+          <property name="text">
+           <string>第1頁</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_next">
+          <property name="text">
+           <string>下一頁 &gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_bottom">
+          <property name="text">
+           <string>頁尾</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_total_pages">
+          <property name="text">
+           <string>共1頁</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_page_count_2">
+          <property name="text">
+           <string>跳到第</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="spinBox_move_page">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="value">
+           <number>1</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_page_count_3">
+          <property name="text">
+           <string>頁</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_record_count">
+          <property name="text">
+           <string>共 0 筆</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_count_per_page">
+          <property name="text">
+           <string>每頁顯示</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="spinBox_count_per_page">
+          <property name="minimum">
+           <number>100</number>
+          </property>
+          <property name="maximum">
+           <number>999999</number>
+          </property>
+          <property name="singleStep">
+           <number>100</number>
+          </property>
+          <property name="value">
+           <number>200</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_count_per_page_2">
+          <property name="text">
+           <string>筆</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1057</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+    <widget class="QMenu" name="menu_5">
+     <property name="title">
+      <string>列印實體病歷</string>
+     </property>
+     <addaction name="action_print_cases"/>
+     <addaction name="action_print_cases_without_treat"/>
+     <addaction name="action_print_cases3"/>
+     <addaction name="action_print_cases2"/>
+    </widget>
+    <widget class="QMenu" name="menu_PDF">
+     <property name="title">
+      <string>匯出PDF</string>
+     </property>
+     <addaction name="action_export_cases_pdf"/>
+     <addaction name="action_export_cases_pdf2"/>
+     <addaction name="action_export_fees_pdf"/>
+    </widget>
+    <widget class="QMenu" name="menu_Excel">
+     <property name="title">
+      <string>匯出Excel</string>
+     </property>
+     <addaction name="action_export_medical_record_excel"/>
+     <addaction name="action_export_marked_medical_record_excel"/>
+     <addaction name="action_export_medical_record_diagnosis_excel"/>
+     <addaction name="action_export_excel"/>
+    </widget>
+    <widget class="QMenu" name="menu_Word">
+     <property name="title">
+      <string>匯出Word檔</string>
+     </property>
+     <addaction name="action_export_case_to_word"/>
+    </widget>
+    <addaction name="action_open_ins_record"/>
+    <addaction name="action_open_marked_records"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_registration"/>
+    <addaction name="action_print_prescript"/>
+    <addaction name="action_print_receipt"/>
+    <addaction name="action_print_misc"/>
+    <addaction name="action_print_misc2"/>
+    <addaction name="action_print_misc3"/>
+    <addaction name="action_print_prescription_bag"/>
+    <addaction name="separator"/>
+    <addaction name="menu_5"/>
+    <addaction name="action_print_fees"/>
+    <addaction name="action_print_medical_certificate"/>
+    <addaction name="separator"/>
+    <addaction name="menu_PDF"/>
+    <addaction name="menu_Word"/>
+    <addaction name="menu_Excel"/>
+    <addaction name="action_export_json"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_care_income"/>
+    <addaction name="action_print_correction_reg_income"/>
+    <addaction name="action_export_correction_reg_income_txt"/>
+    <addaction name="separator"/>
+    <addaction name="action_close_case"/>
+    <addaction name="action_open_case"/>
+    <addaction name="separator"/>
+    <addaction name="action_close"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>註記</string>
+    </property>
+    <addaction name="action_set_check"/>
+    <addaction name="action_set_uncheck"/>
+    <addaction name="action_set_block_check"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>列印</string>
+    </property>
+    <addaction name="action_print_registration"/>
+    <addaction name="action_print_prescript"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_receipt"/>
+    <addaction name="action_print_non_dosage_receipt"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_misc"/>
+    <addaction name="action_print_misc2"/>
+    <addaction name="action_print_misc3"/>
+    <addaction name="action_print_massage"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_prescription_bag"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_cases"/>
+    <addaction name="action_print_fees"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_marked_registration_form"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_marked_ins_prescript"/>
+    <addaction name="action_print_marked_ins_receipt"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_marked_self_prescript"/>
+    <addaction name="action_print_marked_self_receipt"/>
+    <addaction name="action_print_marked_self_receipt1"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_referral_form"/>
+   </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>功能</string>
+    </property>
+    <addaction name="action_change_ins_type"/>
+    <addaction name="action_change_apply_type"/>
+    <addaction name="action_change_pharmacy_type"/>
+    <addaction name="action_change_injury_type"/>
+    <addaction name="action_change_doctor"/>
+    <addaction name="separator"/>
+    <addaction name="action_generate_security"/>
+    <addaction name="action_set_traditional_health_case"/>
+    <addaction name="action_show_all"/>
+    <addaction name="action_clear_invalid_patient_name"/>
+    <addaction name="action_unlock_progress"/>
+   </widget>
+   <widget class="QMenu" name="menuIC">
+    <property name="title">
+     <string>IC卡作業</string>
+    </property>
+    <addaction name="action_write_ic_treatment"/>
+    <addaction name="separator"/>
+    <addaction name="action_rewrite_ic_card"/>
+    <addaction name="action_rewrite_ic_prescript"/>
+    <addaction name="separator"/>
+    <addaction name="action_cancel_ic_card"/>
+    <addaction name="action_get_identification"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_3"/>
+   <addaction name="menu_4"/>
+   <addaction name="menuIC"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="palette">
+    <palette>
+     <active/>
+     <inactive/>
+     <disabled/>
+    </palette>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_requery"/>
+   <addaction name="separator"/>
+   <addaction name="action_open_record"/>
+   <addaction name="action_delete_record"/>
+   <addaction name="separator"/>
+   <addaction name="action_print_registration"/>
+   <addaction name="action_print_prescript"/>
+   <addaction name="action_print_receipt"/>
+   <addaction name="action_print_misc"/>
+   <addaction name="action_print_misc2"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <action name="action_open_record">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-open.svg</normaloff>../icons/document-open.svg</iconset>
+   </property>
+   <property name="text">
+    <string>調閱病歷</string>
+   </property>
+   <property name="toolTip">
+    <string>開啟病歷</string>
+   </property>
+  </action>
+  <action name="action_delete_record">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/user-trash.png</normaloff>../icons/user-trash.png</iconset>
+   </property>
+   <property name="text">
+    <string>病歷刪除</string>
+   </property>
+  </action>
+  <action name="action_print_prescript">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印處方箋</string>
+   </property>
+  </action>
+  <action name="action_requery">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/reload.svg</normaloff>../icons/reload.svg</iconset>
+   </property>
+   <property name="text">
+    <string>重新查詢</string>
+   </property>
+   <property name="toolTip">
+    <string>重新查詢病歷</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_print_receipt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印醫療收據</string>
+   </property>
+  </action>
+  <action name="action_print_cases">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印實體病歷</string>
+   </property>
+  </action>
+  <action name="action_export_cases_pdf">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出實體病歷PDF</string>
+   </property>
+  </action>
+  <action name="action_set_check">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/dialog-ok.svg</normaloff>../icons/dialog-ok.svg</iconset>
+   </property>
+   <property name="text">
+    <string>全部註記</string>
+   </property>
+  </action>
+  <action name="action_set_uncheck">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/button_cancel.svg</normaloff>../icons/button_cancel.svg</iconset>
+   </property>
+   <property name="text">
+    <string>全不註記</string>
+   </property>
+  </action>
+  <action name="action_print_fees">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印收費明細</string>
+   </property>
+  </action>
+  <action name="action_export_fees_pdf">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出收費明細PDF</string>
+   </property>
+  </action>
+  <action name="action_export_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/extract-archive.svg</normaloff>../icons/extract-archive.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出日報表 Excel</string>
+   </property>
+  </action>
+  <action name="action_print_misc">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印其他收據1</string>
+   </property>
+  </action>
+  <action name="action_print_registration">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-network.png</normaloff>../icons/printer-network.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印掛號收據</string>
+   </property>
+   <property name="toolTip">
+    <string>列印掛號收據</string>
+   </property>
+  </action>
+  <action name="action_export_json">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/folder-documents.png</normaloff>../icons/folder-documents.png</iconset>
+   </property>
+   <property name="text">
+    <string>匯出JSON檔</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出JSON檔</string>
+   </property>
+  </action>
+  <action name="action_export_medical_record_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出病歷資料Excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出病歷資料Excel</string>
+   </property>
+  </action>
+  <action name="action_print_marked_ins_prescript">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印註記健保處方箋</string>
+   </property>
+   <property name="toolTip">
+    <string>列印註記健保處方箋 (貼病歷用)</string>
+   </property>
+  </action>
+  <action name="action_export_medical_record_diagnosis_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出病歷診斷資料Excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出病歷診斷資料Excel</string>
+   </property>
+  </action>
+  <action name="action_print_misc2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印其他收據2</string>
+   </property>
+  </action>
+  <action name="action_print_misc3">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印其他收據3</string>
+   </property>
+   <property name="toolTip">
+    <string>列印其他收據3</string>
+   </property>
+  </action>
+  <action name="action_print_marked_ins_receipt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印註記健保費用收據</string>
+   </property>
+   <property name="toolTip">
+    <string>列印註記健保費用收據</string>
+   </property>
+  </action>
+  <action name="action_change_pharmacy_type">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-redo.svg</normaloff>../icons/edit-redo.svg</iconset>
+   </property>
+   <property name="text">
+    <string>批量更改調劑申報方式</string>
+   </property>
+   <property name="toolTip">
+    <string>批量更改調劑申報方式</string>
+   </property>
+  </action>
+  <action name="action_set_traditional_health_case">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-save-as.png</normaloff>../icons/document-save-as.png</iconset>
+   </property>
+   <property name="text">
+    <string>設定民俗調理費</string>
+   </property>
+   <property name="toolTip">
+    <string>設定民俗調理費</string>
+   </property>
+  </action>
+  <action name="action_change_doctor">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-revert-to-saved-rtl.svg</normaloff>../icons/gtk-revert-to-saved-rtl.svg</iconset>
+   </property>
+   <property name="text">
+    <string>批量更改醫師姓名</string>
+   </property>
+   <property name="toolTip">
+    <string>批量更改醫師姓名</string>
+   </property>
+  </action>
+  <action name="action_change_apply_type">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/dialog-apply.svg</normaloff>../icons/dialog-apply.svg</iconset>
+   </property>
+   <property name="text">
+    <string>批量更改醫療費用申報方式</string>
+   </property>
+   <property name="toolTip">
+    <string>批量更改醫療費用申報方式</string>
+   </property>
+  </action>
+  <action name="action_print_marked_self_receipt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印註記全部自費費用收據</string>
+   </property>
+   <property name="toolTip">
+    <string>列印全部註記自費費用收據</string>
+   </property>
+  </action>
+  <action name="action_print_marked_self_prescript">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印註記自費處方箋</string>
+   </property>
+   <property name="toolTip">
+    <string>列印註記自費處方箋 (貼病歷用)</string>
+   </property>
+  </action>
+  <action name="action_generate_security">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/preferences-system-privacy.png</normaloff>../icons/preferences-system-privacy.png</iconset>
+   </property>
+   <property name="text">
+    <string>重新產生異常卡序安全簽章</string>
+   </property>
+   <property name="toolTip">
+    <string>重新產生異常卡序安全簽章</string>
+   </property>
+  </action>
+  <action name="action_print_correction_reg_income">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印矯正機關門診現金日報表</string>
+   </property>
+   <property name="toolTip">
+    <string>列印矯正機關門診現金日報表</string>
+   </property>
+  </action>
+  <action name="action_open_marked_records">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/bookmark-new-list.png</normaloff>../icons/bookmark-new-list.png</iconset>
+   </property>
+   <property name="text">
+    <string>開啟註記病歷</string>
+   </property>
+   <property name="toolTip">
+    <string>開啟註記病歷</string>
+   </property>
+  </action>
+  <action name="action_change_ins_type">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/back.png</normaloff>../icons/back.png</iconset>
+   </property>
+   <property name="text">
+    <string>批量更改保險類別</string>
+   </property>
+   <property name="toolTip">
+    <string>批量更改保險類別</string>
+   </property>
+  </action>
+  <action name="action_print_cases2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印實體病歷(含自費處方)</string>
+   </property>
+   <property name="toolTip">
+    <string>列印實體病歷(含自費處方)</string>
+   </property>
+  </action>
+  <action name="action_export_cases_pdf2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出實體病歷PDF(含自費處方)</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出實體病歷PDF(含自費處方)</string>
+   </property>
+  </action>
+  <action name="action_print_prescription_bag">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印藥袋</string>
+   </property>
+   <property name="toolTip">
+    <string>列印藥袋</string>
+   </property>
+  </action>
+  <action name="action_change_injury_type">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/dialog-apply.svg</normaloff>../icons/dialog-apply.svg</iconset>
+   </property>
+   <property name="text">
+    <string>批量更改主訴職災申報方式</string>
+   </property>
+   <property name="toolTip">
+    <string>批量更改主訴職災申報方式</string>
+   </property>
+  </action>
+  <action name="action_print_non_dosage_receipt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印無劑量醫療收據</string>
+   </property>
+   <property name="toolTip">
+    <string>列印無劑量醫療收據</string>
+   </property>
+  </action>
+  <action name="action_show_all">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-multiple.png</normaloff>../icons/document-multiple.png</iconset>
+   </property>
+   <property name="text">
+    <string>顯示全部</string>
+   </property>
+   <property name="toolTip">
+    <string>顯示全部</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F11</string>
+   </property>
+  </action>
+  <action name="action_open_ins_record">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/folder-downloads.png</normaloff>../icons/folder-downloads.png</iconset>
+   </property>
+   <property name="text">
+    <string>僅調閱健保病歷</string>
+   </property>
+   <property name="toolTip">
+    <string>開啟健保病歷 (不含自費處方)</string>
+   </property>
+  </action>
+  <action name="action_print_marked_self_receipt1">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印註記自費1費用收據</string>
+   </property>
+   <property name="toolTip">
+    <string>列印註記自費1費用收據</string>
+   </property>
+  </action>
+  <action name="action_export_marked_medical_record_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出註記病歷資料Excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出註記病歷資料Excel</string>
+   </property>
+  </action>
+  <action name="action_set_block_check">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/dialog-yes.svg</normaloff>../icons/dialog-yes.svg</iconset>
+   </property>
+   <property name="text">
+    <string>區段註記</string>
+   </property>
+   <property name="toolTip">
+    <string>區段註記</string>
+   </property>
+  </action>
+  <action name="action_print_marked_registration_form">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印註記掛號收據</string>
+   </property>
+   <property name="toolTip">
+    <string>列印註記掛號收據</string>
+   </property>
+  </action>
+  <action name="action_print_referral_form">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印轉診單</string>
+   </property>
+   <property name="toolTip">
+    <string>列印轉診單</string>
+   </property>
+  </action>
+  <action name="action_print_cases_without_treat">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印實體病歷 (不印穴道與處置項目)</string>
+   </property>
+   <property name="toolTip">
+    <string>列印實體病歷 (不印穴道與處置項目)</string>
+   </property>
+  </action>
+  <action name="action_print_cases3">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印實體病歷 (不印病患基本資料)</string>
+   </property>
+   <property name="toolTip">
+    <string>列印實體病歷 (不印病患基本資料)</string>
+   </property>
+  </action>
+  <action name="action_print_care_income">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印照護機構現金日報表</string>
+   </property>
+   <property name="toolTip">
+    <string>列印照護機構現金日報表</string>
+   </property>
+  </action>
+  <action name="action_write_ic_treatment">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-redo-ltr.svg</normaloff>../icons/gtk-redo-ltr.svg</iconset>
+   </property>
+   <property name="text">
+    <string>IC寫卡</string>
+   </property>
+  </action>
+  <action name="action_rewrite_ic_card">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-refresh.svg</normaloff>../icons/gtk-refresh.svg</iconset>
+   </property>
+   <property name="text">
+    <string>重寫IC</string>
+   </property>
+  </action>
+  <action name="action_rewrite_ic_prescript">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/rotate.svg</normaloff>../icons/rotate.svg</iconset>
+   </property>
+   <property name="text">
+    <string>重寫醫令</string>
+   </property>
+  </action>
+  <action name="action_cancel_ic_card">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-clear-locationbar-rtl.png</normaloff>../icons/edit-clear-locationbar-rtl.png</iconset>
+   </property>
+   <property name="text">
+    <string>IC退掛</string>
+   </property>
+  </action>
+  <action name="action_clear_invalid_patient_name">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-clear.svg</normaloff>../icons/gtk-clear.svg</iconset>
+   </property>
+   <property name="text">
+    <string>清除無效的病患姓名字元</string>
+   </property>
+   <property name="toolTip">
+    <string>清除無效的病患姓名字元</string>
+   </property>
+  </action>
+  <action name="action_print_medical_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印就醫證明</string>
+   </property>
+   <property name="toolTip">
+    <string>列印就醫證明</string>
+   </property>
+  </action>
+  <action name="action_export_case_to_word">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/x-office-document.png</normaloff>../icons/x-office-document.png</iconset>
+   </property>
+   <property name="text">
+    <string>匯出病歷內容</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出病歷內容</string>
+   </property>
+  </action>
+  <action name="action_unlock_progress">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/task-complete.png</normaloff>../icons/task-complete.png</iconset>
+   </property>
+   <property name="text">
+    <string>解除看診鎖定</string>
+   </property>
+   <property name="toolTip">
+    <string>解除看診鎖定</string>
+   </property>
+  </action>
+  <action name="action_print_massage">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印民俗調理單</string>
+   </property>
+   <property name="toolTip">
+    <string>列印民俗調理單</string>
+   </property>
+  </action>
+  <action name="action_get_identification">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/contact-new.png</normaloff>../icons/contact-new.png</iconset>
+   </property>
+   <property name="text">
+    <string>異常卡序重新取得就醫識別碼</string>
+   </property>
+  </action>
+  <action name="action_export_correction_reg_income_txt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-save.png</normaloff>../icons/document-save.png</iconset>
+   </property>
+   <property name="text">
+    <string>匯出矯正機關門診現金日報表txt</string>
+   </property>
+   <property name="toolTip">
+    <string>列印矯正機關門診現金日報表</string>
+   </property>
+  </action>
+  <action name="action_close_case">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/folder-locked.png</normaloff>../icons/folder-locked.png</iconset>
+   </property>
+   <property name="text">
+    <string>關檔</string>
+   </property>
+   <property name="toolTip">
+    <string>將檔案設定為唯獨狀態</string>
+   </property>
+  </action>
+  <action name="action_open_case">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/folder-new.png</normaloff>../icons/folder-new.png</iconset>
+   </property>
+   <property name="text">
+    <string>開檔</string>
+   </property>
+   <property name="toolTip">
+    <string>將檔案設定為可編輯狀態</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+ <slots>
+  <slot>pushButtonQueryClicked()</slot>
+  <slot>pushButtonRequeryClicked()</slot>
+  <slot>tableWidgetCellDoubleClicked()</slot>
+  <slot>actionOpenCaseTriggered()</slot>
+  <slot>actionDeleteCaseTriggered()</slot>
+  <slot>actionPrintPresTriggered()</slot>
+ </slots>
+</ui>

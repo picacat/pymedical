@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog_input_medicine</class>
+ <widget class="QDialog" name="Dialog_input_medicine">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>840</width>
+    <height>802</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>處方詞庫</string>
+  </property>
+  <property name="modal">
+   <bool>false</bool>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <layout class="QGridLayout" name="gridLayout_buttons"/>
+     </item>
+     <item>
+      <widget class="QTableWidget" name="tableWidget_medicine">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="editTriggers">
+        <set>QAbstractItemView::NoEditTriggers</set>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::SingleSelection</enum>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <column>
+        <property name="text">
+         <string>medicine_key</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>類別</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>處方名稱</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>單位</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>單價</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>健保碼</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>預設量</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>停用狀態</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close|QDialogButtonBox::Save</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

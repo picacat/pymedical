@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowCheckCard</class>
+ <widget class="QMainWindow" name="WindowCheckCard">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>卡序檢查</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QToolButton" name="toolButton_find_error">
+        <property name="text">
+         <string>尋找錯誤</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../icons/edit-find.png</normaloff>../icons/edit-find.png</iconset>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextBesideIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QTableWidget" name="tableWidget_errors">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>case_key</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>門診日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>班別</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>病歷號碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>姓名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>負擔類別</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>卡序</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>療程</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主診斷碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>診斷名稱</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>就醫類別</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主治醫師</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>藥日</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>錯誤訊息</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>異常指標</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QLabel" name="label_indicator1">
+             <property name="text">
+              <string>內傷交替率 = 當月份同時申報針傷及內科案件人數 / 當月總申報人數</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_indicator2">
+             <property name="styleSheet">
+              <string notr="true">color: rgb(255, 0, 0);</string>
+             </property>
+             <property name="text">
+              <string>隔日刷卡率 = 隔日申報診察費件數 / 診察費總件數 </string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_indicator3">
+             <property name="text">
+              <string>療程中刷卡率 = 療程中申報診察費件數 /  療程總件數 </string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>32</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

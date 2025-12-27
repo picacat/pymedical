@@ -1,0 +1,592 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowStatisticsDailyPerson</class>
+ <widget class="QMainWindow" name="WindowStatisticsDailyPerson">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>人數統計日報表</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_3">
+            <property name="spacing">
+             <number>1</number>
+            </property>
+            <item>
+             <widget class="QTableWidget" name="tableWidget_period1">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="alternatingRowColors">
+               <bool>true</bool>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <column>
+               <property name="text">
+                <string>班別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>醫師姓名</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>內科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針灸合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>傷科給藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>傷科合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針傷合併</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>合併給藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>合併合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針傷合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>健保小計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>自費人數</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>總計</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tableWidget_period2">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="alternatingRowColors">
+               <bool>true</bool>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <attribute name="horizontalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>班別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>醫師姓名</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>內科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針灸合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>傷科給藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>傷科合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針傷合併</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>合併給藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>合併合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針傷合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>健保小計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>自費人數</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>總計</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tableWidget_period3">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="alternatingRowColors">
+               <bool>true</bool>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <attribute name="horizontalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>班別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>醫師姓名</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>內科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針灸合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>傷科給藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>傷科合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針傷合併</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>合併給藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>合併合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針傷合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>健保小計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>自費人數</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>總計</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tableWidget_period_total">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>90</height>
+               </size>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="alternatingRowColors">
+               <bool>true</bool>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <attribute name="horizontalHeaderVisible">
+               <bool>true</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>班別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>醫師姓名</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>內科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度針灸</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度針藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針灸合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>一般傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中度傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高度傷科</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>傷科給藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>傷科合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針傷合併</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>合併給藥</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>合併合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>針傷合計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>健保小計</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>自費人數</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>總計</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_chart"/>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>29</height>
+    </rect>
+   </property>
+  </widget>
+  <action name="action_export_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出Excel</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

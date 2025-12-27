@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowCheckPrescript</class>
+ <widget class="QMainWindow" name="WindowCheckPrescript">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>助孕照護</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_medical_record">
+        <item>
+         <widget class="QTableWidget" name="tableWidget_medical_record">
+          <column>
+           <property name="text">
+            <string>case_key</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>門診日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>姓名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>就醫類別</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_pregnant">
+        <item>
+         <widget class="QTabWidget" name="tabWidget_pregnant">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tab_aid_pregnant_female">
+           <attribute name="title">
+            <string>助孕照護-女性</string>
+           </attribute>
+          </widget>
+          <widget class="QWidget" name="tab_aid_pregnant_male">
+           <attribute name="title">
+            <string>助孕照護-男性</string>
+           </attribute>
+          </widget>
+          <widget class="QWidget" name="tab_keep_baby">
+           <attribute name="title">
+            <string>保胎照護</string>
+           </attribute>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>28</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ICRecordWindow</class>
+ <widget class="QMainWindow" name="ICRecordWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>960</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>健保IC卡資料上傳</string>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonTextUnderIcon</enum>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_ic_record">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>CaseKey</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>上傳</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>上傳格式</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>補卡註記</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>門診日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignLeading|AlignVCenter</set>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號碼</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignLeading|AlignVCenter</set>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病患姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>性別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>出生日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>門診</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>負擔類別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>就醫類別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>卡序</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>療程</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>給藥</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>主治醫師</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>錯誤訊息</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>上傳日期時間</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>院所代號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>就醫識別碼</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>960</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+    <addaction name="action_create_ic_upload_xml_2"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>編輯</string>
+    </property>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="palette">
+    <palette>
+     <active/>
+     <inactive/>
+     <disabled/>
+    </palette>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_requery"/>
+   <addaction name="separator"/>
+   <addaction name="action_open_record"/>
+   <addaction name="separator"/>
+   <addaction name="action_upload_file"/>
+   <addaction name="action_set_remark"/>
+   <addaction name="action_section_remark"/>
+   <addaction name="action_clear_remark"/>
+   <addaction name="action_correct_errors"/>
+   <addaction name="action_edit_upload_type"/>
+   <addaction name="action_set_unupload_mode"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <action name="action_open_record">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-open.svg</normaloff>../icons/document-open.svg</iconset>
+   </property>
+   <property name="text">
+    <string>調閱病歷</string>
+   </property>
+   <property name="toolTip">
+    <string>調閱病歷</string>
+   </property>
+  </action>
+  <action name="action_requery">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/reload.svg</normaloff>../icons/reload.svg</iconset>
+   </property>
+   <property name="text">
+    <string>重新查詢</string>
+   </property>
+   <property name="toolTip">
+    <string>重新查詢病歷</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_upload_file">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gnome-stock-mail-snd.svg</normaloff>../icons/gnome-stock-mail-snd.svg</iconset>
+   </property>
+   <property name="text">
+    <string>上傳資料</string>
+   </property>
+  </action>
+  <action name="action_correct_errors">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applications-utilities.png</normaloff>../icons/applications-utilities.png</iconset>
+   </property>
+   <property name="text">
+    <string>修正錯誤</string>
+   </property>
+  </action>
+  <action name="action_set_remark">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/non-starred.png</normaloff>../icons/non-starred.png</iconset>
+   </property>
+   <property name="text">
+    <string>全部註記/反註記</string>
+   </property>
+   <property name="toolTip">
+    <string>全部註記/反註記</string>
+   </property>
+   <property name="shortcut">
+    <string>F8</string>
+   </property>
+  </action>
+  <action name="action_edit_upload_type">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>更改上傳格式</string>
+   </property>
+   <property name="toolTip">
+    <string>更改上傳格式</string>
+   </property>
+  </action>
+  <action name="action_create_ic_upload_xml_2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-save.svg</normaloff>../icons/gtk-save.svg</iconset>
+   </property>
+   <property name="text">
+    <string>IC卡上傳格式2.0預檢</string>
+   </property>
+   <property name="toolTip">
+    <string>產生上傳格式2.0</string>
+   </property>
+  </action>
+  <action name="action_set_unupload_mode">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-refresh.svg</normaloff>../icons/gtk-refresh.svg</iconset>
+   </property>
+   <property name="text">
+    <string>改為未上傳狀態</string>
+   </property>
+   <property name="toolTip">
+    <string>改為未上傳狀態</string>
+   </property>
+  </action>
+  <action name="action_section_remark">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/go-jump.png</normaloff>../icons/go-jump.png</iconset>
+   </property>
+   <property name="text">
+    <string>區段註記</string>
+   </property>
+   <property name="toolTip">
+    <string>區段註記</string>
+   </property>
+  </action>
+  <action name="action_clear_remark">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/editclear.svg</normaloff>../icons/editclear.svg</iconset>
+   </property>
+   <property name="text">
+    <string>清除註記</string>
+   </property>
+   <property name="toolTip">
+    <string>清除註記</string>
+   </property>
+   <property name="shortcut">
+    <string>F7</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+ <slots>
+  <slot>pushButtonQueryClicked()</slot>
+  <slot>pushButtonRequeryClicked()</slot>
+  <slot>tableWidgetCellDoubleClicked()</slot>
+  <slot>actionOpenCaseTriggered()</slot>
+  <slot>actionDeleteCaseTriggered()</slot>
+  <slot>actionPrintPresTriggered()</slot>
+ </slots>
+</ui>

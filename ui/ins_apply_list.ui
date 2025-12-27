@@ -1,0 +1,589 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowInsApplyList</class>
+ <widget class="QMainWindow" name="WindowInsApplyList">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1426</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>申報資料</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QToolButton" name="toolButton_change_sequence">
+          <property name="text">
+           <string>改流水號</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/gtk-revert-to-saved-ltr.svg</normaloff>../icons/gtk-revert-to-saved-ltr.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_jump">
+          <property name="text">
+           <string>查流水號</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/down.svg</normaloff>../icons/down.svg</iconset>
+          </property>
+          <property name="shortcut">
+           <string>F1</string>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_bookmark">
+          <property name="text">
+           <string>註記</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/bookmark_add.svg</normaloff>../icons/bookmark_add.svg</iconset>
+          </property>
+          <property name="shortcut">
+           <string>F2</string>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_clear_bookmark">
+          <property name="text">
+           <string>清註記</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/edit-clear.svg</normaloff>../icons/edit-clear.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_find_error">
+          <property name="text">
+           <string>找錯誤</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/edit-find.png</normaloff>../icons/edit-find.png</iconset>
+          </property>
+          <property name="shortcut">
+           <string>F3</string>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_edit_ins_list">
+          <property name="text">
+           <string>更正資料</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_open_medical_record">
+          <property name="text">
+           <string>調閱病歷</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/document-open.svg</normaloff>../icons/document-open.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_print_order">
+          <property name="text">
+           <string>列印醫令</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+          </property>
+          <property name="shortcut">
+           <string>F7</string>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_print_medical_records">
+          <property name="text">
+           <string>列印病歷</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/printer-network.png</normaloff>../icons/printer-network.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_print_medical_chart">
+          <property name="text">
+           <string>列印首頁</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_print_patient_new_care">
+          <property name="text">
+           <string>列印初診照護</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/gtk-print.svg</normaloff>../icons/gtk-print.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_print_order_bookmark">
+          <property name="text">
+           <string>列印醫令註記</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+          </property>
+          <property name="shortcut">
+           <string>F11</string>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_export">
+          <property name="text">
+           <string>匯出</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+          </property>
+          <property name="shortcut">
+           <string>F11</string>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QTableWidget" name="tableWidget_ins_apply_list">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>ins_apply_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>註記</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignLeading|AlignVCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>院所代號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>費用年月</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報期間</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>案件分類</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>流水號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>特療1</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>特療2</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>特療3</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>特療4</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>科別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>結束日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>出生日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>身份證號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>健保卡序</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>給付類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>負擔代碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>初診照護</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主診斷碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>次診斷碼1</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>次診斷碼2</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>次診斷碼3</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>給藥日份</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>調劑方式</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>醫師ID</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>調劑者ID</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費代號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>調劑代號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>調劑費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>健保合計</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診負擔</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥品負擔</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>負擔合計</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>健保申請</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>代辦費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>就醫識別碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>實際就醫識別碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>原就醫識別碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>錯誤訊息</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tableWidget_ins_apply_statistics">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>700</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>800</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>支付代碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>醫令名稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>支付點數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>次數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>總點數</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1426</width>
+     <height>33</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

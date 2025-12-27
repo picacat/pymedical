@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow_incom_list</class>
+ <widget class="QMainWindow" name="MainWindow_incom_list">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1142</width>
+    <height>816</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>9</number>
+      </property>
+      <property name="topMargin">
+       <number>9</number>
+      </property>
+      <property name="rightMargin">
+       <number>9</number>
+      </property>
+      <property name="bottomMargin">
+       <number>9</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>收費統計</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_print">
+          <property name="text">
+           <string>列印</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_income">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>經手人</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>健保人數</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>收掛號費人數</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>免掛號費人數</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>掛號費金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>收門診負擔人數</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>免門診負擔人數</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>門診負擔金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>藥品負擔金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>合計金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠卡人數</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠卡金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還卡人數</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還卡金額</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>免掛號費人數統計</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_free_count">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <attribute name="horizontalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>合計</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_summary">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <row>
+         <property name="text">
+          <string>合計 (掛號費+門診負擔+藥品負擔)</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>欠卡金額</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>還卡金額</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>應收金額 (掛號費+門診負擔+藥品負擔+欠卡費-還卡費)</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>實收金額 (掛號費+門診負擔+藥品負擔+欠卡費-還卡費)</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>差額 (應收金額-實收金額)</string>
+         </property>
+        </row>
+        <column>
+         <property name="text">
+          <string>金額</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

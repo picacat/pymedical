@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowDoctorSchedule</class>
+ <widget class="QMainWindow" name="WindowDoctorSchedule">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1563</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>醫師班表</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="leftMargin">
+       <number>9</number>
+      </property>
+      <property name="topMargin">
+       <number>9</number>
+      </property>
+      <property name="rightMargin">
+       <number>9</number>
+      </property>
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>固定班表</string>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QTabWidget" name="tabWidget_schedule">
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="QWidget" name="tab_2">
+            <attribute name="title">
+             <string>班別顯示</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <item>
+              <widget class="QTableWidget" name="tableWidget_doctor_schedule_period">
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::SingleSelection</enum>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectItems</enum>
+               </property>
+               <row>
+                <property name="text">
+                 <string>早班</string>
+                </property>
+               </row>
+               <row>
+                <property name="text">
+                 <string>午班</string>
+                </property>
+               </row>
+               <row>
+                <property name="text">
+                 <string>晚班</string>
+                </property>
+               </row>
+               <column>
+                <property name="text">
+                 <string>星期一</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期二</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期三</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期四</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期五</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期六</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期日</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>特約門診設定 (不開放網路預約掛號，只開放院內預約掛號)
+使用者管理醫師備註設定「不開放預約」，醫師姓名不會出現在網路預約班表上</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableWidget" name="tableWidget_special_schedule">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>200</height>
+                </size>
+               </property>
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::SingleSelection</enum>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectItems</enum>
+               </property>
+               <row>
+                <property name="text">
+                 <string>早班</string>
+                </property>
+               </row>
+               <row>
+                <property name="text">
+                 <string>午班</string>
+                </property>
+               </row>
+               <row>
+                <property name="text">
+                 <string>晚班</string>
+                </property>
+               </row>
+               <column>
+                <property name="text">
+                 <string>星期一</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期二</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期三</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期四</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期五</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期六</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期日</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tab_3">
+            <attribute name="title">
+             <string>診別顯示</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <widget class="QTableWidget" name="tableWidget_doctor_schedule">
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::SingleSelection</enum>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+               <column>
+                <property name="text">
+                 <string>doctor_schedule_key</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>診別</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>班別</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期一</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期二</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期三</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期四</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期五</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期六</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>星期日</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="maximumSize">
+         <size>
+          <width>660</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>臨時異動班表</string>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QTableWidget" name="tableWidget_temporary_schedule">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SingleSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <column>
+            <property name="text">
+             <string>temporary_schedule_key</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>異動日期</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>類別</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>診別</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>班別</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>主治醫師</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>代班醫師</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>備註</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_add_schedule"/>
+   <addaction name="action_edit_schedule"/>
+   <addaction name="action_remove_schedule"/>
+   <addaction name="separator"/>
+   <addaction name="action_add_temporary_schedule"/>
+   <addaction name="action_edit_temporary_schedule"/>
+   <addaction name="action_remove_temporary_schedule"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1563</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_remove_schedule">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/remove.svg</normaloff>../icons/remove.svg</iconset>
+   </property>
+   <property name="text">
+    <string>刪除班表</string>
+   </property>
+   <property name="toolTip">
+    <string>取消預約</string>
+   </property>
+  </action>
+  <action name="action_add_schedule">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-add.svg</normaloff>../icons/gtk-add.svg</iconset>
+   </property>
+   <property name="text">
+    <string>新增班表</string>
+   </property>
+  </action>
+  <action name="action_edit_schedule">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-edit.svg</normaloff>../icons/gtk-edit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>修正班表</string>
+   </property>
+  </action>
+  <action name="action_add_temporary_schedule">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-add.svg</normaloff>../icons/gtk-add.svg</iconset>
+   </property>
+   <property name="text">
+    <string>新增臨時班表</string>
+   </property>
+  </action>
+  <action name="action_remove_temporary_schedule">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/list-remove.png</normaloff>../icons/list-remove.png</iconset>
+   </property>
+   <property name="text">
+    <string>刪除臨時班表</string>
+   </property>
+   <property name="toolTip">
+    <string>取消預約</string>
+   </property>
+  </action>
+  <action name="action_edit_temporary_schedule">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-edit.svg</normaloff>../icons/gtk-edit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>修正臨時班表</string>
+   </property>
+   <property name="toolTip">
+    <string>修正臨時班表</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,87 @@
+command
+
+清除狀態
+0.{"command":"machine-clear","parmeter":{"fee":0}}
+  {"status":{"inbillstatus":"OK","outbillstatus":"OK","incoinstatus":"OK","outcoin1status":"OK","outcoin2status":"OK","outcoin3status":"OK","outcoin4status":"OK"},"parmeter":{"inbill1000":"1","inbill500":"1","inbill200":"1","inbill100":"1","outbillA":"1","incoin50":"1","incoin10":"1","incoin5":"1","incoin1":"1","outcoin1":"1","outcoin2":"1","outcoin3":"1","outcoin4":"1","needpay":"100","paid":"100","needchange":"100","notchange":"100","emsg":"ffff"},"command":"machine-clear"}
+
+偵測收鈔狀態
+1.{"command":"machine-state","parmeter":{"fee":0}}
+  {"status":{"inbillstatus":"OK","outbillstatus":"OK","incoinstatus":"OK","outcoin1status":"OK","outcoin2status":"OK","outcoin3status":"OK","outcoin4status":"OK"},"parmeter":{"inbill1000":"1","inbill500":"1","inbill200":"1","inbill100":"1","outbillA":"1","incoin50":"1","incoin10":"1","incoin5":"1","incoin1":"1","outcoin1":"1","outcoin2":"1","outcoin3":"1","outcoin4":"1","needpay":"100","paid":"100","needchange":"100","notchange":"100","emsg":"ffff"},"command":"machine-state"}
+
+提供應付金額
+2.{"command":"machine-deduct","parmeter":{"fee":100}}
+  {"status":{"inbillstatus":"OK","outbillstatus":"OK","incoinstatus":"OK","outcoin1status":"OK","outcoin2status":"OK","outcoin3status":"OK","outcoin4status":"OK"},"parmeter":{"inbill1000":"1","inbill500":"1","inbill200":"1","inbill100":"1","outbillA":"1","incoin50":"1","incoin10":"1","incoin5":"1","incoin1":"1","outcoin1":"1","outcoin2":"1","outcoin3":"1","outcoin4":"1","needpay":"100","paid":"100","needchange":"100","notchange":"100","emsg":"ffff"},"command":"machine-deduct"}
+
+交易取消
+3.{"command":"machine-stop-deduct","parmeter":{"fee":0}}
+  {"status":{"inbillstatus":"OK","outbillstatus":"OK","incoinstatus":"OK","outcoin1status":"OK","outcoin2status":"OK","outcoin3status":"OK","outcoin4status":"OK"},"parmeter":{"inbill1000":"1","inbill500":"1","inbill200":"1","inbill100":"1","outbillA":"1","incoin50":"1","incoin10":"1","incoin5":"1","incoin1":"1","outcoin1":"1","outcoin2":"1","outcoin3":"1","outcoin4":"1","needpay":"100","paid":"100","needchange":"100","notchange":"100","emsg":"ffff"},"command":"machine-stop-deduct"}
+
+RESET
+4.{"command":"machine-reset","parmeter":{"fee":0}}
+  {"status":{"inbillstatus":"OK","outbillstatus":"OK","incoinstatus":"OK","outcoin1status":"OK","outcoin2status":"OK","outcoin3status":"OK","outcoin4status":"OK"},"parmeter":{"inbill1000":"1","inbill500":"1","inbill200":"1","inbill100":"1","outbillA":"1","incoin50":"1","incoin10":"1","incoin5":"1","incoin1":"1","outcoin1":"1","outcoin2":"1","outcoin3":"1","outcoin4":"1","needpay":"100","paid":"100","needchange":"100","notchange":"100","emsg":"ffff"},"command":"machine-reset"}
+
+
+inbillstatus:收鈔機狀態
+outbillstatus:吐鈔機狀態
+incoinstatus:投幣器狀態
+outcoin1status:打幣錢筒1狀態
+outcoin2status:打幣錢筒2狀態
+outcoin3status:打幣錢筒3狀態
+outcoin4status:打幣錢筒4狀態
+inbill1000:此次收鈔1000累積數量
+inbill500:此次收鈔500累積數量
+inbill200:此次收鈔200累積數量
+inbill100:此次收鈔100累積數量
+outbillA:此次吐鈔機累積數量
+incoin50:此次吃幣50元累積數量
+incoin10:此次吃幣10元累積數量
+incoin5:此次吃幣5元累積數量
+incoin1:此次吃幣1元累積數量
+outcoin1-4:此次吐幣累積數量
+needpay:應付金額
+paid:已付金額
+needchange:須找零金額
+notchange:未找零金額
+emsg:doing/finish--代表目前是否正在交易/完成動作
+
+
+操作流程----
+開機時請先開啟程式使此程式常駐
+程式開啟時會自行RESET
+RESET結束之後會開啟Socket開始並開始監聽Client端的請求
+Socket預設IP為127.0.0.1  Port為6389 可於CPAY底下的SETTING.XML修改
+
+client端請先連上之後，
+
+下達指令:
+{"command":"machine-clear","parmeter":{"fee":0}}
+
+接著會收到:
+{"status":{"inbillstatus":"OK","outbillstatus":"OK","incoinstatus":"OK","outcoin1status":"OK","outcoin2status":"OK","outcoin3status":"OK","outcoin4status":"OK"},"parmeter":{"inbill1000":"1","inbill500":"1","inbill200":"1","inbill100":"1","outbillA":"1","incoin50":"1","incoin10":"1","incoin5":"1","incoin1":"1","outcoin1":"1","outcoin2":"1","outcoin3":"1","outcoin4":"1","needpay":"100","paid":"100","needchange":"100","notchange":"100","emsg":"ffff"},"command":"machine-clear"}
+
+收到回應之後請再下指令:
+{"command":"machine-reset","parmeter":{"fee":0}}
+
+並收到:
+{"status":{"inbillstatus":"OK","outbillstatus":"OK","incoinstatus":"OK","outcoin1status":"OK","outcoin2status":"OK","outcoin3status":"OK","outcoin4status":"OK"},"parmeter":{"inbill1000":"1","inbill500":"1","inbill200":"1","inbill100":"1","outbillA":"1","incoin50":"1","incoin10":"1","incoin5":"1","incoin1":"1","outcoin1":"1","outcoin2":"1","outcoin3":"1","outcoin4":"1","needpay":"100","paid":"100","needchange":"100","notchange":"100","emsg":"ffff"},"command":"machine-reset"}
+
+
+如果狀態不是 "OK" 或 "N/A" ， 請重新下RESET指令檢查設備是否異常。
+
+
+正常狀態即可下達指令進行交易:
+
+    順序為 1.清除狀態 2.提供應付金額 
+
+    當收到2的回應碼時，即代表開始交易
+
+    交易中可下達 偵測收鈔狀態 指令，以查詢目前收/找鈔狀態
+
+    交易中可下達 交易取消 指令，讓使用者可以取消交易
+
+    當偵測收鈔狀態的emsg由doing變finish 即完成交易
+
+    請查看回應字串是否有未找零金額:
+	有未找零金額: 請下 清除狀態 跟 RESET 指令 (最面請在下筆交易前須做此動作否則會有資料不正確的情況發生)
+
+

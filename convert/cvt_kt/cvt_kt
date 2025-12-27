@@ -1,0 +1,42 @@
+for file in *.sql; do 
+    echo iconv $file
+    iconv -c -f Big5 -t utf8 $file > $file.new && mv -f $file.new $file
+done
+
+echo sed all files
+sed -i 's/TYPE=MyISAM/ENGINE=MyISAM/g' *.sql
+
+sed -i "s/\\\',/',/g" *.sql
+sed -i "s/\\\'//g" *.sql
+sed -i 's/\\//g' *.sql
+sed -i "s/許);/許');/g" *.sql
+sed -i "s/功);/功');/g" *.sql
+sed -i "s/蓋);/蓋');/g" *.sql
+sed -i "s/餐);/餐');/g" *.sql
+sed -i "s/閱);/閱');/g" *.sql
+sed -i "s/珮);/珮');/g" *.sql
+sed -i "s/豹);/豹');/g" *.sql
+sed -i "s/淚);/淚');/g" *.sql
+sed -i "s/擺);/擺');/g" *.sql
+sed -i "s/枯);/枯');/g" *.sql
+sed -i "s/穀);/穀');/g" *.sql
+sed -i "s/愧);/愧');/g" *.sql
+sed -i "s/單);/單');/g" *.sql
+sed -i "s/確);/確');/g" *.sql
+sed -i "s/穩);/穩');/g" *.sql
+sed -i "s/。);/。');/g" *.sql
+sed -i "s/俞);/俞');/g" *.sql
+sed -i "s/針);/針');/g" *.sql
+sed -i "s/));/)');/g" *.sql
+sed -i "s/微);/微');/g" *.sql
+
+# sed -i 's/\\\\//g' *.sql
+# sed -i "s/\\\'//g" *.sql
+
+mysql --user=root --password=620210 -e 'drop database kthis'
+mysql --user=root --password=620210 -e 'create database kthis'
+
+for file in *.sql; do 
+    echo mysql import $file
+    mysql --user=root --password=620210 -f --default-character-set=utf8 kthis < $file
+done

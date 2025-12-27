@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowCheckErrors</class>
+ <widget class="QMainWindow" name="WindowCheckErrors">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>錯誤檢查</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QToolButton" name="toolButton_calculate_ins_fee">
+            <property name="text">
+             <string>重新批價</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/accessories-calculator.png</normaloff>../icons/accessories-calculator.png</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_correct_error">
+            <property name="text">
+             <string>自動更正錯誤</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/editclear.svg</normaloff>../icons/editclear.svg</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableWidget_errors">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>case_key</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>門診日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>班別</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>病歷號碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>姓名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>出生日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>身分證號</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>負擔類別</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>卡序</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主診斷碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主治醫師</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>診察費</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>藥費</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>調劑費</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>處置費</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>門診負擔</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>藥品負擔</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>申報金額</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>錯誤訊息</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

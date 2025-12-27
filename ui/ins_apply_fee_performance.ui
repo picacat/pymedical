@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowInsDoctorApplyFee</class>
+ <widget class="QMainWindow" name="WindowInsDoctorApplyFee">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>醫療費用申報總表</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>醫師申報業績</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_export_doctor_excel">
+              <property name="text">
+               <string>匯出醫師申報業績 Excel</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tableWidget_doctor_xml">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::NoSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>醫令件數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>調劑費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>健保合計</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>部份負擔</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>健保申請</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>A90 初診照護</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>A91 整合醫療照護</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QTableWidget" name="tableWidget_nurse_list">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>100</height>
+               </size>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="alternatingRowColors">
+               <bool>true</bool>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::NoSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <column>
+               <property name="text">
+                <string>跟診護理師</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>跟診件數</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>總點值</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tableWidget_special_fee">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>100</height>
+               </size>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="alternatingRowColors">
+               <bool>true</bool>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::NoSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <column>
+               <property name="text">
+                <string>門診類別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>申報件數</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>總點值</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>案件分類申報業績</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_export_case_type_excel">
+              <property name="text">
+               <string>匯出案件申報業績 Excel</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tableWidget_case_xml">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>250</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::NoSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>案件分類</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>案件件數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>調劑費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>健保合計</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>部份負擔</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>健保申請</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tableWidget_summary">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>70</height>
+             </size>
+            </property>
+            <column>
+             <property name="text">
+              <string>申請人數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>本月診數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>每診人數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>看診天數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報件數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察人次</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申請金額</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>每日金額</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_chart"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>33</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

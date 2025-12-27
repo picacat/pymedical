@@ -1,0 +1,858 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1234</width>
+    <height>770</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>滿地富醫療資訊管理系統</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_media">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_title">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">font: 48pt &quot;微軟正黑體&quot;;
+font-weight: bold;
+color: rgb(0, 122, 0);
+background-color: qlineargradient(spread:pad, x1:0.547, y1:0.0795455, x2:1, y2:1, stop:0 rgba(204, 255, 193, 255), stop:1 rgba(255, 255, 255, 255));</string>
+              </property>
+              <property name="lineWidth">
+               <number>1</number>
+              </property>
+              <property name="text">
+               <string>中醫診所 候診資訊系統</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QFrame" name="frame_youtube">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QFrame" name="frame">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">
+background-color: rgb(159, 0, 0);</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <widget class="QLabel" name="label_marquee">
+             <property name="geometry">
+              <rect>
+               <x>920</x>
+               <y>20</y>
+               <width>216</width>
+               <height>59</height>
+              </rect>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 48pt &quot;微軟正黑體&quot;;
+font-weight:bold;
+color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="text">
+              <string>marquee text</string>
+             </property>
+             <property name="wordWrap">
+              <bool>false</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_clock">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>-15</y>
+               <width>191</width>
+               <height>131</height>
+              </rect>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 48pt &quot;微軟正黑體&quot;;
+font-weight:bold;
+color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="text">
+              <string>12:00</string>
+             </property>
+             <property name="wordWrap">
+              <bool>false</bool>
+             </property>
+             <property name="margin">
+              <number>0</number>
+             </property>
+             <property name="indent">
+              <number>10</number>
+             </property>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QTextBrowser" name="textBrowser_waiting_list">
+            <property name="maximumSize">
+             <size>
+              <width>600</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: qlineargradient(spread:pad, x1:0.516, y1:0.0568182, x2:0.511, y2:1, stop:0 rgba(157, 222, 255, 255), stop:1 rgba(255, 255, 255, 255));</string>
+            </property>
+            <property name="lineWidth">
+             <number>0</number>
+            </property>
+            <property name="cursorWidth">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_drug_no">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <action name="action_convert">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-import.svg</normaloff>../icons/document-import.svg</iconset>
+   </property>
+   <property name="text">
+    <string>轉檔</string>
+   </property>
+  </action>
+  <action name="action_ins_check">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/dialog-question.png</normaloff>../icons/dialog-question.png</iconset>
+   </property>
+   <property name="text">
+    <string>申報檢查</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+1</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WindowShortcut</enum>
+   </property>
+  </action>
+  <action name="action_ins_apply">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/mail-send.svg</normaloff>../icons/mail-send.svg</iconset>
+   </property>
+   <property name="text">
+    <string>健保申報</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+2</string>
+   </property>
+  </action>
+  <action name="action_ins_judge">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-dictionary.png</normaloff>../icons/accessories-dictionary.png</iconset>
+   </property>
+   <property name="text">
+    <string>健保抽審</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+3</string>
+   </property>
+  </action>
+  <action name="action_registration">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/add-files-to-archive.svg</normaloff>../icons/add-files-to-archive.svg</iconset>
+   </property>
+   <property name="text">
+    <string>門診掛號</string>
+   </property>
+  </action>
+  <action name="action_return_card">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/contact-new.svg</normaloff>../icons/contact-new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>健保卡欠還卡</string>
+   </property>
+  </action>
+  <action name="action_checkout">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-calculator.png</normaloff>../icons/accessories-calculator.png</iconset>
+   </property>
+   <property name="text">
+    <string>掛號櫃台結帳</string>
+   </property>
+  </action>
+  <action name="action_patient_list">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-documents.png</normaloff>../icons/emblem-documents.png</iconset>
+   </property>
+   <property name="text">
+    <string>病患查詢</string>
+   </property>
+  </action>
+  <action name="action_ins_record_upload">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/mail-send.png</normaloff>../icons/mail-send.png</iconset>
+   </property>
+   <property name="text">
+    <string>健保IC卡資料上傳</string>
+   </property>
+  </action>
+  <action name="action_cashier">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/software-update-urgent.png</normaloff>../icons/software-update-urgent.png</iconset>
+   </property>
+   <property name="text">
+    <string>批價作業</string>
+   </property>
+  </action>
+  <action name="action_settings">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/preferences-system.png</normaloff>../icons/preferences-system.png</iconset>
+   </property>
+   <property name="text">
+    <string>系統設定</string>
+   </property>
+  </action>
+  <action name="action_charge">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-select-all.svg</normaloff>../icons/edit-select-all.svg</iconset>
+   </property>
+   <property name="text">
+    <string>收費設定</string>
+   </property>
+  </action>
+  <action name="action_users">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/system-users.png</normaloff>../icons/system-users.png</iconset>
+   </property>
+   <property name="text">
+    <string>使用者管理</string>
+   </property>
+  </action>
+  <action name="action_diagnostic">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/user-info.png</normaloff>../icons/user-info.png</iconset>
+   </property>
+   <property name="text">
+    <string>診察資料</string>
+   </property>
+  </action>
+  <action name="action_medicine">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-dictionary.png</normaloff>../icons/accessories-dictionary.png</iconset>
+   </property>
+   <property name="text">
+    <string>處方資料</string>
+   </property>
+  </action>
+  <action name="action_ic_card">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/ic_card.jpg</normaloff>../icons/ic_card.jpg</iconset>
+   </property>
+   <property name="text">
+    <string>健保卡讀卡機</string>
+   </property>
+  </action>
+  <action name="action_waiting_list">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>醫師看診作業</string>
+   </property>
+  </action>
+  <action name="action_medical_record_list">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/folder-saved-search.png</normaloff>../icons/folder-saved-search.png</iconset>
+   </property>
+   <property name="text">
+    <string>病歷查詢</string>
+   </property>
+  </action>
+  <action name="action_medical_record_statistics">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/x-office-calendar.png</normaloff>../icons/x-office-calendar.png</iconset>
+   </property>
+   <property name="text">
+    <string>病歷統計</string>
+   </property>
+  </action>
+  <action name="action_show_side_bar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/preferences-desktop-accessibility.png</normaloff>../icons/preferences-desktop-accessibility.png</iconset>
+   </property>
+   <property name="text">
+    <string>顯示/關閉側邊欄</string>
+   </property>
+   <property name="shortcut">
+    <string>F4</string>
+   </property>
+  </action>
+  <action name="action_doctor_nurse_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/system-users.png</normaloff>../icons/system-users.png</iconset>
+   </property>
+   <property name="text">
+    <string>護士跟診表</string>
+   </property>
+  </action>
+  <action name="action_purchase">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/user-available.png</normaloff>../icons/user-available.png</iconset>
+   </property>
+   <property name="text">
+    <string>櫃台購藥</string>
+   </property>
+  </action>
+  <action name="action_export_emr_xml">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出電子病歷交換檔 - xml</string>
+   </property>
+  </action>
+  <action name="action_certificate_diagnosis">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>診斷證明書</string>
+   </property>
+  </action>
+  <action name="action_certificate_payment">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-select-all.svg</normaloff>../icons/edit-select-all.svg</iconset>
+   </property>
+   <property name="text">
+    <string>醫療費用證明書</string>
+   </property>
+  </action>
+  <action name="action_update">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-synchronizing.png</normaloff>../icons/emblem-synchronizing.png</iconset>
+   </property>
+   <property name="text">
+    <string>醫療軟體更新</string>
+   </property>
+  </action>
+  <action name="action_doctor_schedule">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-select-all.svg</normaloff>../icons/gtk-select-all.svg</iconset>
+   </property>
+   <property name="text">
+    <string>醫師班表</string>
+   </property>
+  </action>
+  <action name="action_ins_drug">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-synchronizing.png</normaloff>../icons/emblem-synchronizing.png</iconset>
+   </property>
+   <property name="text">
+    <string>健保藥品</string>
+   </property>
+  </action>
+  <action name="action_statistics_doctor">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/stock_select-all.svg</normaloff>../icons/stock_select-all.svg</iconset>
+   </property>
+   <property name="text">
+    <string>醫師統計</string>
+   </property>
+  </action>
+  <action name="action_statistics_return_rate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-redo.svg</normaloff>../icons/edit-redo.svg</iconset>
+   </property>
+   <property name="text">
+    <string>回診率統計</string>
+   </property>
+   <property name="toolTip">
+    <string>回診率統計</string>
+   </property>
+  </action>
+  <action name="action_restore_records">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/undo.svg</normaloff>../icons/undo.svg</iconset>
+   </property>
+   <property name="text">
+    <string>資料回復</string>
+   </property>
+  </action>
+  <action name="action_hosts">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/network-workgroup.png</normaloff>../icons/network-workgroup.png</iconset>
+   </property>
+   <property name="text">
+    <string>分院連線設定</string>
+   </property>
+  </action>
+  <action name="action_database_repair">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/drive-multidisk.png</normaloff>../icons/drive-multidisk.png</iconset>
+   </property>
+   <property name="text">
+    <string>資料庫修復</string>
+   </property>
+  </action>
+  <action name="action_misc">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applications-other.png</normaloff>../icons/applications-other.png</iconset>
+   </property>
+   <property name="text">
+    <string>其他資料</string>
+   </property>
+  </action>
+  <action name="action_statistics_medicine">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-documents.png</normaloff>../icons/emblem-documents.png</iconset>
+   </property>
+   <property name="text">
+    <string>用藥統計</string>
+   </property>
+  </action>
+  <action name="action_examination_list">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applications-engineering.png</normaloff>../icons/applications-engineering.png</iconset>
+   </property>
+   <property name="text">
+    <string>檢驗報告查詢</string>
+   </property>
+   <property name="toolTip">
+    <string>檢驗報告查詢</string>
+   </property>
+  </action>
+  <action name="action_examination">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>檢驗報告登錄</string>
+   </property>
+   <property name="toolTip">
+    <string>檢驗報告登錄</string>
+   </property>
+  </action>
+  <action name="action_import_medical_record">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-import.svg</normaloff>../icons/document-import.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯入病歷資料JSON</string>
+   </property>
+   <property name="toolTip">
+    <string>匯入病歷資料JSON</string>
+   </property>
+  </action>
+  <action name="action_statistics_ins_performance">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/trophy-gold.png</normaloff>../icons/trophy-gold.png</iconset>
+   </property>
+   <property name="text">
+    <string>健保申報業績</string>
+   </property>
+   <property name="toolTip">
+    <string>健保申報業績</string>
+   </property>
+  </action>
+  <action name="action_statistics_doctor_commission">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/face-angel.png</normaloff>../icons/face-angel.png</iconset>
+   </property>
+   <property name="text">
+    <string>醫師銷售業績統計</string>
+   </property>
+   <property name="toolTip">
+    <string>醫師銷售業績統計</string>
+   </property>
+  </action>
+  <action name="action_massage_registration">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>養生館掛號</string>
+   </property>
+  </action>
+  <action name="action_event_log">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-dictionary.png</normaloff>../icons/accessories-dictionary.png</iconset>
+   </property>
+   <property name="text">
+    <string>系統日誌</string>
+   </property>
+   <property name="toolTip">
+    <string>系統日誌</string>
+   </property>
+  </action>
+  <action name="action_statistics_ins_discount">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/face-smile.png</normaloff>../icons/face-smile.png</iconset>
+   </property>
+   <property name="text">
+    <string>健保門診優惠統計</string>
+   </property>
+   <property name="toolTip">
+    <string>健保門診優惠統計</string>
+   </property>
+  </action>
+  <action name="action_statistics_multiple_performance">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/trophy-gold.png</normaloff>../icons/trophy-gold.png</iconset>
+   </property>
+   <property name="text">
+    <string>綜合業績報表</string>
+   </property>
+   <property name="toolTip">
+    <string>綜合業績報表</string>
+   </property>
+  </action>
+  <action name="action_statistics_daily">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-select-all.svg</normaloff>../icons/gtk-select-all.svg</iconset>
+   </property>
+   <property name="text">
+    <string>日報表</string>
+   </property>
+   <property name="toolTip">
+    <string>日報表</string>
+   </property>
+  </action>
+  <action name="action_exam_result">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applications-science.png</normaloff>../icons/applications-science.png</iconset>
+   </property>
+   <property name="text">
+    <string>醫事檢驗所報告</string>
+   </property>
+   <property name="toolTip">
+    <string>醫事檢驗所報告</string>
+   </property>
+  </action>
+  <action name="action_statistics_no_return_rate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-undo-ltr.svg</normaloff>../icons/gtk-undo-ltr.svg</iconset>
+   </property>
+   <property name="text">
+    <string>未回診統計</string>
+   </property>
+   <property name="toolTip">
+    <string>未回診統計</string>
+   </property>
+  </action>
+  <action name="action_case_template">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/editcopy.svg</normaloff>../icons/editcopy.svg</iconset>
+   </property>
+   <property name="text">
+    <string>參考病歷</string>
+   </property>
+   <property name="toolTip">
+    <string>參考病歷</string>
+   </property>
+  </action>
+  <action name="action_statistics_massager">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/system-users.png</normaloff>../icons/system-users.png</iconset>
+   </property>
+   <property name="text">
+    <string>推拿師統計</string>
+   </property>
+   <property name="toolTip">
+    <string>推拿師統計</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>分院資料設定</string>
+   </property>
+  </action>
+  <action name="action_branch_settings">
+   <property name="text">
+    <string>分院統計設定</string>
+   </property>
+  </action>
+  <action name="action_statistics_branch_project">
+   <property name="text">
+    <string>分院專案統計</string>
+   </property>
+  </action>
+  <action name="action_branch_daily_income">
+   <property name="text">
+    <string>分院日報表</string>
+   </property>
+  </action>
+  <action name="action_commission_summary">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/trophy-gold.png</normaloff>../icons/trophy-gold.png</iconset>
+   </property>
+   <property name="text">
+    <string>自費銷售抽成總表</string>
+   </property>
+  </action>
+  <action name="action_sales_summary">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/trophy-silver.png</normaloff>../icons/trophy-silver.png</iconset>
+   </property>
+   <property name="text">
+    <string>自費銷售金額總表</string>
+   </property>
+  </action>
+  <action name="action_export_all_database">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/filesave.svg</normaloff>../icons/filesave.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出全部資料庫</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出全部資料庫</string>
+   </property>
+  </action>
+  <action name="action_import_all_database">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/software-update-urgent.png</normaloff>../icons/software-update-urgent.png</iconset>
+   </property>
+   <property name="text">
+    <string>匯入全部資料庫</string>
+   </property>
+   <property name="toolTip">
+    <string>匯入全部資料庫</string>
+   </property>
+  </action>
+  <action name="action_export_medical_record_json">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出病歷資料JSON</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出病歷資料JSON</string>
+   </property>
+  </action>
+  <action name="action_debt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/face-crying.png</normaloff>../icons/face-crying.png</iconset>
+   </property>
+   <property name="text">
+    <string>欠還款作業</string>
+   </property>
+   <property name="toolTip">
+    <string>欠還款作業</string>
+   </property>
+  </action>
+  <action name="action_pharmacist_schedule">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/x-office-calendar.png</normaloff>../icons/x-office-calendar.png</iconset>
+   </property>
+   <property name="text">
+    <string>藥師班表</string>
+   </property>
+   <property name="toolTip">
+    <string>藥師班表</string>
+   </property>
+  </action>
+  <action name="action_statistics_ins_pregnant">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gohome.svg</normaloff>../icons/gohome.svg</iconset>
+   </property>
+   <property name="text">
+    <string>孕產照護報表</string>
+   </property>
+   <property name="toolTip">
+    <string>孕產照護報表</string>
+   </property>
+  </action>
+  <action name="action_statistics_period_count">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/system-users.png</normaloff>../icons/system-users.png</iconset>
+   </property>
+   <property name="text">
+    <string>診數統計</string>
+   </property>
+   <property name="toolTip">
+    <string>診數統計表表</string>
+   </property>
+  </action>
+  <action name="action_purchase_records">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-calculator.png</normaloff>../icons/accessories-calculator.png</iconset>
+   </property>
+   <property name="text">
+    <string>自費銷售記錄</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

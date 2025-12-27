@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dict_exam</class>
+ <widget class="QMainWindow" name="Dict_exam">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>檢驗資料</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QGroupBox" name="groupBox_dict_exam">
+        <property name="title">
+         <string>檢驗內容</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QToolButton" name="toolButton_add_exam">
+             <property name="toolTip">
+              <string>新增處方</string>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/gtk-add.svg</normaloff>../icons/gtk-add.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="toolButton_remove_exam">
+             <property name="toolTip">
+              <string>刪除處方</string>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/gtk-remove.svg</normaloff>../icons/gtk-remove.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="toolButton_edit_exam">
+             <property name="toolTip">
+              <string>編輯處方</string>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/gtk-edit.svg</normaloff>../icons/gtk-edit.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="toolButton_export">
+             <property name="toolTip">
+              <string>匯出選取的處方</string>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="toolButton_import">
+             <property name="toolTip">
+              <string>匯入處方</string>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/document-import.svg</normaloff>../icons/document-import.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>尋找</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_search_exam">
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBox_find_all">
+             <property name="text">
+              <string>全域搜尋</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTableWidget" name="tableWidget_dict_exam">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::ExtendedSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <column>
+            <property name="text">
+             <string>MedicineKey</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>類別</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>藥品條碼</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>輸入碼</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>藥品名稱</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>健保碼</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>單位</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>用量</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>醫師專案</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>自費專案</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>藥品別名</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>存放位置</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>進價</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>售價</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>存量</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>安全量</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>抽成</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_exam_suit">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>450</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>檢驗套組</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QToolButton" name="toolButton_add_drug_2">
+             <property name="toolTip">
+              <string>新增處方</string>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/gtk-add.svg</normaloff>../icons/gtk-add.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="toolButton_remove_drug_2">
+             <property name="toolTip">
+              <string>刪除處方</string>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/gtk-remove.svg</normaloff>../icons/gtk-remove.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QTableWidget" name="tableWidget_dict_exam_suit">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::ExtendedSelection</enum>
+             </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <column>
+              <property name="text">
+               <string>MedicineKey</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>類別</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>藥品條碼</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>輸入碼</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>藥品名稱</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>健保碼</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>單位</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>用量</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>醫師專案</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>自費專案</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>藥品別名</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>存放位置</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>進價</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>售價</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>存量</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>安全量</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>抽成</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="tableWidget_exam_suit_items">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::ExtendedSelection</enum>
+             </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <column>
+              <property name="text">
+               <string>MedicineKey</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>類別</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>藥品條碼</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>輸入碼</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>藥品名稱</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>健保碼</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>單位</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>用量</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>醫師專案</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>自費專案</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>藥品別名</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>存放位置</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>進價</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>售價</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>存量</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>安全量</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>抽成</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

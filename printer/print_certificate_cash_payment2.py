@@ -1,0 +1,519 @@
+
+# -*- coding: UTF-8 -*-
+
+from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
+from PyQt5.QtPrintSupport import QPrinter
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+import os
+
+from libs import printer_utils
+from libs import system_utils
+from libs import string_utils
+from libs import nhi_utils
+from libs import patient_utils
+from libs import personnel_utils
+from libs import number_utils
+
+
+# 列印收費證明現金明細
+# 2020.10.16
+class PrintCertificateCashPayment2:
+    # 初始化
+    def __init__(self, parent=None, *args):
+        self.parent = parent
+        self.database = args[0]
+        self.system_settings = args[1]
+        self.certificate_key = args[2]
+        self.form_type = args[3]
+
+        self.ui = None
+
+        self.printer = printer_utils.get_printer(self.system_settings, '報表印表機')
+        self.ins_apply_path = nhi_utils.get_dir(self.system_settings, '申報路徑')
+        self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
+        self.current_print = None
+
+        if self.system_settings.field('列印報表雙色印刷') == 'Y':
+            self.html_bg_color = ' bgcolor="LightGray"'
+        else:
+            self.html_bg_color = ''
+
+        self._set_ui()
+        self._set_signal()
+
+    # 解構
+    def __del__(self):
+        self.close_all()
+
+    # 關閉
+    def close_all(self):
+        pass
+
+    # 設定GUI
+    def _set_ui(self):
+        font = system_utils.get_font(self.system_settings)
+        self.font = QtGui.QFont(font, 8, QtGui.QFont.PreferQuality)
+
+    def _set_signal(self):
+        pass
+
+    def print(self):
+        self.print_html(True)
+
+    def preview(self):
+        geometry = QtWidgets.QApplication.desktop().screenGeometry()
+
+        self.preview_dialog.paintRequested.connect(self.print_html)
+        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
+        self.preview_dialog.exec_()
+
+    def save_to_pdf(self):
+        export_dir = f'{self.ins_apply_path}/certificate'
+        if not os.path.exists(export_dir):
+            os.mkdir(export_dir)
+
+        pdf_file_name = f'{export_dir}/certificate_payment{self.certificate_key}.pdf'
+        self.printer.setOutputFormat(QPrinter.PdfFormat)
+        self.printer.setOutputFileName(pdf_file_name)
+        self.print_html(True)
+
+    def save_to_pdf_by_dialog(self):
+        export_dir = f'{self.ins_apply_path}/certificate'
+        if not os.path.exists(export_dir):
+            os.mkdir(export_dir)
+
+        pdf_file_name = f'{export_dir}/certificate_cash_payment{self.certificate_key}.pdf'
+
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(
+            self.parent, "匯出收費證明pdf",
+            pdf_file_name,
+            "所有檔案 (*);;pdf檔 (*.pdf)", options=options
+        )
+        if not file_name:
+            return
+
+        self.printer.setOutputFormat(QPrinter.PdfFormat)
+        self.printer.setOutputFileName(file_name)
+        self.print_html(True)
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            '匯出完成',
+            '<font size="5" color="red"><b>收費證明pdf檔案已匯出完成</b></font>',
+            '',
+        )
+
+    def print_painter(self):
+        self.current_print = self.print_painter
+        self.printer.setPaperSize(QtCore.QSizeF(80, 80), QPrinter.Millimeter)
+
+        painter = QtGui.QPainter()
+        painter.setFont(self.font)
+        painter.begin(self.printer)
+        painter.drawText(0, 10, 'print test line1 中文測試')
+        painter.drawText(0, 30, 'print test line2 中文測試')
+        painter.end()
+
+    def print_html(self, printing):
+        self.current_print = self.print_html
+        self.printer.setPaperSize(printer_utils.get_paper_size(self.system_settings))
+
+        document = printer_utils.get_document(self.printer, self.font)
+        document.setDocumentMargin(5)
+        document.setHtml(self._get_html())
+        if printing:
+            document.print(self.printer)
+
+    def _get_html(self):
+        sql = f'''
+            SELECT * FROM certificate
+            WHERE
+                CertificateKey = {self.certificate_key}
+        '''
+        rows = self.database.select_record(sql)
+
+        if len(rows) <= 0:
+            return
+
+        row = rows[0]
+
+        html_title = self._get_html_title(row)
+        html_patient = self._get_html_patient(row)
+        html_payment = self._get_html_payment(row)
+        html_summary = self._get_html_summary(row)
+        html_remark = self._get_html_remark()
+
+        html = f'''
+            <html>
+              <body>
+                {html_title}
+                {html_patient}
+                {html_payment}
+                {html_summary}
+                {html_remark}
+              </body>
+            </html>
+        '''
+
+        return html
+
+    def _get_html_title(self, row):
+        title = self.system_settings.field('醫療費用證明書抬頭')
+        if title in ['', None]:
+            title = '醫療費用明細證明書'
+
+        clinic_name = self.system_settings.field('院所名稱')
+        certificate_key = f"{row['CertificateKey']:0>8}"
+
+        html = f'''
+            <h1 style="text-align: center">{clinic_name} {title}</h1>
+            <table align=center width="98%" cellspacing="0">
+                <tbody>
+                    <tr>
+                        <td><h3>編號: {certificate_key}</h3></td>
+                    </tr>
+                </tbody>
+            </table>
+        '''
+        return html
+
+    def _get_html_patient(self, row):
+        patient_row = patient_utils.get_patient_row(self.database, row['PatientKey'])
+        case_date = string_utils.xstr(row['StartDate'])
+
+        if row['EndDate'] != row['StartDate']:
+            case_date += f' 至 {row["EndDate"]}'
+
+        telephone = string_utils.xstr(patient_row['Telephone'])
+        if telephone == '':
+            telephone = string_utils.xstr(patient_row['Cellphone'])
+
+        patient_key = f"{row['PatientKey']:0>6}"
+        name = string_utils.xstr(row['Name'])
+        gender = string_utils.xstr(patient_row['Gender'])
+        birthday = string_utils.xstr(patient_row['Birthday'])
+        patient_id = string_utils.xstr(patient_row['ID'])
+        address = string_utils.xstr(patient_row['Address'])
+
+        html = f'''
+            <table align=center cellpadding="2" cellspacing="0" width="98%"
+                style="font-size: 16px; border-width: 1px; border-style: solid; border-collapse: collapse">
+                <tbody>
+                    <tr>
+                        <th{self.html_bg_color}>姓名</th>
+                        <td style="text-align: center; vertical-align: middle">{name}</td>
+                        <th{self.html_bg_color}>性別</th>
+                        <td style="text-align: center; vertical-align: middle">{gender}</td>
+                        <th{self.html_bg_color}>出生日期</th>
+                        <td style="text-align: center; vertical-align: middle">{birthday}</td>
+                    </tr>
+                    <tr>
+                        <th{self.html_bg_color}>病歷號碼</th>
+                        <td style="text-align: center; vertical-align: middle">{patient_key}</td>
+                        <th{self.html_bg_color}>身份證號</th>
+                        <td style="text-align: center; vertical-align: middle">{patient_id}</td>
+                        <th{self.html_bg_color}>電話</th>
+                        <td style="text-align: center; vertical-align: middle">{telephone}</td>
+                    <tr>
+                        <th{self.html_bg_color}>地址</th>
+                        <td colspan="5" style="text-align: left; vertical-align: middle">{address}</td>
+                    </tr>
+                    <tr>
+                        <th{self.html_bg_color} style="vertical-align: middle">科別</th>
+                        <td style="text-align: center; vertical-align: middle">60 中醫科</td>
+                        <th{self.html_bg_color}>診療日期</th>
+                        <td colspan="3" style="text-align: center; vertical-align: middle">{case_date}</td>
+                    </tr>
+                </tbody>
+            </table>
+        '''
+
+        return html
+
+    def _get_html_payment(self, row):
+        ins_type = string_utils.xstr(row['InsType'])
+        fees_detail = self._get_fees_detail(ins_type)
+
+        medicine_fee_field_name = self.system_settings.field('醫療費用證明自費藥費欄位名稱')
+        if medicine_fee_field_name in ['', None]:
+            medicine_fee_field_name = '自費藥費'
+
+        treat_fee_field_name = self.system_settings.field('醫療費用證明自費處置欄位名稱')
+        if treat_fee_field_name in ['', None]:
+            treat_fee_field_name = '處置費'
+
+        misc_fee_field_name = self.system_settings.field('醫療費用證明其他費用欄位名稱')
+        if misc_fee_field_name in ['', None]:
+            misc_fee_field_name = '材料費'
+
+        total_fee_field_name = self.system_settings.field('醫療費用自付明細自費金額欄位名稱')
+        if total_fee_field_name in ['', None]:
+            total_fee_field_name = '自費金額'
+
+        if self.form_type == 'ins_only':
+            head_col = f'''
+                <th>序</th>
+                <th>門診日期</th>
+                <th>保險別</th>
+                <th>掛號費</th>
+                <th>門診負擔</th>
+                <th>藥品負擔</th>
+                <th>合計</th>
+            '''
+        elif self.form_type == 'self_only':
+            head_col = f'''
+                <th>序</th>
+                <th>門診日期</th>
+                <th>保險別</th>
+                <th>{medicine_fee_field_name}</th>
+                <th>{treat_fee_field_name}</th>
+                <th>{misc_fee_field_name}</th>
+                <th>合計</th>
+            '''
+        else:
+            head_col = f'''
+                <th>序</th>
+                <th>門診日期</th>
+                <th>保險別</th>
+                <th>掛號費</th>
+                <th>門診負擔</th>
+                <th>藥品負擔</th>
+                <th>{medicine_fee_field_name}</th>
+                <th>{treat_fee_field_name}</th>
+                <th>{misc_fee_field_name}</th>
+                <th>合計</th>
+            '''
+
+        html = f'''
+            <table align=center cellpadding="2" cellspacing="0" width="98%"
+                style="font-size: 16px; border-width: 1px; border-style: solid; border-collapse: collapse">
+                <tbody>
+                    <tr{self.html_bg_color}>
+                        {head_col}
+                    </tr>
+                    {fees_detail}
+                </tbody>
+            </table>
+            '''
+
+        return html
+
+    def _get_fees_detail(self, ins_type):
+        sql = f'''
+            SELECT certificate_items.*, cases.TreatType, cases.DiscountFee FROM certificate_items
+                LEFT JOIN cases ON cases.CaseKey = certificate_items.CaseKey
+            WHERE
+                CertificateKey = {self.certificate_key}
+            ORDER BY certificate_items.CaseDate
+        '''
+        rows = self.database.select_record(sql)
+
+        total_regist_fee = 0
+        total_diag_share_fee = 0
+        total_drug_share_fee = 0
+        total_self_drug_fee = 0
+        total_treat_fee = 0
+        total_misc_fee = 0
+        total_cash_fee = 0
+        ins_total = 0
+        self_total = 0
+
+        html = ''
+        for row_no, row in zip(range(1, len(rows)+1), rows):
+            case_ins_type = string_utils.xstr(row['InsType'])
+            if string_utils.xstr(row['TreatType']) == '開立證明':
+                case_ins_type = string_utils.xstr(row['TreatType'])
+
+            regist_fee = number_utils.get_integer(row['RegistFee'])
+            diag_share_fee = number_utils.get_integer(row['SDiagShareFee'])
+            drug_share_fee = number_utils.get_integer(row['SDrugShareFee'])
+
+            discount_fee = number_utils.get_integer(row['DiscountFee'])
+            self_drug_fee = (
+                number_utils.get_integer(row['SDrugFee']) +
+                number_utils.get_integer(row['SHerbFee']) +
+                number_utils.get_integer(row['SExpensiveFee'])
+            )
+            treat_fee = (
+                number_utils.get_integer(row['SDiagFee']) +
+                number_utils.get_integer(row['SAcupunctureFee']) +
+                number_utils.get_integer(row['SMassageFee']) +
+                number_utils.get_integer(row['SDislocateFee'])
+            )
+            misc_fee = (
+                number_utils.get_integer(row['SMaterialFee']) +
+                number_utils.get_integer(row['SExamFee'])
+            )
+            if self_drug_fee > 0:
+                self_drug_fee -= discount_fee
+            elif treat_fee > 0:
+                treat_fee -= discount_fee
+            elif misc_fee > 0:
+                misc_fee -= discount_fee
+
+            cash_fee = regist_fee + diag_share_fee + drug_share_fee + self_drug_fee + treat_fee + misc_fee
+
+            total_regist_fee += regist_fee
+            total_diag_share_fee += diag_share_fee
+            total_drug_share_fee += drug_share_fee
+            total_self_drug_fee += self_drug_fee
+            total_treat_fee += treat_fee
+            total_misc_fee += misc_fee
+            total_cash_fee += cash_fee
+
+            case_date = string_utils.xstr(row['CaseDate'].date())
+
+            bg_color = ''
+            if self.system_settings.field('列印報表雙色印刷') == 'Y' and row_no % 2 > 0:
+                bg_color = ' bgcolor="#E3E3E3"'
+
+            if self.form_type == 'ins_only':
+                ins_subtotal = regist_fee + diag_share_fee + drug_share_fee
+
+                if case_ins_type != '健保' or ins_subtotal <= 0:
+                    continue
+
+                ins_total += ins_subtotal
+
+                html += f'''
+                    <tr>
+                        <td{bg_color} style="text-align: center">{row_no}</td>
+                        <td{bg_color} style="text-align: center">{case_date}</td>
+                        <td{bg_color} style="text-align: center">{case_ins_type}</td>
+
+                        <td{bg_color} style="text-align: right">{regist_fee}</td>
+                        <td{bg_color} style="text-align: right">{diag_share_fee}</td>
+                        <td{bg_color} style="text-align: right">{drug_share_fee}</td>
+                        <td{bg_color} style="text-align: right">{ins_subtotal}</td>
+                    </tr>
+                '''
+            elif self.form_type == 'self_only':
+                self_subtotal = self_drug_fee + treat_fee + misc_fee
+
+                if self_subtotal <= 0:
+                    continue
+
+                self_total += self_subtotal
+
+                html += f'''
+                    <tr>
+                        <td{bg_color} style="text-align: center">{row_no}</td>
+                        <td{bg_color} style="text-align: center">{case_date}</td>
+                        <td{bg_color} style="text-align: center">{case_ins_type}</td>
+
+                        <td{bg_color} style="text-align: right">{self_drug_fee}</td>
+                        <td{bg_color} style="text-align: right">{treat_fee}</td>
+                        <td{bg_color} style="text-align: right">{misc_fee}</td>
+                        <td{bg_color} style="text-align: right">{self_subtotal}</td>
+                    </tr>
+                '''
+
+            else:
+                html += f'''
+                    <tr>
+                        <td{bg_color} style="text-align: center">{row_no}</td>
+                        <td{bg_color} style="text-align: center">{case_date}</td>
+                        <td{bg_color} style="text-align: center">{case_ins_type}</td>
+
+                        <td{bg_color} style="text-align: right">{regist_fee}</td>
+                        <td{bg_color} style="text-align: right">{diag_share_fee}</td>
+                        <td{bg_color} style="text-align: right">{drug_share_fee}</td>
+                        <td{bg_color} style="text-align: right">{self_drug_fee}</td>
+                        <td{bg_color} style="text-align: right">{treat_fee}</td>
+                        <td{bg_color} style="text-align: right">{misc_fee}</td>
+                        <td{bg_color} style="text-align: right">{cash_fee}</td>
+                    </tr>
+                '''
+
+        if self.form_type == 'ins_only':
+            html += f'''
+                <tr>
+                    <td{self.html_bg_color} style="text-align: center" colspan=3>合計</td>
+                    <td style="text-align: right">{total_regist_fee}</td>
+                    <td style="text-align: right">{total_diag_share_fee}</td>
+                    <td style="text-align: right">{total_drug_share_fee}</td>
+                    <td style="text-align: right">{ins_total}</td>
+                </tr>
+            '''
+        elif self.form_type == 'self_only':
+            html += f'''
+                <tr>
+                    <td{self.html_bg_color} style="text-align: center" colspan=3>合計</td>
+                    <td style="text-align: right">{total_self_drug_fee}</td>
+                    <td style="text-align: right">{total_treat_fee}</td>
+                    <td style="text-align: right">{total_misc_fee}</td>
+                    <td style="text-align: right">{self_total}</td>
+                </tr>
+            '''
+        else:
+            html += f'''
+                <tr>
+                    <td{self.html_bg_color} style="text-align: center" colspan=3>合計</td>
+                    <td style="text-align: right">{total_regist_fee}</td>
+                    <td style="text-align: right">{total_diag_share_fee}</td>
+                    <td style="text-align: right">{total_drug_share_fee}</td>
+                    <td style="text-align: right">{total_self_drug_fee}</td>
+                    <td style="text-align: right">{total_treat_fee}</td>
+                    <td style="text-align: right">{total_misc_fee}</td>
+                    <td style="text-align: right">{total_cash_fee}</td>
+                </tr>
+            '''
+
+        return html
+
+    def _get_html_summary(self, row):
+        physician = string_utils.xstr(row['Doctor'])
+        physician_cert_no = personnel_utils.get_person_field_value(
+            self.database, physician, 'Certificate')
+        president = self.system_settings.field('負責醫師')
+        license_no = self.system_settings.field('院所代號')
+        clinic_telephone = self.system_settings.field('院所電話')
+        clinic_address = self.system_settings.field('院所地址')
+
+        year = row['CertificateDate'].year
+        month = row['CertificateDate'].month
+        day = row['CertificateDate'].day
+        certificate_date = f'{year} 年 {month} 月 {day} 日'
+
+        html = f'''
+            <table align=center cellpadding="10" cellspacing="0" width="98%"
+                style="font-size: 16px; border-width: 1px; border-style: solid; border-collapse: collapse">
+                <tbody>
+                    <tr>
+                        <td>
+                            <h2>本收據可為報稅之憑證，請妥善保存，遺失恕不補發。</h2>
+                            <h2>
+                                主治醫師: {physician}<br>
+                                醫師證書號碼: {physician_cert_no}<br>
+                                院長: {president}<br>
+                                開業執照號碼: {license_no}
+                            </h2>
+                            <h2>
+                                院所電話: {clinic_telephone}<br>
+                                院所地址: {clinic_address}
+                            </h2>
+                            <h2>
+                                開立醫療費用證明日期: {certificate_date}
+                            </h2>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        '''
+
+        return html
+
+    @staticmethod
+    def _get_html_remark():
+        html = '''
+            <table align=center width="98%" cellspacing="0">
+                <tbody>
+                    <tr>
+                        <td>本證明書經塗改或未加蓋本院印章者無效</td>
+                    </tr>
+                </tbody>
+            </table>
+        '''
+
+        return html

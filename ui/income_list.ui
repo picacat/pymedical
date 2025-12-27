@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow_incom_list</class>
+ <widget class="QMainWindow" name="MainWindow_incom_list">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1142</width>
+    <height>816</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>9</number>
+      </property>
+      <property name="topMargin">
+       <number>9</number>
+      </property>
+      <property name="rightMargin">
+       <number>9</number>
+      </property>
+      <property name="bottomMargin">
+       <number>9</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QToolButton" name="toolButton_set_traditional_health_case">
+          <property name="text">
+           <string>設定民俗調理費</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/document-save-as.png</normaloff>../icons/document-save-as.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_set_batch_traditional_health_case">
+          <property name="text">
+           <string>批次設定民俗調理費</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/dialog-apply.svg</normaloff>../icons/dialog-apply.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_income">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>case_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>註</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>門診日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>保險</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>負擔類別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>就醫類別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>優待類別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>卡序</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>藥日</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>掛號費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>診負</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>藥負</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠卡費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還卡費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還款</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>自費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠款</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>掛欠</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>民俗</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>實收現金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>掛號者</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>批價者</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>診號</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>220</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>總計</string>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QTableWidget" name="tableWidget_total">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::NoSelection</enum>
+           </property>
+           <property name="rowCount">
+            <number>4</number>
+           </property>
+           <property name="columnCount">
+            <number>10</number>
+           </property>
+           <attribute name="horizontalHeaderVisible">
+            <bool>false</bool>
+           </attribute>
+           <row/>
+           <row/>
+           <row/>
+           <row/>
+           <column>
+            <property name="text">
+             <string>類別</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string/>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string/>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string/>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string/>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string/>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string/>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string/>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string/>
+            </property>
+           </column>
+           <column/>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

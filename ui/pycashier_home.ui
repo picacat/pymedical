@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowHome</class>
+ <widget class="QMainWindow" name="WindowHome">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1080</width>
+    <height>1920</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>主畫面</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="label_doctor1">
+    <property name="geometry">
+     <rect>
+      <x>135</x>
+      <y>330</y>
+      <width>381</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微軟正黑體</family>
+      <pointsize>72</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 127);
+font:72pt &quot;微軟正黑體&quot;;
+font-weight: bold;</string>
+    </property>
+    <property name="text">
+     <string>陳士源</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_doctor2">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>330</y>
+      <width>381</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微軟正黑體</family>
+      <pointsize>72</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 127);
+font:72pt &quot;微軟正黑體&quot;;
+font-weight: bold;</string>
+    </property>
+    <property name="text">
+     <string>陳士源</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_marquee">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>600</y>
+      <width>381</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微軟正黑體</family>
+      <pointsize>96</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 255);
+font:96pt &quot;微軟正黑體&quot;;
+font-weight: bold;</string>
+    </property>
+    <property name="text">
+     <string>跑馬燈</string>
+    </property>
+   </widget>
+   <widget class="QToolButton" name="toolButton_quit">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>1890</y>
+      <width>23</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="toolButtonStyle">
+     <enum>Qt::ToolButtonIconOnly</enum>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

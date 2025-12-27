@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Window_certificate_diagnosis</class>
+ <widget class="QMainWindow" name="Window_certificate_diagnosis">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1115</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>診斷證明書</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>今年度已開立診斷證明記錄</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_certificate_list">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>CertificateKey</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>CaseKey</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>開立證明日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號碼</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>保險範圍</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>就醫類別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>診療日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>結束日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>主治醫師</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>診斷</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>醫囑</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>診斷書費用</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>已批價</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_add_certificate"/>
+   <addaction name="action_modify_certificate"/>
+   <addaction name="action_modify_certificate_date"/>
+   <addaction name="separator"/>
+   <addaction name="action_query_certificate"/>
+   <addaction name="action_remove_certificate"/>
+   <addaction name="separator"/>
+   <addaction name="action_print_certificate"/>
+   <addaction name="action_print_certificate_proof"/>
+   <addaction name="action_print_diagnosis_proof"/>
+   <addaction name="action_print_certificate_summary"/>
+   <addaction name="action_print_certificate_pdf"/>
+   <addaction name="action_print_receipt"/>
+   <addaction name="separator"/>
+   <addaction name="action_export_certificate_payment"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1115</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+    <addaction name="action_export_to_excel"/>
+    <addaction name="action_export_certificate_list_excel"/>
+    <addaction name="action_export_table_to_excel"/>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <action name="action_add_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-new.svg</normaloff>../icons/document-new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>開立證明</string>
+   </property>
+   <property name="toolTip">
+    <string>開立診斷證明</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_remove_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/user-trash.png</normaloff>../icons/user-trash.png</iconset>
+   </property>
+   <property name="text">
+    <string>刪除證明</string>
+   </property>
+  </action>
+  <action name="action_print_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印診斷證明</string>
+   </property>
+   <property name="toolTip">
+    <string>列印診斷證明</string>
+   </property>
+  </action>
+  <action name="action_query_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-open.svg</normaloff>../icons/document-open.svg</iconset>
+   </property>
+   <property name="text">
+    <string>查詢資料</string>
+   </property>
+  </action>
+  <action name="action_export_certificate_payment">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>產生醫療費用證明書</string>
+   </property>
+   <property name="toolTip">
+    <string>產生醫療費用證明書</string>
+   </property>
+  </action>
+  <action name="action_modify_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-select-all.svg</normaloff>../icons/edit-select-all.svg</iconset>
+   </property>
+   <property name="text">
+    <string>修改證明</string>
+   </property>
+   <property name="toolTip">
+    <string>開立診斷證明</string>
+   </property>
+  </action>
+  <action name="action_print_receipt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印醫療收據</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_pdf">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出證明pdf</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出證明pdf</string>
+   </property>
+  </action>
+  <action name="action_export_certificate_list_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-select-all.svg</normaloff>../icons/edit-select-all.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出已開立診斷證明明細至excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出已開立診斷證明明細至excel</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_proof">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印就醫證明</string>
+   </property>
+   <property name="toolTip">
+    <string>列印就醫證明</string>
+   </property>
+  </action>
+  <action name="action_print_diagnosis_proof">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印就醫證明2</string>
+   </property>
+   <property name="toolTip">
+    <string>列印就醫證明</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_summary">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印病歷摘要</string>
+   </property>
+   <property name="toolTip">
+    <string>列印病歷摘要</string>
+   </property>
+  </action>
+  <action name="action_modify_certificate_date">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>修改開立日期</string>
+   </property>
+   <property name="toolTip">
+    <string>修改開立日期</string>
+   </property>
+  </action>
+  <action name="action_export_to_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-vnd.ms-excel.png</normaloff>../icons/application-vnd.ms-excel.png</iconset>
+   </property>
+   <property name="text">
+    <string>匯出診斷證明至excel</string>
+   </property>
+  </action>
+  <action name="action_export_table_to_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-vnd.ms-excel.png</normaloff>../icons/application-vnd.ms-excel.png</iconset>
+   </property>
+   <property name="text">
+    <string>匯出今年度診斷證明至excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出今年度診斷證明至excel</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

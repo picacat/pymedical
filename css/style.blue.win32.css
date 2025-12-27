@@ -1,0 +1,92 @@
+/*
+    PyMedical windows css style sheet
+    2018-02-07
+*/
+
+/**************************************************************************************
+    All program
+**************************************************************************************/
+* {
+	font-size: 20px;
+	font-weight: bold; /* system */
+	font-family: "Microsoft JhengHei";
+}
+
+QTableWidget::item:selected {
+    background-color: palette(highlight);
+    color: white;
+}
+
+/**************************************************************************************
+    Main program
+**************************************************************************************/
+/* QPushButton {
+    color: #111;
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 1px;
+    background: QRadialGradient(cx: 0.1, cy: 0,
+    fx: 0.3, fy: -0.4,
+    radius: 1.35, stop: 0 #fff, stop: 1 #aaa);
+    min-width: 80px;
+}
+
+QPushButton:pressed {
+    background: QRadialGradient(cx: 0.4, cy: -0.1,
+    fx: 0.4, fy: -0.1,
+    radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
+} */
+#frameSidebar {
+    background: #8af;
+    border: none;
+    border-right: 1px solid black;
+}
+
+#label_title {
+    color: white;
+    font: 16px;
+}
+
+#label_eng_title {
+    color: white;
+    font: 12px;
+}
+
+QFrame.SidebarFrame {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border: 1px solid black;
+    background: QLinearGradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #56a,
+        stop: 0.1 #016
+    );
+}
+
+QFrame.SidebarInnerFrame {
+    background: QLinearGradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #eef,
+        stop: 1 #ccf);
+    border: none;
+    border-top: 1px solid black;
+}
+
+QFrame.SidebarFrame QLabel {
+    color: white;
+    font-weight: bold;
+}
+
+/**************************************************************************************
+    medical_record
+**************************************************************************************/
+/*
+#textEdit_symptom, #textEdit_tongue, #textEdit_pulse {
+	background: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #eef, stop: 1 #ccf);
+}
+
+#textEdit_remark {
+	background: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #eef, stop: 1 #ccf);
+}
+*/
+

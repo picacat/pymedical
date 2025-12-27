@@ -1,0 +1,2302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RegistrationWindow</class>
+ <widget class="QMainWindow" name="RegistrationWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1681</width>
+    <height>985</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>門診掛號</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="spacing">
+       <number>3</number>
+      </property>
+      <property name="leftMargin">
+       <number>6</number>
+      </property>
+      <property name="topMargin">
+       <number>6</number>
+      </property>
+      <property name="rightMargin">
+       <number>6</number>
+      </property>
+      <property name="bottomMargin">
+       <number>6</number>
+      </property>
+      <item>
+       <widget class="QFrame" name="frame">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>720</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QGroupBox" name="groupBox_search_patient">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>手動/虛擬健保卡掛號</string>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
+           </property>
+           <layout class="QGridLayout" name="gridLayout" rowstretch="0">
+            <property name="topMargin">
+             <number>3</number>
+            </property>
+            <property name="bottomMargin">
+             <number>3</number>
+            </property>
+            <property name="spacing">
+             <number>4</number>
+            </property>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="lineEdit_query">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;生日格式請輸入&lt;br&gt;民國年 yyy.mm.dd&lt;br&gt;西元年 yyyy.mm.dd&lt;br&gt;用 - 或 / 分隔也可以&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_25">
+              <property name="text">
+               <string>請輸入關鍵字</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QToolButton" name="toolButton_query">
+              <property name="text">
+               <string>開始查詢</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/dialog-ok.svg</normaloff>../icons/dialog-ok.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QCheckBox" name="checkBox_no_nhi_vpn">
+              <property name="text">
+               <string>健保VPN網路斷線</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_patient">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="title">
+            <string>病患資料</string>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <property name="topMargin">
+             <number>3</number>
+            </property>
+            <property name="bottomMargin">
+             <number>3</number>
+            </property>
+            <property name="spacing">
+             <number>4</number>
+            </property>
+            <item row="0" column="5">
+             <layout class="QHBoxLayout" name="horizontalLayout_16">
+              <item>
+               <widget class="QLineEdit" name="lineEdit_name">
+                <property name="clearButtonEnabled">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="0" column="2">
+             <layout class="QHBoxLayout" name="horizontalLayout_12">
+              <item>
+               <widget class="QLineEdit" name="lineEdit_patient_key">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::StrongFocus</enum>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="lineEdit_chart_no"/>
+              </item>
+             </layout>
+            </item>
+            <item row="3" column="2">
+             <widget class="QLineEdit" name="lineEdit_telephone">
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QLabel" name="label_7">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>掛號優待</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>聯絡電話</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QComboBox" name="comboBox_patient_share">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QLabel" name="label_5">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>出生日期</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="2" colspan="4">
+             <widget class="QLineEdit" name="lineEdit_patient_remark">
+              <property name="styleSheet">
+               <string notr="true">color:rgb(255, 0, 0)</string>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="5">
+             <widget class="QLineEdit" name="lineEdit_cellphone">
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_3">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>病患姓名</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="5">
+             <layout class="QHBoxLayout" name="horizontalLayout_11">
+              <item>
+               <widget class="QLineEdit" name="lineEdit_birthday"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="lineEdit_age">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="3" column="3">
+             <widget class="QLabel" name="label_9">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>行動電話</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>健保身份</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="5">
+             <widget class="QComboBox" name="comboBox_patient_discount">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="editable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>病歷號碼</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>身份證號</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <layout class="QHBoxLayout" name="horizontalLayout_10">
+              <item>
+               <widget class="QLineEdit" name="lineEdit_id">
+                <property name="clearButtonEnabled">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboBox_gender">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>120</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="checkBox_vegetarian">
+                <property name="text">
+                 <string>吃素</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_10">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>聯絡地址</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_27">
+              <property name="text">
+               <string>備註</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2" colspan="4">
+             <widget class="QLineEdit" name="lineEdit_address">
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_registration">
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="title">
+            <string>掛號資料</string>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <property name="topMargin">
+             <number>3</number>
+            </property>
+            <property name="bottomMargin">
+             <number>3</number>
+            </property>
+            <property name="spacing">
+             <number>4</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>門診類別</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>就醫類別</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="3">
+             <layout class="QHBoxLayout" name="horizontalLayout_8">
+              <item>
+               <widget class="QComboBox" name="comboBox_room">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="spinBox_reg_no">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                </property>
+                <property name="readOnly">
+                 <bool>false</bool>
+                </property>
+                <property name="buttonSymbols">
+                 <enum>QAbstractSpinBox::PlusMinus</enum>
+                </property>
+                <property name="suffix">
+                 <string/>
+                </property>
+                <property name="minimum">
+                 <number>0</number>
+                </property>
+                <property name="maximum">
+                 <number>999</number>
+                </property>
+                <property name="value">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="comboBox_treat_type">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item row="11" column="0">
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="9" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>實收金額</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLineEdit" name="lineEdit_regist_fee">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_7">
+              <item>
+               <widget class="QComboBox" name="comboBox_card">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="editable">
+                 <bool>true</bool>
+                </property>
+                <property name="maxVisibleItems">
+                 <number>20</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboBox_course">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>50</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="editable">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>掛號類別</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QCheckBox" name="checkBox_request_token">
+              <property name="text">
+               <string>虛擬健保卡請求授權</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_15">
+              <item>
+               <widget class="QLineEdit" name="lineEdit_receipt_fee">
+                <property name="font">
+                 <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="clearButtonEnabled">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboBox_payment_type"/>
+              </item>
+             </layout>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLabel" name="label_20">
+              <property name="text">
+               <string>日期班別</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="2">
+             <widget class="QLabel" name="label_22">
+              <property name="text">
+               <string>欠卡費</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="2">
+             <widget class="QLabel" name="label_26">
+              <property name="text">
+               <string>門診醫師</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="3">
+             <layout class="QHBoxLayout" name="horizontalLayout_9">
+              <item>
+               <widget class="QComboBox" name="comboBox_doctor">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="sizeAdjustPolicy">
+                 <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="checkBox_designated_doctor">
+                <property name="text">
+                 <string>指定醫師</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="8" column="2">
+             <widget class="QLabel" name="label_massage_fee">
+              <property name="text">
+               <string>民俗調理</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="0">
+             <widget class="QLabel" name="label_24">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>應收金額</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="2">
+             <widget class="QLabel" name="label_28">
+              <property name="text">
+               <string>備註</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_19">
+              <property name="text">
+               <string>掛號費</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="2">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>推拿師父</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_29">
+              <property name="text">
+               <string>卡序療程</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <layout class="QHBoxLayout" name="horizontalLayout_13">
+              <item>
+               <widget class="QDateEdit" name="dateEdit_case_date">
+                <property name="displayFormat">
+                 <string>yyyy/MM/dd</string>
+                </property>
+                <property name="calendarPopup">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboBox_period">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_18">
+              <property name="text">
+               <string>療程異常</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QLineEdit" name="lineEdit_diag_share_fee">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QComboBox" name="comboBox_card_abnormal"/>
+            </item>
+            <item row="1" column="3">
+             <widget class="QComboBox" name="comboBox_injury_type">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QComboBox" name="comboBox_ins_type">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboBox_visit"/>
+              </item>
+             </layout>
+            </item>
+            <item row="9" column="3">
+             <widget class="QComboBox" name="comboBox_remark">
+              <property name="editable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="3">
+             <widget class="QLineEdit" name="lineEdit_deposit_fee">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="3">
+             <widget class="QLineEdit" name="lineEdit_traditional_health_care_fee">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_11">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>負擔類別</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="comboBox_share_type">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QLabel" name="label_21">
+              <property name="text">
+               <string>門診負擔</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <item>
+               <widget class="QComboBox" name="comboBox_reg_type">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboBox_area">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLabel" name="label_13">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>傷病類別</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="3">
+             <layout class="QHBoxLayout" name="horizontalLayout_19">
+              <item>
+               <widget class="QComboBox" name="comboBox_massager">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="checkBox_designated_massager">
+                <property name="text">
+                 <string>指定推拿</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="8" column="1">
+             <widget class="QLineEdit" name="lineEdit_total_amount">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>診間診號</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QTabWidget" name="tabWidget_list">
+          <property name="tabShape">
+           <enum>QTabWidget::Rounded</enum>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tabWidget_wait">
+           <attribute name="title">
+            <string>候診名單</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="0" column="2">
+               <widget class="QToolButton" name="toolButton_ic_cancel">
+                <property name="text">
+                 <string>IC卡退掛</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QToolButton" name="toolButton_delete_wait">
+                <property name="text">
+                 <string>掛號刪除</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/gtk-cancel.svg</normaloff>../icons/gtk-cancel.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="8">
+               <widget class="QToolButton" name="toolButton_vhc_get_seq_number">
+                <property name="toolTip">
+                 <string>請求虛擬健保卡就醫序號</string>
+                </property>
+                <property name="text">
+                 <string>完成授權</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/network-receive.png</normaloff>../icons/network-receive.png</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="5">
+               <widget class="QToolButton" name="toolButton_precheck">
+                <property name="text">
+                 <string>診前檢查</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/applications-science.png</normaloff>../icons/applications-science.png</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QToolButton" name="toolButton_modify_wait">
+                <property name="text">
+                 <string>掛號修正</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="6">
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="0" column="7">
+               <widget class="QToolButton" name="toolButton_request_req_code">
+                <property name="toolTip">
+                 <string>重新請求授權碼</string>
+                </property>
+                <property name="text">
+                 <string>重新授權</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/edit-undo.png</normaloff>../icons/edit-undo.png</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QToolButton" name="toolButton_modify_patient">
+                <property name="text">
+                 <string>病患修正</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-open.svg</normaloff>../icons/document-open.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="4">
+               <widget class="QToolButton" name="toolButton_print_wait">
+                <property name="text">
+                 <string>補印掛號單</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tableWidget_wait">
+              <property name="contextMenuPolicy">
+               <enum>Qt::DefaultContextMenu</enum>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <column>
+               <property name="text">
+                <string>WaitKey</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>CaseKey</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>診療</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>時間</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>病歷號</string>
+               </property>
+               <property name="textAlignment">
+                <set>AlignLeading|AlignVCenter</set>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>病患姓名</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>診別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>診號</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>性別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>門診</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>掛號類別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>負擔類別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>就醫類別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>初複</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>卡序</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>門診醫師</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>掛號費</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>門診負擔</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>欠卡費</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>調理費</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>推拿師父</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>備註</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <widget class="QLabel" name="label_32">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: red</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_33">
+                <property name="text">
+                 <string>看診中</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_30">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: darkGreen</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_31">
+                <property name="text">
+                 <string>初診</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_34">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: purple</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_35">
+                <property name="text">
+                 <string>預約門診</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_36">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: blue</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_37">
+                <property name="text">
+                 <string>自費門診</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_past_history">
+                <property name="text">
+                 <string>過去病歷</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-open.png</normaloff>../icons/document-open.png</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox_visit_count">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>200</height>
+               </size>
+              </property>
+              <property name="title">
+               <string>最近兩個月健保初診統計</string>
+              </property>
+              <property name="flat">
+               <bool>true</bool>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <widget class="QTableWidget" name="tableWidget_first_visit">
+                 <column>
+                  <property name="text">
+                   <string>醫師</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>不指定醫師</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>指定醫師</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>初診合計</string>
+                  </property>
+                 </column>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tabWidget_wait_done">
+           <attribute name="title">
+            <string>已就診名單</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_14">
+              <item>
+               <widget class="QToolButton" name="toolButton_write_ic_treatment">
+                <property name="text">
+                 <string>IC寫卡</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-revert.svg</normaloff>../icons/document-revert.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_rewrite_ic_prescript">
+                <property name="text">
+                 <string>重寫醫令</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/view-restore.png</normaloff>../icons/view-restore.png</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_rewrite_ic_card">
+                <property name="text">
+                 <string>重寫IC</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/edit-redo-rtl.png</normaloff>../icons/edit-redo-rtl.png</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_ic_cancel_2">
+                <property name="text">
+                 <string>IC退掛</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="Line" name="line">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_edit_cases">
+                <property name="text">
+                 <string>掛號修正</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_modify_patient2">
+                <property name="text">
+                 <string>病患修正</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-open.svg</normaloff>../icons/document-open.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_precheck2">
+                <property name="text">
+                 <string>診前檢查</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/applications-science.png</normaloff>../icons/applications-science.png</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="Line" name="line_2">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_print_wait_2">
+                <property name="text">
+                 <string>掛號單</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_print_receipt">
+                <property name="text">
+                 <string>費用收據</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextUnderIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="checkBox_easy_mode">
+                <property name="text">
+                 <string>精簡
+顯示</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <property name="leftMargin">
+               <number>10</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_38">
+                <property name="text">
+                 <string>班別</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_all">
+                <property name="text">
+                 <string>全部</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_period1">
+                <property name="text">
+                 <string>早班</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_period2">
+                <property name="text">
+                 <string>午班</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_period3">
+                <property name="text">
+                 <string>晚班</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_print_misc1">
+                <property name="toolTip">
+                 <string>列印其他收據1</string>
+                </property>
+                <property name="text">
+                 <string>其他收據1</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_print_misc2">
+                <property name="toolTip">
+                 <string>列印其他收據2</string>
+                </property>
+                <property name="text">
+                 <string>其他收據2</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_quick_ic_card">
+                <property name="toolTip">
+                 <string>快速寫卡 [F12]</string>
+                </property>
+                <property name="text">
+                 <string>快速寫卡</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/ic_card.jpg</normaloff>../icons/ic_card.jpg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tableWidget_wait_completed">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <column>
+               <property name="text">
+                <string>WaitKey</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>CaseKey</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>病歷號</string>
+               </property>
+               <property name="textAlignment">
+                <set>AlignLeading|AlignVCenter</set>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>病患姓名</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>性別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>門診</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>負擔類別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>就醫類別</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>藥日</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>初複</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>卡序</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>診</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>診號</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>IC寫卡</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>主治醫師</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>領藥號</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>掛號費</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>門診負擔</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>藥品負擔</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>欠卡費</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>自費金額</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>民俗調理</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>應收金額</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>備註</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_ic_card"/>
+   <addaction name="action_vhc_ic_card"/>
+   <addaction name="action_new_patient"/>
+   <addaction name="action_reservation"/>
+   <addaction name="action_cancel"/>
+   <addaction name="separator"/>
+   <addaction name="action_save"/>
+   <addaction name="separator"/>
+   <addaction name="action_med_vpn"/>
+   <addaction name="action_med_vpn_vhc"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1681</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+    <addaction name="action_clear_wait"/>
+    <addaction name="separator"/>
+    <addaction name="action_save"/>
+    <addaction name="action_save_no_print"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>功能</string>
+    </property>
+    <addaction name="action_quick_write_ic_card"/>
+    <addaction name="action_rewrite_identifier"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>列印</string>
+    </property>
+    <addaction name="action_print_registration"/>
+    <addaction name="action_print_massage"/>
+   </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>虛擬健保卡</string>
+    </property>
+    <addaction name="action_vhc_ic_card"/>
+    <addaction name="action_rewrite_vhc_card_all"/>
+    <addaction name="separator"/>
+    <addaction name="action_read_vhc_image"/>
+    <addaction name="action_write_ic_treatment_by_qrcode"/>
+    <addaction name="action_rewrite_vhc_card"/>
+    <addaction name="action_rewrite_vhc_prescript"/>
+    <addaction name="separator"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_3"/>
+   <addaction name="menu_4"/>
+  </widget>
+  <action name="action_ic_card">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/contact-new.svg</normaloff>../icons/contact-new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>健保卡掛號[F1]</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+  </action>
+  <action name="action_new_patient">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/filenew.svg</normaloff>../icons/filenew.svg</iconset>
+   </property>
+   <property name="text">
+    <string>初診掛號[F3]</string>
+   </property>
+   <property name="toolTip">
+    <string>初診掛號[F3]</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="action_cancel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/cancel.svg</normaloff>../icons/cancel.svg</iconset>
+   </property>
+   <property name="text">
+    <string>取消掛號[Esc]</string>
+   </property>
+   <property name="shortcut">
+    <string>Esc</string>
+   </property>
+  </action>
+  <action name="action_save">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/filesave.svg</normaloff>../icons/filesave.svg</iconset>
+   </property>
+   <property name="text">
+    <string>掛號存檔[F10]</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
+   </property>
+  </action>
+  <action name="action_reservation">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/calendar.svg</normaloff>../icons/calendar.svg</iconset>
+   </property>
+   <property name="text">
+    <string>預約掛號</string>
+   </property>
+   <property name="toolTip">
+    <string>預約掛號</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_clear_wait">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-clear.svg</normaloff>../icons/gtk-clear.svg</iconset>
+   </property>
+   <property name="text">
+    <string>清除非本日的候診名單</string>
+   </property>
+  </action>
+  <action name="action_med_vpn">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-web.png</normaloff>../icons/emblem-web.png</iconset>
+   </property>
+   <property name="text">
+    <string>雲端藥歷[F5]</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="action_save_no_print">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/filesave.svg</normaloff>../icons/filesave.svg</iconset>
+   </property>
+   <property name="text">
+    <string>掛號存檔不印</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
+  <action name="action_quick_write_ic_card">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/ic_card.jpg</normaloff>../icons/ic_card.jpg</iconset>
+   </property>
+   <property name="text">
+    <string>快速寫卡</string>
+   </property>
+   <property name="toolTip">
+    <string>快速寫卡</string>
+   </property>
+   <property name="shortcut">
+    <string>F12</string>
+   </property>
+  </action>
+  <action name="action_print_registration">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印掛號單</string>
+   </property>
+   <property name="toolTip">
+    <string>列印掛號單</string>
+   </property>
+  </action>
+  <action name="action_print_massage">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印民俗調理單</string>
+   </property>
+   <property name="toolTip">
+    <string>列印民俗調理單</string>
+   </property>
+  </action>
+  <action name="action_vhc_ic_card">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/phone.png</normaloff>../icons/phone.png</iconset>
+   </property>
+   <property name="text">
+    <string>虛擬健保卡掛號[F2]</string>
+   </property>
+   <property name="toolTip">
+    <string>虛擬健保卡掛號[F2]</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
+  <action name="action_read_vhc_image">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applets-screenshooter.png</normaloff>../icons/applets-screenshooter.png</iconset>
+   </property>
+   <property name="text">
+    <string>虛擬健保卡QRCode檔掛號</string>
+   </property>
+   <property name="toolTip">
+    <string>虛擬健保卡QRCode檔掛號</string>
+   </property>
+  </action>
+  <action name="action_write_ic_treatment_by_qrcode">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/preferences-desktop-peripherals.png</normaloff>../icons/preferences-desktop-peripherals.png</iconset>
+   </property>
+   <property name="text">
+    <string>虛擬健保卡QRCode檔IC寫卡</string>
+   </property>
+   <property name="toolTip">
+    <string>虛擬健保卡QRCode檔IC寫卡</string>
+   </property>
+  </action>
+  <action name="action_rewrite_vhc_card">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-redo.png</normaloff>../icons/edit-redo.png</iconset>
+   </property>
+   <property name="text">
+    <string>虛擬健保卡QRCode檔重寫IC</string>
+   </property>
+   <property name="toolTip">
+    <string>虛擬健保卡QRCode檔重寫IC</string>
+   </property>
+  </action>
+  <action name="action_rewrite_vhc_prescript">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-generic.png</normaloff>../icons/emblem-generic.png</iconset>
+   </property>
+   <property name="text">
+    <string>虛擬健保卡QRCode檔重寫醫令</string>
+   </property>
+   <property name="toolTip">
+    <string>虛擬健保卡QRCode檔重寫醫令</string>
+   </property>
+  </action>
+  <action name="action_rewrite_vhc_card_all">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/phone.png</normaloff>../icons/phone.png</iconset>
+   </property>
+   <property name="text">
+    <string>虛擬健保卡寫卡 (寫入所有資料)</string>
+   </property>
+   <property name="toolTip">
+    <string>虛擬健保卡寫卡 (寫入所有資料)</string>
+   </property>
+  </action>
+  <action name="action_rewrite_identifier">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-redo.png</normaloff>../icons/edit-redo.png</iconset>
+   </property>
+   <property name="text">
+    <string>重新取得就醫識別碼</string>
+   </property>
+   <property name="toolTip">
+    <string>重新取得就醫識別碼</string>
+   </property>
+  </action>
+  <action name="action_med_vpn_vhc">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-web.png</normaloff>../icons/emblem-web.png</iconset>
+   </property>
+   <property name="text">
+    <string>虛擬卡雲端藥歷[F6]</string>
+   </property>
+   <property name="toolTip">
+    <string>虛擬卡雲端藥歷[F6]</string>
+   </property>
+   <property name="shortcut">
+    <string>F6</string>
+   </property>
+  </action>
+ </widget>
+ <tabstops>
+  <tabstop>lineEdit_query</tabstop>
+  <tabstop>lineEdit_patient_key</tabstop>
+  <tabstop>lineEdit_chart_no</tabstop>
+  <tabstop>lineEdit_id</tabstop>
+  <tabstop>comboBox_gender</tabstop>
+  <tabstop>lineEdit_birthday</tabstop>
+  <tabstop>lineEdit_age</tabstop>
+  <tabstop>comboBox_patient_share</tabstop>
+  <tabstop>comboBox_patient_discount</tabstop>
+  <tabstop>lineEdit_telephone</tabstop>
+  <tabstop>lineEdit_cellphone</tabstop>
+  <tabstop>lineEdit_address</tabstop>
+  <tabstop>lineEdit_patient_remark</tabstop>
+  <tabstop>comboBox_ins_type</tabstop>
+  <tabstop>comboBox_visit</tabstop>
+  <tabstop>comboBox_reg_type</tabstop>
+  <tabstop>comboBox_area</tabstop>
+  <tabstop>comboBox_share_type</tabstop>
+  <tabstop>comboBox_injury_type</tabstop>
+  <tabstop>comboBox_treat_type</tabstop>
+  <tabstop>comboBox_card</tabstop>
+  <tabstop>comboBox_course</tabstop>
+  <tabstop>comboBox_room</tabstop>
+  <tabstop>spinBox_reg_no</tabstop>
+  <tabstop>comboBox_card_abnormal</tabstop>
+  <tabstop>comboBox_doctor</tabstop>
+  <tabstop>checkBox_designated_doctor</tabstop>
+  <tabstop>lineEdit_regist_fee</tabstop>
+  <tabstop>comboBox_massager</tabstop>
+  <tabstop>checkBox_designated_massager</tabstop>
+  <tabstop>lineEdit_diag_share_fee</tabstop>
+  <tabstop>lineEdit_deposit_fee</tabstop>
+  <tabstop>lineEdit_total_amount</tabstop>
+  <tabstop>lineEdit_traditional_health_care_fee</tabstop>
+  <tabstop>comboBox_remark</tabstop>
+  <tabstop>toolButton_query</tabstop>
+  <tabstop>toolButton_modify_wait</tabstop>
+  <tabstop>toolButton_delete_wait</tabstop>
+  <tabstop>toolButton_ic_cancel</tabstop>
+  <tabstop>toolButton_modify_patient</tabstop>
+  <tabstop>toolButton_print_wait</tabstop>
+  <tabstop>toolButton_precheck</tabstop>
+  <tabstop>tableWidget_first_visit</tabstop>
+  <tabstop>tableWidget_wait_completed</tabstop>
+  <tabstop>radioButton_all</tabstop>
+  <tabstop>radioButton_period1</tabstop>
+  <tabstop>radioButton_period2</tabstop>
+  <tabstop>radioButton_period3</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

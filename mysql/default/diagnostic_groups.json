@@ -1,0 +1,1784 @@
+[
+    {
+        "DictGroupsKey": 9,
+        "DictOrderNo": null,
+        "DictGroupsType": "脈象",
+        "DictGroupsTopLevel": "一般",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "一般",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 11,
+        "DictOrderNo": null,
+        "DictGroupsType": "備註",
+        "DictGroupsTopLevel": "一般",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "一般",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 28,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "大腸",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 29,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "小腸",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 30,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "火",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 31,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "心",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 32,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "血",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 33,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "肝",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 34,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "肺",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 35,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "風",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 36,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "胃",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 37,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "氣",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 38,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "寒",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 39,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "脾",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 40,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "暑",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 41,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "腎",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 42,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "膀胱",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 43,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "衛",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 44,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "濕",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 45,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "營",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 46,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "膽",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 47,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "燥",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 48,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "00體質",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 49,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "01頭部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 50,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "02腦部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 51,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "03面色",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 52,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "03面部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 53,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "04眼部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 54,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "05耳部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 55,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "06鼻部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 56,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "07口部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 57,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "08唇齒",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 58,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "09皮膚",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 59,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "10咽喉",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 60,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "11喘咳",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 61,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "12痰涎",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 62,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "13血液",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 63,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "14血管",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 64,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "15心臟",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 65,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "16內分泌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 66,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "17胸腔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 67,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "18肝膽",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 68,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "19腹腔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 69,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "20腎臟",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 70,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "21脾胃",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 71,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "22腸部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 72,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "23泌尿",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 73,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "24肛門",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 74,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "25大便",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 75,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "26小便",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 76,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "27精神疾患",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 77,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "28指甲",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 78,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "29病情",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 79,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "29睡眠",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 80,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "30感染",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 81,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "31性",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 82,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "32兒科",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 83,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "33疼痛",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 84,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "34習性",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 85,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "35出汗",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 86,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "36寒熱",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 87,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "37工作職場",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 88,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "38時間",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 89,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "39聲音",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 90,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "40日夜",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 91,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "40建議",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 92,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "診治史",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 93,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "檢驗",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 94,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "檢驗2",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 95,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "雜病",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 96,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "醫院",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 97,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "大腸",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 98,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "小腸",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 99,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "心",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 100,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "火",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 101,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "五官",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 102,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "心悸",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 103,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "不寐",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 104,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "甲狀腺",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 105,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "皮膚",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 106,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "血",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 107,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "肝",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 108,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "肺",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 109,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "胃",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 110,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "風",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 111,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "咳嗽",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 112,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "氣",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 113,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "氣血",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 114,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "眩暈",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 115,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "貧血",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 116,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "婦科",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 117,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "寒",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 118,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "腎",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 119,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "脾",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 120,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "暑",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 121,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "喘症",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 122,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "痰",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 123,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "腸胃",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 124,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "感冒",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 125,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "膀胱",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 126,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "衛",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 127,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "糖尿病",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 128,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "頭痛",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 129,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "營",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 130,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "燥",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 131,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "膽",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 132,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "內科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "濕",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 133,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "01月經",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 134,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "02乳房",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 135,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "03子宮",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 136,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "03卵巢",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 137,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "04陰道",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 138,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "05妊娠",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 139,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "06帶下",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 140,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "07經色",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 141,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "08經血",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 142,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "09經量",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 143,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "10經質",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 144,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "11經痛",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 145,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "12經期",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 146,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "13分泌物",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 147,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "14產後",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 148,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "15雜病",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 149,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "16其它",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 150,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "診治史",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 151,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "檢驗",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 152,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "檢驗2",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 153,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "雜病",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 154,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "婦科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "醫院",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 155,
+        "DictOrderNo": null,
+        "DictGroupsType": "治則",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "傷科",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 156,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "00工作",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 157,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "00交通",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 158,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "00勞損",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 159,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "00意外",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 160,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "00運動",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 161,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "01預後",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 162,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "02頭部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 163,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "03頸部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 164,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "04肩部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 165,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "05胸部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 166,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "06背部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 167,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "07腹部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 168,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "08腰部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 169,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "09股部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 170,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "10臂部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 171,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "11肘部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 172,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "12腕部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 173,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "13手掌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 174,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "14手指",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 175,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "15大腿",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 176,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "16膝部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 177,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "17小腿",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 178,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "18踝部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 179,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "19腳掌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 180,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "20腳趾",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 181,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "21上肢",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 182,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "22下肢",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 183,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "23肢體",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 184,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "23脊椎",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 185,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "24肌肉",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 186,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "24軟組織",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 187,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "25症狀",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 188,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "26症狀",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 189,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "27症狀",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 190,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "28骨折",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 191,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "29脫臼",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 192,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "30時間",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 193,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "A部位",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 194,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "B疼痛",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 195,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "C病情",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 196,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "D醫師指示",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 197,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "E患部",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 198,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "診治史",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 199,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "檢驗",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 200,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "檢驗2",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 201,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "醫院",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 202,
+        "DictOrderNo": null,
+        "DictGroupsType": "主訴",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "雜病",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 203,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "傷",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 204,
+        "DictOrderNo": null,
+        "DictGroupsType": "辨證",
+        "DictGroupsTopLevel": "傷骨科",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "傷科",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 205,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌苔",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "白苔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 206,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌苔",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "灰苔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 207,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "光滑舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 208,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "青舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 209,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "花剝舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 210,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "胖大舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 211,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "紅舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 212,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌苔",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "厚苔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 213,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌苔",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "染苔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 214,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "淡白舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 215,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "絳舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 216,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "紫舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 217,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌苔",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "黃苔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 218,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌苔",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "黑苔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 219,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "裂紋舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 220,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "齒痕舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 221,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌質",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "瘦薄舌",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 222,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌苔",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "積粉苔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    },
+    {
+        "DictGroupsKey": 223,
+        "DictOrderNo": null,
+        "DictGroupsType": "舌診",
+        "DictGroupsTopLevel": "舌苔",
+        "DictGroupsLevel2": null,
+        "DictGroupsName": "薄苔",
+        "TimeStamp": "2020-02-07 08:05:52"
+    }
+]

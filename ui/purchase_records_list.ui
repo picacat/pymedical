@@ -1,0 +1,684 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowStatisticsCommissionAmount</class>
+ <widget class="QMainWindow" name="WindowStatisticsCommissionAmount">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>醫師銷售業績統計</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_self_prescript">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <column>
+         <property name="text">
+          <string>prescript_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>case_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>medicine_set</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>medicine_type</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>medicine_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>銷售日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退換貨日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>保險</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單據編號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>促銷</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>產品名稱</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>數量</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單位</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>日份</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>總量</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單價</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>折扣</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>應收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>實收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠款</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還款</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還款日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退貨金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>醫師</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>傷助推薦</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>護佐</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>經手人</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>備註</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>代收費用</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_export_agent">
+          <property name="text">
+           <string>匯出Excel</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/gtk-redo-ltr.svg</normaloff>../icons/gtk-redo-ltr.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_set_agent_debt">
+          <property name="text">
+           <string>代收欠款</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/task-attention.png</normaloff>../icons/task-attention.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_self_prescript_agent">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>150</height>
+         </size>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <column>
+         <property name="text">
+          <string>prescript_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>case_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>medicine_set</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>medicine_type</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>medicine_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>銷售日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退換貨日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>保險</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單據編號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>促銷</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>產品名稱</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>數量</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單位</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>日份</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>總量</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單價</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>折扣</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>應收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>實收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠款</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還款</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還款日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>退貨金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>醫師</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>傷助推薦</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>護佐</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>經手人</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>備註</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTextEdit" name="textEdit_remark">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>150</height>
+         </size>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QToolButton" name="toolButton_return">
+            <property name="text">
+             <string>退貨</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/gtk-redo-ltr.svg</normaloff>../icons/gtk-redo-ltr.svg</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_exchange">
+            <property name="text">
+             <string>換貨</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/gtk-refresh.svg</normaloff>../icons/gtk-refresh.svg</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_return_course">
+            <property name="text">
+             <string>整個療程退貨</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/gtk-undo-ltr.svg</normaloff>../icons/gtk-undo-ltr.svg</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_delete">
+            <property name="text">
+             <string>刪除</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/button_cancel.svg</normaloff>../icons/button_cancel.svg</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_set_debt">
+            <property name="text">
+             <string>欠款</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/task-attention.png</normaloff>../icons/task-attention.png</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_repayment">
+            <property name="text">
+             <string>還款</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/gtk-refresh.svg</normaloff>../icons/gtk-refresh.svg</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_set_discount">
+            <property name="text">
+             <string>折扣設定</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/help-about.png</normaloff>../icons/help-about.png</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_set_person">
+            <property name="text">
+             <string>銷售設定</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/system-users.png</normaloff>../icons/system-users.png</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_set_single_person">
+            <property name="text">
+             <string>單一品項銷售設定</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>../icons/user-info.png</normaloff>../icons/user-info.png</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>33</height>
+    </rect>
+   </property>
+  </widget>
+  <action name="action_export_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出Excel</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

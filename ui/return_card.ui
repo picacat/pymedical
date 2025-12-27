@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ReturnCardWindow</class>
+ <widget class="QMainWindow" name="ReturnCardWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1115</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>樣板</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="leftMargin">
+         <number>10</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>欠還卡期間 從</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDateEdit" name="dateEdit_start_date">
+          <property name="displayFormat">
+           <string>yyyy/MM/dd</string>
+          </property>
+          <property name="calendarPopup">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>至</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDateEdit" name="dateEdit_end_date">
+          <property name="displayFormat">
+           <string>yyyy/MM/dd</string>
+          </property>
+          <property name="calendarPopup">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_deposit">
+          <property name="text">
+           <string>欠卡資料</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_return">
+          <property name="text">
+           <string>還卡資料</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_all">
+          <property name="text">
+           <string>全部資料</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_return_card">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>DepositKey</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>CaseKey</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>掛號類別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號碼</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病患姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>出生日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>身份證號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>卡片號碼</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠卡日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠卡班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還卡日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還卡班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>健保卡序</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>療程</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>掛號人員</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>還卡人員</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>欠卡費</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>完診</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_return_card"/>
+   <addaction name="separator"/>
+   <addaction name="action_add_deposit"/>
+   <addaction name="action_remove_deposit"/>
+   <addaction name="separator"/>
+   <addaction name="action_open_medical_record"/>
+   <addaction name="action_undo"/>
+   <addaction name="action_modify_deposit_fee"/>
+   <addaction name="action_change_return_date"/>
+   <addaction name="action_change_return_period"/>
+   <addaction name="separator"/>
+   <addaction name="action_print_registration_form"/>
+   <addaction name="action_print_return_registration_form"/>
+   <addaction name="action_export_to_excel"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1115</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+    <addaction name="action_print_return_registration_form"/>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <action name="action_return_card">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/contact-new.svg</normaloff>../icons/contact-new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>健保卡還卡</string>
+   </property>
+   <property name="toolTip">
+    <string>健保卡還卡</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_open_medical_record">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/fileopen.svg</normaloff>../icons/fileopen.svg</iconset>
+   </property>
+   <property name="text">
+    <string>調閱病歷</string>
+   </property>
+  </action>
+  <action name="action_undo">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-undo.svg</normaloff>../icons/edit-undo.svg</iconset>
+   </property>
+   <property name="text">
+    <string>還原成欠卡</string>
+   </property>
+  </action>
+  <action name="action_print_return_registration_form">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>列印還卡收據</string>
+   </property>
+   <property name="toolTip">
+    <string>列印還卡收據</string>
+   </property>
+  </action>
+  <action name="action_print_registration_form">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印欠卡收據</string>
+   </property>
+   <property name="toolTip">
+    <string>列印欠卡收據</string>
+   </property>
+  </action>
+  <action name="action_add_deposit">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/add-files-to-archive.svg</normaloff>../icons/add-files-to-archive.svg</iconset>
+   </property>
+   <property name="text">
+    <string>新增欠卡資料</string>
+   </property>
+   <property name="toolTip">
+    <string>新增欠卡資料</string>
+   </property>
+  </action>
+  <action name="action_remove_deposit">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-remove.svg</normaloff>../icons/gtk-remove.svg</iconset>
+   </property>
+   <property name="text">
+    <string>刪除欠卡資料</string>
+   </property>
+   <property name="toolTip">
+    <string>刪除欠卡資料</string>
+   </property>
+  </action>
+  <action name="action_modify_deposit_fee">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-edit.svg</normaloff>../icons/gtk-edit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>更改欠卡費</string>
+   </property>
+   <property name="toolTip">
+    <string>更改欠卡費</string>
+   </property>
+  </action>
+  <action name="action_change_return_date">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/calendar.svg</normaloff>../icons/calendar.svg</iconset>
+   </property>
+   <property name="text">
+    <string>更改還卡日期</string>
+   </property>
+   <property name="toolTip">
+    <string>更改還卡日期</string>
+   </property>
+  </action>
+  <action name="action_change_return_period">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/appointment-soon.png</normaloff>../icons/appointment-soon.png</iconset>
+   </property>
+   <property name="text">
+    <string>更改還卡班別</string>
+   </property>
+   <property name="toolTip">
+    <string>更改還卡班別</string>
+   </property>
+  </action>
+  <action name="action_export_to_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出Excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出Excel</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

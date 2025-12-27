@@ -1,0 +1,726 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Window_certificate_diagnosis</class>
+ <widget class="QMainWindow" name="Window_certificate_diagnosis">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1234</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>醫療費用證明</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>今年度已開立醫療費用證明</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QTableWidget" name="tableWidget_certificate_list">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>CertificateKey</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>CaseKey</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>開立日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>病歷號碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>姓名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>保險</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>主治醫師</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>診療日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>結束日期</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>證明費</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>已批價</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QTableWidget" name="tableWidget_certificate_items">
+            <property name="editTriggers">
+             <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+            </property>
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectItems</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>CertificateItemsKey</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>CaseKey</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>保險</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>掛號費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診負擔</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥品負擔</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>自付金額</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>健保申報</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>自費藥費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>自費處置</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>其他費用</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>折扣</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>自費合計</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>自付合計</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診治醫師</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_change_ins_type">
+              <property name="text">
+               <string>改保險</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/document-edit.png</normaloff>../icons/document-edit.png</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_calculate_fees">
+              <property name="text">
+               <string>批價檢查</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/accessories-calculator.png</normaloff>../icons/accessories-calculator.png</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_add_medical_record">
+              <property name="text">
+               <string>新增病歷</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/list-add.svg</normaloff>../icons/list-add.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_add_cert_fee">
+              <property name="text">
+               <string>開立費用</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/list-add.png</normaloff>../icons/list-add.png</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_remove_item">
+              <property name="text">
+               <string>刪除項目</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/cancel.svg</normaloff>../icons/cancel.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_print_self">
+              <property name="text">
+               <string>列印自費明細</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_export_case_excel">
+              <property name="text">
+               <string>匯出Excel</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_export_self_pdf">
+              <property name="text">
+               <string>匯出自費明細pdf</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_add_certificate"/>
+   <addaction name="action_modify_certificate_date"/>
+   <addaction name="separator"/>
+   <addaction name="action_query_certificate"/>
+   <addaction name="action_remove_certificate"/>
+   <addaction name="separator"/>
+   <addaction name="action_add_certificate_fee"/>
+   <addaction name="separator"/>
+   <addaction name="action_print_certificate"/>
+   <addaction name="action_print_certificate_cash"/>
+   <addaction name="action_print_certificate_cash2"/>
+   <addaction name="action_print_certificate_ins_fee"/>
+   <addaction name="separator"/>
+   <addaction name="action_print_certificate_total"/>
+   <addaction name="action_print_certificate_cash_total"/>
+   <addaction name="action_print_certificate_prescript"/>
+   <addaction name="separator"/>
+   <addaction name="action_print_certificate_receipt"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1234</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+    <addaction name="action_print_certificate_pdf"/>
+    <addaction name="action_print_certificate_cash_pdf"/>
+    <addaction name="action_print_certificate_total_pdf"/>
+    <addaction name="action_print_certificate_prescript_pdf"/>
+    <addaction name="separator"/>
+    <addaction name="action_export_certificate_list_excel"/>
+    <addaction name="action_export_certificate_list_by_month_to_excel"/>
+    <addaction name="action_export_certificate_list_by_year_to_excel"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>列印</string>
+    </property>
+    <addaction name="action_print_certificate"/>
+    <addaction name="action_print_certificate_cash"/>
+    <addaction name="action_print_certificate_total"/>
+    <addaction name="action_print_certificate_prescript"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_certificate_2"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_certificate_ins_only"/>
+    <addaction name="action_print_certificate_self_only"/>
+    <addaction name="action_print_certificate_self_medicine"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_add_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-new.svg</normaloff>../icons/document-new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>開立證明</string>
+   </property>
+   <property name="toolTip">
+    <string>開立費用證明</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_remove_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/user-trash.png</normaloff>../icons/user-trash.png</iconset>
+   </property>
+   <property name="text">
+    <string>刪除證明</string>
+   </property>
+  </action>
+  <action name="action_print_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+   </property>
+   <property name="text">
+    <string>印費用明細</string>
+   </property>
+   <property name="toolTip">
+    <string>列印費用明細</string>
+   </property>
+  </action>
+  <action name="action_query_certificate">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-open.svg</normaloff>../icons/document-open.svg</iconset>
+   </property>
+   <property name="text">
+    <string>查詢資料</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_total">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>印費用總表</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_prescript">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
+   </property>
+   <property name="text">
+    <string>印費用證明</string>
+   </property>
+   <property name="toolTip">
+    <string>印費用證明</string>
+   </property>
+  </action>
+  <action name="action_add_certificate_fee">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>產生開立證明費</string>
+   </property>
+   <property name="toolTip">
+    <string>產生開立證明費</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_total_pdf">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>費用總表pdf</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出費用總表pdf</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_prescript_pdf">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>費用證明pdf</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出費用證明pdf</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_pdf">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>費用明細pdf</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出費用明細pdf</string>
+   </property>
+  </action>
+  <action name="action_export_certificate_list_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-select-all.svg</normaloff>../icons/edit-select-all.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出已開立費用證明明細至excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出已開立費用證明明細至excel</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_cash">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+   </property>
+   <property name="text">
+    <string>印自付明細</string>
+   </property>
+   <property name="toolTip">
+    <string>列印自付明細</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_cash_pdf">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>自付明細pdf</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出自付明細pdf</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印費用明細 (不含報稅憑證字樣)</string>
+   </property>
+   <property name="toolTip">
+    <string>列印費用明細</string>
+   </property>
+  </action>
+  <action name="action_export_certificate_list_by_month_to_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出整月份已開立費用證明至excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出整月份已開立費用證明至excel</string>
+   </property>
+  </action>
+  <action name="action_export_certificate_list_by_year_to_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出整年度已開立費用證明至excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出整年度已開立費用證明至excel</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_receipt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
+   </property>
+   <property name="text">
+    <string>印費用收據</string>
+   </property>
+   <property name="toolTip">
+    <string>列印費用收據</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_cash2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-laser.png</normaloff>../icons/printer-laser.png</iconset>
+   </property>
+   <property name="text">
+    <string>印自付明細2</string>
+   </property>
+   <property name="toolTip">
+    <string>列印自付明細2</string>
+   </property>
+  </action>
+  <action name="action_modify_certificate_date">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>改開立日期</string>
+   </property>
+   <property name="toolTip">
+    <string>修改開立日期</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_ins_fee">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-laser.png</normaloff>../icons/printer-laser.png</iconset>
+   </property>
+   <property name="text">
+    <string>印健保明細</string>
+   </property>
+   <property name="toolTip">
+    <string>印健保明細</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_cash_total">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-laser.png</normaloff>../icons/printer-laser.png</iconset>
+   </property>
+   <property name="text">
+    <string>印自付總表</string>
+   </property>
+   <property name="toolTip">
+    <string>列印自付總表</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_ins_only">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-laser.png</normaloff>../icons/printer-laser.png</iconset>
+   </property>
+   <property name="text">
+    <string>印健保自付明細</string>
+   </property>
+   <property name="toolTip">
+    <string>印健保自付明細</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_self_only">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-laser.png</normaloff>../icons/printer-laser.png</iconset>
+   </property>
+   <property name="text">
+    <string>印自費金額明細</string>
+   </property>
+   <property name="toolTip">
+    <string>印自費金額明細</string>
+   </property>
+  </action>
+  <action name="action_print_certificate_self_medicine">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-laser.png</normaloff>../icons/printer-laser.png</iconset>
+   </property>
+   <property name="text">
+    <string>印自費藥品明細</string>
+   </property>
+   <property name="toolTip">
+    <string>印自費藥品明細</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

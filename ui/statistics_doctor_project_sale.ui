@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowStatisticsDoctorCommission</class>
+ <widget class="QMainWindow" name="WindowStatisticsDoctorCommission">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>醫師銷售業績統計</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QToolButton" name="toolButton_export_to_excel">
+          <property name="text">
+           <string>匯出專案產品銷售抽成統計Excel</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_self_prescript">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>case_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>門診日期</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>診別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病歷號</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>保險</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>組別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>專案名稱</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>數量</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單位</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>單價</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>藥日</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>實收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>產品抽成</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>折扣</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>抽成金</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>銷售醫師</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>批價人員</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>28</height>
+    </rect>
+   </property>
+  </widget>
+  <action name="action_export_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出Excel</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

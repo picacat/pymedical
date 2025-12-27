@@ -1,0 +1,47 @@
+{
+    // 設定基本掃描路徑
+    "include": [
+        "./"
+    ],
+
+    // 允許動態 UI 類型
+    "typeCheckingMode": "basic",  // 可改 strict，但噪音會變多
+
+    // 忽略靜態條件檢查
+    "reportUnreachableCode": "none",
+    
+    // 忽略 PyQt / PySide 動態屬性報錯
+    "reportAttributeAccessIssue": "none",
+    "reportOptionalMemberAccess": "none",
+    "reportGeneralTypeIssues": "none",
+    "reportOptionalCall": "none",
+    "reportGeneralTypeIssues": "none",
+
+
+    // 忽略 PyQt 類別未解析警告
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none",
+    "reportUnusedImport": "information",
+
+    // 保留重要錯誤（像是語法錯誤、未定義變數）
+    "reportUnboundVariable": "error",
+
+    // 允許使用 Any
+    "useLibraryCodeForTypes": true,
+
+    // Python 版本設定（改成你的環境）
+    "pythonVersion": "3.11",
+    "pythonPlatform": "Linux",
+
+    // 設定虛擬環境
+    "venvPath": "/home/john/venv",
+    "venv": "venv",
+
+    // 避免第三方 UI 庫被當成錯誤
+    "exclude": [
+        "**/__pycache__",
+        "**/build",
+        "**/.venv",
+        "**/venv"
+    ]
+}

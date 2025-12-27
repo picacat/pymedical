@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>InsApplyWindow</class>
+ <widget class="QMainWindow" name="InsApplyWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1115</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>健保申報</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QTabWidget" name="tabWidget_ins_data"/>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_reapply"/>
+   <addaction name="separator"/>
+   <addaction name="action_open_nhi_vpn"/>
+   <addaction name="action_upload"/>
+   <addaction name="action_ins_lock"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1115</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_reapply">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-redo-ltr.svg</normaloff>../icons/gtk-redo-ltr.svg</iconset>
+   </property>
+   <property name="text">
+    <string>重新申報</string>
+   </property>
+   <property name="toolTip">
+    <string>重新申報</string>
+   </property>
+  </action>
+  <action name="action_open_nhi_vpn">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applications-internet.png</normaloff>../icons/applications-internet.png</iconset>
+   </property>
+   <property name="text">
+    <string>健保VPN網站</string>
+   </property>
+  </action>
+  <action name="action_upload">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/network-server.png</normaloff>../icons/network-server.png</iconset>
+   </property>
+   <property name="text">
+    <string>上傳申報資料</string>
+   </property>
+  </action>
+  <action name="action_ins_lock">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/lock.svg</normaloff>../icons/lock.svg</iconset>
+   </property>
+   <property name="text">
+    <string>申報資料上鎖</string>
+   </property>
+   <property name="toolTip">
+    <string>申報資料上鎖</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

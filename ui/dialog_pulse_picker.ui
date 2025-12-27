@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog_pulse_picker</class>
+ <widget class="QDialog" name="Dialog_pulse_picker">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>850</width>
+    <height>747</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>脈象</string>
+  </property>
+  <property name="modal">
+   <bool>false</bool>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="1">
+        <widget class="QToolButton" name="toolButton_1">
+         <property name="text">
+          <string>左脈</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QToolButton" name="toolButton_4">
+         <property name="text">
+          <string>寸</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QToolButton" name="toolButton_19">
+         <property name="text">
+          <string>伏</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5">
+        <widget class="QToolButton" name="toolButton_9">
+         <property name="text">
+          <string>數</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="5">
+        <widget class="QToolButton" name="toolButton_51">
+         <property name="text">
+          <string>: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="4">
+        <widget class="QToolButton" name="toolButton_26">
+         <property name="text">
+          <string>緩</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QToolButton" name="toolButton_18">
+         <property name="text">
+          <string>反關</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="8">
+        <widget class="QToolButton" name="toolButton_41">
+         <property name="text">
+          <string>有力</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="6">
+        <widget class="QToolButton" name="toolButton_32">
+         <property name="text">
+          <string>散</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="5">
+        <widget class="QToolButton" name="toolButton_29">
+         <property name="text">
+          <string>緊</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="7">
+        <widget class="QToolButton" name="toolButton_11">
+         <property name="text">
+          <string>實</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="8">
+        <widget class="QToolButton" name="toolButton_12">
+         <property name="text">
+          <string>有根</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="10">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="6">
+        <widget class="QToolButton" name="toolButton_33">
+         <property name="text">
+          <string>微</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QToolButton" name="toolButton_6">
+         <property name="text">
+          <string>尺</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="6">
+        <widget class="QToolButton" name="toolButton_35">
+         <property name="text">
+          <string>細</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="2">
+        <widget class="QToolButton" name="toolButton_17">
+         <property name="text">
+          <string>革</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="QToolButton" name="toolButton_43">
+         <property name="text">
+          <string>大</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6">
+        <widget class="QToolButton" name="toolButton_10">
+         <property name="text">
+          <string>虛</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QToolButton" name="toolButton_8">
+         <property name="text">
+          <string>遲</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="8">
+        <widget class="QToolButton" name="toolButton_48">
+         <property name="text">
+          <string>義肢</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="7" column="6">
+        <widget class="QToolButton" name="toolButton_50">
+         <property name="text">
+          <string> - </string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="5">
+        <widget class="QToolButton" name="toolButton_30">
+         <property name="text">
+          <string>急</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QToolButton" name="toolButton_7">
+         <property name="text">
+          <string>沉</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QToolButton" name="toolButton_20">
+         <property name="text">
+          <string>牢</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="4">
+        <widget class="QToolButton" name="toolButton_49">
+         <property name="text">
+          <string>, </string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QToolButton" name="toolButton_23">
+         <property name="text">
+          <string>代</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="5">
+        <widget class="QToolButton" name="toolButton_27">
+         <property name="text">
+          <string>動</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="8">
+        <widget class="QToolButton" name="toolButton_42">
+         <property name="text">
+          <string>無力</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QToolButton" name="toolButton_13">
+         <property name="text">
+          <string>濡</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="8">
+        <widget class="QToolButton" name="toolButton_47">
+         <property name="text">
+          <string>殘障</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="8">
+        <widget class="QToolButton" name="toolButton_40">
+         <property name="text">
+          <string>無神</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="6">
+        <widget class="QToolButton" name="toolButton_34">
+         <property name="text">
+          <string>短</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QToolButton" name="toolButton_44">
+         <property name="text">
+          <string>小</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0" colspan="11">
+        <widget class="QTableWidget" name="tableWidget_pulse">
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="rowCount">
+          <number>16</number>
+         </property>
+         <property name="columnCount">
+          <number>10</number>
+         </property>
+         <attribute name="horizontalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+         <attribute name="horizontalHeaderDefaultSectionSize">
+          <number>100</number>
+         </attribute>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <row/>
+         <column/>
+         <column/>
+         <column/>
+         <column/>
+         <column/>
+         <column/>
+         <column/>
+         <column/>
+         <column/>
+         <column/>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QToolButton" name="toolButton_14">
+         <property name="text">
+          <string>芤</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="4">
+        <widget class="QToolButton" name="toolButton_24">
+         <property name="text">
+          <string>結</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="5">
+        <widget class="QToolButton" name="toolButton_28">
+         <property name="text">
+          <string>促</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="6">
+        <widget class="QToolButton" name="toolButton_31">
+         <property name="text">
+          <string>弱</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="7">
+        <widget class="QToolButton" name="toolButton_37">
+         <property name="text">
+          <string>長</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="8">
+        <widget class="QToolButton" name="toolButton_38">
+         <property name="text">
+          <string>無根</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1" colspan="9">
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QToolButton" name="toolButton_15">
+         <property name="text">
+          <string>洪</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="4">
+        <widget class="QToolButton" name="toolButton_25">
+         <property name="text">
+          <string>澀</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="8">
+        <widget class="QToolButton" name="toolButton_39">
+         <property name="text">
+          <string>有神</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QToolButton" name="toolButton_2">
+         <property name="text">
+          <string>浮</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="7">
+        <widget class="QToolButton" name="toolButton_36">
+         <property name="text">
+          <string>滑</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="9">
+        <widget class="QToolButton" name="toolButton_52">
+         <property name="text">
+          <string>硬脈</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QToolButton" name="toolButton_5">
+         <property name="text">
+          <string>關</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="9">
+        <widget class="QToolButton" name="toolButton_45">
+         <property name="text">
+          <string>正常脈</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QToolButton" name="toolButton_16">
+         <property name="text">
+          <string>弦</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QToolButton" name="toolButton_3">
+         <property name="text">
+          <string>右脈</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="7">
+        <widget class="QToolButton" name="toolButton_53">
+         <property name="text">
+          <string>略</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="7">
+        <widget class="QToolButton" name="toolButton_54">
+         <property name="text">
+          <string>湧</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="3">
+        <widget class="QToolButton" name="toolButton_22">
+         <property name="text">
+          <string>溢</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
+        <widget class="QToolButton" name="toolButton_21">
+         <property name="text">
+          <string>覆</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QToolButton" name="toolButton_55">
+         <property name="text">
+          <string>硬</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="2">
+        <widget class="QToolButton" name="toolButton_46">
+         <property name="text">
+          <string>略</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

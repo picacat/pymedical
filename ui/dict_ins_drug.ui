@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowDictInsDrug</class>
+ <widget class="QMainWindow" name="WindowDictInsDrug">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1162</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>健保藥品</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QFrame" name="frame_medicine">
+        <property name="maximumSize">
+         <size>
+          <width>750</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <property name="spacing">
+          <number>6</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>藥品詞庫</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>請輸入關鍵字</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_medicine_query"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_medicine_query">
+             <property name="text">
+              <string>開始查詢</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTableWidget" name="tableWidget_medicine">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SingleSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <column>
+            <property name="text">
+             <string>MedicineKey</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>類別</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>藥品名稱</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>健保藥品碼</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>有效期限</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>清除</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>錯誤訊息</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>有效期限</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="spinBox_valid_year">
+             <property name="minimum">
+              <number>2010</number>
+             </property>
+             <property name="maximum">
+              <number>2099</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>年</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="spinBox_valid_month">
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="prefix">
+              <string/>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>12</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>月</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>顯示方式:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButton_all">
+             <property name="text">
+              <string>所有資料</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButton_errors">
+             <property name="text">
+              <string>錯誤資料</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>健保藥品詞庫</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>請輸入關鍵字</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_drug_query"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_drug_query">
+            <property name="text">
+             <string>開始查詢</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableWidget_drug">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <column>
+           <property name="text">
+            <string>DrugKey</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>健保藥品碼</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>健保藥品名稱</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>劑型</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>製造廠名稱</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>有限期限</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>轉入</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>製造廠名稱</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBox_supplier"/>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_update_drug"/>
+   <addaction name="action_update_valid_date"/>
+   <addaction name="action_update_prescript"/>
+   <addaction name="action_assign_ins_code"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1162</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+    <addaction name="action_update_drug"/>
+    <addaction name="action_sync_drug"/>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_sync_drug">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/archive-insert-directory.svg</normaloff>../icons/archive-insert-directory.svg</iconset>
+   </property>
+   <property name="text">
+    <string>開啟及更新健保藥品檔</string>
+   </property>
+  </action>
+  <action name="action_update_valid_date">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/emblem-default.png</normaloff>../icons/emblem-default.png</iconset>
+   </property>
+   <property name="text">
+    <string>更新有效期限</string>
+   </property>
+   <property name="toolTip">
+    <string>自動更新有效期限</string>
+   </property>
+  </action>
+  <action name="action_update_drug">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/applications-internet.png</normaloff>../icons/applications-internet.png</iconset>
+   </property>
+   <property name="text">
+    <string>線上更新健保藥品</string>
+   </property>
+  </action>
+  <action name="action_update_prescript">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-save.svg</normaloff>../icons/gtk-save.svg</iconset>
+   </property>
+   <property name="text">
+    <string>更新病歷處方資料</string>
+   </property>
+   <property name="toolTip">
+    <string>更新病歷處方資料</string>
+   </property>
+  </action>
+  <action name="action_assign_ins_code">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/stock_about.svg</normaloff>../icons/stock_about.svg</iconset>
+   </property>
+   <property name="text">
+    <string>指定藥廠藥品碼</string>
+   </property>
+   <property name="toolTip">
+    <string>指定藥廠藥品碼</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

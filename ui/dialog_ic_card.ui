@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog_ic_card</class>
+ <widget class="QDialog" name="Dialog_ic_card">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>970</width>
+    <height>458</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>健保IC卡作業</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="2">
+      <widget class="QToolButton" name="toolButton_set_ic_card_pin">
+       <property name="text">
+        <string>設定病患健保卡密碼</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/user-info.png</normaloff>../icons/user-info.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QToolButton" name="toolButton_verify_sam">
+       <property name="text">
+        <string>讀卡機安全模組認證</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/emblem-default.png</normaloff>../icons/emblem-default.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QToolButton" name="toolButton_update_ic_card">
+       <property name="text">
+        <string>更新病患健保卡內容</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/appointment-new.png</normaloff>../icons/appointment-new.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QToolButton" name="toolButton_unlock_hpc_pin">
+       <property name="text">
+        <string>解鎖醫事人員卡密碼</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/preferences-system-privacy.png</normaloff>../icons/preferences-system-privacy.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QToolButton" name="toolButton_disable_ic_card_pin">
+       <property name="text">
+        <string>解除病患健保卡密碼</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/avatar-default.png</normaloff>../icons/avatar-default.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QToolButton" name="toolButton_verify_hpc_pin">
+       <property name="text">
+        <string>驗證醫事人員卡密碼</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/application-certificate.png</normaloff>../icons/application-certificate.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QToolButton" name="toolButton_set_hpc_pin">
+       <property name="text">
+        <string>設定醫事人員卡密碼</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/accessories-calculator.png</normaloff>../icons/accessories-calculator.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QToolButton" name="toolButton_verify_ic_card_pin">
+       <property name="text">
+        <string>驗證病患健保卡密碼</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/contact-new.png</normaloff>../icons/contact-new.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QToolButton" name="toolButton_ic_card_info">
+       <property name="text">
+        <string>讀取健保卡基本資料</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/document-new.png</normaloff>../icons/document-new.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QToolButton" name="toolButton_reset_reader">
+       <property name="text">
+        <string>讀卡機裝置重新啟動</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/start-here.png</normaloff>../icons/start-here.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QToolButton" name="toolButton_ic_card_treat_info">
+       <property name="text">
+        <string>讀取健保卡就醫資料</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../icons/application-x-love-game.png</normaloff>../icons/application-x-love-game.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

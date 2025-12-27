@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>585</width>
+    <height>646</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <property name="leftMargin">
+       <number>6</number>
+      </property>
+      <property name="topMargin">
+       <number>6</number>
+      </property>
+      <property name="rightMargin">
+       <number>6</number>
+      </property>
+      <property name="bottomMargin">
+       <number>6</number>
+      </property>
+      <item row="1" column="0" colspan="2">
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="1">
+         <widget class="QComboBox" name="comboBox_regist_payment_type">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>批價收費</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>掛號收費</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QComboBox" name="comboBox_charge_payment_type">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="1">
+       <widget class="QTableWidget" name="tableWidget_cash_fees">
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <row>
+         <property name="text">
+          <string>掛號費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>實收診負</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>實收藥負</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>欠卡費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>還卡費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>診察費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>一般藥費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>水藥費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>高貴藥費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>針灸費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>民俗調理</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>材料費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>檢驗費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>自費合計</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>折扣金額</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>自費應收</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>自費實收</string>
+         </property>
+        </row>
+        <column>
+         <property name="text">
+          <string>自費金額</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_discount">
+          <property name="text">
+           <string>優待</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="spinBox_discount">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="singleStep">
+           <number>5</number>
+          </property>
+          <property name="value">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_percent">
+          <property name="text">
+           <string>%</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_calculate_fees">
+          <property name="text">
+           <string>重新批價</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/accessories-calculator.png</normaloff>../icons/accessories-calculator.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="0">
+       <widget class="QTableWidget" name="tableWidget_ins_fees">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderShowSortIndicator" stdset="0">
+         <bool>false</bool>
+        </attribute>
+        <row>
+         <property name="text">
+          <string>診察費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>內服藥費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>調劑費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>針灸費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>傷科費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>脫臼費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>加計費</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>健保合計</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>門診負擔</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>藥品負擔</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>健保申請</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>代辦費</string>
+         </property>
+        </row>
+        <column>
+         <property name="text">
+          <string>健保點數</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignLeading|AlignVCenter</set>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

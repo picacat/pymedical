@@ -1,0 +1,85 @@
+{
+    "python.languageServer": "Pylance", //Default  //Default, Jedi, JediLSP, Pylance, None
+    "editor.rulers": [119],
+    "flake8.args": [
+        "--max-line-length=119"
+    ],
+    "python.formatting.provider": "none",
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MariaDB",
+            "name": "MariaDB",
+            "database": "pymedical",
+            "username": "root",
+            "password": "620210"
+        }
+    ],
+    "editor.fontFamily": "'Hack Nerd Font', 'Space Mono', 'Hack', 'Cascadia Code PL', 'Noto Sans Mono', 'monospace', 'Droid Sans Fallback'",
+    "terminal.integrated.fontFamily": "'Hack Nerd Font', 'Hack', 'Cascadia Code PL', 'Noto Sans Mono', 'monospace'",
+    "editor.letterSpacing": -0.8,
+    "editor.fontSize": 14,
+    "editor.fontLigatures": false,
+    "auto-close-tag.enableAutoCloseTag": true,
+    "python.analysis.completeFunctionParens": true,
+    "cmake.configureOnOpen": false,
+    "git.ignoreLimitWarning": true,
+    "terminal.integrated.experimentalImageSupport": true,
+    "terminal.integrated.env.windows": {
+        "LANG": "en_US.UTF-8"
+    },
+    "python.analysis.autoImportCompletions": true,
+    "python.experiments.enabled": false,
+    "files.exclude": {
+    "**/__pycache__": true,
+    "**/.venv": true,
+    "**/node_modules": true
+    },
+    "search.exclude": {
+    "**/__pycache__": true,
+    "**/.venv": true,
+    "**/node_modules": true
+    },
+
+    "vim.easymotion": true,
+    "vim.incsearch": true,
+    "vim.useSystemClipboard": true,
+    "vim.useCtrlKeys": true,
+    "vim.hlsearch": true,
+    "vim.insertModeKeyBindings": [
+        {
+        "before": ["j", "j"],
+        "after": ["<Esc>"]
+        }
+    ],
+    "vim.normalModeKeyBindingsNonRecursive": [
+        {
+        "before": ["<leader>", "d"],
+        "after": ["d", "d"]
+        },
+        {
+        "before": ["<C-n>"],
+        "commands": [":nohl"]
+        },
+        {
+        "before": ["K"],
+        "commands": ["lineBreakInsert"],
+        "silent": true
+        }
+    ],
+    "vim.leader": "<space>",
+    "vim.handleKeys": {
+        "<C-a>": false,
+        "<C-f>": false
+    },
+    // To improve performance
+    "extensions.experimental.affinity": {
+        "vscodevim.vim": 1
+    }
+
+}

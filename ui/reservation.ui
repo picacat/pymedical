@@ -1,0 +1,1619 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowReservation</class>
+ <widget class="QMainWindow" name="WindowReservation">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1580</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>預約掛號</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QTabWidget" name="tabWidget_reservation">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab_reservation_table">
+         <attribute name="title">
+          <string>預約一覽表</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="topMargin">
+           <number>3</number>
+          </property>
+          <property name="bottomMargin">
+           <number>3</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_7">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout">
+                <property name="spacing">
+                 <number>2</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="label">
+                  <property name="font">
+                   <font>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>日期</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDateEdit" name="dateEdit_reservation_date">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>150</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="showGroupSeparator" stdset="0">
+                   <bool>false</bool>
+                  </property>
+                  <property name="currentSection">
+                   <enum>QDateTimeEdit::DaySection</enum>
+                  </property>
+                  <property name="displayFormat">
+                   <string>yyyy/MM/dd</string>
+                  </property>
+                  <property name="calendarPopup">
+                   <bool>true</bool>
+                  </property>
+                  <property name="currentSectionIndex">
+                   <number>2</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_weekday_name">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>星期日</string>
+                  </property>
+                  <property name="margin">
+                   <number>0</number>
+                  </property>
+                  <property name="indent">
+                   <number>-1</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButton_period1">
+                  <property name="text">
+                   <string>早班</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButton_period2">
+                  <property name="text">
+                   <string>午班</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButton_period3">
+                  <property name="text">
+                   <string>晚班</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_6">
+                  <property name="font">
+                   <font>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>醫師</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="comboBox_doctor"/>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="toolButton_auto_reservation">
+                  <property name="toolTip">
+                   <string>自動插入預約班表</string>
+                  </property>
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/appointment-new.png</normaloff>../icons/appointment-new.png</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="toolButton_allow">
+                  <property name="font">
+                   <font>
+                    <weight>50</weight>
+                    <italic>false</italic>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="toolTip">
+                   <string>設定僅能初診預約</string>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">color: #5a5aad</string>
+                  </property>
+                  <property name="text">
+                   <string>可</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/appointment-new.png</normaloff>../icons/appointment-new.png</iconset>
+                  </property>
+                  <property name="toolButtonStyle">
+                   <enum>Qt::ToolButtonTextOnly</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="toolButton_visit1">
+                  <property name="font">
+                   <font>
+                    <weight>50</weight>
+                    <italic>false</italic>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="toolTip">
+                   <string>設定僅能初診預約</string>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">color: rgb(255, 0, 0);</string>
+                  </property>
+                  <property name="text">
+                   <string>初</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/appointment-new.png</normaloff>../icons/appointment-new.png</iconset>
+                  </property>
+                  <property name="toolButtonStyle">
+                   <enum>Qt::ToolButtonTextOnly</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="toolButton_visit2">
+                  <property name="font">
+                   <font>
+                    <italic>false</italic>
+                   </font>
+                  </property>
+                  <property name="toolTip">
+                   <string>設定僅能複診預約</string>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">color: rgb(0, 0, 255);</string>
+                  </property>
+                  <property name="text">
+                   <string>複</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/appointment-new.png</normaloff>../icons/appointment-new.png</iconset>
+                  </property>
+                  <property name="toolButtonStyle">
+                   <enum>Qt::ToolButtonTextOnly</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="toolButton_clear_visit">
+                  <property name="font">
+                   <font>
+                    <italic>false</italic>
+                   </font>
+                  </property>
+                  <property name="toolTip">
+                   <string>取消初複診限制</string>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">color: rgb(0, 0, 255);</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/button_cancel.svg</normaloff>../icons/button_cancel.svg</iconset>
+                  </property>
+                  <property name="toolButtonStyle">
+                   <enum>Qt::ToolButtonIconOnly</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="toolButton_hide_calendar">
+                  <property name="toolTip">
+                   <string>顯示整月班表</string>
+                  </property>
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../icons/transform-scale.png</normaloff>../icons/transform-scale.png</iconset>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="tableWidget_reservation">
+                <property name="editTriggers">
+                 <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+                </property>
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::SingleSelection</enum>
+                </property>
+                <attribute name="verticalHeaderVisible">
+                 <bool>false</bool>
+                </attribute>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QFrame" name="verticalFrame">
+              <property name="minimumSize">
+               <size>
+                <width>760</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_4">
+                 <property name="topMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>2</number>
+                 </property>
+                 <item>
+                  <spacer name="horizontalSpacer_3">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="toolButton_previous">
+                   <property name="text">
+                    <string>...</string>
+                   </property>
+                   <property name="icon">
+                    <iconset>
+                     <normaloff>../icons/go-previous.svg</normaloff>../icons/go-previous.svg</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_calendar">
+                   <property name="text">
+                    <string>TextLabel</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="toolButton_next">
+                   <property name="text">
+                    <string>...</string>
+                   </property>
+                   <property name="icon">
+                    <iconset>
+                     <normaloff>../icons/go-next.svg</normaloff>../icons/go-next.svg</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_4">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="toolButton_doctor_month_schedule">
+                   <property name="toolTip">
+                    <string>顯示整月班表</string>
+                   </property>
+                   <property name="text">
+                    <string>...</string>
+                   </property>
+                   <property name="icon">
+                    <iconset>
+                     <normaloff>../icons/calendar.svg</normaloff>../icons/calendar.svg</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QTableWidget" name="tableWidget_calendar">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: lightgray;</string>
+                 </property>
+                 <property name="editTriggers">
+                  <set>QAbstractItemView::NoEditTriggers</set>
+                 </property>
+                 <property name="alternatingRowColors">
+                  <bool>false</bool>
+                 </property>
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::SingleSelection</enum>
+                 </property>
+                 <attribute name="horizontalHeaderDefaultSectionSize">
+                  <number>100</number>
+                 </attribute>
+                 <attribute name="verticalHeaderDefaultSectionSize">
+                  <number>32</number>
+                 </attribute>
+                 <row>
+                  <property name="text">
+                   <string>日期
+早班
+午班
+晚班</string>
+                  </property>
+                 </row>
+                 <row>
+                  <property name="text">
+                   <string>日期
+早班
+午班
+晚班</string>
+                  </property>
+                 </row>
+                 <row>
+                  <property name="text">
+                   <string>日期
+早班
+午班
+晚班</string>
+                  </property>
+                 </row>
+                 <row>
+                  <property name="text">
+                   <string>日期
+早班
+午班
+晚班</string>
+                  </property>
+                 </row>
+                 <row>
+                  <property name="text">
+                   <string>日期
+早班
+午班
+晚班</string>
+                  </property>
+                 </row>
+                 <row>
+                  <property name="text">
+                   <string>日期
+早班
+午班
+晚班</string>
+                  </property>
+                 </row>
+                 <column>
+                  <property name="text">
+                   <string>星期日</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>星期一</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>星期二</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>星期三</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>星期四</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>星期五</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>星期六</string>
+                  </property>
+                 </column>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_reservation_list">
+         <attribute name="title">
+          <string>預約名單</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>預約日期</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_start_date">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="currentSection">
+               <enum>QDateTimeEdit::YearSection</enum>
+              </property>
+              <property name="displayFormat">
+               <string>yyyy/MM/dd</string>
+              </property>
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>至</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_end_date">
+              <property name="currentSection">
+               <enum>QDateTimeEdit::YearSection</enum>
+              </property>
+              <property name="displayFormat">
+               <string>yyyy/MM/dd</string>
+              </property>
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>班別</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBox_period"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_7">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>預約醫師</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBox_list_doctor"/>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radioButton_arrival1">
+              <property name="text">
+               <string>未報到</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radioButton_arrival2">
+              <property name="text">
+               <string>已報到</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radioButton_arrival3">
+              <property name="text">
+               <string>全部</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_export_reservation">
+              <property name="text">
+               <string>匯出預約名單Excel</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tableWidget_reservation_list">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>reserve_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約時間</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>班別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>生日</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>報到</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約來源</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>掛號人員</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>聯絡電話</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>行動電話</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>登錄時間</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>備註</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>爽約名單</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QLabel" name="label_9">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>預約日期</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_absent_start_date">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="currentSection">
+               <enum>QDateTimeEdit::YearSection</enum>
+              </property>
+              <property name="displayFormat">
+               <string>yyyy/MM/dd</string>
+              </property>
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_10">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>至</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_absent_end_date">
+              <property name="currentSection">
+               <enum>QDateTimeEdit::YearSection</enum>
+              </property>
+              <property name="displayFormat">
+               <string>yyyy/MM/dd</string>
+              </property>
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_11">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>班別</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBox_absent_period"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_12">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>預約醫師</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBox_absent_doctor"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_13">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>病歷號碼</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="lineEdit">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_6">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_export_absent">
+              <property name="text">
+               <string>匯出爽約名單Excel</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tableWidget_absent_list">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>reserve_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>班別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>生日</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>報到</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約來源</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>掛號人員</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>聯絡電話</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>行動電話</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>登錄時間</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>備註</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_2">
+         <attribute name="title">
+          <string>取消預約名單</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_8">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <item>
+             <widget class="QLabel" name="label_14">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>取消日期</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_cancel_start_date">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="currentSection">
+               <enum>QDateTimeEdit::YearSection</enum>
+              </property>
+              <property name="displayFormat">
+               <string>yyyy/MM/dd</string>
+              </property>
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_15">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>至</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_cancel_end_date">
+              <property name="currentSection">
+               <enum>QDateTimeEdit::YearSection</enum>
+              </property>
+              <property name="displayFormat">
+               <string>yyyy/MM/dd</string>
+              </property>
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_18">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>病歷號碼</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="lineEdit_cancel_patient_key">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tableWidget_cancel_list">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>reserve_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>班別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約號</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>預約來源</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>掛號人員</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>登錄時間</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>取消時間</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>取消方式</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_reservation_query"/>
+   <addaction name="separator"/>
+   <addaction name="action_add_reservation"/>
+   <addaction name="action_modify_reservation"/>
+   <addaction name="action_cancel_reservation"/>
+   <addaction name="action_print_reservation"/>
+   <addaction name="action_medical_record_past_history"/>
+   <addaction name="action_print_reservation_list"/>
+   <addaction name="separator"/>
+   <addaction name="action_reserve_reservation"/>
+   <addaction name="action_off_day_setting"/>
+   <addaction name="action_permission_list_setting"/>
+   <addaction name="action_hide_on_web"/>
+   <addaction name="separator"/>
+   <addaction name="action_reservation_arrival"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+   <addaction name="separator"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1580</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+    <addaction name="action_first_visit_info"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_reservation_list"/>
+    <addaction name="action_print_correction_area_reservation_list"/>
+    <addaction name="separator"/>
+    <addaction name="action_export_reservation_excel"/>
+    <addaction name="action_export_web_reservation_excel"/>
+    <addaction name="separator"/>
+    <addaction name="action_set_not_arrival"/>
+   </widget>
+   <widget class="QMenu" name="menu_reservation_table">
+    <property name="title">
+     <string>班表設定</string>
+    </property>
+    <addaction name="action_save_general_table"/>
+    <addaction name="action_save_assigned_table"/>
+    <addaction name="separator"/>
+    <addaction name="action_copy_general_table"/>
+    <addaction name="action_remove_general_table"/>
+    <addaction name="action_remove_assigned_table"/>
+    <addaction name="action_save_assigned_null_table"/>
+    <addaction name="separator"/>
+    <addaction name="action_off_day_setting"/>
+    <addaction name="action_hide_on_web"/>
+    <addaction name="separator"/>
+    <addaction name="action_auto_reservation_table"/>
+    <addaction name="action_set_reserve_type2"/>
+    <addaction name="action_set_reserve_type3"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_reservation_table"/>
+  </widget>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_save_general_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-save.svg</normaloff>../icons/gtk-save.svg</iconset>
+   </property>
+   <property name="text">
+    <string>儲存一般班表</string>
+   </property>
+  </action>
+  <action name="action_cancel_reservation">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-cancel.svg</normaloff>../icons/gtk-cancel.svg</iconset>
+   </property>
+   <property name="text">
+    <string>取消預約[F5]</string>
+   </property>
+   <property name="toolTip">
+    <string>取消預約</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="action_reservation_arrival">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/dialog-ok.svg</normaloff>../icons/dialog-ok.svg</iconset>
+   </property>
+   <property name="text">
+    <string>預約報到[F10]</string>
+   </property>
+   <property name="toolTip">
+    <string>預約報到</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
+   </property>
+  </action>
+  <action name="action_add_reservation">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/appointment-new.svg</normaloff>../icons/appointment-new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>新增預約[F2]</string>
+   </property>
+   <property name="toolTip">
+    <string>新增選取時間表內的預約掛號</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
+  <action name="action_reservation_query">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/system-search.png</normaloff>../icons/system-search.png</iconset>
+   </property>
+   <property name="text">
+    <string>預約查詢[F1]</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+  </action>
+  <action name="action_save_assigned_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-save-as.svg</normaloff>../icons/gtk-save-as.svg</iconset>
+   </property>
+   <property name="text">
+    <string>儲存指定班表</string>
+   </property>
+  </action>
+  <action name="action_remove_assigned_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/gtk-delete.svg</normaloff>../icons/gtk-delete.svg</iconset>
+   </property>
+   <property name="text">
+    <string>刪除指定班表</string>
+   </property>
+  </action>
+  <action name="action_export_reservation_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出預約名單 (Excel格式)</string>
+   </property>
+  </action>
+  <action name="action_modify_reservation">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>更改預約[F3]</string>
+   </property>
+   <property name="toolTip">
+    <string>取消預約</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="action_print_reservation">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印預約單[F7]</string>
+   </property>
+   <property name="toolTip">
+    <string>列印預約單</string>
+   </property>
+   <property name="shortcut">
+    <string>F7</string>
+   </property>
+  </action>
+  <action name="action_off_day_setting">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/cancel.svg</normaloff>../icons/cancel.svg</iconset>
+   </property>
+   <property name="text">
+    <string>暫停預約</string>
+   </property>
+   <property name="toolTip">
+    <string>暫停預約</string>
+   </property>
+  </action>
+  <action name="action_copy_general_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-copy.svg</normaloff>../icons/edit-copy.svg</iconset>
+   </property>
+   <property name="text">
+    <string>複製一般班表</string>
+   </property>
+   <property name="toolTip">
+    <string>複製一般班表</string>
+   </property>
+  </action>
+  <action name="action_print_reservation_list">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-network.png</normaloff>../icons/printer-network.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印預約名單</string>
+   </property>
+   <property name="toolTip">
+    <string>列印預約名單</string>
+   </property>
+   <property name="shortcut">
+    <string>F7</string>
+   </property>
+  </action>
+  <action name="action_reserve_reservation">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/dialog-warning.png</normaloff>../icons/dialog-warning.png</iconset>
+   </property>
+   <property name="text">
+    <string>保留預約[F8]</string>
+   </property>
+   <property name="toolTip">
+    <string>保留此預約時間</string>
+   </property>
+   <property name="shortcut">
+    <string>F8</string>
+   </property>
+  </action>
+  <action name="action_save_assigned_null_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/button_cancel.svg</normaloff>../icons/button_cancel.svg</iconset>
+   </property>
+   <property name="text">
+    <string>指定班表不預約</string>
+   </property>
+   <property name="toolTip">
+    <string>指定班表不預約</string>
+   </property>
+  </action>
+  <action name="action_remove_general_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/dialog-cancel.svg</normaloff>../icons/dialog-cancel.svg</iconset>
+   </property>
+   <property name="text">
+    <string>刪除一般班表</string>
+   </property>
+   <property name="toolTip">
+    <string>刪除一般班表</string>
+   </property>
+  </action>
+  <action name="action_auto_reservation_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/appointment-new.svg</normaloff>../icons/appointment-new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>自動設定預約一覽表</string>
+   </property>
+   <property name="toolTip">
+    <string>自動設定預約一覽表</string>
+   </property>
+  </action>
+  <action name="action_first_visit_info">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>初診預約基本資料</string>
+   </property>
+   <property name="toolTip">
+    <string>初診預約基本資料</string>
+   </property>
+  </action>
+  <action name="action_export_web_reservation_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出網路初診預約名單 (Excel格式)</string>
+   </property>
+  </action>
+  <action name="action_medical_record_past_history">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-open.png</normaloff>../icons/document-open.png</iconset>
+   </property>
+   <property name="text">
+    <string>過去病歷</string>
+   </property>
+   <property name="toolTip">
+    <string>過去病歷</string>
+   </property>
+  </action>
+  <action name="action_print_correction_area_reservation_list">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印矯正機關內預約門診名單</string>
+   </property>
+   <property name="toolTip">
+    <string>列印矯正機關內預約門診名單</string>
+   </property>
+  </action>
+  <action name="action_hide_on_web">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/network-error.png</normaloff>../icons/network-error.png</iconset>
+   </property>
+   <property name="text">
+    <string>網頁隱藏</string>
+   </property>
+   <property name="toolTip">
+    <string>網頁隱藏</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="action_permission_list_setting">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/object-unlocked.png</normaloff>../icons/object-unlocked.png</iconset>
+   </property>
+   <property name="text">
+    <string>預約權限</string>
+   </property>
+   <property name="toolTip">
+    <string>預約權限</string>
+   </property>
+  </action>
+  <action name="action_set_not_arrival">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/revert.svg</normaloff>../icons/revert.svg</iconset>
+   </property>
+   <property name="text">
+    <string>還原成未預約狀態</string>
+   </property>
+   <property name="toolTip">
+    <string>還原成未預約狀態</string>
+   </property>
+  </action>
+  <action name="action_set_reserve_type2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/preferences-system-time.png</normaloff>../icons/preferences-system-time.png</iconset>
+   </property>
+   <property name="text">
+    <string>預約類別全部設為複診</string>
+   </property>
+   <property name="toolTip">
+    <string>預約類別全部設為複診</string>
+   </property>
+  </action>
+  <action name="action_set_reserve_type3">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-x-quattropro.png</normaloff>../icons/application-x-quattropro.png</iconset>
+   </property>
+   <property name="text">
+    <string>預約類別全部設為初複診</string>
+   </property>
+   <property name="toolTip">
+    <string>預約類別全部設為初複診</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

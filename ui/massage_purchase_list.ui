@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PurchaseWindow</class>
+ <widget class="QMainWindow" name="PurchaseWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1095</width>
+    <height>882</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>購買商品</string>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonTextUnderIcon</enum>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label_data_period">
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_purchase_list">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>massage_case_key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>購買時間</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>班別</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>顧客號碼</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>病患姓名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>購買內容</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>應收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>實收金額</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>銷售櫃台</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>銷售師父</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1095</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>檔案</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>編輯</string>
+    </property>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="palette">
+    <palette>
+     <active/>
+     <inactive/>
+     <disabled/>
+    </palette>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_requery"/>
+   <addaction name="separator"/>
+   <addaction name="action_purchase"/>
+   <addaction name="action_open_record"/>
+   <addaction name="action_delete_record"/>
+   <addaction name="separator"/>
+   <addaction name="action_print_receipt"/>
+   <addaction name="action_export_excel"/>
+   <addaction name="separator"/>
+   <addaction name="action_close"/>
+  </widget>
+  <action name="action_open_record">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-open.svg</normaloff>../icons/document-open.svg</iconset>
+   </property>
+   <property name="text">
+    <string>購藥明細</string>
+   </property>
+   <property name="toolTip">
+    <string>購藥明細</string>
+   </property>
+  </action>
+  <action name="action_delete_record">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/user-trash.png</normaloff>../icons/user-trash.png</iconset>
+   </property>
+   <property name="text">
+    <string>資料刪除</string>
+   </property>
+  </action>
+  <action name="action_requery">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/reload.svg</normaloff>../icons/reload.svg</iconset>
+   </property>
+   <property name="text">
+    <string>重新查詢</string>
+   </property>
+   <property name="toolTip">
+    <string>重新查詢病歷</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+   </property>
+   <property name="text">
+    <string>關閉視窗</string>
+   </property>
+  </action>
+  <action name="action_purchase">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>購買商品</string>
+   </property>
+  </action>
+  <action name="action_print_receipt">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
+   </property>
+   <property name="text">
+    <string>列印收據</string>
+   </property>
+  </action>
+  <action name="action_export_excel">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出Excel</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出Excel</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+ <slots>
+  <slot>pushButtonQueryClicked()</slot>
+  <slot>pushButtonRequeryClicked()</slot>
+  <slot>tableWidgetCellDoubleClicked()</slot>
+  <slot>actionOpenCaseTriggered()</slot>
+  <slot>actionDeleteCaseTriggered()</slot>
+  <slot>actionPrintPresTriggered()</slot>
+ </slots>
+</ui>

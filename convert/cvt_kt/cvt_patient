@@ -1,0 +1,12 @@
+echo sed all files
+sed -i 's/TYPE=MyISAM/ENGINE=MyISAM/g' patient.sql
+
+sed -i 's/\\\\//g' patient.sql
+sed -i "s/\\\'//g" patient.sql
+
+iconv -c -f Big5 -t utf8 patient.sql > patient.new
+mv patient.new patient.sql
+
+
+mysql --user=root --password=620210 -e 'drop table kthis.patient'
+mysql --user=root --password=620210 -f --default-character-set=utf8 kthis < patient.sql

@@ -1,0 +1,1577 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WindowCheckMedicalRecordCount</class>
+ <widget class="QMainWindow" name="WindowCheckMedicalRecordCount">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>865</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>門診次數檢查</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="QTabWidget" name="tabWidget_medical_record_count">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>針傷次數</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="1" column="0">
+           <widget class="QTableWidget" name="tableWidget_patient_treat">
+            <property name="maximumSize">
+             <size>
+              <width>450</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病患姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診次數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>超過次數</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QTableWidget" name="tableWidget_medical_record_treat">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>case_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>就醫類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>卡序</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>療程</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主診斷碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診斷名稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置項目</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置費</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_treat_limit">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>顯示期間 從</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_start_date">
+              <property name="displayFormat">
+               <string>yyyy/MM/dd</string>
+              </property>
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>至</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_end_date">
+              <property name="displayFormat">
+               <string>yyyy/MM/dd</string>
+              </property>
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_treat_unapply">
+              <property name="text">
+               <string>轉成不申報</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/editdelete.svg</normaloff>../icons/editdelete.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_treat_apply">
+              <property name="text">
+               <string>恢復申報</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/edit-undo.svg</normaloff>../icons/edit-undo.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_2">
+         <attribute name="title">
+          <string>首次次數</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="1" column="0">
+           <widget class="QTableWidget" name="tableWidget_patient_diag">
+            <property name="maximumSize">
+             <size>
+              <width>450</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病患姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診次數</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>超過次數</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QTableWidget" name="tableWidget_medical_record_diag">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>case_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>就醫類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>卡序</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>療程</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥日</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主診斷碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診斷名稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置項目</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置費</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_diag_limit">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QToolButton" name="toolButton_diag_unapply">
+              <property name="text">
+               <string>轉成不申報</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/editdelete.svg</normaloff>../icons/editdelete.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_diag_apply">
+              <property name="text">
+               <string>恢復申報</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/edit-undo.svg</normaloff>../icons/edit-undo.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_3">
+         <attribute name="title">
+          <string>中度複雜性針灸次數</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="1" column="0">
+           <widget class="QTableWidget" name="tableWidget_moderate_doctor">
+            <property name="maximumSize">
+             <size>
+              <width>320</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>職稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>醫師姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>執行次數</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QTableWidget" name="tableWidget_moderate_case">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>case_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>就醫類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>卡序</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>療程</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥日</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主診斷碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診斷名稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置項目</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置費</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QToolButton" name="toolButton_acupuncture1">
+              <property name="text">
+               <string>轉成一般針灸</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/down.svg</normaloff>../icons/down.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_complicated1">
+              <property name="text">
+               <string>恢復成中度複雜性針灸</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/edit-undo.svg</normaloff>../icons/edit-undo.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>已排除居家、職傷及山地離島案件</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_moderate_acupuncture_limit">
+            <property name="text">
+             <string>中度複雜性針灸限量</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QLabel" name="label_moderate_acupuncture">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_4">
+         <attribute name="title">
+          <string>高度複雜性針灸次數</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QToolButton" name="toolButton_acupuncture2">
+              <property name="text">
+               <string>轉成一般針灸</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/down.svg</normaloff>../icons/down.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_complicated2">
+              <property name="text">
+               <string>恢復成高度複雜性針灸</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/edit-undo.svg</normaloff>../icons/edit-undo.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>已排除居家、職傷及山地離島案件</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_highly_acupuncture_limit">
+            <property name="text">
+             <string>高度複雜性針灸限量</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QTableWidget" name="tableWidget_highly_doctor">
+            <property name="maximumSize">
+             <size>
+              <width>320</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>職稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>醫師姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>執行次數</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QTableWidget" name="tableWidget_highly_case">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>case_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>就醫類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>卡序</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>療程</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥日</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主診斷碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診斷名稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置項目</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置費</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QLabel" name="label_highly_acupuncture">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_7">
+         <attribute name="title">
+          <string>中度複雜性傷科次數</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_moderate_massage_limit">
+            <property name="text">
+             <string>中度複雜性傷科限量</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QTableWidget" name="tableWidget_moderate_massage_doctor">
+            <property name="maximumSize">
+             <size>
+              <width>320</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>職稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>醫師姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>執行次數</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <item>
+             <widget class="QToolButton" name="toolButton_massage1">
+              <property name="text">
+               <string>轉成一般傷科</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/down.svg</normaloff>../icons/down.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_complicated3">
+              <property name="text">
+               <string>恢復成中度複雜性傷科</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/edit-undo.svg</normaloff>../icons/edit-undo.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>已排除居家、職傷及山地離島案件</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="2">
+           <widget class="QTableWidget" name="tableWidget_moderate_massage_case">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>case_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>就醫類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>卡序</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>療程</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥日</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主診斷碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診斷名稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置項目</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置費</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_moderate_massage">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_8">
+         <attribute name="title">
+          <string>高度複雜性傷科次數</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_highly_massage_limit">
+            <property name="text">
+             <string>高度複雜性傷科限量</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <widget class="QToolButton" name="toolButton_massage2">
+              <property name="text">
+               <string>轉成一般傷科</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/down.svg</normaloff>../icons/down.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_complicated4">
+              <property name="text">
+               <string>恢復成高度複雜性傷科</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/edit-undo.svg</normaloff>../icons/edit-undo.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>已排除居家、職傷及山地離島案件</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <widget class="QTableWidget" name="tableWidget_highly_massage_doctor">
+            <property name="maximumSize">
+             <size>
+              <width>320</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>職稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>醫師姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>執行次數</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QTableWidget" name="tableWidget_highly_massage_case">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>case_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>就醫類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>卡序</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>療程</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥日</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主診斷碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診斷名稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置項目</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診察費</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置費</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_highly_massage">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_5">
+         <attribute name="title">
+          <string>針傷合併次數</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="3" column="0">
+           <widget class="QTableWidget" name="tableWidget_merge_doctor">
+            <property name="maximumSize">
+             <size>
+              <width>320</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>職稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>醫師姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>執行次數</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QToolButton" name="toolButton_cancel_merge">
+              <property name="text">
+               <string>取消針傷合併</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/go-previous.svg</normaloff>../icons/go-previous.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_merge">
+              <property name="text">
+               <string>恢復成針傷合併</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/edit-undo.svg</normaloff>../icons/edit-undo.svg</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonTextBesideIcon</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_6">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>已排除居家、職傷及山地離島案件</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="3" column="1">
+           <widget class="QTableWidget" name="tableWidget_merge_case">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>case_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>就醫類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>卡序</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>療程</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥日</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主診斷碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診斷名稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置項目</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_merge_limit">
+            <property name="text">
+             <string>針傷合併限量</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QLabel" name="label_merge">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_6">
+         <attribute name="title">
+          <string>針傷給藥次數</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_treat_drug_limit">
+            <property name="text">
+             <string>針傷給藥限量</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_11">
+            <item>
+             <spacer name="horizontalSpacer_11">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>已排除居家、職傷及山地離島案件</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <widget class="QTableWidget" name="tableWidget_treat_drug_doctor">
+            <property name="maximumSize">
+             <size>
+              <width>320</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>職稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>醫師姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>執行次數</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QTableWidget" name="tableWidget_treat_drug_case">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <column>
+             <property name="text">
+              <string>case_key</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>申報類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>門診日期</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>病歷號碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>姓名</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>就醫類別</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>卡序</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>療程</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>藥日</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主診斷碼</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>診斷名稱</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>處置項目</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>主治醫師</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_treat_drug">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1114</width>
+     <height>32</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
