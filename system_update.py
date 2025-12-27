@@ -14,6 +14,7 @@ from os import listdir
 import ntpath
 import shutil
 import datetime
+import hashlib
 
 from libs import class_utils
 from libs import ui_utils
@@ -192,6 +193,20 @@ class SystemUpdate(QtWidgets.QDialog):
         self.ui.buttonBox.button(
             QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
 
+    def get_file_hash(self, file_path):
+        """計算檔案的 MD5 雜湊值"""
+        if not os.path.isfile(file_path):
+            return None
+        hasher = hashlib.md5()
+        try:
+            with open(file_path, 'rb') as f:
+                # 分塊讀取，避免大檔案佔用過多記憶體
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hasher.update(chunk)
+            return hasher.hexdigest()
+        except Exception:
+            return None
+
     # 列出需要更新的檔案
     def _list_files(self, zip_source_root, dest_root, dir_name):
         source_dir = os.path.join(zip_source_root, dir_name)
@@ -205,21 +220,44 @@ class SystemUpdate(QtWidgets.QDialog):
             if os.path.isfile(os.path.join(source_dir, f))
         ]
 
-        for file in source_files:
-            source_file_name = file
-            source_file_date = datetime.datetime.fromtimestamp(
-                self.creation_date(os.path.join(source_dir, source_file_name)))
-            row = [source_file_name, source_dir, dest_dir, source_file_date]
+        # for file in source_files:
+        #     source_file_name = file
+        #     source_file_date = datetime.datetime.fromtimestamp(
+        #         self.creation_date(os.path.join(source_dir, source_file_name)))
+        #     row = [source_file_name, source_dir, dest_dir, source_file_date]
 
-            dest_file_name = os.path.join(dest_dir, source_file_name)
-            if not os.path.isfile(dest_file_name):
+        #     dest_file_name = os.path.join(dest_dir, source_file_name)
+        #     if not os.path.isfile(dest_file_name):
+        #         self._add_list(row)
+        #         continue
+
+        #     dest_file_date = datetime.datetime.fromtimestamp(
+        #         self.creation_date(os.path.join(dest_dir, dest_file_name)))
+        #     if source_file_date > dest_file_date:
+        #         if source_file_name in ['pymedical.py'] or 'libs' in dest_dir:
+        #             self.restart_pymedical = True
+
+        #         self._add_list(row)
+        for file in source_files:
+            source_full_path = os.path.join(source_dir, file)
+            dest_full_path = os.path.join(dest_dir, file)
+            
+            # 取得來源檔的日期 (維持顯示用)
+            source_file_date = datetime.datetime.fromtimestamp(self.creation_date(source_full_path))
+            row = [file, source_dir, dest_dir, source_file_date]
+
+            # 如果目標檔案不存在，直接加入更新清單
+            if not os.path.isfile(dest_full_path):
                 self._add_list(row)
                 continue
 
-            dest_file_date = datetime.datetime.fromtimestamp(
-                self.creation_date(os.path.join(dest_dir, dest_file_name)))
-            if source_file_date > dest_file_date:
-                if source_file_name in ['pymedical.py'] or 'libs' in dest_dir:
+            # --- 優化點：改用 Hash 比對 ---
+            source_hash = self.get_file_hash(source_full_path)
+            dest_hash = self.get_file_hash(dest_full_path)
+
+            if source_hash != dest_hash:
+                # 如果是核心檔案變更，標記需要重啟
+                if file == 'pymedical.py' or 'libs' in dest_dir:
                     self.restart_pymedical = True
 
                 self._add_list(row)
