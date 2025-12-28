@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 *.log
+*.db
 *.sqlite
 .env
 venv/
@@ -10,4 +11,6 @@ venv/
 install/
 documents/
 history/
+.vscode/
+_temp/
 
