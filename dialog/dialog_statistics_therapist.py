@@ -54,11 +54,16 @@ class DialogStatisticsTherapist(QtWidgets.QDialog):
 
         self.ui.groupBox_exclude_cases.setVisible(False)
         self.ui.checkBox_only_traditional_massage.setVisible(False)
+        self.ui.checkBox_under_250.setVisible(False)
 
         if self.dialog_type in ['推拿師父', '推拿師']:
             self.label_therapist.setText(self.dialog_type)
             self.groupBox_ins_type.setVisible(False)
             self.ui.checkBox_only_traditional_massage.setVisible(True)
+
+        if self.call_from in ['自費印花稅統計']:
+            self.ui.checkBox_under_250.setVisible(True)
+
         if self.dialog_type in ['自費抽成統計', '全部']:
             self.label_therapist.setText('銷售人員')
         elif self.call_from in ['醫師統計', '病歷統計']:
@@ -174,6 +179,11 @@ class DialogStatisticsTherapist(QtWidgets.QDialog):
         only_traditional_massage = self.ui.checkBox_only_traditional_massage.isChecked()
 
         return only_traditional_massage
+
+    def under_250(self):
+        under_250 = self.ui.checkBox_under_250.isChecked()
+
+        return under_250
 
     def accepted_button_clicked(self):
         pass

@@ -360,6 +360,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="checkBox_under_250">
+     <property name="text">
+      <string>只統計收費&lt;250的人數</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

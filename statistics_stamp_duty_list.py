@@ -24,6 +24,11 @@ class StatisticsStampDutyList(QtWidgets.QMainWindow):
         self.doctor = args[6]
         self.option = args[7]
         self.weekday_list = args[8]
+        try:
+            self.under_250 = args[9]
+        except Exception:
+            self.under_250 = False
+
         self.ui = None
         self.program_name = '自費印花稅統計'
 
@@ -113,6 +118,9 @@ class StatisticsStampDutyList(QtWidgets.QMainWindow):
             weekday_condition = f' AND WEEKDAY(CaseDate) IN({",".join(self.weekday_list)})'
 
         regist_condition = case_utils.get_regist_type_exclude_sql(self.option)
+        total_fee_condition = ' (RegistFee >= 250 OR TotalFee >= 250) '
+        if self.under_250:
+            total_fee_condition = ' (RegistFee + TotalFee < 250) '
 
         sql = f'''
             SELECT
@@ -123,7 +131,7 @@ class StatisticsStampDutyList(QtWidgets.QMainWindow):
             FROM cases
             WHERE
                 CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}" AND
-                (RegistFee >= 250 OR TotalFee >= 250)
+                {total_fee_condition}
                 {period_condition}
                 {weekday_condition}
                 {ins_type_condition}

@@ -25,6 +25,7 @@ class StatisticsStampDuty(QtWidgets.QMainWindow):
             "period": None,
             "ins_type": None,
             "therapist": None,
+            "under_250": False,
             "option": [],
         }
 
@@ -61,7 +62,7 @@ class StatisticsStampDuty(QtWidgets.QMainWindow):
     # 讀取病歷
     def open_dialog(self):
         dialog = dialog_utils.get_dialog_statistics_therapist(
-            self, self.database, self.system_settings, '醫師統計', '醫師',
+            self, self.database, self.system_settings, '自費印花稅統計', '醫師',
         )
 
         if self.dialog_setting['dialog_executed']:
@@ -77,6 +78,9 @@ class StatisticsStampDuty(QtWidgets.QMainWindow):
 
             dialog.ui.comboBox_period.setCurrentText(self.dialog_setting['period'])
             dialog.ui.comboBox_therapist.setCurrentText(self.dialog_setting['therapist'])
+
+            if self.dialog_setting['under_250']:
+                dialog.ui.checkBox_under_250.setChecked(True)
 
             if '資源不足' in self.dialog_setting['option']:
                 dialog.ui.checkBox_lack_area.setChecked(True)
@@ -99,6 +103,7 @@ class StatisticsStampDuty(QtWidgets.QMainWindow):
         ins_type = dialog.ins_type()
         therapist = dialog.therapist()
         weekday_list = dialog.weekday_list()
+        under_250 = dialog.under_250()
 
         option = []
         if dialog.checkBox_lack_area.isChecked():
@@ -119,24 +124,28 @@ class StatisticsStampDuty(QtWidgets.QMainWindow):
         self.dialog_setting['ins_type'] = ins_type
         self.dialog_setting['therapist'] = therapist
         self.dialog_setting['option'] = option
+        self.dialog_setting['under_250'] = under_250
 
         dialog.deleteLater()
-        self._set_tab_widget(start_date, end_date, period, ins_type, therapist, option, weekday_list)
+        self._set_tab_widget(start_date, end_date, period, ins_type, therapist, option, weekday_list, under_250)
 
-    def _set_tab_widget(self, start_date, end_date, period, ins_type, doctor, option, weekday_list):
+    def _set_tab_widget(self, start_date, end_date, period, ins_type, doctor, option, weekday_list, under_250):
         self.ui.tabWidget_statistics_stamp_duty.clear()
 
         self.ui.statusbar.showMessage(
             f' 統計期間: 從 {start_date[:10]} 至 {end_date[:10]} {period} 保險: {ins_type} 醫師: {doctor}'
         )
 
-        self._add_statistic_stamp_duty_list(start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        self._add_statistic_stamp_duty_list(
+            start_date, end_date, period, ins_type, doctor, option, weekday_list, under_250)
 
     # 醫師門診人數統計
-    def _add_statistic_stamp_duty_list(self, start_date, end_date, period, ins_type, doctor, option, weekday_list):
+    def _add_statistic_stamp_duty_list(
+            self, start_date, end_date, period, ins_type, doctor, option, weekday_list, under_250
+    ):
         self.tab_statistics_stamp_duty_list = module_utils.get_statistics_stamp_duty_list(
             self, self.database, self.system_settings, start_date, end_date, period, ins_type,
-            doctor, option, weekday_list
+            doctor, option, weekday_list, under_250
         )
         self.tab_statistics_stamp_duty_list.start_calculate()
         self.ui.tabWidget_statistics_stamp_duty.addTab(self.tab_statistics_stamp_duty_list, '印花稅金額統計')

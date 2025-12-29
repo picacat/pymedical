@@ -1673,12 +1673,14 @@ def get_physiotherapy_income(parent, database, system_settings):
 
 # 醫師統計-門診人數統計
 def get_statistics_stamp_duty_list(parent, database, system_settings,
-                                   start_date, end_date, period, ins_type, doctor, option, weekday_list):
+                                   start_date, end_date, period, ins_type,
+                                   doctor, option, weekday_list, under_250):
     import statistics_stamp_duty_list
 
     module = importlib.reload(statistics_stamp_duty_list)
     widget = module.StatisticsStampDutyList(
-        parent, database, system_settings, start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        parent, database, system_settings, start_date, end_date, period,
+        ins_type, doctor, option, weekday_list, under_250)
 
     return widget
 
