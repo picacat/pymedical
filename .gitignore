@@ -13,4 +13,4 @@ documents/
 history/
 .vscode/
 _temp/
-
+*診所*.json
