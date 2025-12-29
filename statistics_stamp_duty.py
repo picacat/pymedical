@@ -62,7 +62,7 @@ class StatisticsStampDuty(QtWidgets.QMainWindow):
     # 讀取病歷
     def open_dialog(self):
         dialog = dialog_utils.get_dialog_statistics_therapist(
-            self, self.database, self.system_settings, '自費印花稅統計', '醫師',
+            self, self.database, self.system_settings, '自費印花稅統計', '全部',
         )
 
         if self.dialog_setting['dialog_executed']:
