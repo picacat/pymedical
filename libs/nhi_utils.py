@@ -9,7 +9,6 @@ from threading import Thread
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMessageBox
-
 from libs import (case_utils, charge_utils, date_utils, dialog_utils,
                   icd10_utils, number_utils, personnel_utils, string_utils,
                   system_utils)
@@ -2029,33 +2028,59 @@ def get_visit(database, row):
             return '初診照護'
 
     visit_year = 2  # 2年內無看診
-
-    try:
-        if row['CaseDate'].month == 1:
-            first_visit_year_range = row['CaseDate'].replace(
-                year=row['CaseDate'].year - visit_year - 1,
-                month=12,
-                day=1
-            )
-        else:
-            first_visit_year_range = row['CaseDate'].replace(
-                year=row['CaseDate'].year - visit_year,
-                month=row['CaseDate'].month - 1,
-                day=1
-            )
-    except ValueError:
-        return None
-
-    first_visit_year_range = first_visit_year_range.strftime('%Y-%m-%d')
     case_key = row['CaseKey']
+    current_case_date = row['CaseDate'] # 假設這是 datetime 物件
+
+    # 1. 計算兩年前的同一天
+    # 處理閏年 2/29 的特殊情況，若兩年前沒那天，則取 3/1
+    try:
+        years_ago = current_case_date.replace(year=current_case_date.year - visit_year)
+    except ValueError:
+        years_ago = current_case_date.replace(year=current_case_date.year - visit_year, month=3, day=1)
+
+    years_ago_str = years_ago.strftime('%Y-%m-%d')
+    case_date_str = current_case_date.strftime('%Y-%m-%d')
+
+    # 2. 修改 SQL 邏輯
+    # 修正重點：
+    # - 增加 DATE(CaseDate) < "{case_date_str}" 確保只找過去的紀錄
+    # - 使用 LIMIT 1 提高效能
     sql = f'''
         SELECT CaseKey FROM cases
         WHERE
             InsType = "健保" AND
             PatientKey = {patient_key} AND
             CaseKey != {case_key} AND
-            DATE(CaseDate) >= "{first_visit_year_range}"
+            DATE(CaseDate) >= "{years_ago_str}" AND
+            DATE(CaseDate) < "{case_date_str}"
+        LIMIT 1
     '''
+
+    # try:
+    #     if row['CaseDate'].month == 1:
+    #         first_visit_year_range = row['CaseDate'].replace(
+    #             year=row['CaseDate'].year - visit_year - 1,
+    #             month=12,
+    #             day=1
+    #         )
+    #     else:
+    #         first_visit_year_range = row['CaseDate'].replace(
+    #             year=row['CaseDate'].year - visit_year,
+    #             month=row['CaseDate'].month - 1,
+    #             day=1
+    #         )
+    # except ValueError:
+    #     return None
+
+    # first_visit_year_range = first_visit_year_range.strftime('%Y-%m-%d')
+    # sql = f'''
+    #     SELECT CaseKey FROM cases
+    #     WHERE
+    #         InsType = "健保" AND
+    #         PatientKey = {patient_key} AND
+    #         CaseKey != {case_key} AND
+    #         DATE(CaseDate) >= "{first_visit_year_range}"
+    # '''
     rows = database.select_record(sql)
 
     if len(rows) <= 0:  # 2年內無看診
