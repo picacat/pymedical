@@ -358,14 +358,14 @@ class CSHIS:
 
     def _get_requests_response(self, service_path, request_type, data, local_url=True):
         if self.system_settings.field('使用測試環境') == 'Y':
-            nhi_url = NHI_TEST_URL   
+            nhi_url = NHI_TEST_URL
         else:
-            nhi_url = NHI_URL   
+            nhi_url = NHI_URL
 
         if local_url:
-            url =  LOCAL_URL + service_path
+            url = LOCAL_URL + service_path
         else:
-            url =  nhi_url + service_path
+            url = nhi_url + service_path
 
         # data = json.dumps(data)
 
@@ -387,7 +387,6 @@ class CSHIS:
             return None
 
         return response
-
 
     def get_sam_signature(self, service_type):
         service_path = "/api/sam/v1/Signature"

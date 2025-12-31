@@ -409,6 +409,8 @@ class MedicalRecord(QtWidgets.QMainWindow):
             self.ui.textEdit_patient_remark.setVisible(False)
             self.ui.textEdit_remark.setMaximumHeight(160)
         # self.ui.groupBox_patient.setVisible(False)
+        self.ui.action_conflict_drug.setVisible(False)  # 2026-01-01 關閉中西藥交互(web 1.0)
+
 
     def _set_tongue(self):
         max_tongue = 5

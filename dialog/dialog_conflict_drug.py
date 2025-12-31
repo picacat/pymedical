@@ -7,11 +7,11 @@ import json
 import requests
 from libs import (class_utils, date_utils, prescript_utils, string_utils,
                   system_utils, ui_utils)
-from libs.case_utils import restore_prescript
 from PyQt5 import QtWidgets
 
-WEB_SERVICE_ADDRESS = 'https://medcloudws.nhi.gov.tw:7008/imie0000/NHIIMI01.asmx'
-
+HEADERS = {
+    "Content-Type": "application/json",  # 根據 API 要求的 Content-Type 設定
+}
 
 # 主視窗
 class DialogConflictDrug(QtWidgets.QDialog):
@@ -69,8 +69,7 @@ class DialogConflictDrug(QtWidgets.QDialog):
 
     def start_check(self):
         self._set_table_widget_prescript()
-        upload_json = self._get_upload_json()
-        error_code, response_content = self._send_soap_request(upload_json)
+        error_code, response_content = self._get_request()
         if error_code is None:
             self._show_connection_error('無法連線至健保醫療資訊雲端查詢系統')
             return
@@ -160,30 +159,26 @@ class DialogConflictDrug(QtWidgets.QDialog):
         json_content = xml[start_idx:end_idx]
         return json_content
     
-    def _send_soap_request(self, upload_json):
-        headers = {'Content-Type': 'application/soap+xml; charset=utf-8'}
-        soap_request = f'''<?xml version="1.0" encoding="utf-8"?>
-            <soap12:Envelope
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                    xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-                <soap12:Body>
-                    <GetDDIData xmlns="http://localhost/">
-                    <json>{upload_json}</json>
-                    </GetDDIData>
-                </soap12:Body>
-            </soap12:Envelope>
-        '''
+    def _get_cshis6_request(self):
+        service_path = "/api/hc/v1/Signature/HpcHc"
+        url = 'https://medcloudws2.nhi.gov.tw/api/imie5000/GetMedPrtInfo'
+        data = {'serviceType': '91'}
 
-        try:
-            response = requests.post(url=WEB_SERVICE_ADDRESS,
-                                     data=soap_request, headers=headers, verify=False)
-        except Exception:
-            return None, None
+        response = self._get_requests_response(service_path, 'POST', data)
+        response = requests.post(
+            url, json=data, headers=HEADERS, verify=False)
 
-        response_content = str(response.content, encoding='utf-8')
+        return response.json()
 
-        return response.status_code, response_content
+    def _get_request(self):
+        if self.system_settings.field('讀卡機控制軟體版本') == 'cshis6':
+            response = self._get_cshis6_request()
+        else:
+            response = self._get_cshis6_request()
+
+        error_code = 0
+
+        return error_code, response
 
     def _set_table_widget_prescript(self):
         self.ui.tableWidget_conflict_drug.setRowCount(0)
