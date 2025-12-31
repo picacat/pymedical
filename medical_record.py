@@ -2314,6 +2314,18 @@ class MedicalRecord(QtWidgets.QMainWindow):
     def add_additional_prescript(self):
         pass
 
+    # 新增加強照護處方
+    def add_care_prescript(self):
+        medicine_set = 11
+        self.tab_list[10] = module_utils.get_ins_care_record(
+            self, self.database, self.system_settings, self.case_key, medicine_set)
+        self.tab_list[10].refresh_prescript()
+        self.ui.tabWidget_prescript.addTab(self.tab_list[10], '加強照護')
+        self.ui.tabWidget_prescript.tabBar().setTabButton(
+            self.ui.tabWidget_prescript.indexOf(
+                self.tab_list[10]), QtWidgets.QTabBar.RightSide, None
+        )
+
     # 新增自費處方
     def add_prescript_tab(self, medicine_set=None):
         if medicine_set in (1, 11):  # 健保處方頁  1=健保 11=加強照護,
@@ -2326,15 +2338,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
             if self.medical_record is not None and \
                self.medical_record['TreatType'] in nhi_utils.IMPROVE_CARE_TREAT + nhi_utils.CHILD_CARE_TREAT:
-                medicine_set = 11
-                self.tab_list[10] = module_utils.get_ins_care_record(
-                    self, self.database, self.system_settings, self.case_key, medicine_set)
-                self.tab_list[10].refresh_prescript()
-                self.ui.tabWidget_prescript.addTab(self.tab_list[10], '加強照護')
-                self.ui.tabWidget_prescript.tabBar().setTabButton(
-                    self.ui.tabWidget_prescript.indexOf(
-                        self.tab_list[10]), QtWidgets.QTabBar.RightSide, None
-                )
+                self.add_care_prescript()
 
             return
 

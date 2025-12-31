@@ -350,6 +350,9 @@ class Debt(QtWidgets.QMainWindow):
         repayment_date = f'{repayment_date} {current_time}'
 
         debt_key = self.table_widget_debt.field_value(0)
+        if debt_key in ['', None]:
+            return
+
         sql = f'''
             UPDATE debt
             SET

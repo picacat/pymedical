@@ -329,7 +329,7 @@ class StatisticsInsDiscountRegistFee(QtWidgets.QMainWindow):
 
         export_utils.export_table_widget_to_excel(
             excel_file_name, self.ui.tableWidget_medical_record, [0],
-            [7, 8, 9],
+            [7, 8, 9], title='掛號費優待統計表',
         )
 
         system_utils.show_message_box(

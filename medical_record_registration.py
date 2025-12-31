@@ -25,6 +25,7 @@ class MedicalRecordRegistration(QtWidgets.QMainWindow):
         self.data_changed = False
 
         self._set_ui()
+        self._block_signals(True)
         self._set_signal()  # 先讀完資料才設定信號
 
         self._read_case_registration()
@@ -34,6 +35,7 @@ class MedicalRecordRegistration(QtWidgets.QMainWindow):
 
         self.user_name = system_utils.get_user_name(self.system_settings)
         self._set_permission()
+        self._block_signals(False)
 
     # 解構
     def __del__(self):
@@ -42,6 +44,9 @@ class MedicalRecordRegistration(QtWidgets.QMainWindow):
     # 關閉
     def close_all(self):
         pass
+
+    def _block_signals(self, block):
+        self.ui.comboBox_treat_type.blockSignals(block)
 
     # 設定GUI
     def _set_ui(self):
@@ -171,6 +176,10 @@ class MedicalRecordRegistration(QtWidgets.QMainWindow):
                 visible = False
 
             self.ui.groupBox_additional_items.setVisible(visible)
+        elif sender_name == 'comboBox_treat_type':
+            treat_type = self.ui.comboBox_treat_type.currentText()
+            if treat_type in nhi_utils.IMPROVE_CARE_TREAT:
+                self.parent.add_care_prescript()
 
         # if self.ui.comboBox_ins_type.currentText() == '健保':
         self.parent.calculate_ins_fees()

@@ -843,7 +843,7 @@ class DictDrug(QtWidgets.QMainWindow):
             self.ui.checkBox_deactivate.setChecked(False)
 
         dict_groups_type = self.table_widget_dict_groups.field_value(self.groups_col_no['dict_groups_name'])
-        keyword = self.ui.lineEdit_search_drug.text()
+        keyword = self.ui.lineEdit_search_drug.text().strip()
 
         if keyword == '':
             self._read_dict_drug(dict_groups_type)
