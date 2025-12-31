@@ -3,7 +3,6 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPushButton
 
-import ssl
 import socket
 import urllib.request
 import urllib.error
@@ -12,6 +11,7 @@ import io
 import os.path
 from os import listdir
 import ntpath
+import stat
 import shutil
 import datetime
 import hashlib
@@ -298,6 +298,14 @@ class SystemUpdate(QtWidgets.QDialog):
             dest_file_name = os.path.join(
                 dest_dir,
                 self.ui.tableWidget_file_list.item(row_no, 0).text())
+
+            # --- 新增的部分：解除唯讀屬性 ---
+            if os.path.exists(dest_file_name):
+                # 取得目前的權限狀態
+                current_mode = os.stat(dest_file_name).st_mode
+                # 使用位元運算移除「唯讀」標誌 (S_IWRITE 代表可寫入)
+                os.chmod(dest_file_name, current_mode | stat.S_IWRITE)
+            # ----------------------------
 
             shutil.copy2(source_file_name, dest_file_name)
 
