@@ -15,4 +15,5 @@ history/
 _temp/
 *診所*.json
 pymedical.json
+pymedical.conf
 __settings.ini

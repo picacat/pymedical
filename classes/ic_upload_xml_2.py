@@ -505,6 +505,7 @@ class ICUploadXML2:
                     prescript.MedicineSet = 1 AND
                     prescript.MedicineName NOT LIKE "%清冠一號%" AND
                     prescript.InsCode IS NOT NULL AND
+                    prescript.MedicineType NOT IN ("穴道", "處置") AND
                     presextend.ExtendType = "處方簽章" AND
                     presextend.Content IS NOT NULL
                 ORDER BY prescript.PrescriptNo, prescript.PrescriptKey
