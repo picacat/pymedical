@@ -2,9 +2,13 @@
 # 系統設定 指定診別起始號 2021-11-04
 # -*- coding: UTF-8 -*-
 
+from http import client
 import json
+import re
 
+from numpy import sign
 import requests
+from classes import cshis, cshis_win32
 from libs import (class_utils, date_utils, prescript_utils, string_utils,
                   system_utils, ui_utils)
 from PyQt5 import QtWidgets
@@ -78,23 +82,11 @@ class DialogConflictDrug(QtWidgets.QDialog):
             self._show_connection_error(f'HTTP 錯誤: 代碼: {error_code}')
             return
 
-        try:
-            json_content = self._convert_xml_to_json(response_content)
-            if not json_content:
-                self._show_connection_error('雲端回傳格式錯誤（無 JSON 資料）')
-                return
-
-            json_dict = json.loads(json_content)
-        except Exception:
-            self._show_connection_error('雲端回傳資料解析失敗')
-            return
-
-        if json_dict.get('RtnCode') != '00':
-            # 可以視情況顯示 json_dict.get('RtnMsg') 之類的
+        if response_content['rtnCode'] != '00':
             return
 
         try:
-            return_number = json_dict['sub'][0]['RtnNum']
+            return_number = response_content['sub'][0]['rtnNum']
         except Exception:
             # 結構和預期不同
             return
@@ -102,7 +94,7 @@ class DialogConflictDrug(QtWidgets.QDialog):
         if return_number == 0:
             return
 
-        result_list = json_dict['sub'][0]['sub']
+        result_list = response_content['sub'][0]['sub']
         self._display_order_message(result_list)
 
         self.ui.tableWidget_conflict_drug.resizeRowsToContents()
@@ -110,9 +102,9 @@ class DialogConflictDrug(QtWidgets.QDialog):
     def _display_order_message(self, result_list):
         for result_dict in result_list:
             ins_code = result_dict['oOrder']
-            effect = result_dict['Effect']
-            mechanism = result_dict['Mechanism']
-            management = result_dict['Management']
+            effect = result_dict['effect']
+            mechanism = result_dict['mechanism']
+            management = result_dict['management']
             try:
                 sub = self._extract_sub(result_dict['sub'])
             except Exception:
@@ -123,10 +115,10 @@ class DialogConflictDrug(QtWidgets.QDialog):
             self._set_message_item(ins_code, order_message)
 
     def _extract_sub(self, sub_list):
-        result = '開立藥品機構:'
+        result = '開立藥品機構\t開立日期\t藥品名稱'
         for sub in sub_list:
-            func_date = date_utils.nhi_date_to_west_date(sub["FuncDT"])
-            result += f'\n{sub["HospName"]}\t{func_date}  {sub["DDIATC7Name"]}'
+            func_date = date_utils.nhi_date_to_west_date(sub["funcDT"])
+            result += f'\n{sub["hospName"]}\t{func_date}\t{sub["ddiatC7Name"]}'
 
         return result
 
@@ -139,46 +131,83 @@ class DialogConflictDrug(QtWidgets.QDialog):
                 )
                 break
 
-    # def _convert_xml_to_json(self, xml):
-    #     json_content = xml.split('<GetDDIDataResult>')[1]
-    #     json_content = json_content.split('</GetDDIDataResult>')[0]
+    def _get_cshis5_signature(self):
+        signature = "UGqD+rMIFwwJFmyGePEBqEIvmi0eVU/AhSYTzwToSFFHQEvDdNl0L4z+LSihxhts5AnWbVf1mJ4F8H3Xr4EpN1aix4mjIwjzM4vC5pvAlSc6vAsKfwLTLJgkgzIJJemFYOqq1K0IDDO7/Jd1XHZO24/wi9zgpa9wLDCuOZmrnziDRlFeNgiCbPN1fRZPYe+orF7i/HipThloESbkwtDkS8g9s2pjL4thUqyppV8de2G0RVKVshk4RfPeCpFNy7uSEG7mZCTI1kLmV0DMJn4GjgGGv3ru5XRDidFlNqUv7jLJX0XbAAPMUuI6Grtzp3S5pRhNP4Hli7WFjLmHwlEEqA=="
+        return signature 
 
-    #     return json_content
+    def _get_cshis5_client_random(self):
+        client_random = "4je+oJUz/Yc="
+        return client_random
 
-    def _convert_xml_to_json(self, xml):
-        start_tag = '<GetDDIDataResult>'
-        end_tag = '</GetDDIDataResult>'
-
-        start_idx = xml.find(start_tag)
-        end_idx = xml.find(end_tag)
-        if start_idx == -1 or end_idx == -1:
-            # 找不到標籤就回傳 None 或 raise 自訂例外，再上層處理
+    def _get_cshis6_verify(self):
+        ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
+        hpchc_signature = ic_card.get_hpchc_signature(service_type='91')
+        if hpchc_signature is None or hpchc_signature['clientRandom'] is None:
             return None
 
-        start_idx += len(start_tag)
-        json_content = xml[start_idx:end_idx]
-        return json_content
-    
-    def _get_cshis6_request(self):
-        service_path = "/api/hc/v1/Signature/HpcHc"
-        url = 'https://medcloudws2.nhi.gov.tw/api/imie5000/GetMedPrtInfo'
-        data = {'serviceType': '91'}
+        verify = {
+            'signature': hpchc_signature['signature'],
+            'clientRandom': hpchc_signature['clientRandom'],
+            'samId': hpchc_signature['samId'],
+            'hospitalId': hpchc_signature['hospitalId'],
+            'hpcId': hpchc_signature['hpcId'],
+            'hpcIdNo': hpchc_signature['hpcIdNo'],
+            'hcId': hpchc_signature['hcId'],
+            'hcIdNo': hpchc_signature['hcIdNo'],
+        }
 
-        response = self._get_requests_response(service_path, 'POST', data)
-        response = requests.post(
-            url, json=data, headers=HEADERS, verify=False)
+        return verify
 
-        return response.json()
+    def _get_json_data(self):
+        json_data = {}
+        json_data["sHospID"] = self.system_settings.field('院所代號')
+        json_data["sHpcId"] = self.doctor_id
+        json_data["sPatId"] = self.patient_id
+
+        return json_data
+
+    def _get_cshis6_json(self):
+        json_data = self._get_json_data()
+        json_data["sVerify"] = self._get_cshis6_verify()
+        json_data["sub"] = self._get_sub()
+
+        return json_data
+
+    def _get_cshis5_json(self):
+        cshis_x = class_utils.get_cshisx(self.database, self.system_settings)
+        random_number, signature = cshis_x.VPNH_SignX(card_type='4', service_type='91')
+
+        sam_card_info = cshis_x.GetSAMCardInfoInCS()
+        sam_card_json = json.loads(sam_card_info)
+
+        sSamId = sam_card_json['SAMCardInfoInCS']['SAM'][0]['CARD_ID']
+        sHospId = sam_card_json['SAMCardInfoInCS']['SAM'][0]['HOSP']
+
+        json_data = self._get_json_data()
+        json_data["sPatCardType"] = "2"  # 1:虛擬卡 2:實體卡
+        json_data["sHcaCardId"] = "000000123456"  # 醫事卡卡號
+        json_data["sPatCardId"] = "000012345678"  # 健保卡卡號
+        json_data["sClientRandom"] = random_number
+        json_data["sSignature"] = signature
+        json_data["sSamId"] = sSamId
+        json_data["sub"] = self._get_sub()
+
+        return json_data
 
     def _get_request(self):
         if self.system_settings.field('讀卡機控制軟體版本') == 'cshis6':
-            response = self._get_cshis6_request()
+            url = 'https://medcloudws2.nhi.gov.tw/api/imie5000/GetMedPrtInfo'
+            json_data = self._get_cshis6_json()
         else:
-            response = self._get_cshis6_request()
+            url = 'https://medcloudws2.nhi.gov.tw/api/imie5000/GetMedPrtData'
+            json_data = self._get_cshis5_json()
 
-        error_code = 0
+        response = requests.post(
+            url, json=json_data, headers=HEADERS, verify=False)
 
-        return error_code, response
+        error_code = response.status_code
+
+        return error_code, response.json()
 
     def _set_table_widget_prescript(self):
         self.ui.tableWidget_conflict_drug.setRowCount(0)
@@ -203,17 +232,6 @@ class DialogConflictDrug(QtWidgets.QDialog):
                     index, col_no, QtWidgets.QTableWidgetItem(string_utils.xstr(medicine[col_no]))
                 )
 
-    def _get_upload_json(self):
-        upload_dict = {}
-        upload_dict['sHospId'] = self.system_settings.field('院所代號')
-        upload_dict['sHcaId'] = self.doctor_id
-        upload_dict['sPatId'] = self.patient_id
-        upload_dict['sub'] = [self._get_sub()]
-
-        upload_json = json.dumps(upload_dict)
-
-        return upload_json
-
     def _get_sub(self):
         sub_list = []
         for row_no in range(self.ui.tableWidget_conflict_drug.rowCount()):
@@ -223,7 +241,7 @@ class DialogConflictDrug(QtWidgets.QDialog):
             sub_list.append(ord_dict)
 
         sub_dict = {}
-        sub_dict['sType'] = 'D'  # 中藥 -> 西醫
-        sub_dict['sub'] = sub_list
+        sub_dict["sType"] = "09"  # 中藥 -> 西醫
+        sub_dict["sub"] = sub_list
 
-        return sub_dict
+        return [sub_dict]

@@ -1,4 +1,4 @@
-# 讀卡機作業 2018.05.03
+
 
 import base64
 import json

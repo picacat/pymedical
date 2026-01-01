@@ -6,6 +6,7 @@ import json
 import base64
 import requests
 
+from classes import cshis
 from libs import date_utils
 import win32com.client
 
@@ -42,9 +43,9 @@ class CSHISX:
     def __del__(self):
         pass
 
-    def VPNH_SignX(self):
+    def VPNH_SignX(self, card_type='3', service_type='30'):
         random_number = self.cshisx.VPNGetRandomX()
-        signature = self.cshisx.VPNH_SignX(random_number, '3', '30')
+        signature = self.cshisx.VPNH_SignX(random_number, card_type, service_type)
 
         return random_number, signature
 
@@ -59,7 +60,7 @@ class CSHISX:
 
         sSamId = sam_card_json['SAMCardInfoInCS']['SAM'][0]['CARD_ID']
         sHospId = sam_card_json['SAMCardInfoInCS']['SAM'][0]['HOSP']
-        sClientRandom, sSignature = self.VPNH_SignX()
+        sClientRandom, sSignature = self.VPNH_SignX(card_type='3', service_type='30')
 
         sType = upload_type  # A1: 健保卡就醫資料正式上傳, A2: 健保卡就醫資料預檢上傳 ZZ: 介接測試
         sMrecs = case_count
