@@ -1,10 +1,9 @@
 
 # 系統設定 指定診別起始號 2021-11-04
+# 2026-01-01 改成web 2.0
 # -*- coding: UTF-8 -*-
 
-from http import client
 import json
-import re
 
 from numpy import sign
 import requests

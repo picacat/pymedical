@@ -43,6 +43,7 @@ class CSHISX:
     def __del__(self):
         pass
 
+    # 取得簽章 2026-01-01 新增card_type及service_type參數
     def VPNH_SignX(self, card_type='3', service_type='30'):
         random_number = self.cshisx.VPNGetRandomX()
         signature = self.cshisx.VPNH_SignX(random_number, card_type, service_type)
