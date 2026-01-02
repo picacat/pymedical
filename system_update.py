@@ -309,11 +309,29 @@ class SystemUpdate(QtWidgets.QDialog):
 
             shutil.copy2(source_file_name, dest_file_name)
 
+    def _get_latest_url(self):
+        # 這是你在 GitHub 點擊 "Raw" 後取得的網址
+        raw_url = 'https://raw.githubusercontent.com/picacat/pymedical_update/refs/heads/main/update.txt'
+        try:
+            # 讀取網路上的純文字內容
+            with urllib.request.urlopen(raw_url, timeout=5) as response:
+                # 讀取並去掉換行與空格
+                latest_url = response.read().decode('utf-8').strip()
+                return latest_url
+        except Exception as e:
+            print(f"無法取得更新網址: {e}")
+            return None
+
     def _download_dropbox_file(self, timeout=10):
         import ssl
         context = ssl._create_unverified_context()
 
-        url = 'https://www.dropbox.com/s/4h4a35ygzqx7duc/pymedical.zip?dl=1'
+        # --- 修改部分：動態獲取網址 ---
+        dynamic_url = self._get_latest_url()
+        if not dynamic_url:
+            url = 'https://www.dropbox.com/s/4h4a35ygzqx7duc/pymedical.zip?dl=1' 
+        else:
+            url = dynamic_url
 
         try:
             response = urllib.request.urlopen(url, context=context, timeout=timeout)
