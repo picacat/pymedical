@@ -362,31 +362,23 @@ class CSHIS:
         else:
             nhi_url = NHI_URL
 
-        if local_url:
-            url = LOCAL_URL + service_path
-        else:
-            url = nhi_url + service_path
-
-        # data = json.dumps(data)
+        # 主控台元件預設聆聽 5066 通訊埠 [cite: 52, 59]
+        url = (LOCAL_URL if local_url else nhi_url) + service_path    
 
         try:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            if request_type == 'GET':
-                response = requests.get(
-                    url, json=data, headers=HEADERS, verify=False)
-            elif request_type == 'POST':
-                response = requests.post(
-                    url, json=data, headers=HEADERS, verify=False)
-            elif request_type == 'PUT':
-                response = requests.put(
-                    url, json=data, headers=HEADERS, verify=False)
-            elif request_type == 'DELETE':
-                response = requests.delete(
-                    url, json=data, headers=HEADERS, verify=False)
+            response = requests.request(
+                method=request_type,
+                url=url,
+                json=data,
+                headers=HEADERS,
+                verify=False,
+                timeout=10 # 加入逾時機制提升品質
+            )
+            response.raise_for_status()
+            return response
         except Exception:
             return None
-
-        return response
 
     def get_sam_signature(self, service_type):
         service_path = "/api/sam/v1/Signature"
