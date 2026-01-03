@@ -214,6 +214,35 @@ class CSHIS:
 
         return True
 
+    def read_hpc_card_no(self):
+        # 1. 準備緩衝區：建議稍微放寬長度（例如 16 或 32）
+        max_len = 32
+        buffer = ctypes.create_string_buffer(max_len)
+        
+        # 2. 準備長度參數：必須使用 c_int 以對應 C 語言的 int *
+        # 傳入時告知 API buffer 的最大容量
+        buffer_len = ctypes.c_int(max_len) 
+
+        self.open_com()
+        try:
+            # 3. 呼叫 API
+            # buffer 本身就是指標，buffer_len 則需用 byref 傳遞指標
+            error_code = self.cshis.hpcGetHPCSN(buffer, ctypes.byref(buffer_len))
+        finally:
+            self.close_com()
+
+        # 4. 錯誤處理
+        if error_code != 0:
+            cshis_utils.show_ic_card_message(error_code, '醫事卡讀取')
+            return None
+
+        # 5. 取得結果
+        # 根據 API 回傳的實際長度 (buffer_len.value) 截取資料
+        actual_len = buffer_len.value
+        hpc_card_sn = buffer.raw[:actual_len].decode('ascii').strip()
+
+        return hpc_card_sn
+
     def read_register_basic_data(self, show_warning=True):
         buffer = ctypes.create_string_buffer(78)  # c: char *
         buffer_len = ctypes.c_short(78)  # c: int *

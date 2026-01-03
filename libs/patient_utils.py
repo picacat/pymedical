@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 from libs import (class_utils, date_utils, dialog_utils, string_utils,
                   system_utils, validator_utils)
+import patient
 
 
 # 尋找病患資料
@@ -367,6 +368,23 @@ def get_patient_row(database, patient_key):
         return None
 
     return rows[0]
+
+
+def get_card_no(database, patient_id):
+    if patient_id is None:
+        return None
+
+    sql = f'''
+        SELECT CardNo FROM patient
+        WHERE
+            ID = "{patient_id}"
+    '''
+    rows = database.select_record(sql)
+
+    if len(rows) <= 0:
+        return None
+
+    return string_utils.xstr(rows[0]["CardNo"])
 
 
 def get_gender_code(gender):

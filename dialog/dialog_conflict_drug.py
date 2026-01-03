@@ -8,7 +8,7 @@ import json
 from numpy import sign
 import requests
 from classes import cshis, cshis_win32
-from libs import (class_utils, date_utils, prescript_utils, string_utils,
+from libs import (class_utils, date_utils, prescript_utils, string_utils, patient_utils,
                   system_utils, ui_utils)
 from PyQt5 import QtWidgets
 
@@ -157,16 +157,12 @@ class DialogConflictDrug(QtWidgets.QDialog):
 
         return verify
 
-    def _get_json_data(self):
+    def _get_cshis6_json(self):
         json_data = {}
-        json_data["sHospID"] = self.system_settings.field('院所代號')
+        json_data["sHospId"] = self.system_settings.field('院所代號')
         json_data["sHpcId"] = self.doctor_id
         json_data["sPatId"] = self.patient_id
 
-        return json_data
-
-    def _get_cshis6_json(self):
-        json_data = self._get_json_data()
         json_data["sVerify"] = self._get_cshis6_verify()
         json_data["sub"] = self._get_sub()
 
@@ -180,14 +176,20 @@ class DialogConflictDrug(QtWidgets.QDialog):
         sam_card_json = json.loads(sam_card_info)
 
         sSamId = sam_card_json['SAMCardInfoInCS']['SAM'][0]['CARD_ID']
-        sHospId = sam_card_json['SAMCardInfoInCS']['SAM'][0]['HOSP']
+        patient_card_no = patient_utils.get_card_no(self.database, self.patient_id)
+        ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
+        hpc_card_no = ic_card.read_hpc_card_no()
 
-        json_data = self._get_json_data()
+        json_data = {}
+        json_data["sHospId"] = self.system_settings.field('院所代號')
+        json_data["sHcaId"] = self.doctor_id
+        json_data["sPatId"] = self.patient_id
         json_data["sPatCardType"] = "2"  # 1:虛擬卡 2:實體卡
-        json_data["sHcaCardId"] = "000000123456"  # 醫事卡卡號
-        json_data["sPatCardId"] = "000012345678"  # 健保卡卡號
+        json_data["sHcaCardId"] = hpc_card_no
+        json_data["sPatCardId"] = patient_card_no  # 健保卡卡號
         json_data["sClientRandom"] = random_number
         json_data["sSignature"] = signature
+        json_data["vhcCloudToken"] = ''
         json_data["sSamId"] = sSamId
         json_data["sub"] = self._get_sub()
 
