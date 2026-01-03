@@ -33,6 +33,22 @@
     "terminal.integrated.env.windows": {
         "LANG": "en_US.UTF-8"
     },
+    "terminal.integrated.profiles.osx": {
+        "zsh (OMZ)": {
+            "path": "/bin/zsh",
+            "args": ["-l"] 
+        }
+    },
+    "terminal.integrated.defaultProfile.osx": "zsh (OMZ)",
+    
+    // 解決 Linux/WSL 環境下可能的問題
+    "terminal.integrated.profiles.linux": {
+        "zsh (OMZ)": {
+            "path": "/bin/zsh",
+            "args": ["-l"]
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "zsh (OMZ)",
     "python.analysis.autoImportCompletions": true,
     "python.experiments.enabled": false,
     "files.exclude": {

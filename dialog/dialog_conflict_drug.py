@@ -149,10 +149,11 @@ class DialogConflictDrug(QtWidgets.QDialog):
             'clientRandom': hpchc_signature['clientRandom'],
             'samId': hpchc_signature['samId'],
             'hospitalId': hpchc_signature['hospitalId'],
+            'serviceType': '91',
             'hpcId': hpchc_signature['hpcId'],
-            'hpcIdNo': hpchc_signature['hpcIdNo'],
-            'hcId': hpchc_signature['hcId'],
             'hcIdNo': hpchc_signature['hcIdNo'],
+            'hcId': hpchc_signature['hcId'],
+            'hpcIdNo': hpchc_signature['hpcIdNo'],
         }
 
         return verify
