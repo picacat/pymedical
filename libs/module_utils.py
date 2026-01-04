@@ -1500,21 +1500,23 @@ def get_statistics_no_return_rate_doctor(parent, database, system_settings,
 
 
 # 照護機構院民資料報表
-def get_statistics_nursing_home_data(parent, database, system_settings, year, month):
+def get_statistics_nursing_home_data(parent, database, system_settings, year, month, doctor, nursing_home):
     import statistics_nursing_home_data
 
     module = importlib.reload(statistics_nursing_home_data)
-    widget = module.StatisticsNursingHomeData(parent, database, system_settings, year, month)
+    widget = module.StatisticsNursingHomeData(
+        parent, database, system_settings, year, month, doctor, nursing_home)
 
     return widget
 
 
 # 照護機構院民資料日報表
-def get_statistics_nursing_home_daily_data(parent, database, system_settings, year, month):
+def get_statistics_nursing_home_daily_data(parent, database, system_settings, year, month, doctor, nursing_home):
     import statistics_nursing_home_daily_data
 
     module = importlib.reload(statistics_nursing_home_daily_data)
-    widget = module.StatisticsNursingHomeDailyData(parent, database, system_settings, year, month)
+    widget = module.StatisticsNursingHomeDailyData(
+        parent, database, system_settings, year, month, doctor, nursing_home)
 
     return widget
 

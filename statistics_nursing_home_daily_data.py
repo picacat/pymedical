@@ -21,12 +21,23 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
         self.system_settings = args[1]
         self.year = args[2]
         self.month = args[3]
+        self.doctor = args[4]
+        self.nursing_home_data = args[5]
+
         self.ui = None
         self.case_count = 0
 
         self.year = int(self.year)
         self.month = int(self.month)
         self.apply_date = nhi_utils.get_apply_date(self.year, self.month)
+
+        if self.nursing_home_data != '全部':
+            self.nursing_home_id = self.nursing_home_data.split(',')[0]
+            self.nursing_home = self.nursing_home_data.split(',')[1]
+        else:
+            self.nursing_home_id = self.nursing_home_data
+            self.nursing_home = self.nursing_home_data
+
         self._set_ui()
         self._set_signal()
 
@@ -73,14 +84,26 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
         start_date = f'{self.year}-{self.month:0>2}-01'
         end_date = f'{self.year}-{self.month:0>2}-{last_day:0>2}'
 
+        doctor_script = ''
+        nursing_home_script = ''
+
+        if self.doctor not in ['全部', '']:
+            doctor_script = f'AND cases.Doctor = "{self.doctor}"'
+
+        if self.nursing_home_id not in ['全部', '']:
+            nursing_home_script = f'AND patient.NursingHomeID LIKE "%{self.nursing_home_id}%"'
+
         sql = f'''
             SELECT * FROM cases
+                LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
             WHERE
-                DATE(CaseDate) BETWEEN "{start_date}" AND "{end_date}" AND
-                RegistType = "照護機構中醫照護" AND
-                InsType = "健保" AND
-                ApplyType = "申報" AND
-                Card != "欠卡"
+                DATE(cases.CaseDate) BETWEEN "{start_date}" AND "{end_date}" AND
+                cases.RegistType = "照護機構中醫照護" AND
+                cases.InsType = "健保" AND
+                cases.ApplyType = "申報" AND
+                cases.Card != "欠卡"
+                {doctor_script}
+                {nursing_home_script}
             GROUP BY DATE(CaseDate)
         '''
         rows = self.database.select_record(sql)

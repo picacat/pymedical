@@ -23,6 +23,8 @@ class StatisticsNursingHome(QtWidgets.QMainWindow):
             "dialog_executed": False,
             "year": None,
             "month": None,
+            "doctor": None,
+            "nursing_home": None,
         }
         self.user_name = system_utils.get_user_name(self.system_settings)
 
@@ -57,11 +59,14 @@ class StatisticsNursingHome(QtWidgets.QMainWindow):
 
     # 讀取病歷
     def open_dialog(self):
-        dialog = dialog_utils.get_dialog_date_picker(self, self.database, self.system_settings, None)
+        dialog = dialog_utils.get_dialog_date_picker(
+            self, self.database, self.system_settings, '照護機構院民資料報表')
 
         if self.dialog_setting['dialog_executed']:
             dialog.ui.comboBox_year.setCurrentText(self.dialog_setting['year'])
             dialog.ui.comboBox_month.setCurrentText(self.dialog_setting['month'])
+            dialog.ui.comboBox_doctor.setCurrentText(self.dialog_setting['doctor'])
+            dialog.ui.comboBox_nursing_home.setCurrentText(self.dialog_setting['nursing_home'])
 
         if not dialog.exec_():
             dialog.deleteLater()
@@ -69,33 +74,37 @@ class StatisticsNursingHome(QtWidgets.QMainWindow):
 
         year = dialog.ui.comboBox_year.currentText()
         month = dialog.ui.comboBox_month.currentText()
+        doctor = dialog.ui.comboBox_doctor.currentText()
+        nursing_home = dialog.ui.comboBox_nursing_home.currentText()
 
         self.dialog_setting['dialog_executed'] = True
         self.dialog_setting['year'] = year
         self.dialog_setting['month'] = month
+        self.dialog_setting['doctor'] = doctor
+        self.dialog_setting['nursing_home'] = nursing_home
 
         dialog.deleteLater()
-        self._set_tab_widget(year, month)
+        self._set_tab_widget(year, month, doctor, nursing_home)
 
-    def _set_tab_widget(self, year, month):
+    def _set_tab_widget(self, year, month, doctor, nursing_home):
         self.ui.tabWidget_statistics.clear()
 
         self.ui.statusbar.showMessage(f' 統計期間: {year}年 {month}月')
 
-        self._add_statistic_nursing_home_data(year, month)
-        self._add_statistic_nursing_home_daily_data(year, month)
+        self._add_statistic_nursing_home_data(year, month, doctor, nursing_home)
+        self._add_statistic_nursing_home_daily_data(year, month, doctor, nursing_home)
 
     # 照護機構院民資料
-    def _add_statistic_nursing_home_data(self, year, month):
+    def _add_statistic_nursing_home_data(self, year, month, doctor, nursing_home):
         self.tab_statistics_nursing_home_data = module_utils.get_statistics_nursing_home_data(
-                self, self.database, self.system_settings, year, month)
+                self, self.database, self.system_settings, year, month, doctor, nursing_home)
         self.tab_statistics_nursing_home_data.read_data()
         self.ui.tabWidget_statistics.addTab(self.tab_statistics_nursing_home_data, '院民資料')
 
     # 照護機構院民資料日報表
-    def _add_statistic_nursing_home_daily_data(self, year, month):
+    def _add_statistic_nursing_home_daily_data(self, year, month, doctor, nursing_home):
         self.tab_statistics_nursing_home_daily_data = module_utils.get_statistics_nursing_home_daily_data(
-                self, self.database, self.system_settings, year, month)
+                self, self.database, self.system_settings, year, month, doctor, nursing_home)
         self.tab_statistics_nursing_home_daily_data.read_data()
         self.ui.tabWidget_statistics.addTab(self.tab_statistics_nursing_home_daily_data, '日報表')
 

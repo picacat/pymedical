@@ -21,6 +21,8 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
         self.system_settings = args[1]
         self.year = args[2]
         self.month = args[3]
+        self.doctor = args[4]
+        self.nursing_home_data = args[5]
         self.ui = None
 
         last_day = calendar.monthrange(int(self.year), int(self.month))[1]
@@ -28,6 +30,13 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
         self.end_date = f'{self.year}-{self.month}-{last_day}'
         self.clinic_name = self.system_settings.field('院所名稱')
         self.clinic_id = self.system_settings.field('院所代號')
+
+        if self.nursing_home_data != '全部':
+            self.nursing_home_id = self.nursing_home_data.split(',')[0]
+            self.nursing_home = self.nursing_home_data.split(',')[1]
+        else:
+            self.nursing_home_id = self.nursing_home_data
+            self.nursing_home = self.nursing_home_data
 
         self._set_ui()
         self._set_signal()
@@ -92,6 +101,15 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
         self._set_table_data(row_no, row)
 
     def read_data(self):
+        doctor_script = ''
+        nursing_home_script = ''
+
+        if self.doctor not in ['全部', '']:
+            doctor_script = f'AND cases.Doctor = "{self.doctor}"'
+
+        if self.nursing_home_id not in ['全部', '']:
+            nursing_home_script = f'AND patient.NursingHomeID LIKE "%{self.nursing_home_id}%"'
+
         sql = f'''
             SELECT
                 cases.CaseKey, patient.*
@@ -101,6 +119,8 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
                 DATE(CaseDate) BETWEEN "{self.start_date}" AND "{self.end_date}" AND
                 cases.InsType = "健保" AND
                 cases.RegistType = "{nhi_utils.LONG_TERM_CARE[0]}"
+                {doctor_script}
+                {nursing_home_script}
             GROUP BY PatientKey
             ORDER BY CaseDate
         '''

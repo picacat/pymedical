@@ -2,12 +2,14 @@
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
+from ctypes import string_at
 from PyQt5 import QtWidgets
 import datetime
 
 from libs import system_utils
 from libs import ui_utils
 from libs import personnel_utils
+from libs import string_utils
 
 
 # 主視窗
@@ -40,8 +42,9 @@ class DialogDatePicker(QtWidgets.QDialog):
         self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('確定')
         self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText('取消')
         self._set_combo_box()
-        if self.call_from in [None, 'by_month', 'by_year']:
-            self.ui.groupBox_doctor.setVisible(False)
+
+        self.ui.groupBox_doctor.setVisible(False)
+        self.ui.groupBox_nursing_home.setVisible(False)
 
         if self.call_from == 'by_year':
             self.ui.groupBox.setTitle('請選擇年度')
@@ -49,6 +52,11 @@ class DialogDatePicker(QtWidgets.QDialog):
             self.ui.label_month.setVisible(False)
         elif self.call_from == 'by_month':
             self.ui.comboBox_year.setEnabled(False)
+        elif self.call_from not in [None]:
+            self.ui.groupBox_doctor.setVisible(True)
+            if self.call_from in ['照護機構院民資料報表']:
+                self.ui.groupBox_nursing_home.setVisible(True)
+                self._set_nursing_home()
 
     # 設定信號
     def _set_signal(self):
@@ -68,6 +76,25 @@ class DialogDatePicker(QtWidgets.QDialog):
         doctor_list = personnel_utils.get_person(self.database, '醫師', None)
         doctor_list.insert(0, '全部')
         ui_utils.set_combo_box(self.ui.comboBox_doctor, doctor_list)
+
+    def _set_nursing_home(self):
+        sql = '''
+            SELECT NursingHome, NursingHomeID FROM patient
+            WHERE
+                NursingHome IS NOT NULL AND
+                NursingHomeID IS NOT NULL
+            GROUP BY NursingHomeID
+            ORDER BY NursingHomeID
+        '''
+        rows = self.database.select_record(sql)
+        nursing_home_list = ['全部']
+        for row in rows:
+            nursing_home = string_utils.xstr(row['NursingHome']).strip()
+            nursing_home_id = string_utils.xstr(row['NursingHomeID']).strip()
+            if nursing_home not in nursing_home_list:
+                nursing_home_list.append(f'{nursing_home_id},{nursing_home}')
+
+        ui_utils.set_combo_box(self.ui.comboBox_nursing_home, nursing_home_list, '全部')
 
     def accepted_button_clicked(self):
         pass
