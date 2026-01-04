@@ -5,9 +5,7 @@
 
 import json
 
-from numpy import sign
 import requests
-from classes import cshis, cshis_win32
 from libs import (class_utils, date_utils, prescript_utils, string_utils, patient_utils,
                   system_utils, ui_utils)
 from PyQt5 import QtWidgets
@@ -15,6 +13,7 @@ from PyQt5 import QtWidgets
 HEADERS = {
     "Content-Type": "application/json",  # 根據 API 要求的 Content-Type 設定
 }
+
 
 # 主視窗
 class DialogConflictDrug(QtWidgets.QDialog):
