@@ -105,7 +105,28 @@ class KioskRegistration(QtWidgets.QMainWindow):
             return
 
         name = string_utils.xstr(patient_row['Name'])
+        debt_mark = name[-1]
         name = string_utils.remove_not_chinese_character(name)
+
+        debt_hint = ''
+        if debt_mark == '$':
+            debt_hint = '''
+                <tr>
+                    <td colspan="2" style="color: red;">您尚有欠款未結</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="color: red;">請與櫃台聯絡</td>
+                </tr>
+            '''
+        elif debt_mark == '#':
+            debt_hint = '''
+                <tr>
+                    <td colspan="2" style="color: red;">您上次找零未取</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="color: red;">請與櫃台聯絡</td>
+                </tr>
+            '''
 
         label_header = system_utils.set_label(
             self, name + ' 您好', 50, 600, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
@@ -126,6 +147,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
                     <td>預約醫師:</td>
                     <td align=left>{row["Doctor"]}</td>
                 </tr>
+                {debt_hint}
             </table>
         '''
 
