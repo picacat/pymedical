@@ -708,6 +708,9 @@ class MedicalRecordFees(QtWidgets.QMainWindow):
                 self_fee['diag_fee'] = diag_fee
                 self_total_fee += diag_fee
 
+            if self.parent.tab_registration.ui.comboBox_treat_type.currentText() in ['加購', '自費']:
+                self_fee['diag_fee'] = 0
+
         if self.system_settings.field('自費折扣方式') == '統一折扣':
             # discount_fee = self_total_fee - (self_total_fee * self.ui.spinBox_discount.value() / 100)
             discount_fee = charge_utils.get_discount_fee(
