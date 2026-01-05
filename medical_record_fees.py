@@ -169,7 +169,7 @@ class MedicalRecordFees(QtWidgets.QMainWindow):
         if key in [QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter, QtCore.Qt.Key_Down, QtCore.Qt.Key_Up]:
             if current_row not in [self.SELF_COLUMN['ReceiptFee']]:
                 self._calculate_own_expense_total()
-                self._reset_discount_fee()
+                # self._reset_discount_fee()
                 self._calculate_own_expense_total()  # 再重算一次
                 self._set_cash_fee_editable()
 
