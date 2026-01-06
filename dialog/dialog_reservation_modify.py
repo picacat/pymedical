@@ -2,6 +2,8 @@
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
+import re
+import string
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
@@ -28,7 +30,6 @@ class DialogReservationModify(QtWidgets.QDialog):
         self.reserve_key = args[2]
 
         self.ui = None
-
         self._set_ui()
         self._set_signal()
         self._read_data()
@@ -75,48 +76,11 @@ class DialogReservationModify(QtWidgets.QDialog):
     # 設定信號
     def _set_signal(self):
         self.ui.buttonBox.accepted.connect(self.accepted_button_clicked)
-        self.ui.spinBox_reserve_no.valueChanged.connect(self._spin_box_value_changed)
-
-    def _spin_box_value_changed(self):
-        self._set_reservation_time()
-
-    def _set_reservation_time(self):
-        period = self.ui.comboBox_period.currentText()
-        reserve_no = self.ui.spinBox_reserve_no.value()
-        doctor = self.ui.comboBox_doctor.currentText()
-        week_day_name = self._get_week_day_name()
-
-        if doctor == '' or period == '' or reserve_no == '':
-            return
-
-        sql = f'''
-            SELECT * FROM reservation_table
-            WHERE
-                Doctor = "{doctor}" AND
-                Period = "{period}" AND
-                ReserveNo = {reserve_no} AND
-                (Weekday IS NULL OR Weekday = "{week_day_name}")
-            ORDER BY Timestamp
-        '''
-        rows = self.database.select_record(sql)
-        if len(rows) <= 0:
-            return
-
-        row = rows[0]
-
-        time = row['Time']
-        if time is None:
-            return
-
-        try:
-            hour = number_utils.get_integer(time[:2])
-            minute = number_utils.get_integer(time[3:5])
-        except Exception:
-            hour = 0
-            minute = 0
-
-        self.ui.spinBox_hour.setValue(hour)
-        self.ui.spinBox_minute.setValue(minute)
+        self.ui.dateEdit_reserve_date.dateChanged.connect(self._set_available_reservation_dict)
+        self.ui.comboBox_period.currentIndexChanged.connect(self._set_available_reservation_dict)
+        self.ui.comboBox_doctor.currentIndexChanged.connect(self._set_available_reservation_dict)
+        self.ui.comboBox_time.currentIndexChanged.connect(self._set_reserve_no)
+        self.ui.comboBox_reserve_no.currentIndexChanged.connect(self._set_reservation_time)
 
     def _get_week_day_name(self):
         current_week_day = datetime.datetime(
@@ -132,7 +96,8 @@ class DialogReservationModify(QtWidgets.QDialog):
         patient_key = self.ui.lineEdit_patient_key.text()
         reserve_date = self.ui.dateEdit_reserve_date.date().toString('yyyy-MM-dd')
         period = self.ui.comboBox_period.currentText()
-        reserve_no = self.ui.spinBox_reserve_no.value()
+        time = self.ui.comboBox_time.currentText() + ':00'
+        reserve_no = self.ui.comboBox_reserve_no.currentText()
         doctor = self.ui.comboBox_doctor.currentText()
         room = self.ui.spinBox_room.value()
         source = self.ui.comboBox_source.currentText()
@@ -158,10 +123,7 @@ class DialogReservationModify(QtWidgets.QDialog):
             )
             return
 
-        hour = self.ui.spinBox_hour.value()
-        minute = self.ui.spinBox_minute.value()
-
-        reserve_date = f'{reserve_date} {hour:0>2}:{minute:0>2}:00'
+        reserve_date = f'{reserve_date} {time}'
 
         if self.ui.comboBox_arrival.currentText() == '是':
             arrival = 'True'
@@ -213,21 +175,11 @@ class DialogReservationModify(QtWidgets.QDialog):
         if source in ['網路初診預約', '視訊初診預約']:
             patient_key = source[:4]
 
-        try:
-            hour = row['ReserveDate'].hour
-            minute = row['ReserveDate'].minute
-        except Exception:
-            hour = 0
-            minute = 0
-
         self.ui.lineEdit_patient_key.setText(patient_key)
         self.ui.lineEdit_name.setText(string_utils.xstr(row['Name']))
         self.ui.lineEdit_telephone.setText(string_utils.xstr(row['Telephone']))
         self.ui.lineEdit_cellphone.setText(string_utils.xstr(row['Cellphone']))
         self.ui.dateEdit_reserve_date.setDate(row['ReserveDate'].date())
-        self.ui.spinBox_hour.setValue(hour)
-        self.ui.spinBox_minute.setValue(minute)
-        self.ui.spinBox_reserve_no.setValue(number_utils.get_integer(row['ReserveNo']))
         self.ui.spinBox_room.setValue(number_utils.get_integer(row['Room']))
         self.ui.comboBox_period.setCurrentText(string_utils.xstr(row['Period']))
         self.ui.comboBox_doctor.setCurrentText(string_utils.xstr(row['Doctor']))
@@ -245,3 +197,95 @@ class DialogReservationModify(QtWidgets.QDialog):
             self.ui.comboBox_source.setEnabled(False)
         else:
             self.ui.comboBox_source.setEnabled(True)
+
+        self._set_available_reservation_dict()
+
+    def _is_reservation_exists(self, reservation_date):
+        doctor = self.ui.comboBox_doctor.currentText()
+        period = self.ui.comboBox_period.currentText()
+
+        sql = f'''
+            SELECT ReserveKey FROM reserve
+            WHERE
+                ReserveDate = "{reservation_date}" AND
+                Doctor = "{doctor}" AND
+                Period = "{period}"
+        '''
+        rows = self.database.select_record(sql)
+        if len(rows) > 0:
+            return True
+        else:
+            return False
+
+    def _set_available_reservation_dict(self):
+        doctor = self.ui.comboBox_doctor.currentText()
+        period = self.ui.comboBox_period.currentText()
+        weekday_name = self._get_week_day_name()
+
+        sql = f'''
+            SELECT * FROM reservation_table
+            WHERE
+                (Doctor="{doctor}") AND
+                (Period = "{period}") AND
+                (Weekday = "{weekday_name}")
+            ORDER BY Time
+        '''
+        rows = self.database.select_record(sql)
+
+        if len(rows) <= 0:
+            sql = f'''
+                SELECT * FROM reservation_table
+                WHERE
+                    (Doctor="{doctor}") AND
+                    (Period = "{period}") AND
+                    (ReserveNo IS NOT NULL) AND
+                    (Weekday IS NULL)
+                ORDER BY Time
+            '''
+            rows = self.database.select_record(sql)
+
+        self.time_dict = {}
+        self.number_dict = {}
+        for row in rows:
+            time = string_utils.xstr(row['Time'])
+            reservation_date = self.ui.dateEdit_reserve_date.date().toString('yyyy-MM-dd') + ' ' + time + ':00'
+            if self._is_reservation_exists(reservation_date):
+                continue
+
+            reserve_no = string_utils.xstr(row['ReserveNo'])
+            self.time_dict[time] = reserve_no
+            self.number_dict[reserve_no] = time
+
+        self.ui.comboBox_time.blockSignals(True)
+        self.ui.comboBox_reserve_no.blockSignals(True)
+        ui_utils.set_combo_box(self.ui.comboBox_time, self.time_dict.keys())
+        ui_utils.set_combo_box(self.ui.comboBox_reserve_no, self.number_dict.keys())
+        if self.ui.comboBox_time.count() <= 0:
+            self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+        else:
+            self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+
+        self.ui.comboBox_time.blockSignals(False)
+        self.ui.comboBox_reserve_no.blockSignals(False)
+
+    def _set_reservation_time(self):
+        self.ui.comboBox_time.blockSignals(True)
+        reserve_no = self.ui.comboBox_reserve_no.currentText()
+        if reserve_no in ['', None]:
+            self.ui.comboBox_reserve_no.blockSignals(False)
+            return
+
+        time = self.number_dict[reserve_no]
+        self.ui.comboBox_time.setCurrentText(time)
+        self.ui.comboBox_time.blockSignals(False)
+
+    def _set_reserve_no(self):
+        self.ui.comboBox_reserve_no.blockSignals(True)
+        time = self.ui.comboBox_time.currentText()
+        if time in ['', None]:
+            self.ui.comboBox_reserve_no.blockSignals(False)
+            return
+
+        reserve_no = self.time_dict[time]
+        self.ui.comboBox_reserve_no.setCurrentText(reserve_no)
+        self.ui.comboBox_reserve_no.blockSignals(False)
