@@ -59,6 +59,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self.ui.tableWidget_bulletin._sorter = table_widget.TableDragDropSorter(
             self.ui.tableWidget_bulletin
         )
+        self.ui.tableWidget_notice._sorter = table_widget.TableDragDropSorter(
+            self.ui.tableWidget_notice
+        )
 
     # 設定信號
     def _set_signal(self):
