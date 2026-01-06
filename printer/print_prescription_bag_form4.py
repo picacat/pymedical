@@ -107,13 +107,13 @@ class PrintPrescriptionBagForm4:
         case_year = medical_record['CaseDate'].year - 1911
         case_month = medical_record['CaseDate'].month
         case_day = medical_record['CaseDate'].day
-        painter.drawText(340, lines[0], string_utils.xstr(case_year))
-        painter.drawText(460, lines[0], f'{case_month:0>2}')
-        painter.drawText(580, lines[0], f'{case_day:0>2}')
+        painter.drawText(300, lines[0], string_utils.xstr(case_year))
+        painter.drawText(420, lines[0], f'{case_month:0>2}')
+        painter.drawText(540, lines[0], f'{case_day:0>2}')
 
         font = QtGui.QFont(self.font_name, 36, QtGui.QFont.PreferQuality)
         painter.setFont(font)
-        painter.drawText(340, lines[1], medical_record['patient_name'])
+        painter.drawText(300, lines[1], medical_record['patient_name'])
 
     def _print_dosage(self, painter, medical_record):
         if sys.platform == 'win32':
@@ -123,8 +123,8 @@ class PrintPrescriptionBagForm4:
 
         font = QtGui.QFont(self.font_name, 24, QtGui.QFont.PreferQuality)
         painter.setFont(font)
-        painter.drawText(270, lines[0], medical_record['packages'])
-        painter.drawText(500, lines[0], medical_record['pres_days'])
+        painter.drawText(230, lines[0], medical_record['packages'])
+        painter.drawText(460, lines[0], medical_record['pres_days'])
 
     def _print_usage(self, painter, medical_record):
         usage1, usage2, usage3, usage4, usage5 = '', '', '', '', ''
@@ -156,12 +156,12 @@ class PrintPrescriptionBagForm4:
 
         font = QtGui.QFont(self.font_name, 24, QtGui.QFont.PreferQuality)
         painter.setFont(font)
-        painter.drawText(160, lines[0], usage1)
-        painter.drawText(295, lines[0], usage2)
-        painter.drawText(430, lines[0], usage3)
+        painter.drawText(120, lines[0], usage1)
+        painter.drawText(255, lines[0], usage2)
+        painter.drawText(390, lines[0], usage3)
 
-        painter.drawText(160, lines[1], usage4)
-        painter.drawText(295, lines[1], usage5)
+        painter.drawText(120, lines[1], usage4)
+        painter.drawText(255, lines[1], usage5)
 
     def _get_medical_record(self):
         sql = f'''

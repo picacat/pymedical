@@ -178,6 +178,7 @@ class PyMedical(QtWidgets.QMainWindow):
         self.clinic_name = self.system_settings.field('院所名稱')
         instance_setting = self.system_settings.field('醫療系統執行個體')
         self.set_waiting_list = self.system_settings.field('自動切換醫師候診名單')
+        self.no_beep = self.system_settings.field('醫師候診名單不要提示音')
 
         if sys.platform == 'win32' and instance_setting == '獨立執行':
             self._check_single_instance()
@@ -1955,7 +1956,8 @@ class PyMedical(QtWidgets.QMainWindow):
 
         index = self.ui.tabWidget_window.currentIndex()
         current_tab_text = self.ui.tabWidget_window.tabText(index)
-        if current_tab_text not in ['門診掛號', '醫師看診作業', '批價作業', '藥局作業'] and '病歷資料' not in current_tab_text:
+        if current_tab_text not in ['門診掛號', '醫師看診作業', '批價作業', '藥局作業'] and \
+                '病歷資料' not in current_tab_text:
             return
 
         tab = self.ui.tabWidget_window.currentWidget()
@@ -2003,8 +2005,10 @@ class PyMedical(QtWidgets.QMainWindow):
         else:
             pass
 
-    @staticmethod
-    def _notify_wait_arrive():
+    def _notify_wait_arrive(self):
+        if self.no_beep == 'Y':
+            return
+
         try:
             mixer.init()
             mixer.music.load('./icq.mp3')

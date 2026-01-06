@@ -1695,8 +1695,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>638</width>
-              <height>685</height>
+              <width>1322</width>
+              <height>792</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -2147,7 +2147,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>977</width>
+              <width>1301</width>
               <height>1205</height>
              </rect>
             </property>
@@ -3030,7 +3030,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>685</width>
+              <width>1301</width>
               <height>816</height>
              </rect>
             </property>
@@ -3601,8 +3601,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>881</width>
-              <height>1408</height>
+              <width>1301</width>
+              <height>1439</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -4008,17 +4008,17 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="0">
-                   <widget class="QRadioButton" name="radioButton_all_room">
-                    <property name="text">
-                     <string>顯示所有的診別</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="1" column="0">
                    <widget class="QRadioButton" name="radioButton_doctor_room">
                     <property name="text">
                      <string>只顯示相同的醫師姓名</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QRadioButton" name="radioButton_all_room">
+                    <property name="text">
+                     <string>顯示所有的診別</string>
                     </property>
                    </widget>
                   </item>
@@ -4029,13 +4029,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1">
-                   <widget class="QCheckBox" name="checkBox_hide_wait_time">
-                    <property name="text">
-                     <string>候診名單隱藏等候時間</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="0" column="0">
                    <widget class="QRadioButton" name="radioButton_self_room">
                     <property name="text">
@@ -4043,6 +4036,20 @@
                     </property>
                     <property name="checked">
                      <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QCheckBox" name="checkBox_hide_wait_time">
+                    <property name="text">
+                     <string>候診名單隱藏等候時間</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QCheckBox" name="checkBox_no_beep">
+                    <property name="text">
+                     <string>名單更新不要提示音</string>
                     </property>
                    </widget>
                   </item>
@@ -4934,7 +4941,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>836</width>
+              <width>1301</width>
               <height>2319</height>
              </rect>
             </property>
@@ -6798,7 +6805,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>508</width>
+              <width>1301</width>
               <height>883</height>
              </rect>
             </property>
@@ -7108,7 +7115,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>980</width>
+              <width>1301</width>
               <height>1440</height>
              </rect>
             </property>

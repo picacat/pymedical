@@ -884,7 +884,7 @@ class WaitingList(QtWidgets.QMainWindow):
 
         try:
             patient_key = self.table_widget_reservation_list.field_value(5)
-            if patient_key in [None, '', 0, '初診預約', '網路初診']:
+            if patient_key in [None, '', 0, '初診預約', '網路初診', '網路初診預約']:
                 return
 
             name = self.table_widget_reservation_list.field_value(6)

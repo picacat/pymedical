@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QFileDialog, QInputDialog
 
 class DialogSystemSettings(QtWidgets.QDialog):
     """系統設定."""
-    
+
     def __init__(self, parent=None, *args):
         """初始化."""
         super(DialogSystemSettings, self).__init__(parent)
@@ -776,6 +776,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._set_check_box(self.ui.checkBox_hide_reserve_time, '醫師候診名單隱藏預約時間')
         self._set_check_box(self.ui.checkBox_hide_wait_time, '醫師候診名單隱藏候診時間')
         self._set_check_box(self.ui.checkBox_set_waiting_list, '自動切換醫師候診名單')
+        self._set_check_box(self.ui.checkBox_no_beep, '醫師候診名單不要提示音')
         self._set_check_box(self.ui.checkBox_sort_dosage, '處方劑量欄位可以排序')
         self._set_check_box(self.ui.checkBox_fixed_waiting_list_width, '醫師候診名單欄位固定寬度')
         self._set_check_box(self.ui.checkBox_same_doctor, '病歷存檔檢查醫師姓名')
@@ -1531,6 +1532,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._save_check_box(self.ui.checkBox_hide_reserve_time, '醫師候診名單隱藏預約時間')
         self._save_check_box(self.ui.checkBox_hide_wait_time, '醫師候診名單隱藏候診時間')
         self._save_check_box(self.ui.checkBox_set_waiting_list, '自動切換醫師候診名單')
+        self._save_check_box(self.ui.checkBox_no_beep, '醫師候診名單不要提示音')
         self._save_check_box(self.ui.checkBox_sort_dosage, '處方劑量欄位可以排序')
         self._save_check_box(self.ui.checkBox_fixed_waiting_list_width, '醫師候診名單欄位固定寬度')
         self._save_check_box(self.ui.checkBox_same_doctor, '病歷存檔檢查醫師姓名')
