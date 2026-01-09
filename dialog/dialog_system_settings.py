@@ -506,6 +506,8 @@ class DialogSystemSettings(QtWidgets.QDialog):
             number_utils.get_integer(self.system_settings.field('預設中度複雜性傷科治療時間')))
         self.ui.spinBox_highly_massage_time.setValue(
             number_utils.get_integer(self.system_settings.field('預設高度複雜性傷科治療時間')))
+        self.ui.spinBox_min_acupuncture_points.setValue(
+            number_utils.get_integer(self.system_settings.field('最少針灸穴道數')))
 
         self.ui.lineEdit_print_massage_address.setText(self.system_settings.field('民俗調理單地址'))
         self.ui.lineEdit_print_massage_remark.setText(self.system_settings.field('民俗調理單備註'))
@@ -1275,6 +1277,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self.system_settings.post('預設高度複雜性針灸治療時間', self.ui.spinBox_highly_acupuncture_time.value())
         self.system_settings.post('預設中度複雜性傷科治療時間', self.ui.spinBox_moderate_massage_time.value())
         self.system_settings.post('預設高度複雜性傷科治療時間', self.ui.spinBox_highly_massage_time.value())
+        self.system_settings.post('最少針灸穴道數', self.ui.spinBox_min_acupuncture_points.value())
 
         self.system_settings.post('民俗調理單地址', self.ui.lineEdit_print_massage_address.text())
         self.system_settings.post('民俗調理單備註', self.ui.lineEdit_print_massage_remark.text())

@@ -226,8 +226,8 @@ class CheckCard(QtWidgets.QMainWindow):
                             else:
                                 if delta.days + 1 < 14:  # 當天也算一天 +1
                                     error_message.append('療程14日未完成另開新卡')
-                                elif delta.days + 1 < 30:  # 當天也算一天 +1
-                                    error_message.append('療程30日未完成另開新卡')
+                                # elif delta.days + 1 < 30:  # 當天也算一天 +1
+                                #     error_message.append('療程30日未完成另開新卡')
 
                     if treat_type != next_treat_type and next_course <= 1 and 1 <= course <= 5:
                         is_new_course = False
@@ -266,14 +266,20 @@ class CheckCard(QtWidgets.QMainWindow):
                             next_treat_type in nhi_utils.ALL_CARE_TREAT:
                             pass
                         else:
-                            error_message.append('內科與針傷療程同診斷碼')
-                    elif (treat_type == '內科' and next_treat_type in nhi_utils.INS_TREAT and
-                            disease_code == next_disease_code):
-                        if treat_type in nhi_utils.ALL_CARE_TREAT or \
-                            next_treat_type in nhi_utils.ALL_CARE_TREAT:
-                            pass
-                        else:
-                            error_message.append('針傷療程與內科同診斷碼')
+                            if case_date is not None and next_case_date is not None and \
+                                case_date[5:7] != next_case_date[5:7]:  # 不同月份不要檢查
+                                pass
+                            elif course == 6:  # 療程已滿不檢查
+                                pass
+                            else:
+                                error_message.append('內科與針傷療程同診斷碼')
+                    # elif (treat_type == '內科' and next_treat_type in nhi_utils.INS_TREAT and
+                    #         disease_code == next_disease_code):
+                    #     if treat_type in nhi_utils.ALL_CARE_TREAT or \
+                    #         next_treat_type in nhi_utils.ALL_CARE_TREAT:
+                    #         pass
+                    #     else:
+                    #         error_message.append('針傷療程與內科同診斷碼')
 
                     if course <= 1 and next_course <= 1:
                         delta = date_utils.str_to_date(next_case_date) - date_utils.str_to_date(case_date)

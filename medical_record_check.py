@@ -652,13 +652,13 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         if not self._check_empty_prescript():
             return False
 
+        if not self._check_min_acupuncture_points():  # 2023-07-19 暫停  # 2026-01-10 重新啟用
+            return False
+
         if not self._check_empty_treat():
             return False
 
         # if not self._check_acupuncture_level():  # 2023-07-19 暫停
-        #     return False
-
-        # if not self._check_three_acupuncture_points():  # 2023-07-19 暫停
         #     return False
 
         if not self._check_injury_treat():
@@ -1331,8 +1331,13 @@ class MedicalRecordCheck(QtWidgets.QDialog):
 
         return check_ok
 
-    def _check_three_acupuncture_points(self):
+    def _check_min_acupuncture_points(self):
         check_ok = True
+
+        min_acupuncture_points = number_utils.get_integer(self.system_settings.field('最少針灸穴道數'))
+        if min_acupuncture_points <= 0:
+            return check_ok
+
         error_message = []
 
         if self.treatment not in nhi_utils.ACUPUNCTURE_TREAT:
@@ -1347,7 +1352,9 @@ class MedicalRecordCheck(QtWidgets.QDialog):
                 if '波形' in medicine_name or '頻率' in medicine_name or '時間' in medicine_name:
                     continue
 
-                if '治療部位' in medicine_name or '治療時間' in medicine_name or '輔助治療' in medicine_name:
+                if '治療部位' in medicine_name or '治療時間' in medicine_name or \
+                        '治療開始' in medicine_name or '治療結束' in medicine_name or \
+                        '輔助治療' in medicine_name:
                     continue
 
             medicine_type = self.table_widget_ins_treat.item(
@@ -1355,8 +1362,8 @@ class MedicalRecordCheck(QtWidgets.QDialog):
             if medicine_type is not None and medicine_type.text() == '穴道':
                 acupuncture_points += 1
 
-        if acupuncture_points < 3:
-            error_message.append('有執行針灸治療但針灸穴位不足三個, 請補足.')
+        if acupuncture_points < min_acupuncture_points:
+            error_message.append(f'針灸穴位不足{min_acupuncture_points}個, 請補足.')
 
         if len(error_message) > 0:
             system_utils.show_message_box(
@@ -2944,6 +2951,11 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         if not self.integrate_care:
             return check_ok
 
+        try:
+            share_type = self.parent.tab_registration.ui.comboBox_share_type.currentText()
+        except Exception:
+            share_type = self.medical_record['Share']
+        
         if self.medical_record['CaseDate'].date() < datetime.datetime.strptime('2023-03-01', '%Y-%m-%d').date():
             error_message.append('整合醫療照護支付項目在2023-03-01生效, 在此之前請勿申報')
         if self.disease_code2 == '':
@@ -2951,11 +2963,11 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         # if self.special_code == '':
         #     error_message.append('至少需要一個以上的慢性病診斷碼')
         if self.treatment in ['', None] and self.special_code != '' and \
-                self.pres_days >= 1 and self.pres_days <= 7 and self.medical_record['Share'] != '重大傷病':  # 29類針傷專案不在此現 2024-03-25
+                self.pres_days >= 1 and self.pres_days <= 7 and share_type != '重大傷病':  # 29類針傷專案不在此現 2024-03-25
             error_message.append('慢性病需開藥8天(含)以上')
 
         if self.treatment in ['', None] and self.special_code == '' and \
-                self.pres_days >= 1 and self.pres_days <= 7 and self.medical_record['Share'] != '重大傷病':  # 29類針傷專案不在此現 2024-03-25
+                self.pres_days >= 1 and self.pres_days <= 7 and share_type != '重大傷病':  # 29類針傷專案不在此現 2024-03-25
             error_message.append('一般疾病需開藥8天(含)以上')
 
         if len(error_message) > 0:
