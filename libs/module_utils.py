@@ -1214,6 +1214,18 @@ def get_statistics_doctor_amount_income(parent, database, system_settings,
     return widget
 
 
+# 醫師統計-門診人數統計
+def get_statistics_doctor_amount_salary(parent, database, system_settings,
+                                        start_date, end_date, period, ins_type, doctor, option, weekday_list):
+    import statistics_doctor_amount_salary
+
+    module = importlib.reload(statistics_doctor_amount_salary)
+    widget = module.StatisticsDoctorAmountSalary(
+        parent, database, system_settings, start_date, end_date, period, ins_type, doctor, option, weekday_list)
+
+    return widget
+
+
 # 醫師統計-醫師處方類別統計
 def get_statistics_doctor_medicine_percent(parent, database, system_settings,
                                            start_date, end_date, period, ins_type, doctor, option, weekday_list):

@@ -3,6 +3,7 @@
 import ast
 import datetime
 import json
+from pydoc import doc
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QPushButton
@@ -2704,6 +2705,7 @@ def get_charge_settings_fee(database, charge_type, ins_type, item_name):
 
     return fee
 
+
 def get_self_fee_discount_rate(database, item_name):
     if item_name in [None, '']:
         return None
@@ -2723,17 +2725,25 @@ def get_self_fee_discount_rate(database, item_name):
 
     return discount_rate
 
+
+def get_doctor_period_fee(database, doctor):
+    if doctor in [None, '']:
+        return 0
+
     sql = f'''
-        SELECT * FROM cases
+        SELECT * FROM charge_settings
         WHERE
-            CaseKey = {case_key}
+            ItemName = "開診金" AND
+            Remark = "{doctor}"
     '''
     rows = database.select_record(sql)
     if len(rows) > 0:
         row = rows[0]
-        discount_rate = number_utils.get_integer(row['DiscountRate'])
+        period_fee = number_utils.get_integer(row['Amount'])
+    else:
+        period_fee = 0
 
-    return discount_rate
+    return period_fee
 
 
 def get_min_discount_rate(database):

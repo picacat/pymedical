@@ -168,6 +168,9 @@ class StatisticsInsPerformanceDoctor(QtWidgets.QMainWindow):
         self.ui.tableWidget_doctor_summary.setRowCount(row_no+1)
 
         case_date, _ = case_utils.get_case_date(self.database, case_key)
+        if case_date is None:
+            return
+
         case_date = case_date.strftime('%Y-%m-%d')
 
         if ins_type == '健保':

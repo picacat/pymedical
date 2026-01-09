@@ -159,7 +159,7 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
 
             if ins_type == '自費' and treat_type == '自購' and doctor == '':
                 seller = string_utils.xstr(row['Register'])
-        except:
+        except Exception:
             discount_fee = 0
             seller = doctor
 

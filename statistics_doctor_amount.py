@@ -130,13 +130,27 @@ class StatisticsDoctorAmount(QtWidgets.QMainWindow):
             f' 統計期間: 從 {start_date[:10]} 至 {end_date[:10]} {period} 保險: {ins_type} 醫師: {doctor}'
         )
 
-        self._add_statistic_doctor_amount_income(start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        self._add_statistic_doctor_amount_income(
+            start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        self._add_statistic_doctor_amount_salary(
+            start_date, end_date, period, ins_type, doctor, option, weekday_list)
 
     # 醫師門診人數統計
-    def _add_statistic_doctor_amount_income(self, start_date, end_date, period, ins_type, doctor, option, weekday_list):
+    def _add_statistic_doctor_amount_income(
+            self, start_date, end_date, period, ins_type, doctor, option, weekday_list):
         self.tab_statistics_doctor_amount_income = module_utils.get_statistics_doctor_amount_income(
             self, self.database, self.system_settings, start_date, end_date, period, ins_type,
             doctor, option, weekday_list
         )
         self.tab_statistics_doctor_amount_income.start_calculate()
         self.ui.tabWidget_statistics_doctor.addTab(self.tab_statistics_doctor_amount_income, '醫師金額統計')
+
+    # 醫師門診人數統計
+    def _add_statistic_doctor_amount_salary(
+            self, start_date, end_date, period, ins_type, doctor, option, weekday_list):
+        self.tab_statistics_doctor_amount_salary = module_utils.get_statistics_doctor_amount_salary(
+            self, self.database, self.system_settings, start_date, end_date, period, ins_type,
+            doctor, option, weekday_list
+        )
+        self.tab_statistics_doctor_amount_salary.start_calculate()
+        self.ui.tabWidget_statistics_doctor.addTab(self.tab_statistics_doctor_amount_salary, '醫師薪資統計')
