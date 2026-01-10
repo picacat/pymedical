@@ -112,10 +112,10 @@
      <normaloff>../icons/software-update-urgent.png</normaloff>../icons/software-update-urgent.png</iconset>
    </property>
    <property name="text">
-    <string>電子化抽審</string>
+    <string>電子化抽審上傳</string>
    </property>
    <property name="toolTip">
-    <string>電子化抽審</string>
+    <string>電子化抽審上傳</string>
    </property>
   </action>
   <action name="action_print_ins_order_mark">
