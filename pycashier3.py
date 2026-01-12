@@ -2,7 +2,6 @@
 
 import sys
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QMessageBox
 
 from libs import class_utils
 from libs import ui_utils

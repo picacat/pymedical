@@ -7,9 +7,7 @@ import os
 import sys
 import time
 
-import pygame
-from pygame import mixer
-from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDesktopWidget
 

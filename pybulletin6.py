@@ -9,7 +9,6 @@ from pygame import mixer
 import os
 import datetime
 import json
-import threading
 
 if sys.platform == 'win32':
     os.environ["PYTHON_VLC_MODULE_PATH"] = './vlc'
@@ -27,7 +26,6 @@ from libs import registration_utils
 from libs import date_utils
 from libs import string_utils
 from libs import number_utils
-from libs import case_utils
 
 class BellThread(QThread):
     """播放音效的子執行緒"""

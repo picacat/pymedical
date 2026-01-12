@@ -26,7 +26,7 @@ from pygame import mixer
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QCoreApplication, Qt
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import (QFileDialog, QInputDialog, QMessageBox,
+from PyQt5.QtWidgets import (QFileDialog, QMessageBox,
                              QPushButton, QStyleFactory)
 
 from libs import (class_utils, date_utils, db_utils, dialog_utils, log_utils,

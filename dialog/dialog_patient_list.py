@@ -2,7 +2,6 @@
 # 病患查詢 2019.03.18
 # -*- coding: UTF-8 -*-
 
-import dis
 from PyQt5 import QtWidgets
 import re
 import calendar
@@ -72,7 +71,10 @@ class DialogPatientList(QtWidgets.QDialog):
         if sql is None:
             return 0
 
-        rows = self.database.select_record(sql)
+        try:
+            rows = self.database.select_record(sql)
+        except Exception:
+            return 0
 
         return len(rows)
 

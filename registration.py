@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QInputDialog, QMessageBox, QPushButton
+from PyQt5.QtWidgets import QMessageBox, QPushButton
 
 from libs import (alleypin_utils, case_utils, charge_utils, class_utils,
                   cshis_utils, date_utils, dialog_utils, log_utils, nhi_utils,

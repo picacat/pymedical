@@ -1,13 +1,7 @@
 # -*- coding: UTF-8 -*-
 
-import sys
-import os
 import json
 import datetime
-import configparser
-import pygame
-import vlc
-import pafy
 import yt_dlp
 import cv2
 from PyQt5 import QtWidgets, QtCore
@@ -292,4 +286,3 @@ def main():
     # 程式開始
     if __name__ == '__main__':
         main()
-

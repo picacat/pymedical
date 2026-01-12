@@ -232,7 +232,11 @@
        </widget>
       </item>
       <item row="3" column="3">
-       <widget class="QComboBox" name="comboBox_reserve_no"/>
+       <widget class="QComboBox" name="comboBox_reserve_no">
+        <property name="editable">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

@@ -11,8 +11,8 @@ import serial
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QInputDialog, QMessageBox, QPushButton
 
-from libs import (case_utils, charge_utils, class_utils, date_utils,
-                  dialog_utils, module_utils, nhi_utils, number_utils,
+from libs import (case_utils, class_utils, date_utils,
+                  dialog_utils, module_utils, number_utils,
                   prescript_utils, printer_utils, registration_utils,
                   string_utils, system_utils, ui_utils)
 
