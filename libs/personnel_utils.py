@@ -395,7 +395,10 @@ def get_permission(database, program_name, permission_item, user_name):
             PermissionItem = "{permission_item}"
         ORDER BY TimeStamp LIMIT 1
     '''
-    rows = database.select_record(sql)
+    try:
+        rows = database.select_record(sql)
+    except Exception:
+        return None
 
     if len(rows) <= 0:
         return None

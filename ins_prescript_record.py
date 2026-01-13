@@ -2833,13 +2833,19 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             share_type = None
 
         try:
+            regist_type = self.parent.tab_registration.ui.comboBox_reg_type.currentText()
+        except AttributeError:
+            regist_type = None
+
+        try:
             treat_type = self.parent.tab_registration.ui.comboBox_treat_type.currentText()
         except AttributeError:
             treat_type = None
 
         if injury_type in nhi_utils.OCCUPATIONAL_INJURY_TYPE or \
                 share_type in ["山地離島"] or \
-                treat_type in ["居家醫療"]:
+                treat_type in ["居家醫療"] or \
+                regist_type in ["照護機構中醫照護"]:
             return
 
         primary_treatment = self.ui.comboBox_treatment.currentText()
@@ -2892,7 +2898,6 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
                 avg_acupuncture_times = case_utils.get_complicated_acupuncture_times(
                     self.database, self.case_date, treatment,
                 )
-
 
             if treatment in check_acupuncture_list and \
                avg_acupuncture_times > max_acupuncture_times and \

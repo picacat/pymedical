@@ -2,8 +2,6 @@
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
-import re
-import string
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
@@ -28,6 +26,7 @@ class DialogReservationModify(QtWidgets.QDialog):
         self.database = args[0]
         self.system_settings = args[1]
         self.reserve_key = args[2]
+        self.patient_key = self._get_patient_key()
 
         self.ui = None
         self._set_ui()
@@ -50,6 +49,15 @@ class DialogReservationModify(QtWidgets.QDialog):
         self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('確定')
         self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText('取消')
         self._set_combo_box()
+
+    def _get_patient_key(self):
+        sql = f'SELECT PatientKey FROM reserve WHERE ReserveKey = {self.reserve_key}'
+        rows = self.database.select_record(sql)
+        if not rows:
+            return None
+
+        row = rows[0]
+        return row['PatientKey']
 
     def _set_combo_box(self):
         sql = '''
@@ -199,6 +207,10 @@ class DialogReservationModify(QtWidgets.QDialog):
             self.ui.comboBox_source.setEnabled(True)
 
         self._set_available_reservation_dict()
+        reserve_time = row['ReserveDate'].strftime('%H:%M')
+        index = self.ui.comboBox_time.findText(reserve_time)
+        if index >= 0:
+            self.ui.comboBox_time.setCurrentIndex(index)
 
     def _is_reservation_exists(self, reservation_date):
         doctor = self.ui.comboBox_doctor.currentText()
@@ -208,6 +220,7 @@ class DialogReservationModify(QtWidgets.QDialog):
             SELECT ReserveKey FROM reserve
             WHERE
                 ReserveDate = "{reservation_date}" AND
+                PatientKey != "{self.patient_key}" AND
                 Doctor = "{doctor}" AND
                 Period = "{period}"
         '''
