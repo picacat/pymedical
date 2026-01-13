@@ -3979,6 +3979,13 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if doctor_id == '':
             return
 
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            '藥物交互作用讀取前提醒',
+            f'<font size="5"><b>讀取中西藥交互作用資料前，請插入病人健保卡並完成醫事卡認證</b></font>',
+            '中西藥交互作用 2.0 隱私權認證說明.'
+        )
+
         table_widget = self.tab_list[0].ui.tableWidget_prescript
 
         dialog = dialog_utils.get_dialog_conflict_drug(
