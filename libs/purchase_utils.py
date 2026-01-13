@@ -296,14 +296,15 @@ def set_purchase_list_data(
            sale_date != case_date and (case_date < query_start_date or case_date > query_end_date):
             return
         
-        if doctor_commission > 0:
-            doctor_commission = -doctor_commission
+        if '(退貨)' in medicine_name:  # 退貨要把之前給的抽成扣回來 2026-01-13
+            if doctor_commission > 0:
+                doctor_commission = -doctor_commission
 
-        if massager_commission > 0:
-            massager_commission = -massager_commission
+            if massager_commission > 0:
+                massager_commission = -massager_commission
 
-        if cashier_commission > 0:
-            cashier_commission = -cashier_commission
+            if cashier_commission > 0:
+                cashier_commission = -cashier_commission
 
     total_dosage = dosage * pres_days
     
@@ -552,10 +553,10 @@ def get_commission_rate(
     row = rows[0]
 
     if position == '醫師':
-        if '無介紹人' in remark:
+        if '(無介紹人' in remark:
             commission_rate = charge_utils.get_commission_rate(
                 database, medicine_key, '醫師', treat_type, medicine_name=medicine_name)
-        elif '介紹人' in remark:  # 要在後，不然關鍵字會誤判
+        elif '(介紹人' in remark:  # 要在後，不然關鍵字會誤判
             commission_rate = charge_utils.get_commission_rate(
                 database, medicine_key, '醫師分成', treat_type, medicine_name=medicine_name)
         elif massage_referrer not in [None, ''] or nursing_assistant not in [None, '']:
@@ -565,28 +566,32 @@ def get_commission_rate(
             commission_rate = charge_utils.get_commission_rate(
                 database, medicine_key, '醫師', treat_type, doctor=doctor, medicine_name=medicine_name)
     elif position in ['推拿師父', '傷助推薦']:
-        if doctor != '' or nursing_assistant != '' or '介紹人' in remark:
+        if '(無介紹人' in remark:
+            commission_rate = charge_utils.get_commission_rate(
+                database, medicine_key, '推拿師父', treat_type, medicine_name=medicine_name)
+        elif '(介紹人' in remark:
             commission_rate = charge_utils.get_commission_rate(
                 database, medicine_key, '推拿師父分成', treat_type, medicine_name=medicine_name)
-        elif doctor == '' and nursing_assistant == '':
+        elif doctor not in ['', None] or nursing_assistant not in ['', None]:
+            commission_rate = charge_utils.get_commission_rate(
+                database, medicine_key, '推拿師父分成', treat_type, medicine_name=medicine_name)
+        else:
             commission_rate = charge_utils.get_commission_rate(
                 database, medicine_key, '推拿師父', treat_type, medicine_name=medicine_name)
 
-        if commission_rate == '':
-            commission_rate = charge_utils.get_commission_rate(
-                database, medicine_key, '推拿師父分成', treat_type, medicine_name=medicine_name)
-
     elif position in ['櫃台', '護佐']:
-        if doctor != '' or massage_referrer != '' or '介紹人' in remark:
-            commission_rate = charge_utils.get_commission_rate(
-                database, medicine_key, '櫃台分成', treat_type, medicine_name=medicine_name)
-        elif doctor == '' and massage_referrer == '':
+        if '(無介紹人' in remark:
             commission_rate = charge_utils.get_commission_rate(
                 database, medicine_key, '櫃台', treat_type, medicine_name=medicine_name)
-
-        if commission_rate == '':
+        elif '(介紹人' in remark:
             commission_rate = charge_utils.get_commission_rate(
                 database, medicine_key, '櫃台分成', treat_type, medicine_name=medicine_name)
+        elif doctor not in ['', None] or massage_referrer not in ['', None]:
+            commission_rate = charge_utils.get_commission_rate(
+                database, medicine_key, '櫃台分成', treat_type, medicine_name=medicine_name)
+        else:
+            commission_rate = charge_utils.get_commission_rate(
+                database, medicine_key, '櫃台', treat_type, medicine_name=medicine_name)
 
     if discount_fee > 0 and '%' in commission_rate:
         max_discount_fee = total_fee - (total_fee * 80 / 100)  # 折扣超過2成不得抽成

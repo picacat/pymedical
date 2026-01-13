@@ -252,19 +252,14 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
             if in_case_date != case_date:
                 continue
 
-            medicine_key = string_utils.xstr(row['MedicineKey'])
-            commission = self._get_commission(medicine_key)
-            if commission == '0':
-                continue
+            # medicine_key = string_utils.xstr(row['MedicineKey'])
+            # commission = self._get_commission(medicine_key)
+            # if commission == '0':
+            #     continue
 
-            case_key = row['CaseKey']
             massage_referrer = string_utils.xstr(row['MassageReferrer'])
             nursing_assistant = string_utils.xstr(row['NursingAssistant'])
             debt = number_utils.get_integer(row['Debt'])
-            if debt > 0:
-                repayment = self._get_repayment(case_key)
-                if repayment < debt:  # 尚有欠款
-                    continue
 
             if massage_referrer != '' or nursing_assistant != '':  # 有推薦者不算醫師的業績
                 continue
@@ -288,6 +283,9 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
                 days = 1
 
             subtotal = number_utils.get_integer(row['Amount']) * days
+
+            if debt > 0:
+                subtotal -= debt
 
             total_amount += subtotal
 

@@ -183,7 +183,7 @@ class PrintReceiptSelfForm6:
         dislocate_fee = number_utils.get_integer(row['SDislocateFee'])
         material_fee = number_utils.get_integer(row['SMaterialFee'])
         exam_fee = number_utils.get_integer(row['SExamFee'])
-        self_total_fee = number_utils.get_integer(row['SelfTotalFee']) + regist_fee
+        self_total_fee = number_utils.get_integer(row['SelfTotalFee'])
         discount_fee = number_utils.get_integer(row['DiscountFee'])
         total_fee = number_utils.get_integer(row['TotalFee'])
         receipt_fee = number_utils.get_integer(row['ReceiptFee'])
@@ -217,7 +217,7 @@ class PrintReceiptSelfForm6:
             total_fee += regist_fee
             receipt_fee += regist_fee
 
-        if self.system_settings.field('不印折扣') == 'Y' or discount_fee < 0:
+        if self.system_settings.field('不印折扣') == 'Y' and discount_fee < 0:
             self_total_fee -= discount_fee
 
             discount_fee = 0
@@ -230,8 +230,6 @@ class PrintReceiptSelfForm6:
             dislocate_fee = 0
             material_fee = 0
             exam_fee = 0
-            receipt_fee = self_total_fee
-            total_fee = self_total_fee
 
         fees_html = f'''
             <table width="100%" cellspacing="0">
