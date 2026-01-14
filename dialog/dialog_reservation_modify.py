@@ -288,8 +288,12 @@ class DialogReservationModify(QtWidgets.QDialog):
             self.ui.comboBox_reserve_no.blockSignals(False)
             return
 
-        time = self.number_dict[reserve_no]
-        self.ui.comboBox_time.setCurrentText(time)
+        try:
+            time = self.number_dict[reserve_no]
+            self.ui.comboBox_time.setCurrentText(time)
+        except Exception:
+            pass
+
         self.ui.comboBox_time.blockSignals(False)
 
     def _set_reserve_no(self):
