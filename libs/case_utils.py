@@ -2582,6 +2582,7 @@ def get_merge_treatment_times(database, case_date, treatment):
 
     return avg_acupuncture_times
 
+
 def get_treatment_times_by_doctor(database, case_date, treat_list, doctor):
     last_day = calendar.monthrange(case_date.year, case_date.month)[1]
     start_date = f'{case_date.year}-{case_date.month}-01 00:00:00'
