@@ -109,7 +109,7 @@ class PrintPrescriptionBagForm4:
         case_day = medical_record['CaseDate'].day
         painter.drawText(300, lines[0], string_utils.xstr(case_year))
         painter.drawText(420, lines[0], f'{case_month:0>2}')
-        painter.drawText(540, lines[0], f'{case_day:0>2}')
+        painter.drawText(530, lines[0], f'{case_day:0>2}')
 
         font = QtGui.QFont(self.font_name, 36, QtGui.QFont.PreferQuality)
         painter.setFont(font)
@@ -124,7 +124,7 @@ class PrintPrescriptionBagForm4:
         font = QtGui.QFont(self.font_name, 24, QtGui.QFont.PreferQuality)
         painter.setFont(font)
         painter.drawText(230, lines[0], medical_record['packages'])
-        painter.drawText(460, lines[0], medical_record['pres_days'])
+        painter.drawText(450, lines[0], medical_record['pres_days'])
 
     def _print_usage(self, painter, medical_record):
         usage1, usage2, usage3, usage4, usage5 = '', '', '', '', ''
