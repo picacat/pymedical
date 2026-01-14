@@ -2595,6 +2595,7 @@ def get_treatment_times_by_doctor(database, case_date, treat_list, doctor):
             (Injury NOT IN {tuple(nhi_utils.OCCUPATIONAL_INJURY_TYPE)}) AND
             (Share NOT IN ("山地離島")) AND
             (TreatType NOT IN ("居家醫療")) AND
+            (RegistType NOT IN ("照護機構中醫照護")) AND
             (Card IS NOT NULL) AND (LENGTH(cases.Card) > 0) AND (cases.Card != "欠卡") AND
             (Treatment IN {tuple(treat_list)}) AND
             (Doctor = "{doctor}")
