@@ -134,6 +134,7 @@ class PrintPrescriptionSelfForm9:
         html = f'''
             <html>
               <body>
+                <b>
                 <table width="98%" cellspacing="0">
                   <thead>
                     <tr>
@@ -148,6 +149,7 @@ class PrintPrescriptionSelfForm9:
                   </tbody>
                 </table>
                 {prescript_html}
+                </b>
               </body>
             </html>
         '''
