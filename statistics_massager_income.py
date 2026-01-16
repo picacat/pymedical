@@ -193,6 +193,10 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         if group_by_massager:
             group_condition = ' GROUP BY Massager'
 
+        massage_fee_condition = ''
+        if self.system_settings.field('院所名稱') == '耀康中醫診所':
+            massage_fee_condition = ' AND SMassageFee > 0'
+
         sql = f'''
             SELECT
                 CaseKey, Name, CaseDate, SMassageFee, Massager
@@ -200,6 +204,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
             WHERE
                 CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}" AND
                 Massager IS NOT NULL AND LENGTH(Massager) > 0
+                {massage_fee_condition}
                 {only_traditional_massage_condition}
                 {period_condition}
                 {ins_type_condition}
