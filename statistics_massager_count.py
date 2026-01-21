@@ -1,3 +1,4 @@
+
 # -*- coding: UTF-8 -*-
 
 from PyQt5 import QtWidgets, QtCore, QtGui, QtChart
@@ -184,21 +185,21 @@ class StatisticsMassagerCount(QtWidgets.QMainWindow):
             group_condition = ' GROUP BY Massager'
 
         massage_fee_condition = ''
-        if self.system_settings.field('院所名稱') == '耀康中醫診所':  # 2026-01-17 增加
+        if self.system_settings.field('院所名稱') == '耀康中醫診所':
             massage_fee_condition = ' AND SMassageFee > 0'
 
         sql = f'''
             SELECT
-                CaseKey, CaseDate, PatientKey, Period, InsType, TreatType, Continuance, Massager
+                CaseKey, CaseDate, PatientKey, Period, InsType, TreatType, Continuance, Massager, SMassageFee
             FROM cases
             WHERE
                 CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}" AND
-                Massager IS NOT NULL AND LENGTH(Massager) > 0 AND
+                Massager IS NOT NULL AND LENGTH(Massager) > 0
+                {massage_fee_condition}
                 {only_traditional_massage_condition}
                 {period_condition}
                 {ins_type_condition}
                 {massager_condition}
-                {massage_fee_condition}
             {group_condition}
             ORDER BY CaseDate, CaseKey
         '''
@@ -247,9 +248,15 @@ class StatisticsMassagerCount(QtWidgets.QMainWindow):
         case_key = row['CaseKey']
         case_date = row['CaseDate'].strftime('%Y-%m-%d')
         ins_type = string_utils.xstr(row['InsType'])
+        massage_fee = number_utils.get_integer(row['SMassageFee'])
         patient_key = row['PatientKey']
 
-        if ins_type == '健保':
+        if self.system_settings.field('院所名稱') == '耀康中醫診所':
+            if massage_fee == 50:
+                col_no = 1
+            else:
+                col_no = 2
+        elif ins_type == '健保':
             is_double_rows, self_case_key = self._is_double_rows(case_date, patient_key)
             if is_double_rows:
                 col_no = 2
