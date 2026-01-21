@@ -184,7 +184,7 @@ class StatisticsMassagerCount(QtWidgets.QMainWindow):
             group_condition = ' GROUP BY Massager'
 
         massage_fee_condition = ''
-        if self.system_settings.field('院所名稱') == '耀康中醫診所':
+        if self.system_settings.field('院所名稱') == '耀康中醫診所':  # 2026-01-17 增加
             massage_fee_condition = ' AND SMassageFee > 0'
 
         sql = f'''
