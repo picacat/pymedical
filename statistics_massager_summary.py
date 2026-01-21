@@ -143,13 +143,18 @@ class StatisticsMassagerSummary(QtWidgets.QMainWindow):
         if self.only_traditional_massage:
             only_traditional_massage_condition = ' AND TreatType = "民俗調理"'
 
+        massage_fee_condition = ''
+        if self.system_settings.field('院所名稱') == '耀康中醫診所':
+            massage_fee_condition = ' AND SMassageFee > 0'
+
         sql = f'''
             SELECT
-                CaseKey, CaseDate, PatientKey, Period, InsType, TreatType, Continuance, Massager
+                CaseKey, CaseDate, PatientKey, Period, InsType, TreatType, Continuance, Massager, MassageFee
             FROM cases
             WHERE
                 CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}" AND
                 Massager IS NOT NULL AND LENGTH(Massager) > 0
+            {massage_fee_condition}
             {only_traditional_massage_condition}
             {group_condition}
             ORDER BY CaseDate
@@ -193,12 +198,16 @@ class StatisticsMassagerSummary(QtWidgets.QMainWindow):
             return False, None
 
     def _calculate_massage_count(self, rows):
+        clinic_name = self.system_settings.field('院所名稱')
+
         for row in rows:
             patient_key = row['PatientKey']
             ins_type = string_utils.xstr(row['InsType'])
             case_date = row['CaseDate'].strftime('%Y-%m-%d')
 
-            if ins_type == '健保' and self._is_double_rows(case_date, patient_key):
+            if clinic_name == '耀康中醫診所':
+                pass
+            elif ins_type == '健保' and self._is_double_rows(case_date, patient_key):
                 continue
 
             massager = string_utils.xstr(row['Massager'])

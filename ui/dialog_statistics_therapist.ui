@@ -355,7 +355,7 @@
    <item>
     <widget class="QCheckBox" name="checkBox_only_traditional_massage">
      <property name="text">
-      <string>只統計民俗調理的人數</string>
+      <string>只統計自費民俗調理的人數，健保民俗調理不算</string>
      </property>
     </widget>
    </item>
