@@ -4,6 +4,7 @@
 from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
 from PyQt5.QtPrintSupport import QPrinter
 import sys
+import datetime
 
 from libs import printer_utils
 from libs import system_utils
@@ -72,7 +73,7 @@ class PrintPrescriptionSelfForm9:
         document = printer_utils.get_document(self.printer, self.font)
         document.setDocumentMargin(printer_utils.get_document_margin())
         document.setHtml(self._html())
-        printer_utils.set_document_line_height(document, 13)
+        printer_utils.set_document_line_height(document, 14)
         if printing:
             document.print(self.printer)
 
@@ -102,6 +103,7 @@ class PrintPrescriptionSelfForm9:
             self.database, self.system_settings, self.case_key, self.medicine_set
         )
         pres_days = case_utils.get_pres_days(self.database, self.case_key, self.medicine_set)
+        time = datetime.datetime.now().strftime('%H:%M:%S')
 
         if self.system_settings.field('處方箋不印費用明細') == 'Y':
             fees_record = ''
@@ -119,7 +121,12 @@ class PrintPrescriptionSelfForm9:
                 {prescript_record}
               </tbody>
             </table>
-            {instruction}
+            <table width="100%">
+              <tr>
+                <td align="left">{instruction}</td>
+                <td align="right">[{time}]</td>
+              </tr>
+            </table>
             {fees_record}
         '''
 
@@ -130,6 +137,7 @@ class PrintPrescriptionSelfForm9:
         clinic_id = self.system_settings.field('院所代號')
         clinic_telephone = self.system_settings.field('院所電話')
         clinic_address = self.system_settings.field('院所地址')
+
 
         html = f'''
             <html>
