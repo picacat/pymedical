@@ -189,7 +189,7 @@ class StatisticsMassagerCount(QtWidgets.QMainWindow):
             FROM cases
             WHERE
                 CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}" AND
-                Massager IS NOT NULL AND LENGTH(Massager) > 0
+                Massager IS NOT NULL AND LENGTH(Massager) > 0 AND
                 {only_traditional_massage_condition}
                 {period_condition}
                 {ins_type_condition}
