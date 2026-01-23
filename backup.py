@@ -90,33 +90,32 @@ class Backup(QtWidgets.QDialog):
                         QMessageBox.Critical,
                         '備份路徑錯誤',
                         '<font size="5" color="red"><b>找不到物理磁碟備份路徑, 無法備份資料.</b></font>',
-                        '請重新檢查物理磁碟備份路徑是否正確.'
+                        '請重新檢查物理磁碟備份路徑是存在.'
                     )
-                    return
+                else:
+                    physical_backup_dir = os.path.join(physical_dir, backup_date)
+                    progress_dialog = QtWidgets.QProgressDialog(
+                        '系統正在備份資料至物理磁碟，請耐心等候...', '取消', 0, max_progress, self
+                    )
 
-                physical_backup_dir = os.path.join(physical_dir, backup_date)
-                progress_dialog = QtWidgets.QProgressDialog(
-                    '系統正在備份資料至物理磁碟，請耐心等候...', '取消', 0, max_progress, self
-                )
-
-                progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-                progress_dialog.setValue(0)
-                progress_dialog.show()
-                QApplication.processEvents()
-
-                version = system_utils.get_mariadb_version(self.database)
-                self._check_backup_path(physical_backup_dir)
-                for i, filename in enumerate(backup_list):
-                    try:
-                        system_utils.dump_table(
-                            self.database, version, physical_backup_dir, filename[0],
-                            where_script=None, use_docker=self.use_docker,
-                        )
-                    except Exception:
-                        pass
-
+                    progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
+                    progress_dialog.setValue(0)
+                    progress_dialog.show()
                     QApplication.processEvents()
-                    progress_dialog.setValue(i+1)
+
+                    version = system_utils.get_mariadb_version(self.database)
+                    self._check_backup_path(physical_backup_dir)
+                    for i, filename in enumerate(backup_list):
+                        try:
+                            system_utils.dump_table(
+                                self.database, version, physical_backup_dir, filename[0],
+                                where_script=None, use_docker=self.use_docker,
+                            )
+                        except Exception:
+                            pass
+
+                        QApplication.processEvents()
+                        progress_dialog.setValue(i+1)
 
         progress_dialog = QtWidgets.QProgressDialog(
             '系統正在備份大型資料表，可能需要較多的時間，請耐心等候...', '取消', 0, max_progress, self
