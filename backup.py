@@ -68,15 +68,21 @@ class Backup(QtWidgets.QDialog):
         backup_date = datetime.datetime.today().strftime('%Y-%m-%d')
         backup_path = os.path.join(data_dir, backup_date)
 
-        self._check_backup_path(backup_path)
+        sql = 'SHOW TABLES'
+        rows = self.database.select_record(sql)
+
+        backup_list = []
+        for row in rows:
+            table_name = f"{list(row.values())[0]}.sql"
+            backup_list.append([table_name, None])
+
+        max_progress = len(backup_list) + 1
 
         config = configparser.ConfigParser()
         config.read(self.database.CONFIG_FILE)
 
         host_name = config['db']['host']
         if host_name in ['localhost', '127.0.0.1']:  # 伺服器每天備份完整資料
-            system_utils.backup_mariadb(self, self.database, backup_path, use_docker=self.use_docker)
-
             physical_dir = self.system_settings.field('伺服器物理備份路徑')
             if physical_dir not in ['', None]:
                 if not os.path.isdir(physical_dir):
@@ -89,20 +95,29 @@ class Backup(QtWidgets.QDialog):
                     return
 
                 physical_backup_dir = os.path.join(physical_dir, backup_date)
+                progress_dialog = QtWidgets.QProgressDialog(
+                    '系統正在備份資料至物理磁碟，請耐心等候...', '取消', 0, max_progress, self
+                )
+
+                progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
+                progress_dialog.setValue(0)
+                progress_dialog.show()
+                QApplication.processEvents()
+
+                version = system_utils.get_mariadb_version(self.database)
                 self._check_backup_path(physical_backup_dir)
-                system_utils.backup_mariadb(self, self.database, physical_backup_dir)
+                for i, filename in enumerate(backup_list):
+                    try:
+                        system_utils.dump_table(
+                            self.database, version, physical_backup_dir, filename[0],
+                            where_script=None, use_docker=self.use_docker,
+                        )
+                    except Exception:
+                        pass
 
-            return
+                    QApplication.processEvents()
+                    progress_dialog.setValue(i+1)
 
-        sql = 'SHOW TABLES'
-        rows = self.database.select_record(sql)
-
-        backup_list = []
-        for row in rows:
-            table_name = f"{list(row.values())[0]}.sql"
-            backup_list.append([table_name, None])
-
-        max_progress = len(backup_list) + 1
         progress_dialog = QtWidgets.QProgressDialog(
             '系統正在備份大型資料表，可能需要較多的時間，請耐心等候...', '取消', 0, max_progress, self
         )
@@ -113,26 +128,15 @@ class Backup(QtWidgets.QDialog):
         QApplication.processEvents()
 
         version = system_utils.get_mariadb_version(self.database)
+        self._check_backup_path(backup_path)
         for i, filename in enumerate(backup_list):
-            where_clause = None
-            # if filename[0].replace('.sql', '') in [
-            #     'backup_records', 'icdmap', 'insapply', 'insappeal', 'insappeal_items', 'address', 'address_list',
-            #     'casex', 'clinic', 'drug', 'hospid', 'prescriptx', 'symptom_kt', 'icd10', 'icd10ex',
-            #     'event_log', 'icd9', 'experience', 'expprescript', 'expremark',
-            #     'returngoods', 'chargeregist',
-            # ]:
-            #     continue
-
             try:
                 system_utils.dump_table(
                     self.database, version, backup_path, filename[0],
-                    where_script=where_clause, use_docker=self.use_docker,
+                    where_script=None, use_docker=self.use_docker,
                 )
             except Exception:
                 pass
-
-            # zip_file = filename[0].replace('.sql', '.zip')
-            # system_utils.zip_file(zip_file, filename[0], backup_path)
 
             QApplication.processEvents()
             progress_dialog.setValue(i+1)
