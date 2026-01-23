@@ -73,26 +73,26 @@ class Backup(QtWidgets.QDialog):
         config = configparser.ConfigParser()
         config.read(self.database.CONFIG_FILE)
 
-        # host_name = config['db']['host']
-        # if host_name in ['localhost', '127.0.0.1']:  # 伺服器每天備份完整資料
-        #     system_utils.backup_mariadb(self, self.database, backup_path, use_docker=self.use_docker)
+        host_name = config['db']['host']
+        if host_name in ['localhost', '127.0.0.1']:  # 伺服器每天備份完整資料
+            system_utils.backup_mariadb(self, self.database, backup_path, use_docker=self.use_docker)
 
-        #     physical_dir = self.system_settings.field('伺服器物理備份路徑')
-        #     if physical_dir not in ['', None]:
-        #         if not os.path.isdir(physical_dir):
-        #             system_utils.show_message_box(
-        #                 QMessageBox.Critical,
-        #                 '備份路徑錯誤',
-        #                 '<font size="5" color="red"><b>找不到物理磁碟備份路徑, 無法備份資料.</b></font>',
-        #                 '請重新檢查物理磁碟備份路徑是否正確.'
-        #             )
-        #             return
+            physical_dir = self.system_settings.field('伺服器物理備份路徑')
+            if physical_dir not in ['', None]:
+                if not os.path.isdir(physical_dir):
+                    system_utils.show_message_box(
+                        QMessageBox.Critical,
+                        '備份路徑錯誤',
+                        '<font size="5" color="red"><b>找不到物理磁碟備份路徑, 無法備份資料.</b></font>',
+                        '請重新檢查物理磁碟備份路徑是否正確.'
+                    )
+                    return
 
-        #         physical_backup_dir = os.path.join(physical_dir, backup_date)
-        #         self._check_backup_path(physical_backup_dir)
-        #         system_utils.backup_mariadb(self, self.database, physical_backup_dir)
+                physical_backup_dir = os.path.join(physical_dir, backup_date)
+                self._check_backup_path(physical_backup_dir)
+                system_utils.backup_mariadb(self, self.database, physical_backup_dir)
 
-        #     return
+            return
 
         sql = 'SHOW TABLES'
         rows = self.database.select_record(sql)
