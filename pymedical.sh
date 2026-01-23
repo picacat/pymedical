@@ -1,5 +1,5 @@
 #!/bin/zsh
 
 source ~/venv/bin/activate
-cd ~/Dropbox/pymedical
+cd ~/projects/pymedical
 python3 pymedical.py
