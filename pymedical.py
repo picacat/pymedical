@@ -530,7 +530,8 @@ class PyMedical(QtWidgets.QMainWindow):
 
         import ssl
         context = ssl._create_unverified_context()
-        url = 'https://www.dropbox.com/s/fi5d71d6g33natn/bulletin.html?dl=1'
+        # url = 'https://www.dropbox.com/s/fi5d71d6g33natn/bulletin.html?dl=1'
+        url = 'https://raw.githubusercontent.com/picacat/medical-announcements/refs/heads/main/bulletin.html'
         with urllib.request.urlopen(url, context=context, timeout=10) as response:
             html = response.read().decode('utf-8')
 
