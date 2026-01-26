@@ -201,12 +201,13 @@ class CheckInsDrug(QtWidgets.QMainWindow):
         ins_code = string_utils.xstr(row['InsCode'])
         if ins_code in nhi_utils.INVALID_INS_CODE_LIST:
             error_message.append('港香蘭無效藥品, 請重新輸入其他藥廠藥品')
+        elif ins_code in nhi_utils.INVALID_WKP_INS_CODE_LIST:
+            error_message.append('萬國信宏無效藥品, 請重新輸入其他藥廠藥品')
 
         if len(error_message) > 0:
             self.errors += 1
 
         return error_message
-    
 
     def _check_drug_name(self, row, drug_rows):
         error_message = []
