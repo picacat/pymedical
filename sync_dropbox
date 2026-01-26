@@ -1,7 +1,7 @@
 #!/bin/bash
 ls |grep -E "中醫" | xargs -d"\n" rm
-current_date=PyMed$(date '+%Y%m%d')
-sed -i -r "s/PyMed(20[0-9][0-9][0-9][0-9][0-9][0-9])/$current_date/g" bulletin.html
+# current_date=PyMed$(date '+%Y%m%d')
+# sed -i -r "s/PyMed(20[0-9][0-9][0-9][0-9][0-9][0-9])/$current_date/g" bulletin.html
 
 source_dir="pymedical/"
 dest_dir="$HOME/Dropbox/python_update/"
