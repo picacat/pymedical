@@ -212,6 +212,8 @@ class CheckDatabase(QtWidgets.QDialog):
                 self.database.check_field_exists('medicine', 'add', 'MinDosage', 'decimal(10,2) AFTER Dosage'),
                 self.database.check_field_exists('medicine', 'add', 'MaxDosage', 'decimal(10,2) AFTER MinDosage'),
                 self.database.check_field_exists(
+                    'medicine', 'add', 'AnimalDerived', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER MedicineName'),
+                self.database.check_field_exists(
                     'dict_groups', 'add', 'DictGroupsLevel3', 'varchar(20) AFTER DictGRoupsLevel2'),
             ]
         else:

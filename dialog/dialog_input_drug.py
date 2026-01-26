@@ -197,6 +197,12 @@ class DialogInputDrug(QtWidgets.QDialog):
         self.ui.lineEdit_medicine_code.setText(row['MedicineCode'])
         self.ui.lineEdit_input_code.setText(row['InputCode'])
         self.ui.lineEdit_medicine_name.setText(row['MedicineName'])
+
+        if row['AnimalDerived'] == 1:
+            self.ui.checkBox_animal_derived.setChecked(True)
+        else:
+            self.ui.checkBox_animal_derived.setChecked(False)
+
         self.ui.comboBox_unit.setCurrentText(row['Unit'])
         self.ui.comboBox_medicine_mode.setCurrentText(row['MedicineMode'])
         self.ui.lineEdit_ins_code.setText(row['InsCode'])
@@ -282,10 +288,15 @@ class DialogInputDrug(QtWidgets.QDialog):
         else:
             no_discount = None
 
+        if self.ui.checkBox_animal_derived.isChecked():
+            animal_derived = 1
+        else:
+            animal_derived = 0
+
         fields = [
             'MedicineType', 'MedicineCode', 'InputCode', 'MedicineName', 'Unit', 'MedicineMode', 'InsCode',
             'Dosage', 'MinDosage', 'MaxDosage', 'MedicineAlias', 'Location', 'InPrice', 'SalePrice', 'Commission',
-            'Quantity', 'SafeQuantity', 'Charged',
+            'Quantity', 'SafeQuantity', 'Charged', 'AnimalDerived',
             'Description',
         ]
         data = [
@@ -307,6 +318,7 @@ class DialogInputDrug(QtWidgets.QDialog):
             self.ui.lineEdit_quantity.text(),
             self.ui.lineEdit_safe_quantity.text(),
             no_discount,
+            animal_derived,
             self.ui.textEdit_description.toPlainText(),
         ]
         string_utils.str_to_none(data)
@@ -331,6 +343,11 @@ class DialogInputDrug(QtWidgets.QDialog):
         else:
             no_discount = None
 
+        if self.ui.checkBox_animal_derived.isChecked():
+            animal_derived = 1
+        else:
+            animal_derived = 0
+
         if self.ui.checkBox_no_dosage.isChecked():
             no_dosage = 'Y'
         else:
@@ -344,7 +361,7 @@ class DialogInputDrug(QtWidgets.QDialog):
         fields = [
             'MedicineType', 'MedicineCode', 'InputCode', 'MedicineName', 'Unit', 'MedicineMode', 'InsCode',
             'Dosage', 'MinDosage', 'MaxDosage', 'MedicineAlias', 'Location', 'InPrice', 'SalePrice', 'Commission', 'Project', 'DoctorProject',
-            'Quantity', 'SafeQuantity', 'Deactivate', 'Charged', 'NoDosage', 'NonNHI',
+            'Quantity', 'SafeQuantity', 'Deactivate', 'Charged', 'NoDosage', 'NonNHI', 'AnimalDerived',
             'Description',
         ]
         data = [
@@ -371,6 +388,7 @@ class DialogInputDrug(QtWidgets.QDialog):
             no_discount,
             no_dosage,
             non_nhi,
+            animal_derived,
             self.ui.textEdit_description.toPlainText(),
         ]
 

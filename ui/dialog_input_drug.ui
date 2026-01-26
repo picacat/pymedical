@@ -362,16 +362,6 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1" colspan="3">
-         <widget class="QLineEdit" name="lineEdit_medicine_name">
-          <property name="maxLength">
-           <number>40</number>
-          </property>
-          <property name="clearButtonEnabled">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
         <item row="5" column="1">
          <widget class="QLineEdit" name="lineEdit_in_price">
           <property name="alignment">
@@ -387,12 +377,18 @@
           <property name="text">
            <string>自費專案</string>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
          </widget>
         </item>
         <item row="8" column="2">
          <widget class="QLabel" name="label_16">
           <property name="text">
            <string>停用原因</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -493,6 +489,23 @@
            </spacer>
           </item>
          </layout>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="lineEdit_medicine_name">
+          <property name="maxLength">
+           <number>40</number>
+          </property>
+          <property name="clearButtonEnabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QCheckBox" name="checkBox_animal_derived">
+          <property name="text">
+           <string>含動物性成份</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
