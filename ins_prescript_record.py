@@ -5,8 +5,6 @@ import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QPushButton, QTableView
-from flask.cli import F
-
 from libs import (case_utils, class_utils, db_utils, dialog_utils, nhi_utils,
                   number_utils, patient_utils, personnel_utils,
                   prescript_utils, stock_utils, string_utils, system_utils,
