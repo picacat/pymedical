@@ -38,6 +38,10 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         self.no_zero_price = self.system_settings.field('單日計價輸入藥品不要歸零')
         self.no_instruction_pres_days = self.system_settings.field('單一處方服法不可取代用藥天數')
         self._do_set_dosage_percent = True
+        self.is_vegetarian = False
+
+        if patient_utils.get_patient_extension_settings(self.database, self.parent.patient_key, '吃素') == 'Y':
+            self.is_vegetarian = True
 
         self._set_ui()
         self._set_signal()
@@ -102,14 +106,12 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
             self.ui.horizontalLayout_dosage_percent.addItem(spacer)
 
         try:
-            vegetarian = patient_utils.get_patient_extension_settings(
-                self.database, self.parent.medical_record['PatientKey'], '吃素')
-            if vegetarian == 'Y':
+            if self.is_vegetarian:
                 item = QtWidgets.QTableWidgetItem("處方名稱 (病人吃素)")
                 item.setForeground(QtGui.QBrush(QtGui.QColor("red")))  # 設定字體顏色為紅色
 
                 self.ui.tableWidget_prescript.setHorizontalHeaderItem(
-                    prescript_utils.SELF_PRESCRIPT_COL_NO['MedicineName'] , item)
+                    prescript_utils.SELF_PRESCRIPT_COL_NO['MedicineName'], item)
         except Exception:
             pass
 
@@ -605,7 +607,8 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
             if dosage is not None:
                 dosage = number_utils.get_float(dosage)
 
-            self.append_prescript(rows[0], dosage=dosage)
+            if not self.append_prescript(rows[0], dosage=dosage):
+                return
 
             if current_row == self.ui.tableWidget_prescript.rowCount() - 1:
                 self.append_null_medicine()
@@ -646,6 +649,30 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
         medicine_type = string_utils.xstr(row['MedicineType'])
         medicine_name = string_utils.xstr(row['MedicineName'])
+
+        if self.is_vegetarian and prescript_utils.is_animal_derived(self.database, medicine_key):
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle('含動物性成份藥品')
+            msg_box.setText(
+                f'''
+                    <font color="red"><h3>
+                        注意！本藥品「{medicine_name}」動物性成份, 此病人吃素是否繼續開立?
+                    </h3></font>'''
+            )
+            msg_box.setInformativeText("請確定是否繼續給藥.")
+            msg_box.addButton(QPushButton("繼續給藥"), QMessageBox.YesRole)
+            msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+            append_medicine = msg_box.exec_()
+            if append_medicine == QMessageBox.RejectRole:
+                item = self.ui.tableWidget_prescript.item(
+                    self.ui.tableWidget_prescript.currentRow(),
+                    prescript_utils.INS_PRESCRIPT_COL_NO['MedicineName']
+                )
+                if item is not None:
+                    item.setText(None)
+
+                return False
 
         if not duplicate_warning or self.dict_dialog == '彈出式視窗':
             duplicate_warning = False
@@ -1102,8 +1129,6 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         else:
             row_no = row_count
             check_row_no = row_no - 1
-
-
         
         item = self.ui.tableWidget_prescript.item(
             check_row_no, prescript_utils.SELF_PRESCRIPT_COL_NO['MedicineName'])

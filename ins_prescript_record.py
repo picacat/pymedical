@@ -5,6 +5,7 @@ import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QPushButton, QTableView
+from flask.cli import F
 
 from libs import (case_utils, class_utils, db_utils, dialog_utils, nhi_utils,
                   number_utils, patient_utils, personnel_utils,
@@ -47,6 +48,11 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self.check_total_costs_event = self.system_settings.field('健保用藥成本上限檢查時機')
         self.no_ins_cost = self.system_settings.field('不要顯示健保用藥成本')
         self.no_massage = self.system_settings.field('不申報傷科治療')
+        self.is_vegetarian = False
+        vegetarian = patient_utils.get_patient_extension_settings(
+            self.database, self.parent.patient_key, '吃素')
+        if vegetarian == 'Y':
+            self.is_vegetarian = True
 
         self.popup_menu = self.system_settings.field('刪除處方啟用彈出式選單')
         self.ins_drug_fee_limitation = number_utils.get_integer(self.system_settings.field('健保用藥成本上限'))
@@ -183,7 +189,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
                 item.setForeground(QtGui.QBrush(QtGui.QColor("red")))  # 設定字體顏色為紅色
 
                 self.ui.tableWidget_prescript.setHorizontalHeaderItem(
-                    prescript_utils.INS_PRESCRIPT_COL_NO['MedicineName'] , item)
+                    prescript_utils.INS_PRESCRIPT_COL_NO['MedicineName'], item)
         except Exception:
             pass
 
@@ -1024,7 +1030,10 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             if dosage is not None:
                 dosage = number_utils.get_float(dosage)
 
-            self.append_prescript(rows[0], dosage=dosage)
+            if not self.append_prescript(rows[0], dosage=dosage):
+                item.setText(None)
+                return
+
             if current_row == self.ui.tableWidget_prescript.rowCount() - 1:
                 self.append_null_medicine()
             else:
@@ -1153,6 +1162,25 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
 
         medicine_key = string_utils.xstr(row['MedicineKey'])
         medicine_name = string_utils.xstr(row['MedicineName'])
+
+        if self.is_vegetarian and prescript_utils.is_animal_derived(self.database, medicine_key):
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle('含動物性成份藥品')
+            msg_box.setText(
+                f'''
+                    <font color="red"><h3>
+                        注意！本藥品「{medicine_name}」含動物性成份, 此病人吃素是否繼續開立?
+                    </h3></font>'''
+            )
+            msg_box.setInformativeText("請確定是否繼續給藥.")
+            msg_box.addButton(QPushButton("繼續給藥"), QMessageBox.YesRole)
+            msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+            append_medicine = msg_box.exec_()
+            self.vegetarian_warned = True
+            if append_medicine == QMessageBox.RejectRole:
+                return False
+
         deactivate = prescript_utils.get_medicine_deactivate(self.database, medicine_key)
         if deactivate not in ['', None]:
             system_utils.show_message_box(
@@ -3138,15 +3166,12 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         if self.doctor_done == 'True' or pres_days <= 0:
             return
 
-        patient_key = self.parent.medical_record['PatientKey']
-        vegetarian = patient_utils.get_patient_extension_settings(
-            self.database, patient_key, '吃素')
-        if vegetarian == 'Y':
+        if self.is_vegetarian:
             system_utils.show_message_box(
                 QtWidgets.QMessageBox.Warning,
                 '吃素提醒',
                 '''<font size="5" color="red">
-                    <b>注意! 此病患吃素，請留意是否開立動物性藥物.</b>
+                    <b>注意! 此病患吃素，請留意是否開立含動物性成份藥物.</b>
                 </font>
                 ''',
                 '請詢問病患是否吃素.'

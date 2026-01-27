@@ -148,9 +148,9 @@ def check_prescript_duplicates(in_table_widget, medicine_type, col_no, check_val
 
             exists = True
             break
-        
+ 
     in_table_widget.blockSignals(False)
-    
+ 
     return exists
 
 
@@ -347,7 +347,8 @@ def add_medicine(prescript_tab, table_widget_medicine, row=None, dosage=None):
         if quantity in ['', None]:
             quantity = None
 
-    prescript_tab.append_prescript(row, quantity)
+    if not prescript_tab.append_prescript(row, quantity):
+        return
 
     current_row = prescript_tab.tableWidget_prescript.currentRow()
     if current_row == prescript_tab.tableWidget_prescript.rowCount() - 1:
@@ -1394,6 +1395,29 @@ def get_medicine_deactivate(database, medicine_key):
         return rows[0]['Deactivate']
     else:
         return None
+
+
+# 藥品是含動物性成份 2026-01-27
+def is_animal_derived(database, medicine_key):
+    if medicine_key in ['', None]:
+        return False
+
+    sql = f'''
+        SELECT AnimalDerived FROM medicine
+        WHERE
+            MedicineKey = {medicine_key}
+
+    '''
+    rows = database.select_record(sql)
+
+    if len(rows) <= 0:
+        return False
+
+    row = rows[0]
+    if row['AnimalDerived'] == 1:
+        return True
+    else:
+        return False
 
 
 def get_medicine_record(database, medicine_key):

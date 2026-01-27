@@ -5,7 +5,7 @@
 from libs import (class_utils, db_utils, nhi_utils, number_utils,
                   prescript_utils, string_utils, system_utils, ui_utils)
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QPoint, QSettings, QSize, Qt
+from PyQt5.QtCore import QPoint, QSettings, QSize
 from PyQt5.QtWidgets import QMessageBox
 
 
@@ -66,7 +66,6 @@ class DialogInputMedicine(QtWidgets.QDialog):
 
         ui_utils.restore_settings(
             self, 'dialog_medicine', QSize(635, 930), QPoint(1054, 225))
-        
 
         self.table_widget_medicine = class_utils.get_table_widget(self.ui.tableWidget_medicine, self.database)
         self.table_widget_medicine.set_column_hidden([0])
