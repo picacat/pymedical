@@ -10,6 +10,10 @@ import sys
 
 if sys.platform == 'linux':
     os.environ['QT_QPA_PLATFORM'] = 'xcb'
+    os.environ['QT_IM_MODULE'] = 'fcitx'
+    os.environ['XMODIFIERS'] = '@im=fcitx'
+    os.environ['SDL_IM_MODULE'] = 'fcitx' # 如果你有用到 SDL 相關庫
+
     os.environ['QT_FONT_DPI'] = '96'  # 避免 DPI 混亂
     os.environ['QT_DEFAULT_FONT'] = 'Noto Sans'
     os.environ['QT_FONT_FAMILY'] = 'Noto Sans'
