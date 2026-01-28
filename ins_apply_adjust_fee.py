@@ -61,8 +61,8 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
         pass
 
     def adjust_ins_fee(self):
-        if self.apply_type == '補報':  # 補報不調整各項費用成數 2019.05.30
-            return
+        # if self.apply_type == '補報':  # 補報不調整各項費用成數 2019.05.30
+        #     return
 
         progress_dialog = QtWidgets.QProgressDialog(
             '正在調整申報檔各項費用中, 請稍後...', '取消', 0, 8, self
