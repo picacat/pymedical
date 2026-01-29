@@ -116,7 +116,7 @@ class StatisticsInsDiscountRegistFee(QtWidgets.QMainWindow):
 
         basic_regist_fee_condition = ''
         if self.basic_regist_fee_discount:
-            basic_regist_fee_condition = f' OR (cases.Share = "基層醫療" AND RegistFee < {self.basic_regist_fee})'
+            basic_regist_fee_condition = f' OR (RegistFee < {self.basic_regist_fee})'
 
         discount_condition = f''' AND
             ((patient.DiscountType IS NOT NULL AND LENGTH(patient.DiscountType) > 0) OR
