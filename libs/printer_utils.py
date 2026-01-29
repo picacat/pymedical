@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from dis import disco
 import html
 import importlib
 import json
 import sys
-from unicodedata import numeric
 
 from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter, QPrinterInfo
