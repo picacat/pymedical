@@ -1,6 +1,4 @@
-
 # -*- coding: UTF-8 -*-
-
 import datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -611,6 +609,7 @@ class CheckErrors(QtWidgets.QMainWindow):
         use_infectious_drug = False
         for prescript_row in prescript_rows:
             ins_code = string_utils.xstr(prescript_row['InsCode'])
+
             dosage = prescript_row['Dosage']
             if ins_code in [
                 '1100015686',
@@ -629,6 +628,15 @@ class CheckErrors(QtWidgets.QMainWindow):
 
             medicine_type = string_utils.xstr(prescript_row['MedicineType'])
             medicine_name = string_utils.xstr(prescript_row['MedicineName'])
+            if medicine_type in ['', None]:
+                total_ins_medicine += 1
+                error_messages.append('無處方類別')
+                continue
+            elif medicine_name in ['', None]:
+                total_ins_medicine += 1
+                error_messages.append('無處方名稱')
+                continue
+
             sql = f'''
                 SELECT PrescriptKey FROM prescript
                 WHERE
@@ -638,7 +646,17 @@ class CheckErrors(QtWidgets.QMainWindow):
                     MedicineType NOT IN ("穴道", "處置") AND
                     MedicineName = "{medicine_name}"
             '''
-            rows = self.database.select_record(sql)
+            try:
+                rows = self.database.select_record(sql)
+            except Exception:
+                if ins_code in [None, '']:
+                    pass
+                else:
+                    total_ins_medicine += 1
+                    error_messages.append(f'{medicine_name}處方名稱錯誤(不可以使用雙引號)')
+
+                continue
+
             if len(rows) >= 2:
                 error = f'{medicine_name}重複開立'
                 if error not in error_messages:

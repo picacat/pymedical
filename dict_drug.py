@@ -1469,7 +1469,7 @@ class DictDrug(QtWidgets.QMainWindow):
         self.dict_groups_changed()
 
     def _sync_drug_data(self, workbook, medicine_type):
-        sheet = workbook['Sheet1']
+        sheet = workbook['sheet1']
 
         max_progress = sheet.max_row
         progress_dialog = QtWidgets.QProgressDialog(
