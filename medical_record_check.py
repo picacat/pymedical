@@ -127,16 +127,16 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         error_message = None
 
         if treat_type == '腦血管疾病':
-            if 'G450' <= self.disease_code1[:3] <= 'G468':
+            if 'G450' <= self.disease_code1[:4] <= 'G468':
                 pass
             elif 'I60' <= self.disease_code1[:3] <= 'I69':
                 pass
             else:
                 error_message = '* ICD-10-CM主診斷碼非腦血管疾病<br>腦血管疾病範圍範圍: G450~G468, I60~I69'
         elif treat_type == '助孕照護':
-            if 'N970' <= self.disease_code1[:3] <= 'N979':  # 女性不孕症
+            if 'N970' <= self.disease_code1[:4] <= 'N979':  # 女性不孕症
                 pass
-            elif 'N460' <= self.disease_code1[:3] <= 'N469':  # 男性不孕症
+            elif 'N460' <= self.disease_code1[:4] <= 'N469':  # 男性不孕症
                 pass
             else:
                 error_message = '* ICD-10-CM主診斷碼非不孕症<br>女性不孕症主診斷碼範圍: N970 ~ N979<br>男性不孕症主診斷碼範圍: N4601 ~ N469'
