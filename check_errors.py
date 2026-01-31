@@ -629,11 +629,6 @@ class CheckErrors(QtWidgets.QMainWindow):
             medicine_type = string_utils.xstr(prescript_row['MedicineType'])
             medicine_name = string_utils.xstr(prescript_row['MedicineName'])
 
-            if medicine_name in ['', None]:  # 2026-01-30
-                total_ins_medicine += 1
-                error_messages.append('無處方名稱')
-                continue
-
             sql = f'''
                 SELECT PrescriptKey FROM prescript
                 WHERE
