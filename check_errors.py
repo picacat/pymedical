@@ -628,11 +628,8 @@ class CheckErrors(QtWidgets.QMainWindow):
 
             medicine_type = string_utils.xstr(prescript_row['MedicineType'])
             medicine_name = string_utils.xstr(prescript_row['MedicineName'])
-            if medicine_type in ['', None]:
-                total_ins_medicine += 1
-                error_messages.append('無處方類別')
-                continue
-            elif medicine_name in ['', None]:
+
+            if medicine_name in ['', None]:  # 2026-01-30
                 total_ins_medicine += 1
                 error_messages.append('無處方名稱')
                 continue
@@ -653,7 +650,7 @@ class CheckErrors(QtWidgets.QMainWindow):
                     pass
                 else:
                     total_ins_medicine += 1
-                    error_messages.append(f'{medicine_name}處方名稱錯誤(不可以使用雙引號)')
+                    error_messages.append(f'{medicine_name}處方名稱錯誤(不可以使用雙引號)')  # 2026-01-30
 
                 continue
 

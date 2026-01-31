@@ -217,7 +217,7 @@ class PrintReceiptSelfForm6:
             total_fee += regist_fee
             receipt_fee += regist_fee
 
-        if self.system_settings.field('不印折扣') == 'Y' and discount_fee < 0:
+        if discount_fee < 0:
             self_total_fee -= discount_fee
 
             discount_fee = 0
