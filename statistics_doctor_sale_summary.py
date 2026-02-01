@@ -261,11 +261,10 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
             nursing_assistant = string_utils.xstr(row['NursingAssistant'])
             debt = number_utils.get_integer(row['Debt'])
 
-            if massage_referrer != '' or nursing_assistant != '':  # 有推薦者不算醫師的業績
-                continue
+            # if massage_referrer != '' or nursing_assistant != '':  # 有推薦者不算醫師的業績 2026-02-02 void
+            #     continue
 
             medicine_type = string_utils.xstr(row['MedicineType'])
-
             if in_medicine_type == '其他':
                 not_other = False
                 for med_type in self.other_medicine_type_list:
@@ -289,27 +288,50 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
 
             total_amount += subtotal
 
-        return total_amount
+        repayment_total_amount = self._get_repayment(in_case_date, row['Doctor'], in_medicine_type)
 
-    def _get_repayment(self, case_key):
-        if case_key == '':
-            return 0
+        return total_amount + repayment_total_amount
+
+    def _get_repayment(self, case_date, doctor, in_medicine_type):
+        if in_medicine_type == '其他':
+            medicine_type_condition = f' AND MedicineType NOT LIKE "%{in_medicine_type}%" '
+        else:
+            medicine_type_condition = f' AND MedicineType LIKE "%{in_medicine_type}%" '
 
         sql = f'''
-            SELECT * FROM debt
+            SELECT prescript.* FROM debt
+                LEFT JOIN prescript ON prescript.CaseKey = debt.CaseKey
             WHERE
-                CaseKey = {case_key} AND
-                ReturnDate1 IS NOT NULL AND
+                ReturnDate1 = "{case_date}" AND
+                Doctor = "{doctor}" AND
                 TotalReturn > 0
+                {medicine_type_condition}
         '''
-
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             return 0
 
-        row = rows[0]
+        case_key = rows[0]['CaseKey']
 
-        return number_utils.get_integer(row['TotalReturn'])
+        repayment = 0
+        for row in rows:
+            repayment += number_utils.get_integer(row['Amount'])
+            medicine_set = row['MedicineSet']
+
+            sql = f'''
+                SELECT DiscountFee FROM dosage
+                WHERE
+                    CaseKey = {case_key} AND
+                    MedicineSet = {medicine_set} AND
+                    DiscountFee > 0
+            '''
+            rows = self.database.select_record(sql)
+            if rows:
+                row = rows[0]
+                discount_fee = number_utils.get_integer(row['DiscountFee'])
+                repayment -= discount_fee
+       
+        return repayment
 
     def _set_table_widget_cell_value(self, row_no, col_no, value, align):
         item = QtWidgets.QTableWidgetItem()
@@ -324,14 +346,15 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
 
         sql = f'''
             SELECT
-                prescript.*, cases.CaseDate, cases.InsType, cases.MassageReferrer, cases.NursingAssistant
+                prescript.*, cases.Name, cases.CaseDate, cases.InsType,
+                cases.Doctor, cases.MassageReferrer, cases.NursingAssistant
             FROM prescript
                 LEFT JOIN cases ON cases.CaseKey = prescript.CaseKey
             WHERE
                 cases.CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}" AND
                 prescript.MedicineSet >= 2 AND
                 prescript.MedicineSet != 11 AND
-                prescript.Price > 0 AND
+                prescript.Amount > 0 AND
                 cases.Doctor = "{doctor}"
                 {ins_type_condition}
             GROUP BY PrescriptKey ORDER BY cases.CaseDate
