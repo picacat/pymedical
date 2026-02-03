@@ -4183,7 +4183,7 @@ def get_instruction_html(database, system_settings, case_key, medicine_set, addi
         html = f'''
               醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}
               指示: 一日<font size="5"><b>{packages}</b></font>包, 共<font size="5"><b>{pres_days}</b></font>日份
-              {instruction}服用 日量: {single_day_dosage} 總量: {total_dosage}
+              <font size="5"><b>{instruction}</b></font> 服用 日量: {single_day_dosage} 總量: {total_dosage}
         '''
 
         if medicine_set == 1 and drug_share_fee > 0:
