@@ -719,6 +719,12 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         case_key_item = self.ui.tableWidget_self_prescript.item(
             row_no, purchase_utils.PURCHASE_COL_NO['case_key'])
         if case_key_item is None:
+            system_utils.show_message_box(
+                QMessageBox.Information,
+                '注意',
+                '<font size="5" color="red"><b>請選擇銷售資料.</b></font>',
+                '未選擇任何資料.'
+            )
             return
 
         case_key = case_key_item.text()
@@ -764,8 +770,18 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
 
     def _set_single_person(self):
         row_no = self.ui.tableWidget_self_prescript.currentRow()
-        case_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO['case_key']).text()
+        case_key_item = self.ui.tableWidget_self_prescript.item(
+            row_no, purchase_utils.PURCHASE_COL_NO['case_key'])
+        if case_key_item is None:
+            system_utils.show_message_box(
+                QMessageBox.Information,
+                '注意',
+                '<font size="5" color="red"><b>請選擇單一品項資料.</b></font>',
+                '未選擇任何資料.'
+            )
+            return
+
+        case_key = case_key_item.text()
         prescript_key = self.ui.tableWidget_self_prescript.item(
             row_no, purchase_utils.PURCHASE_COL_NO['prescript_key']).text()
 
@@ -882,16 +898,24 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         
     def _set_agent_debt(self):
         row_no = self.ui.tableWidget_self_prescript_agent.currentRow()
-        prescript_key = self.ui.tableWidget_self_prescript_agent.item(
-            row_no, purchase_utils.PURCHASE_COL_NO['prescript_key']).text()
+        prescript_key_item = self.ui.tableWidget_self_prescript_agent.item(
+            row_no, purchase_utils.PURCHASE_COL_NO['prescript_key'])
+        if prescript_key_item is None:
+            system_utils.show_message_box(
+                QMessageBox.Information,
+                '注意',
+                '<font size="5" color="red"><b>請選擇代收費用的資料.</b></font>',
+                '未選擇任何資料.'
+            )
+            return
 
+        prescript_key = prescript_key_item.text()
         rows = self.database.select_record(f'SELECT Amount, Debt FROM prescript WHERE PrescriptKey = {prescript_key}')
         if len(rows) <= 0:
             return
 
         row = rows[0]
         debt = number_utils.get_integer(row['Debt'])
-        amount = number_utils.get_integer(row['Amount'])
 
         input_dialog = QInputDialog()
         input_dialog.setOkButtonText('確定')

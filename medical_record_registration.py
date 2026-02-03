@@ -135,7 +135,7 @@ class MedicalRecordRegistration(QtWidgets.QMainWindow):
                 if self.ui.comboBox_injury_type.currentText() != '普通疾病':
                     self.ui.comboBox_injury_type.setCurrentText('普通疾病')
 
-            self._set_infectious_date()
+            # self._set_infectious_date()
         elif sender_name == 'comboBox_reg_type':
             self._set_area_list()
         elif sender_name == 'comboBox_injury_type':
@@ -146,7 +146,7 @@ class MedicalRecordRegistration(QtWidgets.QMainWindow):
                 if card != 'IC06':
                     self.ui.comboBox_card.setCurrentText(nhi_utils.INJURY_CARD_DICT['IC06'])
 
-            self._set_infectious_date()
+            # self._set_infectious_date()
         elif sender_name == 'comboBox_card':
             card = string_utils.xstr(self.ui.comboBox_card.currentText()).split(' ')[0]
             if card == 'IC06':

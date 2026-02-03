@@ -30,6 +30,149 @@
        <number>5</number>
       </property>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QToolButton" name="toolButton_return">
+          <property name="text">
+           <string>退貨</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/gtk-redo-ltr.svg</normaloff>../icons/gtk-redo-ltr.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_exchange">
+          <property name="text">
+           <string>換貨</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/gtk-refresh.svg</normaloff>../icons/gtk-refresh.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_return_course">
+          <property name="text">
+           <string>整個療程退貨</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/gtk-undo-ltr.svg</normaloff>../icons/gtk-undo-ltr.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_delete">
+          <property name="text">
+           <string>刪除</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/button_cancel.svg</normaloff>../icons/button_cancel.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_set_debt">
+          <property name="text">
+           <string>欠款</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/task-attention.png</normaloff>../icons/task-attention.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_repayment">
+          <property name="text">
+           <string>還款</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/gtk-refresh.svg</normaloff>../icons/gtk-refresh.svg</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_set_discount">
+          <property name="text">
+           <string>折扣設定</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/help-about.png</normaloff>../icons/help-about.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_set_person">
+          <property name="text">
+           <string>銷售設定</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/system-users.png</normaloff>../icons/system-users.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_set_single_person">
+          <property name="text">
+           <string>單一品項銷售設定</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/user-info.png</normaloff>../icons/user-info.png</iconset>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
        <widget class="QTableWidget" name="tableWidget_self_prescript">
         <property name="editTriggers">
          <set>QAbstractItemView::NoEditTriggers</set>
@@ -509,151 +652,7 @@
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QToolButton" name="toolButton_return">
-            <property name="text">
-             <string>退貨</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../icons/gtk-redo-ltr.svg</normaloff>../icons/gtk-redo-ltr.svg</iconset>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_exchange">
-            <property name="text">
-             <string>換貨</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../icons/gtk-refresh.svg</normaloff>../icons/gtk-refresh.svg</iconset>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_return_course">
-            <property name="text">
-             <string>整個療程退貨</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../icons/gtk-undo-ltr.svg</normaloff>../icons/gtk-undo-ltr.svg</iconset>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_delete">
-            <property name="text">
-             <string>刪除</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../icons/button_cancel.svg</normaloff>../icons/button_cancel.svg</iconset>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_set_debt">
-            <property name="text">
-             <string>欠款</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../icons/task-attention.png</normaloff>../icons/task-attention.png</iconset>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_repayment">
-            <property name="text">
-             <string>還款</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../icons/gtk-refresh.svg</normaloff>../icons/gtk-refresh.svg</iconset>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_set_discount">
-            <property name="text">
-             <string>折扣設定</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../icons/help-about.png</normaloff>../icons/help-about.png</iconset>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_set_person">
-            <property name="text">
-             <string>銷售設定</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../icons/system-users.png</normaloff>../icons/system-users.png</iconset>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_set_single_person">
-            <property name="text">
-             <string>單一品項銷售設定</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../icons/user-info.png</normaloff>../icons/user-info.png</iconset>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-       </layout>
+       <layout class="QHBoxLayout" name="horizontalLayout_2"/>
       </item>
      </layout>
     </item>
