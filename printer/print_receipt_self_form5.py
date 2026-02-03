@@ -100,7 +100,8 @@ class PrintReceiptSelfForm5:
             self.database, self.system_settings,
             self.case_key, self.medicine_set, '費用收據', blocks=2, instruction=self.additional)
         instruction = printer_utils.get_instruction_html(
-            self.database, self.system_settings, self.case_key, self.medicine_set
+            self.database, self.system_settings, self.case_key, self.medicine_set,
+            resize_instruction=True
         )
         total_fee = case_utils.get_total_fee(self.database, self.case_key, self.medicine_set)
         if total_fee is not None and total_fee > 0:

@@ -1,6 +1,7 @@
 
 # -*- coding: UTF-8 -*-
 
+from readline import read_init_file
 from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
 from PyQt5.QtPrintSupport import QPrinter
 from libs import printer_utils
@@ -101,8 +102,8 @@ class PrintReceiptInsForm5:
             self.database, self.system_settings,
             self.case_key, self.medicine_set, '費用收據', blocks=2, instruction=self.additional)
         instruction = printer_utils.get_instruction_html(
-            self.database, self.system_settings, self.case_key, self.medicine_set, self.additional
-        )
+            self.database, self.system_settings, self.case_key, self.medicine_set, self.additional,
+            resize_instruction=True)
         additional_label = printer_utils.get_additional_label(self.additional)
         if self.additional == '健保檢驗':
             title = '檢驗單'

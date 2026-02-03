@@ -2953,7 +2953,6 @@ def get_prescript_html7(database, system_setting, case_key,
 
             if medicine_set == 1:
                 location = get_location(database, medicine_type, medicine_name, unit)
-                print(unit)
                 if location == '':
                     location = string_utils.xstr(prescript_block[1])
             else:
@@ -4140,7 +4139,8 @@ def get_instruction_html_0(database, system_settings, case_key, medicine_set, ad
     return html
 
 
-def get_instruction_html(database, system_settings, case_key, medicine_set, additional=None):
+def get_instruction_html(
+        database, system_settings, case_key, medicine_set, additional=None, resize_instruction=False):
     sql = f'''
         SELECT CaseDate, Doctor, DrugShareFee, TotalFee FROM cases
         WHERE
@@ -4180,11 +4180,17 @@ def get_instruction_html(database, system_settings, case_key, medicine_set, addi
 
         total_dosage = f'{total_dosage:.1f}'
         case_date = row['CaseDate'].date()
-        html = f'''
-              醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}
-              指示: 一日<font size="5"><b>{packages}</b></font>包, 共<font size="5"><b>{pres_days}</b></font>日份
-              <font size="5"><b>{instruction}</b></font> 服用 日量: {single_day_dosage} 總量: {total_dosage}
-        '''
+        if resize_instruction:
+            html = f'''
+                醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}
+                指示: 一日<font size="5"><b>{packages}</b></font>包, 共<font size="5"><b>{pres_days}</b></font>日份
+                <font size="5"><b>{instruction}</b></font> 服用 日量: {single_day_dosage} 總量: {total_dosage}
+            '''
+        else:
+            html = f'''
+                醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}<br>
+                指示: 一日{packages}包, 共{pres_days}日份 {instruction}服用 日量: {single_day_dosage} 總量: {total_dosage}
+            '''
 
         if medicine_set == 1 and drug_share_fee > 0:
             html += f'<br>藥品負擔: {drug_share_fee}'
