@@ -38,7 +38,6 @@ class CheckErrors(QtWidgets.QMainWindow):
         self.doctor_list = personnel_utils.get_person(self.database, "醫師")
         self.check_chronic_pres_days = self.system_settings.field("慢性病開藥檢查")
         self.no_massage = self.system_settings.field("不申報傷科治療")
-
         self.rows = None
 
         self._set_ui()
