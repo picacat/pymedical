@@ -2,6 +2,6 @@
     "host": "localhost",
     "user": "root",
     "password": "153fish",
-    "database": "pymedical",
-    "sql_folder": "c:/_temp/2025-10-27"
+    "database": "chuyun",
+    "sql_folder": "/home/john/backup/databases/初蘊"
 }

@@ -1,10 +1,9 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
-from libs import printer_utils
-from libs import system_utils
+
+from libs import printer_utils, system_utils
 
 
 # 自費收據格式7 105x148mm
@@ -19,7 +18,9 @@ class PrintReceiptSelfForm7:
         self.medicine_set = args[3]
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '自費醫療收據印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "自費醫療收據印表機"
+        )
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
 
         self.current_print = None
@@ -50,14 +51,23 @@ class PrintReceiptSelfForm7:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
     def print_html(self, printing=None):
         self.current_print = self.print_html
         # self.printer.setPaperSize(QtCore.QSizeF(105, 148), QPrinter.Millimeter)
-        printer_utils.set_paper_size(self.printer, self.system_settings, 105, 148, QPrinter.Millimeter, '自費醫療收據')
+        printer_utils.set_paper_size(
+            self.printer,
+            self.system_settings,
+            105,
+            148,
+            QPrinter.Millimeter,
+            "自費醫療收據",
+        )
 
         document = printer_utils.get_document(self.printer, self.font)
         document.setDocumentMargin(printer_utils.get_document_margin())
@@ -68,17 +78,28 @@ class PrintReceiptSelfForm7:
 
     def _html(self):
         case_record = printer_utils.get_case_html_6(
-          self.database, self.case_key, '自費', tw_date=True, medicine_set=self.medicine_set)
+            self.database,
+            self.case_key,
+            "自費",
+            tw_date=True,
+            medicine_set=self.medicine_set,
+        )
         prescript_record = printer_utils.get_prescript_html7(
-            self.database, self.system_settings,
-            self.case_key, self.medicine_set, '費用收據', blocks=1, print_total_dosage='Y')
+            self.database,
+            self.system_settings,
+            self.case_key,
+            self.medicine_set,
+            "費用收據",
+            blocks=1,
+            print_total_dosage="Y",
+        )
         fees_record = printer_utils.get_self_fees_html_2(self.database, self.case_key)
-        instruction = printer_utils.get_instruction_html(
+        instruction = printer_utils.get_instruction_html7(
             self.database, self.system_settings, self.case_key, self.medicine_set
         )
-        remark = '* 本收據可為報稅之憑證, 請妥善保存, 遺失恕不補發'
+        remark = "* 本收據可為報稅之憑證, 請妥善保存, 遺失恕不補發"
 
-        prescript_html = f'''
+        prescript_html = f"""
             <table cellspacing="0">
               <thead>
                 <tr>
@@ -95,21 +116,21 @@ class PrintReceiptSelfForm7:
             <br>
             <hr style="line-height:0.5">
            {instruction}
-        '''
+        """
 
         if self.medicine_set is None:
-            prescript_html = '無處方'
+            prescript_html = "無處方"
 
         if self.medicine_set is None or self.medicine_set >= 3:
-            fees_record = ''
-            remark = ''
+            fees_record = ""
+            remark = ""
 
-        clinic_name = self.system_settings.field('院所名稱')
-        clinic_id = self.system_settings.field('院所代號')
-        clinic_telephone = self.system_settings.field('院所電話')
-        clinic_address = self.system_settings.field('院所地址')
+        clinic_name = self.system_settings.field("院所名稱")
+        clinic_id = self.system_settings.field("院所代號")
+        clinic_telephone = self.system_settings.field("院所電話")
+        clinic_address = self.system_settings.field("院所地址")
 
-        html = f'''
+        html = f"""
             <html>
               <body>
                 <table width="98%" cellspacing="0">
@@ -143,6 +164,6 @@ class PrintReceiptSelfForm7:
                 {remark}
               </body>
             </html>
-        '''
+        """
 
         return html

@@ -1,11 +1,9 @@
-
 # -*- coding: UTF-8 -*-
 
-from readline import read_init_file
-from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
-from libs import printer_utils
-from libs import system_utils
+
+from libs import printer_utils, system_utils
 
 
 # 健保處方箋格式5 6.5 x 2.5 inches
@@ -20,7 +18,9 @@ class PrintReceiptInsForm5:
         self.ui = None
         self.medicine_set = 1
 
-        self.printer = printer_utils.get_printer(self.system_settings, '健保醫療收據印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "健保醫療收據印表機"
+        )
 
         self.current_print = None
         self.additional = None
@@ -47,13 +47,13 @@ class PrintReceiptInsForm5:
     def _check_printing(self):
         printing = True
 
-        if self.additional == '健保另包':
+        if self.additional == "健保另包":
             if printer_utils.is_additional_prescript(self.database, self.case_key):
                 printing = True
             else:
                 printing = False
 
-        if self.additional == '健保檢驗':
+        if self.additional == "健保檢驗":
             if printer_utils.is_ins_examination(self.database, self.case_key):
                 printing = True
             else:
@@ -84,7 +84,9 @@ class PrintReceiptInsForm5:
     def print_html(self, printing=None):
         self.current_print = self.print_html
         # self.printer.setPaperSize(QtCore.QSizeF(7.2, 2.5), QPrinter.Inch)
-        printer_utils.set_paper_size(self.printer, self.system_settings, 7.2, 2.5, QPrinter.Inch, '健保醫療收據')
+        printer_utils.set_paper_size(
+            self.printer, self.system_settings, 7.2, 2.5, QPrinter.Inch, "健保醫療收據"
+        )
 
         document = printer_utils.get_document(self.printer, self.font)
         document.setDocumentMargin(printer_utils.get_document_margin())
@@ -94,29 +96,44 @@ class PrintReceiptInsForm5:
             document.print(self.printer)
 
     def _html(self):
-        title = '醫療費用收據'
+        title = "醫療費用收據"
 
-        case_record = printer_utils.get_case_html_1(self.database, self.case_key, '健保', print_time_label=True)
-        disease_record = printer_utils.get_disease2(self.database, self.system_settings, self.case_key)
+        case_record = printer_utils.get_case_html_1(
+            self.database, self.case_key, "健保", print_time_label=True
+        )
+        disease_record = printer_utils.get_disease2(
+            self.database, self.system_settings, self.case_key
+        )
         prescript_record = printer_utils.get_prescript_html(
-            self.database, self.system_settings,
-            self.case_key, self.medicine_set, '費用收據', blocks=2, instruction=self.additional)
+            self.database,
+            self.system_settings,
+            self.case_key,
+            self.medicine_set,
+            "費用收據",
+            blocks=2,
+            instruction=self.additional,
+        )
         instruction = printer_utils.get_instruction_html(
-            self.database, self.system_settings, self.case_key, self.medicine_set, self.additional,
-            resize_instruction=True)
+            self.database,
+            self.system_settings,
+            self.case_key,
+            self.medicine_set,
+            self.additional,
+            resize_instruction=True,
+        )
         additional_label = printer_utils.get_additional_label(self.additional)
-        if self.additional == '健保檢驗':
-            title = '檢驗單'
-            additional_label = ''
+        if self.additional == "健保檢驗":
+            title = "檢驗單"
+            additional_label = ""
 
-        clinic_name = self.system_settings.field('院所名稱')
-        clinic_id = self.system_settings.field('院所代號')
-        clinic_telephone = self.system_settings.field('院所電話')
-        clinic_address = self.system_settings.field('院所地址')
+        clinic_name = self.system_settings.field("院所名稱")
+        clinic_id = self.system_settings.field("院所代號")
+        clinic_telephone = self.system_settings.field("院所電話")
+        clinic_address = self.system_settings.field("院所地址")
 
         # case_key_barcode = printer_utils.get_case_key_barcode(self.case_key)
 
-        html = f'''
+        html = f"""
             <html>
               <body>
                 <table width="100%" cellspacing="0">
@@ -148,6 +165,6 @@ class PrintReceiptInsForm5:
                 副作用: 本處方用藥在醫學文獻上尚無副作用之記載 / 保存方式: 置於乾燥陰涼處 / 保存期限: 三個月<br>
               </body>
             </html>
-        '''
+        """
 
         return html
