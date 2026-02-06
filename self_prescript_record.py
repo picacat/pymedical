@@ -872,7 +872,7 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
             except Exception:
                 pass
 
-        price = self._get_ratio_price(price)
+        price = self._get_ratio_price(medicine_type, price)
 
         try:
             amount = number_utils.get_float(dosage) * number_utils.get_float(price)
@@ -970,7 +970,10 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
         return True
 
-    def _get_ratio_price(self, price):
+    def _get_ratio_price(self, medicine_type, price):
+        if medicine_type not in ["單方", "複方"]:
+            return price
+
         try:
             if self.ratio is not None:
                 price = string_utils.xstr(number_utils.get_float(price) * self.ratio)
@@ -1011,7 +1014,7 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 price = string_utils.get_formatted_str("單價", None)
 
         if row["MedicineSet"] == 1:  # 拷貝健保才要放大倍率
-            price = self._get_ratio_price(price)
+            price = self._get_ratio_price(medicine_type, price)
 
         try:
             amount = number_utils.get_float(dosage) * number_utils.get_float(price)
