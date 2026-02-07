@@ -1005,7 +1005,7 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         except Exception:
             price = None
 
-        if number_utils.get_float(price) == 0:
+        if number_utils.get_float(price) == 0 and self.refresh_price == "Y":
             try:
                 price = string_utils.get_formatted_str(
                     "單價", number_utils.get_float(row["SalePrice"])
