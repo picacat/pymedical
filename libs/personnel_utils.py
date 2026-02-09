@@ -162,7 +162,7 @@ def get_person(database, personnel_type, exclude_person=None, include_person=Non
                 Name NOT LIKE "%,%" AND
                 ID IS NOT NULL AND LENGTH(ID) > 0 AND
                 Password IS NOT NULL AND LENGTH(Password) > 0 AND
-                Fulltime NOT IN ("已離職")
+                (Fulltime IS NULL OR Fulltime NOT IN ("已離職"))
             )
         """
     elif personnel_type == "職員":

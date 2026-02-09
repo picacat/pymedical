@@ -256,6 +256,7 @@ class Reservation(QtWidgets.QMainWindow):
         )
         self.ui.action_modify_reservation.triggered.connect(self._modify_reservation)
         self.ui.action_cancel_reservation.triggered.connect(self._cancel_reservation)
+        self.ui.action_lock_reservation.triggered.connect(self._lock_reservation)
 
         self.ui.action_print_reservation.triggered.connect(self._print_reservation)
         self.ui.action_print_reservation_list.triggered.connect(
@@ -477,8 +478,8 @@ class Reservation(QtWidgets.QMainWindow):
             ui_utils.set_combo_box(self.ui.comboBox_doctor, [self.doctor])
             return
 
-        # doctor_list = personnel_utils.get_person(self.database, "無逗點醫師")
-        doctor_list = self._get_doctor_list()
+        doctor_list = personnel_utils.get_person(self.database, "無逗點醫師")
+        # doctor_list = self._get_doctor_list()
         ui_utils.set_combo_box(self.ui.comboBox_doctor, doctor_list)
         ui_utils.set_combo_box(self.ui.comboBox_list_doctor, doctor_list, "全部")
 
@@ -817,6 +818,9 @@ class Reservation(QtWidgets.QMainWindow):
 
                 reserve_key = string_utils.xstr(row["ReserveKey"])
                 name = string_utils.xstr(row["Name"])
+                if row["Frozen"]:
+                    name = "🔒" + name
+
                 remark = string_utils.xstr(row["Remark"])
 
                 if self.ui.verticalFrame.isVisible():
@@ -1562,6 +1566,12 @@ class Reservation(QtWidgets.QMainWindow):
         else:
             self._cancel_reservation_by_list()
 
+    def _lock_reservation(self):
+        if self.tab_name == "預約一覽表":
+            self._lock_reservation_by_table()
+        else:
+            self._lock_reservation_by_list()
+
     def _cancel_reservation_by_table(self):
         current_row = self.ui.tableWidget_reservation.currentRow()
         current_column = self.ui.tableWidget_reservation.currentColumn()
@@ -1578,6 +1588,24 @@ class Reservation(QtWidgets.QMainWindow):
         reserve_key = self.table_widget_reservation_list.field_value(0)
         name = self.table_widget_reservation_list.field_value(4)
         if self._delete_reserve_record(reserve_key, name):
+            self._read_reservation_list()
+
+    def _lock_reservation_by_table(self):
+        current_row = self.ui.tableWidget_reservation.currentRow()
+        current_column = self.ui.tableWidget_reservation.currentColumn()
+
+        reserve_key = self._get_reserve_key_by_table(current_row, current_column, True)
+        if reserve_key is None:
+            return
+
+        name = self._get_name_by_table(current_row, current_column)
+        if self._lock_reserve_record(reserve_key, name):
+            self.read_reservation()
+
+    def _lock_reservation_by_list(self):
+        reserve_key = self.table_widget_reservation_list.field_value(0)
+        name = self.table_widget_reservation_list.field_value(4)
+        if self._lock_reserve_record(reserve_key, name):
             self._read_reservation_list()
 
     def _modify_reservation(self):
@@ -3361,3 +3389,43 @@ class Reservation(QtWidgets.QMainWindow):
         self.doctor = doctor
         self.patient_key = patient_key
         self.vhc_ic_card = vhc_ic_card
+
+    def _lock_reserve_record(self, reserve_key, name):
+        patient_key = self._get_patient_key(reserve_key)
+
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle("鎖定網路預約掛號")
+        msg_box.setText(f"""
+            <font size='4' color='red'>
+                <b>確定鎖定病歷號{patient_key}{name}的網路預約掛號?</b>
+            </font>
+        """)
+        msg_box.setInformativeText("注意！預約掛號鎖定後, 將無法透過網路取消預約!")
+        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+        msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+        lock_reservation = msg_box.exec_()
+        if not lock_reservation:
+            return False
+
+        sql = f"""
+            SELECT Frozen From reserve
+            WHERE
+                ReserveKey = {reserve_key}
+        """
+        rows = self.database.select_record(sql)
+        if not rows:
+            return False
+
+        frozen = rows[0]["Frozen"]
+
+        sql = f"""
+            UPDATE reserve
+            SET
+                Frozen = {not frozen}
+            WHERE
+                ReserveKey = {reserve_key}
+        """
+        self.database.exec_sql(sql)
+
+        return True

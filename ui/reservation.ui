@@ -1224,6 +1224,7 @@
    <addaction name="action_add_reservation"/>
    <addaction name="action_modify_reservation"/>
    <addaction name="action_cancel_reservation"/>
+   <addaction name="action_lock_reservation"/>
    <addaction name="action_print_reservation"/>
    <addaction name="action_medical_record_past_history"/>
    <addaction name="action_print_reservation_list"/>
@@ -1244,7 +1245,7 @@
      <x>0</x>
      <y>0</y>
      <width>1580</width>
-     <height>22</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -1406,7 +1407,7 @@
      <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
    </property>
    <property name="text">
-    <string>列印預約單[F7]</string>
+    <string>列預約單[F7]</string>
    </property>
    <property name="toolTip">
     <string>列印預約單</string>
@@ -1445,7 +1446,7 @@
      <normaloff>../icons/printer-network.png</normaloff>../icons/printer-network.png</iconset>
    </property>
    <property name="text">
-    <string>列印預約名單</string>
+    <string>印預約名單</string>
    </property>
    <property name="toolTip">
     <string>列印預約名單</string>
@@ -1611,6 +1612,21 @@
    </property>
    <property name="toolTip">
     <string>預約類別全部設為初複診</string>
+   </property>
+  </action>
+  <action name="action_lock_reservation">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/lock.png</normaloff>../icons/lock.png</iconset>
+   </property>
+   <property name="text">
+    <string>網路鎖定</string>
+   </property>
+   <property name="toolTip">
+    <string>取消預約</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
    </property>
   </action>
  </widget>
