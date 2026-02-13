@@ -8753,6 +8753,10 @@ def get_title_image(
             "明醫中醫診所",
         ]:
             br_line = "<br><br><br><br><br>"
+        elif clinic_name in [
+            "木林中醫診所",
+        ]:
+            br_line = "<br><br><br><br><br><br><br><br><br>"
         elif clinic_name in ["澄美中醫診所", "澄馨中醫診所"]:
             br_line = "<br><br>"
         else:
