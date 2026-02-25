@@ -1,17 +1,18 @@
-
 # -*- coding: UTF-8 -*-
-
-from PyQt5 import QtWidgets, QtCore, QtGui, QtChart
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
 import datetime
 
-from libs import class_utils
-from libs import ui_utils
-from libs import string_utils
-from libs import number_utils
-from libs import export_utils
-from libs import system_utils
+from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+
+from libs import (
+    class_utils,
+    export_utils,
+    number_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 推拿師收入統計 2020.11.04
@@ -28,6 +29,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         self.ins_type = args[5]
         self.massager = args[6]
         self.only_traditional_massage = args[7]
+        self.clinic_name = self.system_settings.field("院所名稱")
         self.ui = None
 
         self._set_ui()
@@ -57,7 +59,8 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
     def _set_table_width(self):
         width = [
             130,
-            100, 100,
+            100,
+            100,
         ]
         self.table_widget_massager_income.set_table_heading_width(width)
         self.table_widget_massager.set_table_heading_width(width)
@@ -65,7 +68,9 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
     # 設定信號
     def _set_signal(self):
         self.ui.toolButton_export_date_excel.clicked.connect(self._export_to_date_excel)
-        self.ui.toolButton_export_massager_excel.clicked.connect(self._export_to_massager_excel)
+        self.ui.toolButton_export_massager_excel.clicked.connect(
+            self._export_to_massager_excel
+        )
 
     def close_tab(self):
         current_tab = self.parent.ui.tabWidget_window.currentIndex()
@@ -83,8 +88,10 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         self._calculate_data()
 
     def _set_statistics_table_heading(self):
-        start_date = datetime.datetime.strptime(self.start_date, '%Y-%m-%d %H:%M:%S').date()
-        end_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d %H:%M:%S').date()
+        start_date = datetime.datetime.strptime(
+            self.start_date, "%Y-%m-%d %H:%M:%S"
+        ).date()
+        end_date = datetime.datetime.strptime(self.end_date, "%Y-%m-%d %H:%M:%S").date()
         day_count = (end_date - start_date).days + 1
 
         calendar_list = []
@@ -102,14 +109,14 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
             )
 
         self.ui.tableWidget_massager_income.setItem(
-            row_count, 0, QtWidgets.QTableWidgetItem('總計')
+            row_count, 0, QtWidgets.QTableWidgetItem("總計")
         )
 
     def _set_statistics_massager_table_heading(self):
         massager_list = []
         rows = self._read_data(group_by_massager=True)
         for row in rows:
-            massager = string_utils.xstr(row['Massager'])
+            massager = string_utils.xstr(row["Massager"])
             if massager not in massager_list:
                 massager_list.append(massager)
 
@@ -122,7 +129,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
             )
 
         self.ui.tableWidget_massager.setItem(
-            row_count, 0, QtWidgets.QTableWidgetItem('總計')
+            row_count, 0, QtWidgets.QTableWidgetItem("總計")
         )
 
     def _calculate_data(self):
@@ -133,7 +140,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
             return
 
         self.progress_dialog = QtWidgets.QProgressDialog(
-            '門診收入統計中, 請稍後...', '取消', 0, row_count, self
+            "門診收入統計中, 請稍後...", "取消", 0, row_count, self
         )
 
         self.progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
@@ -155,47 +162,45 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         for row_no in range(self.ui.tableWidget_massager_income.rowCount()):
             for col_no in range(1, self.ui.tableWidget_massager_income.columnCount()):
                 self.ui.tableWidget_massager_income.setItem(
-                    row_no, col_no, QtWidgets.QTableWidgetItem('0')
+                    row_no, col_no, QtWidgets.QTableWidgetItem("0")
                 )
                 self.ui.tableWidget_massager_income.item(
-                    row_no, col_no).setTextAlignment(
-                    QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                )
+                    row_no, col_no
+                ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
         for row_no in range(self.ui.tableWidget_massager.rowCount()):
             for col_no in range(1, self.ui.tableWidget_massager.columnCount()):
                 self.ui.tableWidget_massager.setItem(
-                    row_no, col_no, QtWidgets.QTableWidgetItem('0')
+                    row_no, col_no, QtWidgets.QTableWidgetItem("0")
                 )
-                self.ui.tableWidget_massager.item(
-                    row_no, col_no).setTextAlignment(
+                self.ui.tableWidget_massager.item(row_no, col_no).setTextAlignment(
                     QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
                 )
 
     def _read_data(self, group_by_massager=False):
-        only_traditional_massage_condition = ''
+        only_traditional_massage_condition = ""
         if self.only_traditional_massage:
             only_traditional_massage_condition = ' AND TreatType = "民俗調理"'
 
-        period_condition = ''
-        if self.period != '全部':
-            period_condition = ' AND Period = "{0}"'.format(self.period)
+        period_condition = ""
+        if self.period != "全部":
+            period_condition = f' AND Period = "{0}"'.format(self.period)
 
-        ins_type_condition = ''
-        if self.ins_type != '全部':
-            ins_type_condition = ' AND InsType = "{0}"'.format(self.ins_type)
+        ins_type_condition = ""
+        if self.ins_type != "全部":
+            ins_type_condition = f' AND InsType = "{0}"'.format(self.ins_type)
 
-        massager_condition = ''
-        if self.massager != '全部':
+        massager_condition = ""
+        if self.massager != "全部":
             massager_condition = f' AND Massager = "{self.massager}"'
 
-        group_condition = ''
+        group_condition = ""
         if group_by_massager:
-            group_condition = ' GROUP BY Massager'
+            group_condition = " GROUP BY Massager"
 
-        massage_fee_condition = ''
-        if self.system_settings.field('院所名稱') == '耀康中醫診所':
-            massage_fee_condition = ' AND SMassageFee > 0'
+        massage_fee_condition = ""
+        if self.system_settings.field("院所名稱") == "耀康中醫診所":
+            massage_fee_condition = " AND SMassageFee > 0"
 
         sql = f'''
             SELECT
@@ -240,10 +245,16 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
 
     def _calculate_income(self, rows):
         for row in rows:
-            case_date = row['CaseDate'].strftime('%Y-%m-%d')
+            case_date = row["CaseDate"].strftime("%Y-%m-%d")
             row_no = self._get_row_no(case_date)
             self.progress_dialog.setValue(row_no)
-            massage_fee = self._get_cell_fee(row_no, 1) + number_utils.get_integer(row['SMassageFee'])
+            massage_fee = number_utils.get_integer(row["SMassageFee"])
+            if (
+                self.clinic_name == "耀康中醫診所" and massage_fee == 50
+            ):  # 健保民俗調理費不算業績
+                continue
+
+            massage_fee += self._get_cell_fee(row_no, 1)
             total_fee = massage_fee
 
             self._set_item_data(row_no, 1, string_utils.xstr(massage_fee))
@@ -251,10 +262,17 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
 
     def _calculate_massager_income(self, rows):
         for row in rows:
-            massager = string_utils.xstr(row['Massager'])
+            massager = string_utils.xstr(row["Massager"])
+            massage_fee = number_utils.get_integer(row["SMassageFee"])
+
             row_no = self._get_massager_row_no(massager)
             self.progress_dialog.setValue(row_no)
-            massage_fee = self._get_massager_cell_fee(row_no, 1) + number_utils.get_integer(row['SMassageFee'])
+            if (
+                self.clinic_name == "耀康中醫診所" and massage_fee == 50
+            ):  # 健保民俗調理費不算業績
+                continue
+
+            massage_fee += self._get_massager_cell_fee(row_no, 1)
             total_fee = massage_fee
 
             self._set_massager_item_data(row_no, 1, string_utils.xstr(massage_fee))
@@ -284,28 +302,26 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         self.ui.tableWidget_massager_income.setItem(
             row_no, col_no, QtWidgets.QTableWidgetItem(data)
         )
-        self.ui.tableWidget_massager_income.item(
-            row_no, col_no).setTextAlignment(
+        self.ui.tableWidget_massager_income.item(row_no, col_no).setTextAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         )
 
         if col_no > 0 and number_utils.get_integer(data) < 0:
             self.ui.tableWidget_massager_income.item(row_no, col_no).setForeground(
-                QtGui.QColor('red')
+                QtGui.QColor("red")
             )
 
     def _set_massager_item_data(self, row_no, col_no, data):
         self.ui.tableWidget_massager.setItem(
             row_no, col_no, QtWidgets.QTableWidgetItem(data)
         )
-        self.ui.tableWidget_massager.item(
-            row_no, col_no).setTextAlignment(
+        self.ui.tableWidget_massager.item(row_no, col_no).setTextAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         )
 
         if col_no > 0 and number_utils.get_integer(data) < 0:
             self.ui.tableWidget_massager.item(row_no, col_no).setForeground(
-                QtGui.QColor('red')
+                QtGui.QColor("red")
             )
 
     def _calculate_subtotal(self):
@@ -330,26 +346,32 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
                     self.ui.tableWidget_massager.item(row_no, col_no).text()
                 )
 
-            self._set_massager_item_data(row_no, subtotal_field_no, string_utils.xstr(subtotal))
+            self._set_massager_item_data(
+                row_no, subtotal_field_no, string_utils.xstr(subtotal)
+            )
 
     def _calculate_total(self):
-        total_list = [0 for i in range(self.ui.tableWidget_massager_income.columnCount())]
+        total_list = [
+            0 for i in range(self.ui.tableWidget_massager_income.columnCount())
+        ]
         for row_no in range(self.ui.tableWidget_massager_income.rowCount()):
             for col_no in range(1, self.ui.tableWidget_massager_income.columnCount()):
-                value = number_utils.get_integer(self.ui.tableWidget_massager_income.item(row_no, col_no).text())
+                value = number_utils.get_integer(
+                    self.ui.tableWidget_massager_income.item(row_no, col_no).text()
+                )
                 total_list[col_no] += value
 
         row_no = self.ui.tableWidget_massager_income.rowCount() - 1
         for col_no in range(1, len(total_list)):
-            self._set_item_data(
-                row_no, col_no, string_utils.xstr(total_list[col_no])
-            )
+            self._set_item_data(row_no, col_no, string_utils.xstr(total_list[col_no]))
 
     def _calculate_massager_total(self):
         total_list = [0 for i in range(self.ui.tableWidget_massager.columnCount())]
         for row_no in range(self.ui.tableWidget_massager.rowCount()):
             for col_no in range(1, self.ui.tableWidget_massager.columnCount()):
-                value = number_utils.get_integer(self.ui.tableWidget_massager.item(row_no, col_no).text())
+                value = number_utils.get_integer(
+                    self.ui.tableWidget_massager.item(row_no, col_no).text()
+                )
                 total_list[col_no] += value
 
         row_no = self.ui.tableWidget_massager.rowCount() - 1
@@ -363,23 +385,25 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            '{0}至{1}{2}推拿師收入統計表.xlsx'.format(
+            "{0}至{1}{2}推拿師收入統計表.xlsx".format(
                 self.start_date[:10], self.end_date[:10], self.massager
             ),
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
 
         export_utils.export_table_widget_to_excel(
-            excel_file_name, self.ui.tableWidget_massager_income,
+            excel_file_name,
+            self.ui.tableWidget_massager_income,
         )
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            '<h3>推拿師收入統計檔{0}匯出完成.</h3>'.format(excel_file_name),
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            "<h3>推拿師收入統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            "Microsoft Excel 格式.",
         )
 
     def _export_to_massager_excel(self):
@@ -387,23 +411,25 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            '{0}至{1}{2}推拿師個別收入統計表.xlsx'.format(
+            "{0}至{1}{2}推拿師個別收入統計表.xlsx".format(
                 self.start_date[:10], self.end_date[:10], self.massager
             ),
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
 
         export_utils.export_table_widget_to_excel(
-            excel_file_name, self.ui.tableWidget_massager,
+            excel_file_name,
+            self.ui.tableWidget_massager,
         )
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            '<h3>推拿師個別收入統計檔{0}匯出完成.</h3>'.format(excel_file_name),
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            "<h3>推拿師個別收入統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            "Microsoft Excel 格式.",
         )
 
     def _plot_chart(self):
@@ -427,7 +453,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
                 continue
 
             case_date = case_date_field.text()
-            if case_date == '總計':
+            if case_date == "總計":
                 continue
 
             case_date_list.append(case_date)
@@ -441,16 +467,16 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
                 self.ui.tableWidget_massager_income.item(row_no, 2).text()
             )
             bar_set.append(QtChart.QBarSet(case_date_list[i][8:10]))
-            bar_set[i].setColor(QtGui.QColor('green'))
+            bar_set[i].setColor(QtGui.QColor("green"))
             bar_set[i] << subtotal
             series.append([bar_set[i]])
 
         chart = QtChart.QChart()
         chart.addSeries(series)
-        chart.setTitle('推拿收入統計表')
+        chart.setTitle("推拿收入統計表")
         chart.setAnimationOptions(QtChart.QChart.SeriesAnimations)
 
-        categories = ['推拿收入']
+        categories = ["推拿收入"]
 
         axis = QtChart.QBarCategoryAxis()
         axis.append(categories)
@@ -472,11 +498,13 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         for row_no in range(self.ui.tableWidget_massager.rowCount() - 1):
             massager_item = self.ui.tableWidget_massager.item(row_no, 0)
             if massager_item is None:
-                massager_name = '空白'
+                massager_name = "空白"
                 total_income = 0
             else:
                 massager_name = massager_item.text()
-                total_income = number_utils.get_integer(self.ui.tableWidget_massager.item(row_no, 2).text())
+                total_income = number_utils.get_integer(
+                    self.ui.tableWidget_massager.item(row_no, 2).text()
+                )
 
             series.append(massager_name, total_income)
 
@@ -490,7 +518,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
 
         chart = QtChart.QChart()
         chart.addSeries(series)
-        chart.setTitle('推拿師父收入統計表')
+        chart.setTitle("推拿師父收入統計表")
         chart.legend().hide()
         chart.setAnimationOptions(QtChart.QChart.AllAnimations)
 
