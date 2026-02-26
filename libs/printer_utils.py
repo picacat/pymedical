@@ -7658,10 +7658,10 @@ def get_prescript_html23(
         database, system_setting, case_key, medicine_set, instruction
     )
     order_script = "ORDER BY PrescriptNo, PrescriptKey"
-    if system_setting.field("列印處方依照存放位置排序") == "Y" and medicine_set == 1:
+    if system_setting.field("列印處方依照存放位置排序") == "Y":
         order_script = """
             ORDER BY
-                SUBSTRING(medicine.Location, 1, 1), 
+                SUBSTRING(medicine.Location, 1, 1),
                 LENGTH(SUBSTRING(medicine.Location, 2)),
                 SUBSTRING(medicine.Location, 2)
         """
@@ -9370,7 +9370,7 @@ def get_prescript_html24(
     if system_setting.field("列印處方依照存放位置排序") == "Y":
         order_script = """
             ORDER BY
-                SUBSTRING(medicine.Location, 1, 1), 
+                SUBSTRING(medicine.Location, 1, 1),
                 LENGTH(SUBSTRING(medicine.Location, 2)),
                 SUBSTRING(medicine.Location, 2)
         """
