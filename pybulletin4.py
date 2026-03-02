@@ -12,16 +12,22 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDesktopWidget
 
-if sys.platform == 'win32':
-    os.environ["PYTHON_VLC_MODULE_PATH"] = './vlc'
+if sys.platform == "win32":
+    os.environ["PYTHON_VLC_MODULE_PATH"] = "./vlc"
 
 import configparser
 
 import yt_dlp
 
 import vlc
-from libs import (class_utils, number_utils, registration_utils, string_utils,
-                  system_utils, ui_utils)
+from libs import (
+    class_utils,
+    number_utils,
+    registration_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 MAX_ROOM = 10
 MAX_WAITING_ROWS = 5
@@ -39,26 +45,32 @@ class PyBulletin4(QtWidgets.QMainWindow):
         if not self.database.connected():
             sys.exit(0)
 
-        self.system_settings = class_utils.get_system_settings(self.database, self.config_file)
+        self.system_settings = class_utils.get_system_settings(
+            self.database, self.config_file
+        )
         self.ui = None
 
         self.waiting_number = [0 for x in range(100)]
         self.audio_timer = QtCore.QTimer(self)
-        self.volume = number_utils.get_integer(self.system_settings.field('媒體播放音量'))
-        self.url = self.system_settings.field('媒體播放位址')
+        self.volume = number_utils.get_integer(
+            self.system_settings.field("媒體播放音量")
+        )
+        self.url = self.system_settings.field("媒體播放位址")
 
-        self.media_type = self.system_settings.field('媒體播放來源')
-        self.image_list_time = number_utils.get_integer(self.system_settings.field('輪播圖片間隔秒數'))
-        self.show_name_only = self.system_settings.field('候診名單只顯示名字')
+        self.media_type = self.system_settings.field("媒體播放來源")
+        self.image_list_time = number_utils.get_integer(
+            self.system_settings.field("輪播圖片間隔秒數")
+        )
+        self.show_name_only = self.system_settings.field("候診名單只顯示名字")
         self.show_seq_number = False
         if self.image_list_time == 0:
             self.image_list_time = 10000
         else:
             self.image_list_time *= 1000
 
-        self.period1 = self.system_settings.field('早班時間')
-        self.period2 = self.system_settings.field('午班時間')
-        self.period3 = self.system_settings.field('晚班時間')
+        self.period1 = self.system_settings.field("早班時間")
+        self.period2 = self.system_settings.field("午班時間")
+        self.period3 = self.system_settings.field("晚班時間")
 
         self.rotation_timer = QtCore.QTimer(self)
         self.rotation_timer.timeout.connect(self._rotation_wait_list)
@@ -81,7 +93,9 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.voice_server = class_utils.get_voice_server(self, 9990)
 
     def get_monitor_number(self):
-        return number_utils.get_integer(self.system_settings.field('候診系統顯示器編號'))
+        return number_utils.get_integer(
+            self.system_settings.field("候診系統顯示器編號")
+        )
 
     def _set_db(self):
         self.host = None
@@ -93,16 +107,16 @@ class PyBulletin4(QtWidgets.QMainWindow):
         if config_file is not None:
             self.config_file = config_file
             config_dict = self._parse_config_file(self.config_file)
-            self.host = config_dict['host']
+            self.host = config_dict["host"]
             self.database = class_utils.get_db(
                 host=self.host,
-                user=config_dict['user'],
-                database=config_dict['database'],
-                password=config_dict['password'],
-                charset=config_dict['charset'],
-                buffered=config_dict['buffered'],
+                user=config_dict["user"],
+                database=config_dict["database"],
+                password=config_dict["password"],
+                charset=config_dict["charset"],
+                buffered=config_dict["buffered"],
             )
-            self.server_ip = config_dict['host']
+            self.server_ip = config_dict["host"]
         else:
             self.database = class_utils.get_db()
             self.config_file = self.database.CONFIG_FILE
@@ -116,21 +130,21 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self._set_clock()
 
     def _show_title(self):
-        title = self.system_settings.field('院所名稱') + ' 候診資訊系統'
+        title = self.system_settings.field("院所名稱") + " 候診資訊系統"
         self.ui.label_title.setText(title)
 
     @staticmethod
-    def _parse_config_file(config_file, db_section='db'):
+    def _parse_config_file(config_file, db_section="db"):
         config = configparser.ConfigParser()
         config.read(config_file)
 
         config_dict = {
-            'host': config[db_section]['host'],
-            'user': config[db_section]['user'],
-            'database': config[db_section]['database'],
-            'password': config[db_section]['password'],
-            'charset': config[db_section]['charset'],
-            'buffered': True
+            "host": config[db_section]["host"],
+            "user": config[db_section]["user"],
+            "database": config[db_section]["database"],
+            "password": config[db_section]["password"],
+            "charset": config[db_section]["charset"],
+            "buffered": True,
         }
 
         return config_dict
@@ -163,8 +177,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
     # 設定 css style
     def _set_style(self):
-        system_utils.set_background_image(
-            self.ui.tab_home, self.system_settings)
+        system_utils.set_background_image(self.ui.tab_home, self.system_settings)
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         system_utils.set_theme(self.ui, self.system_settings)
@@ -177,13 +190,13 @@ class PyBulletin4(QtWidgets.QMainWindow):
     def _notify_wait_arrive():
         try:
             mixer.init()
-            mixer.music.load('./icq.mp3')
+            mixer.music.load("./icq.mp3")
             mixer.music.play()
         except pygame.error:
             pass
 
     def _set_lower_audio(self):
-        if self.url in ['', None]:
+        if self.url in ["", None]:
             return
 
         try:
@@ -204,7 +217,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
     # 廣播叫號
     def _broadcast_speech(self, json_data):
-        if json_data == 'refresh_wait':
+        if json_data == "refresh_wait":
             self.show_seq_number = True
             self._show_waiting_list()
             self.show_seq_number = False
@@ -213,12 +226,12 @@ class PyBulletin4(QtWidgets.QMainWindow):
         try:
             voice_dict = json.loads(json_data)
         except Exception:
-            print('json error: ', json_data)
+            print("json error: ", json_data)
             return
 
-        regist_no = number_utils.get_integer(voice_dict['regist_no'])
-        room = number_utils.get_integer(voice_dict['room'])
-        sentence = voice_dict['sentence']
+        regist_no = number_utils.get_integer(voice_dict["regist_no"])
+        room = number_utils.get_integer(voice_dict["room"])
+        sentence = voice_dict["sentence"]
 
         self.waiting_number[room] = regist_no
 
@@ -233,9 +246,9 @@ class PyBulletin4(QtWidgets.QMainWindow):
         system_utils.speak(sentence)
 
     def _play_media(self):
-        if self.media_type == '輪播圖片':
+        if self.media_type == "輪播圖片":
             self._play_images()
-        elif self.media_type == '輪播影片':
+        elif self.media_type == "輪播影片":
             self._play_videos()
         else:
             self._play_url_stream()
@@ -248,17 +261,17 @@ class PyBulletin4(QtWidgets.QMainWindow):
     def _set_image_list(self):
         self.image_list_index = 1
 
-        sql = '''
+        sql = """
             SELECT * FROM system_settings
             WHERE
                 Field LIKE "輪播圖片檔%"
             ORDER BY Field
-        '''
+        """
         rows = self.database.select_record(sql)
 
         self.image_list = []
         for row in rows:
-            self.image_list.append(row['Value'])
+            self.image_list.append(row["Value"])
 
     def _image_list_timeout(self):
         self.image_list_index += 1
@@ -281,19 +294,19 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.ui.frame_youtube.setStyleSheet(f"border-image: url({image_file})")
 
     def _get_video_list(self):
-        sql = '''
+        sql = """
             SELECT * FROM system_settings
             WHERE
                 Field LIKE "輪播影片檔-%"
             ORDER BY Field
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             return []
 
         video_list = []
         for row in rows:
-            video_list.append(string_utils.xstr(row['Value']))
+            video_list.append(string_utils.xstr(row["Value"]))
 
         return video_list
 
@@ -305,11 +318,11 @@ class PyBulletin4(QtWidgets.QMainWindow):
         # events.event_attach(vlc.EventType.MediaPlayerEndReached, self.video_finished)
 
         win_id = int(self.ui.frame_youtube.winId())
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             self.vlc_player.set_hwnd(win_id)
-        elif sys.platform == 'linux':
+        elif sys.platform == "linux":
             self.vlc_player.set_xwindow(win_id)
-        elif sys.platform == 'darwin':
+        elif sys.platform == "darwin":
             self.vlc_player.set_nsobject(win_id)
 
         media_list = self.vlc_instance.media_list_new()
@@ -334,20 +347,20 @@ class PyBulletin4(QtWidgets.QMainWindow):
     def _set_stream_list(self):
         self.stream_index = 0
 
-        sql = '''
+        sql = """
             SELECT * FROM system_settings
             WHERE
                 Field LIKE "輪播影片檔%"
             ORDER BY Field
-        '''
+        """
         rows = self.database.select_record(sql)
 
         self.stream_list = []
-        if self.url not in ['', None]:
+        if self.url not in ["", None]:
             self.stream_list.append(self.url)
 
         for row in rows:
-            self.stream_list.append(row['Value'])
+            self.stream_list.append(row["Value"])
 
     def _play_url_stream(self):
         self._set_stream_list()
@@ -359,11 +372,11 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.vlc_player = self.vlc_instance.media_player_new()
 
         win_id = int(self.ui.frame_youtube.winId())
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             self.vlc_player.set_hwnd(win_id)
-        elif sys.platform == 'linux':
+        elif sys.platform == "linux":
             self.vlc_player.set_xwindow(win_id)
-        elif sys.platform == 'darwin':
+        elif sys.platform == "darwin":
             self.vlc_player.set_nsobject(win_id)
 
         stream_url = self._get_stream_url(self.stream_index)
@@ -380,14 +393,14 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
     def _get_stream_url(self, index):
         url = self.stream_list[index]
-        
+
         ydl_opts = {
-            'format': 'best',
-            'buffer-size': '4096',
+            "format": "best",
+            "buffer-size": "4096",
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-            stream_url = info['url']
+            stream_url = info["url"]
 
         return stream_url
 
@@ -441,20 +454,20 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
     def _set_marquee_list(self):
         self.marquee_list = []
-        sql = '''
+        sql = """
             SELECT * FROM system_settings
             WHERE
                 Field LIKE "跑馬燈訊息-%"
             ORDER BY Field
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
-            marquee = self.system_settings.field('院所名稱') + ' 關心您的健康'
+            marquee = self.system_settings.field("院所名稱") + " 關心您的健康"
             self.marquee_list.append(marquee)
             return
 
         for row in rows:
-            self.marquee_list.append(string_utils.xstr(row['Value']))
+            self.marquee_list.append(string_utils.xstr(row["Value"]))
 
     def _play_marquee(self):
         self._set_marquee_list()
@@ -473,7 +486,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self._timeout)
 
     def _timeout(self):
-        current_time = datetime.datetime.now().strftime('%H:%M')
+        current_time = datetime.datetime.now().strftime("%H:%M")
         if current_time in [self.period1, self.period2, self.period3]:
             self._show_waiting_list()
 
@@ -497,10 +510,10 @@ class PyBulletin4(QtWidgets.QMainWindow):
         current_period = registration_utils.get_current_period(self.system_settings)
 
         if current_page is None:
-            limit_script = ''
+            limit_script = ""
         else:
             start = current_page * MAX_WAITING_ROWS
-            limit_script = f'LIMIT {start}, {MAX_WAITING_ROWS}'
+            limit_script = f"LIMIT {start}, {MAX_WAITING_ROWS}"
 
         sql = f'''
             SELECT PatientKey, RegistNo, Name, Remark FROM wait
@@ -518,31 +531,31 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
     def _mask_name(self, name):
         name = string_utils.remove_not_chinese_character(name)
-        mask_name = name[0] + '〇' + name[2:6]
+        mask_name = name[0] + "〇" + name[2:6]
 
         return mask_name
 
     def _get_seq_number(self, room):
-        sql = f'''
+        sql = f"""
             SELECT SeqNumber FROM seq_number
             WHERE
                 Room = {room}
-        '''
+        """
         try:
             rows = self.database.select_record(sql)
             if len(rows) <= 0:
                 seq_number = 0
             else:
-                seq_number = number_utils.get_integer(rows[0]['SeqNumber'])
+                seq_number = number_utils.get_integer(rows[0]["SeqNumber"])
         except Exception:
             seq_number = 0
 
         return seq_number
 
     def _get_waiting_html(self, row, current_page=None):
-        html = ''
-        room = number_utils.get_integer(row['Room'])
-        doctor = string_utils.xstr(row['Doctor'])
+        html = ""
+        room = number_utils.get_integer(row["Room"])
+        doctor = string_utils.xstr(row["Doctor"])
         seq_number = self._get_seq_number(room)
 
         # if self.show_seq_number:
@@ -555,7 +568,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
         else:
             called_regist_no = self.waiting_number[room]
 
-        html += f'''
+        html += f"""
             <tr>
                 <td>
                     <table width="98%" style="font-weight:bold; font-family:Microsoft JhengHei">
@@ -577,34 +590,36 @@ class PyBulletin4(QtWidgets.QMainWindow):
                     </table>
                 </td>
             </tr>
-        '''
+        """
 
         waiting_rows = self._get_waiting_rows(room, current_page=current_page)
-        waiting_html = ''
+        waiting_html = ""
         for row_no, row in enumerate(waiting_rows):
             if row_no >= MAX_WAITING_ROWS:
                 break
 
-            patient_key = string_utils.xstr(row['PatientKey'])
-            regist_no = number_utils.get_integer(row['RegistNo'])
-            remark = string_utils.xstr(row['Remark'])
+            patient_key = string_utils.xstr(row["PatientKey"])
+            regist_no = number_utils.get_integer(row["RegistNo"])
+            remark = string_utils.xstr(row["Remark"])
 
-            label_remark = ''
-            if registration_utils.is_in_reservation_list(self.database, patient_key, datetime.datetime.now().date()):
-                label_remark = '預約'
+            label_remark = ""
+            if registration_utils.is_in_reservation_list(
+                self.database, patient_key, datetime.datetime.now().date()
+            ):
+                label_remark = "預約"
 
-            if '過號' in remark:
-                label_remark += '過號'
+            if "過號" in remark:
+                label_remark += "過號"
 
-            if self.show_name_only == 'Y':
-                label_remark = ''
+            if self.show_name_only == "Y":
+                label_remark = ""
 
             if regist_no == called_regist_no:
-                color = 'red'
+                color = "red"
             else:
-                color = 'navy'
+                color = "navy"
 
-            waiting_html += f'''
+            waiting_html += f"""
                 <tr bgcolor="LightCyan" style="color: {color}">
                     <td style="font-size: 72px; font-weight: bold" align="center">
                         {regist_no}
@@ -613,9 +628,9 @@ class PyBulletin4(QtWidgets.QMainWindow):
                         {self._mask_name(string_utils.xstr(row["Name"]))}<font size="7" color="magenta">{label_remark}</font>
                     </td>
                 </tr>
-            '''
+            """
 
-        html += f'''
+        html += f"""
             <tr>
                 <td>
                     <table width="98%" style="font-weight:bold; font-family:Microsoft JhengHei">
@@ -637,7 +652,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
                     </table>
                 </td>
             </tr>
-        '''
+        """
 
         return html
 
@@ -693,9 +708,11 @@ class PyBulletin4(QtWidgets.QMainWindow):
             if len(rows) <= 0:
                 room = 1
                 period = registration_utils.get_current_period(self.system_settings)
-                doctor = registration_utils.get_schedule_doctor(self.database, room, period)
-                
-                row = {'Room': room, 'Doctor': doctor}
+                doctor = registration_utils.get_schedule_doctor(
+                    self.database, room, period
+                )
+
+                row = {"Room": room, "Doctor": doctor}
             else:
                 row = rows[0]
         else:
@@ -707,10 +724,12 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self._show_waiting_list_html(row)
 
     def _show_waiting_list_html(self, row):
-        room = number_utils.get_integer(row['Room'])
+        room = number_utils.get_integer(row["Room"])
         waiting_rows_count = len(self._get_waiting_rows(room))
 
-        if waiting_rows_count > MAX_WAITING_ROWS:  # 超過一頁, 停止全域輪播, 改單一診間輪播
+        if (
+            waiting_rows_count > MAX_WAITING_ROWS
+        ):  # 超過一頁, 停止全域輪播, 改單一診間輪播
             self.rotation_timer.stop()
             self.current_row = row
             self.current_page = 0
@@ -733,7 +752,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
     def _show_waiting_list_row(self, row, current_page=None):
         waiting_html = self._get_waiting_html(row, current_page=current_page)
 
-        html = f'''
+        html = f"""
             <table align=center cellpadding="2" cellspacing="2" width="98%"
                 style=" background-color: #ccc;
                         -moz-border-radius: 5px;
@@ -744,11 +763,11 @@ class PyBulletin4(QtWidgets.QMainWindow):
                     {waiting_html}
                 </tbody>
             </table>
-        '''
+        """
         self.ui.textBrowser_waiting_list.setHtml(html)
 
     def _set_clock(self):
-        current_time = datetime.datetime.now().strftime('%H:%M')
+        current_time = datetime.datetime.now().strftime("%H:%M")
         self.ui.label_clock.setText(current_time)
 
         self.clock_timer = QtCore.QTimer(self)
@@ -756,7 +775,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.clock_timer.timeout.connect(self._clock_timeout)
 
     def _clock_timeout(self):
-        current_time = datetime.datetime.now().strftime('%H:%M')
+        current_time = datetime.datetime.now().strftime("%H:%M")
         self.ui.label_clock.setText(current_time)
 
 
@@ -770,5 +789,5 @@ def main():
 
 
 # 程式開始
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
