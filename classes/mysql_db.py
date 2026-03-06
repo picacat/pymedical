@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-import mysql.connector as mysql
-import time
 import configparser
 import os
 import re
+import time
 
-from libs import string_utils
-from libs import db_utils
+import mysql.connector as mysql
 
 from classes.database_interface import DatabaseInterface
+from libs import db_utils, string_utils
 
 BASE_DIR = os.path.abspath(os.getcwd())
 DB_PATH = "mysql"
@@ -27,13 +26,13 @@ class MySQLDatabase(DatabaseInterface):
             **kwargs: 資料庫連線參數。
         """
         self.cnx = None
-        self.host = 'localhost'
-        self.user = ''
-        self.password = ''
-        self.database = ''
-        self.charset = 'utf8mb4'
+        self.host = "localhost"
+        self.user = ""
+        self.password = ""
+        self.database = ""
+        self.charset = "utf8mb4"
         self.port = 3306
-        self.engine = 'MyISAM'
+        self.engine = "MyISAM"
 
         if config_file:
             self.CONFIG_FILE = config_file
@@ -41,9 +40,9 @@ class MySQLDatabase(DatabaseInterface):
         self.timeout = 0
         self._connect_to_db(**kwargs)
 
-    def __del__(self):
-        """解構時關閉資料庫連線。"""
-        self.close_database()
+    # def __del__(self):
+    #     """解構時關閉資料庫連線。"""
+    #     self.close_database()
 
     def connected(self):
         """檢查是否與資料庫成功連線。
@@ -68,11 +67,10 @@ class MySQLDatabase(DatabaseInterface):
         Returns:
             str: 資料庫名稱。
         """
-        sql = 'SELECT DATABASE()'
+        sql = "SELECT DATABASE()"
         rows = self.select_record(sql)
 
-        return rows[0]['DATABASE()'] if rows else None
-
+        return rows[0]["DATABASE()"] if rows else None
 
     def _connect_to_db(self, **kwargs):
         """建立資料庫連線，並初始化資料庫。
@@ -84,26 +82,26 @@ class MySQLDatabase(DatabaseInterface):
             if not kwargs:
                 config = configparser.ConfigParser()
                 config.read(self.CONFIG_FILE)
-                if 'db' in config:
-                    self.host = config['db'].get('host', self.host)
-                    self.user = config['db']['user']
-                    self.password = config['db']['password']
-                    self.database = config['db']['database']
-                    self.charset = config['db']['charset']
-                    self.port = config['db'].getint('port', 3306)
-                    self.engine = config['db'].get('engine', 'MyISAM')
+                if "db" in config:
+                    self.host = config["db"].get("host", self.host)
+                    self.user = config["db"]["user"]
+                    self.password = config["db"]["password"]
+                    self.database = config["db"]["database"]
+                    self.charset = config["db"]["charset"]
+                    self.port = config["db"].getint("port", 3306)
+                    self.engine = config["db"].get("engine", "MyISAM")
                 else:
                     print(f"⚠️ 找不到 [db] 區段，設定檔位置：{self.CONFIG_FILE}")
                     self.cnx = None
                     return
             else:
-                self.host = kwargs.get('host', self.host)
-                self.user = kwargs['user']
-                self.password = kwargs['password']
-                self.database = kwargs['database']
-                self.charset = kwargs['charset']
-                self.port = kwargs.get('port', 3306)
-                self.engine = kwargs.get('engine', 'MyISAM')
+                self.host = kwargs.get("host", self.host)
+                self.user = kwargs["user"]
+                self.password = kwargs["password"]
+                self.database = kwargs["database"]
+                self.charset = kwargs["charset"]
+                self.port = kwargs.get("port", 3306)
+                self.engine = kwargs.get("engine", "MyISAM")
 
             self._create_connection(use_db=False)
             self._initialize_database()
@@ -127,7 +125,7 @@ class MySQLDatabase(DatabaseInterface):
                 charset=self.charset,
                 port=self.port,
                 buffered=True,
-                collation=f'{self.charset}_general_ci',
+                collation=f"{self.charset}_general_ci",
             )
         except mysql.Error as err:
             print(f"Error: {err}")
@@ -140,10 +138,10 @@ class MySQLDatabase(DatabaseInterface):
             return
         try:
             cursor = self.cnx.cursor()
-            cursor.execute(f'''
+            cursor.execute(f"""
                 CREATE DATABASE IF NOT EXISTS `{self.database}`
                 DEFAULT CHARACTER SET {self.charset} COLLATE {self.charset}_general_ci
-            ''')
+            """)
             cursor.close()
             self.cnx.close()
             self._create_connection(use_db=True)
@@ -199,9 +197,9 @@ class MySQLDatabase(DatabaseInterface):
         Raises:
             顯示 QMessageBox 錯誤訊息，如果發生檔案不存在、編碼錯誤或 SQL 執行錯誤。
         """
-        table_file = os.path.join(BASE_DIR, DB_PATH, f'{table_name}.sql')
+        table_file = os.path.join(BASE_DIR, DB_PATH, f"{table_name}.sql")
         try:
-            with open(table_file, 'r', encoding='utf-8') as db_table:
+            with open(table_file, "r", encoding="utf-8") as db_table:
                 sql = db_table.read()
 
             # 移除 BOM
@@ -209,7 +207,7 @@ class MySQLDatabase(DatabaseInterface):
 
             # 逐條處理 SQL 指令
             final_statements = []
-            for statement in sql.split(';'):
+            for statement in sql.split(";"):
                 statement = statement.strip()
                 if not statement:
                     continue
@@ -219,14 +217,16 @@ class MySQLDatabase(DatabaseInterface):
                 if upper_stmt.startswith("CREATE TABLE"):
                     # 使用正則式替換 ENGINE 設定
                     statement = re.sub(
-                        r'ENGINE\s*=\s*\w+',
-                        f'ENGINE={self.engine}',
+                        r"ENGINE\s*=\s*\w+",
+                        f"ENGINE={self.engine}",
                         statement,
-                        flags=re.IGNORECASE
+                        flags=re.IGNORECASE,
                     )
                     # 若未指定 ENGINE，則補上 ENGINE 與 CHARSET 設定
                     if "ENGINE=" not in statement.upper():
-                        statement += f' ENGINE={self.engine} DEFAULT CHARSET={self.charset}'
+                        statement += (
+                            f" ENGINE={self.engine} DEFAULT CHARSET={self.charset}"
+                        )
 
                 final_statements.append(statement)
 
@@ -237,16 +237,51 @@ class MySQLDatabase(DatabaseInterface):
             self.cnx.commit()
 
         except FileNotFoundError:
-            self._show_error_message('資料表檔案不存在', f'找不到資料表定義檔：{table_file}')
+            self._show_error_message(
+                "資料表檔案不存在", f"找不到資料表定義檔：{table_file}"
+            )
         except UnicodeDecodeError:
-            self._show_error_message('編碼錯誤', f'無法解析檔案：{table_file}，請確認是否為 UTF-8 編碼。')
+            self._show_error_message(
+                "編碼錯誤", f"無法解析檔案：{table_file}，請確認是否為 UTF-8 編碼。"
+            )
         except mysql.connector.Error as err:
-            self._show_error_message('建表錯誤', f'建立資料表 {table_name} 時出現錯誤：\n{str(err)}')
+            self._show_error_message(
+                "建表錯誤", f"建立資料表 {table_name} 時出現錯誤：\n{str(err)}"
+            )
         finally:
             try:
                 cursor.close()
             except:
                 pass
+
+    # def select_record(self, sql, dictionary=True):
+    #     if not sql:
+    #         return []
+
+    #     retry_count = 2
+    #     for attempt in range(retry_count):
+    #         cursor = None
+    #         try:
+    #             cursor = self.get_cursor(dictionary)
+    #             cursor.execute(sql)
+    #             return cursor.fetchall()
+    #         except Exception as e:
+    #             print(sql)
+    #             print(f"⚠️ 執行 SQL 失敗（第 {attempt + 1} 次）：{e}")
+    #             self._reconnect()
+    #         finally:
+    #             if cursor:
+    #                 try:
+    #                     # 只有在連線還活著時才關閉 cursor
+    #                     if self.cnx and self.cnx.is_connected():
+    #                         cursor.close()
+    #                 except ReferenceError:
+    #                     # 如果物件已經消失，就讓它安靜地走吧
+    #                     pass
+    #                 except Exception:
+    #                     pass
+
+    #     return []
 
     def select_record(self, sql, dictionary=True):
         if not sql:
@@ -257,15 +292,29 @@ class MySQLDatabase(DatabaseInterface):
             cursor = None
             try:
                 cursor = self.get_cursor(dictionary)
+                if cursor is None:
+                    # 如果拿不到游標，嘗試重連後繼續下一次迴圈
+                    self._reconnect()
+                    continue
+
                 cursor.execute(sql)
-                return cursor.fetchall()
+                result = cursor.fetchall()
+                return result  # 成功拿到資料就回傳
+
             except Exception as e:
-                print(sql)
-                print(f"⚠️ 執行 SQL 失敗（第 {attempt+1} 次）：{e}")
+                print(f"SQL: {sql}")
+                print(f"⚠️ 執行 SQL 失敗（第 {attempt + 1} 次）：{e}")
                 self._reconnect()
             finally:
+                # 這裡是你修正的核心：確保關閉時不會崩潰
                 if cursor:
-                    cursor.close()
+                    try:
+                        # 檢查 self.cnx 是否還存在且連線中
+                        if self.cnx and self.cnx.is_connected():
+                            cursor.close()
+                    except (ReferenceError, Exception):
+                        # 徹底無視關閉游標時的任何異常
+                        pass
 
         return []
 
@@ -277,7 +326,7 @@ class MySQLDatabase(DatabaseInterface):
             primary_key (str): 主鍵欄位名稱。
             key_value (any): 要刪除的主鍵值。
         """
-        sql = f'DELETE FROM {table_name} WHERE {primary_key} = %s'
+        sql = f"DELETE FROM {table_name} WHERE {primary_key} = %s"
         cursor = self.get_cursor(dictionary=True)
         try:
             cursor.execute(sql, (key_value,))
@@ -296,9 +345,9 @@ class MySQLDatabase(DatabaseInterface):
         Returns:
             int: 自動遞增的主鍵 ID。
         """
-        fields_list = ', '.join(fields)
-        value_list = ', '.join(['%s'] * len(fields))
-        sql = f'INSERT INTO {table_name} ({fields_list}) VALUES ({value_list})'
+        fields_list = ", ".join(fields)
+        value_list = ", ".join(["%s"] * len(fields))
+        sql = f"INSERT INTO {table_name} ({fields_list}) VALUES ({value_list})"
         string_utils.str_to_none(data)
         cursor = self.get_cursor(dictionary=True)
         try:
@@ -308,7 +357,11 @@ class MySQLDatabase(DatabaseInterface):
             self.cnx.rollback()
             raise
         finally:
-            cursor.close()
+            try:
+                if cursor and self.cnx and self.cnx.is_connected():
+                    cursor.close()
+            except:
+                pass
 
         return self.get_last_insert_id()
 
@@ -322,8 +375,8 @@ class MySQLDatabase(DatabaseInterface):
             key_value (any): 主鍵值。
             data (list): 欲更新的欄位值。
         """
-        assignment_list = ', '.join([f'{field} = %s' for field in fields])
-        sql = f'UPDATE {table_name} SET {assignment_list} WHERE {primary_key} = %s'
+        assignment_list = ", ".join([f"{field} = %s" for field in fields])
+        sql = f"UPDATE {table_name} SET {assignment_list} WHERE {primary_key} = %s"
         string_utils.str_to_none(data)
 
         cursor = self.get_cursor(dictionary=True)
@@ -334,7 +387,12 @@ class MySQLDatabase(DatabaseInterface):
             self.cnx.rollback()
             raise
         finally:
-            cursor.close()
+            # 加入同樣的保護機制
+            try:
+                if cursor and self.cnx and self.cnx.is_connected():
+                    cursor.close()
+            except:
+                pass
 
     def exec_sql(self, sql, auto_commit=True):
         """執行任意 SQL 語句（非查詢類），例如 INSERT、UPDATE、DELETE。
@@ -373,7 +431,7 @@ class MySQLDatabase(DatabaseInterface):
             int: 最後插入的 ID。
         """
         row = self.select_record("SELECT LAST_INSERT_ID()")
-        return row[0]['LAST_INSERT_ID()'] if row else None
+        return row[0]["LAST_INSERT_ID()"] if row else None
 
     def get_last_auto_increment_key(self, table_name):
         """取得指定資料表的下一個自動編號值。
@@ -389,7 +447,7 @@ class MySQLDatabase(DatabaseInterface):
             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "{table_name}"
         '''
         row = self.select_record(sql)
-        return row[0]['AUTO_INCREMENT'] if row else None
+        return row[0]["AUTO_INCREMENT"] if row else None
 
     def host_name(self):
         """取得目前連線的主機名稱。"""
@@ -409,7 +467,7 @@ class MySQLDatabase(DatabaseInterface):
         Returns:
             list[str]: 資料表名稱列表。
         """
-        rows = self.select_record('SHOW TABLES')
+        rows = self.select_record("SHOW TABLES")
         return [list(row.values())[0] for row in rows]
 
     def ping(self):
@@ -426,7 +484,7 @@ class MySQLDatabase(DatabaseInterface):
 
     def check_table_exists(self, table_name):
         """檢查資料表是否存在，不存在時自動建立並寫入預設資料。"""
-        if 'InsReply' in table_name:
+        if "InsReply" in table_name:
             return
         if not self._is_table_exists(table_name):
             try:
@@ -454,10 +512,17 @@ class MySQLDatabase(DatabaseInterface):
         sql = f'SHOW COLUMNS FROM {table_name} LIKE "{search_column}"'
         rows = self.select_record(sql)
         column_exists = bool(rows)
-        field_match = column_exists and string_utils.xstr(rows[0]['Field']) == new_column
-        type_match = column_exists and string_utils.xstr(rows[0]['Type']).lower() == data_type.lower()
-        if (alter_type == 'add' and column_exists) or \
-           (alter_type in ['change', 'modify'] and (not column_exists or (field_match and type_match))):
+        field_match = (
+            column_exists and string_utils.xstr(rows[0]["Field"]) == new_column
+        )
+        type_match = (
+            column_exists
+            and string_utils.xstr(rows[0]["Type"]).lower() == data_type.lower()
+        )
+        if (alter_type == "add" and column_exists) or (
+            alter_type in ["change", "modify"]
+            and (not column_exists or (field_match and type_match))
+        ):
             return
 
         try:
@@ -465,12 +530,12 @@ class MySQLDatabase(DatabaseInterface):
         except Exception:
             pass
 
-        if alter_type == 'add':
-            sql = f'ALTER TABLE {table_name} ADD {column} {data_type}'
-        elif alter_type == 'change':
-            sql = f'ALTER TABLE {table_name} CHANGE {search_column} {new_column} {data_type}'
-        elif alter_type == 'modify':
-            sql = f'ALTER TABLE {table_name} MODIFY {new_column} {data_type}'
+        if alter_type == "add":
+            sql = f"ALTER TABLE {table_name} ADD {column} {data_type}"
+        elif alter_type == "change":
+            sql = f"ALTER TABLE {table_name} CHANGE {search_column} {new_column} {data_type}"
+        elif alter_type == "modify":
+            sql = f"ALTER TABLE {table_name} MODIFY {new_column} {data_type}"
         self.exec_sql(sql)
 
     def kill_sleep_connections(self, threshold=60):
@@ -484,22 +549,25 @@ class MySQLDatabase(DatabaseInterface):
 
         try:
             # 取得目前連線的 ID（避免自殺）
-            cursor.execute('SELECT CONNECTION_ID()')
-            my_id = cursor.fetchone()['CONNECTION_ID()']
+            cursor.execute("SELECT CONNECTION_ID()")
+            my_id = cursor.fetchone()["CONNECTION_ID()"]
 
             # 取得所有連線狀態
-            cursor.execute('SHOW PROCESSLIST')
+            cursor.execute("SHOW PROCESSLIST")
             processlist = cursor.fetchall()
 
             for row in processlist:
                 if (
-                    row['Command'] == 'Sleep' and
-                    row['Time'] > threshold and
-                    row['Id'] != my_id and
-                    row.get('db') in (self.database, None)  # 確保是連到同一個資料庫或未指定的資料庫
+                    row["Command"] == "Sleep"
+                    and row["Time"] > threshold
+                    and row["Id"] != my_id
+                    and row.get("db")
+                    in (self.database, None)  # 確保是連到同一個資料庫或未指定的資料庫
                 ):
-                    process_id = row['Id']
-                    print(f"🔪 Killing sleep connection: ID {process_id}, User: {row['User']}, Host: {row['Host']}")
+                    process_id = row["Id"]
+                    print(
+                        f"🔪 Killing sleep connection: ID {process_id}, User: {row['User']}, Host: {row['Host']}"
+                    )
                     try:
                         kill_cursor = self.get_cursor(dictionary=True, buffered=True)
                         kill_cursor.execute(f"KILL {process_id}")

@@ -486,7 +486,23 @@ class PyMedical(QtWidgets.QMainWindow):
             event.accept()
             pygame.quit()
             system_utils.remove_user_info(self.system_settings)
-            self.database.close_database()
+
+            # self.database.close_database()
+            # --- 修改重點：安全關閉資料庫 ---
+            if hasattr(self, "database") and self.database:
+                try:
+                    self.database.close_database()
+                    print("✅ 資料庫連線已安全關閉")
+                except Exception as e:
+                    print(f"❌ 關閉資料庫時發生錯誤: {e}")
+
+            if hasattr(self, "archive_db") and self.archive_db:
+                try:
+                    print("✅ 封存資料庫連線已安全關閉")
+                    self.archive_db.close_database()
+                except Exception as e:
+                    print(f"❌ 關閉封存資料庫時發生錯誤: {e}")
+
             self._close_socket()
             self.deactivate_ic_card_reader()
         else:

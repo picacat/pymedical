@@ -1,4 +1,3 @@
-
 # -*- coding: UTF-8 -*-
 
 import calendar
@@ -6,9 +5,18 @@ import calendar
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from libs import (case_utils, class_utils, date_utils, export_utils, nhi_utils,
-                  number_utils, printer_utils, string_utils, system_utils,
-                  ui_utils)
+from libs import (
+    case_utils,
+    class_utils,
+    date_utils,
+    export_utils,
+    nhi_utils,
+    number_utils,
+    printer_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 照護機構院民資料日報表 2023.03.16
@@ -31,9 +39,9 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
         self.month = int(self.month)
         self.apply_date = nhi_utils.get_apply_date(self.year, self.month)
 
-        if self.nursing_home_data != '全部':
-            self.nursing_home_id = self.nursing_home_data.split(',')[0]
-            self.nursing_home = self.nursing_home_data.split(',')[1]
+        if self.nursing_home_data != "全部":
+            self.nursing_home_id = self.nursing_home_data.split(",")[0]
+            self.nursing_home = self.nursing_home_data.split(",")[1]
         else:
             self.nursing_home_id = self.nursing_home_data
             self.nursing_home = self.nursing_home_data
@@ -59,11 +67,14 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
 
     # 設定GUI
     def _set_ui(self):
-        self.ui = ui_utils.load_ui_file(ui_utils.UI_STATISTICS_NURSING_HOME_DAILY_DATA, self)
+        self.ui = ui_utils.load_ui_file(
+            ui_utils.UI_STATISTICS_NURSING_HOME_DAILY_DATA, self
+        )
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         self.table_widget_daily_list = class_utils.get_table_widget(
-            self.ui.tableWidget_daily_list, self.database)
+            self.ui.tableWidget_daily_list, self.database
+        )
         self._set_table_width()
 
     # 設定信號
@@ -81,17 +92,19 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
 
     def _display_daily_list(self):
         last_day = calendar.monthrange(self.year, self.month)[1]
-        start_date = f'{self.year}-{self.month:0>2}-01'
-        end_date = f'{self.year}-{self.month:0>2}-{last_day:0>2}'
+        start_date = f"{self.year}-{self.month:0>2}-01"
+        end_date = f"{self.year}-{self.month:0>2}-{last_day:0>2}"
 
-        doctor_script = ''
-        nursing_home_script = ''
+        doctor_script = ""
+        nursing_home_script = ""
 
-        if self.doctor not in ['全部', '']:
+        if self.doctor not in ["全部", ""]:
             doctor_script = f'AND cases.Doctor = "{self.doctor}"'
 
-        if self.nursing_home_id not in ['全部', '']:
-            nursing_home_script = f'AND patient.NursingHomeID LIKE "%{self.nursing_home_id}%"'
+        if self.nursing_home_id not in ["全部", ""]:
+            nursing_home_script = (
+                f'AND patient.NursingHomeID LIKE "%{self.nursing_home_id}%"'
+            )
 
         sql = f'''
             SELECT * FROM cases
@@ -119,43 +132,43 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
         self.ui.tableWidget_daily_list.setRowCount(0)  # 歸零
         self.ui.tableWidget_daily_list.setRowCount(row_count)
         for row_no, row in enumerate(rows):
-            html = self._get_daily_html(row['CaseKey'], row['CaseDate'], '10px')
+            html = self._get_daily_html(row["CaseKey"], row["CaseDate"], "10px")
             text_edit = QtWidgets.QTextEdit(self.ui.tableWidget_daily_list)
             text_edit.setHtml(html)
             self.ui.tableWidget_daily_list.setCellWidget(row_no, 0, text_edit)
 
-    def _get_daily_html(self, case_key, case_date, font_size='12px'):
-        sql = f'''
+    def _get_daily_html(self, case_key, case_date, font_size="12px"):
+        sql = f"""
             SELECT TourArea FROM cases
             WHERE
                 CaseKey = {case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) > 0:
-            tour_area = string_utils.xstr(rows[0]['TourArea'])
+            tour_area = string_utils.xstr(rows[0]["TourArea"])
         else:
-            tour_area = ''
+            tour_area = ""
 
         daily_list = self._get_daily_list(case_date, font_size)
-        branch_name = self.system_settings.field('健保業務').split('業務組')[0]
-        branch = f'中保會{branch_name}分會'
+        branch_name = self.system_settings.field("健保業務").split("業務組")[0]
+        branch = f"中保會{branch_name}分會"
         tour_area = tour_area
         apply_year = self.year - 1911
-        case_date = date_utils.west_date_to_nhi_date(case_date, '-')
-        case_time = '08:00 - 12:00'
-        clinic_id = self.system_settings.field('院所代號')
+        case_date = date_utils.west_date_to_nhi_date(case_date, "-")
+        case_time = "08:00 - 12:00"
+        clinic_id = self.system_settings.field("院所代號")
 
         apply_date = f"{self.year}-{self.month}-01"
-        treat_head = '''
+        treat_head = """
             <td style="text-align: center;"></td>
             <td style="text-align: center;"></td>
             <td style="text-align: center;"></td>
             <td style="text-align: center;"></td>
             <td style="text-align: center;"></td>
             <td style="text-align: center;"></td>
-        '''
+        """
 
-        html = f'''
+        html = f"""
             <html>
             <body>
                 <table width="100%" cellspacing="0">
@@ -215,16 +228,16 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
                 </table>
             </body>
             </html>
-        '''
+        """
 
         return html
 
     def _get_ins_apply_row(self, case_key):
-        sql = f'''
+        sql = f"""
             SELECT DiagCode, InsApplyFee, InsTotalFee FROM insapply
             WHERE
                 CaseKey1 = {case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) > 0:
             row = rows[0]
@@ -250,68 +263,72 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
         '''
         rows = self.database.select_record(sql)
 
-        html = ''
+        html = ""
         for row_no, row in enumerate(rows):
-            if tour_area is None and string_utils.xstr(row['TourArea']) != '':
-                tour_area = string_utils.xstr(row['TourArea'])
+            if tour_area is None and string_utils.xstr(row["TourArea"]) != "":
+                tour_area = string_utils.xstr(row["TourArea"])
 
-            if string_utils.xstr(row['Gender']) == '男':
-                gender_code = '1'
-            elif string_utils.xstr(row['Gender']) == '女':
-                gender_code = '0'
+            if string_utils.xstr(row["Gender"]) == "男":
+                gender_code = "1"
+            elif string_utils.xstr(row["Gender"]) == "女":
+                gender_code = "0"
             else:
-                gender_code = ''
+                gender_code = ""
 
-            address = string_utils.xstr(row['Address'])
+            address = string_utils.xstr(row["Address"])
 
-            pres_days = case_utils.get_pres_days(self.database, row['CaseKey'])
-            if string_utils.xstr(row['PharmacyType']) == '申報':
-                pharmacy_code = 'A31'
+            pres_days = case_utils.get_pres_days(self.database, row["CaseKey"])
+            if string_utils.xstr(row["PharmacyType"]) == "申報":
+                pharmacy_code = "A31"
             else:
-                pharmacy_code = ''
+                pharmacy_code = ""
 
             pharmacy_cell = self._get_pharmacy_cell(pharmacy_code)
-            treat_cell = self._get_treat_cell(string_utils.xstr(row['CaseKey']))
+            treat_cell = self._get_treat_cell(string_utils.xstr(row["CaseKey"]))
             native_cell = self._get_native_cell(address, tour_area)
             share_code = nhi_utils.get_share_code(  # 內含2020.10 新制
                 self.database,
-                row['CaseDate'].date(),
-                string_utils.xstr(row['Share']),
-                string_utils.xstr(row['Treatment']),
-                number_utils.get_integer(row['Continuance']),
-                number_utils.get_integer(row['InterDrugFee']),
-                number_utils.get_integer(row['DiagShareFee']),
-                number_utils.get_integer(row['DrugShareFee']),
-                row
+                row["CaseDate"].date(),
+                string_utils.xstr(row["Share"]),
+                string_utils.xstr(row["Treatment"]),
+                number_utils.get_integer(row["Continuance"]),
+                number_utils.get_integer(row["InterDrugFee"]),
+                number_utils.get_integer(row["DiagShareFee"]),
+                number_utils.get_integer(row["DrugShareFee"]),
+                row,
             )
-            if share_code in ['S10', 'S20']:
-                share_code = ''
+            if share_code in ["S10", "S20"]:
+                share_code = ""
 
             sequence = row_no + 1
-            name = string_utils.xstr(row['Name'])
-            patient_id = string_utils.xstr(row['ID'])
-            birthday = string_utils.xstr(date_utils.west_date_to_nhi_date(row['Birthday'], '-'))
-            telephone = string_utils.xstr(row['Telephone'])
-            ins_apply_row = self._get_ins_apply_row(row['CaseKey'])
+            name = string_utils.xstr(row["Name"])
+            patient_id = string_utils.xstr(row["ID"])
+            birthday = string_utils.xstr(
+                date_utils.west_date_to_nhi_date(row["Birthday"], "-")
+            )
+            telephone = string_utils.xstr(row["Telephone"])
+            ins_apply_row = self._get_ins_apply_row(row["CaseKey"])
             if ins_apply_row is not None:
-                diag_code = string_utils.xstr(ins_apply_row['DiagCode'])
-                ins_apply_fee = string_utils.xstr(ins_apply_row['InsApplyFee'])
-                ins_total_fee = string_utils.xstr(ins_apply_row['InsTotalFee'])
+                diag_code = string_utils.xstr(ins_apply_row["DiagCode"])
+                ins_apply_fee = string_utils.xstr(ins_apply_row["InsApplyFee"])
+                ins_total_fee = string_utils.xstr(ins_apply_row["InsTotalFee"])
             else:
                 diag_code = nhi_utils.get_diag_code(
                     self.database,
                     self.system_settings,
-                    string_utils.xstr(row['Doctor']),
-                    string_utils.xstr(row['RegistType']),
-                    string_utils.xstr(row['TreatType']),
-                    number_utils.get_integer(row['DiagFee']),
+                    string_utils.xstr(row["Doctor"]),
+                    string_utils.xstr(row["RegistType"]),
+                    string_utils.xstr(row["TreatType"]),
+                    number_utils.get_integer(row["DiagFee"]),
                 )
-                ins_apply_fee = string_utils.xstr(row['InsApplyFee'])
-                ins_total_fee = string_utils.xstr(row['InsTotalFee'])
+                ins_apply_fee = string_utils.xstr(row["InsApplyFee"])
+                ins_total_fee = string_utils.xstr(row["InsTotalFee"])
 
-            share_fee = number_utils.get_integer(row['DiagShareFee']) + number_utils.get_integer(row['DrugShareFee'])
+            share_fee = number_utils.get_integer(
+                row["DiagShareFee"]
+            ) + number_utils.get_integer(row["DrugShareFee"])
 
-            html += f'''
+            html += f"""
                 <tr style="font-size: {font_size}">
                     <td style="text-align: center; vertical-align: middle">{sequence}</td>
                     <td style="text-align: center; vertical-align: middle">{name}</td>
@@ -330,7 +347,7 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
                     <td style="text-align: center; vertical-align: middle">{ins_apply_fee}</td>
                     <td style="text-align: center; vertical-align: middle">{share_code}</td>
                 </tr>
-            '''
+            """
 
         return html
 
@@ -340,21 +357,23 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
             '<td style="text-align: center; vertical-align: middle"></td>',
             '<td style="text-align: center; vertical-align: middle"></td>',
         ]
-        if pharmacy_code == '':
-            return ''.join(pharmacy_cell_list)
+        if pharmacy_code == "":
+            return "".join(pharmacy_cell_list)
 
         pharmacy_cell_dict = {
-            'A31': 0, 'A32': 1,
+            "A31": 0,
+            "A32": 1,
         }
-        pharmacy_cell_list[pharmacy_cell_dict[pharmacy_code]] = \
+        pharmacy_cell_list[pharmacy_cell_dict[pharmacy_code]] = (
             '<td style="text-align: center; vertical-align: middle">V</td>'
+        )
 
-        return ''.join(pharmacy_cell_list)
+        return "".join(pharmacy_cell_list)
 
     def _get_treat_cell(self, case_key):
         treat_code = nhi_utils.get_treat_code(self.database, case_key)
-        if treat_code in ['', None]:
-            treat_code = ''
+        if treat_code in ["", None]:
+            treat_code = ""
 
         treat_cell_list = [
             f'<td style="text-align: center; vertical-align: middle">{treat_code}</td>',
@@ -365,7 +384,7 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
             '<td style="text-align: center; vertical-align: middle"></td>',
         ]
 
-        return ''.join(treat_cell_list)
+        return "".join(treat_cell_list)
 
     @staticmethod
     def _get_native_cell(address, tour_area):
@@ -383,9 +402,11 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
         #     index = 0
 
         index = 0  # 全部設定為當地居民
-        native_cell_list[index] = '<td style="text-align: center; vertical-align: middle">V</td>'
+        native_cell_list[index] = (
+            '<td style="text-align: center; vertical-align: middle">V</td>'
+        )
 
-        return ''.join(native_cell_list)
+        return "".join(native_cell_list)
 
     def _display_ins_tour_apply(self):
         sql = f'''
@@ -401,21 +422,21 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
             GROUP BY insapply.CaseDate
         '''
         rows = self.database.select_record(sql)
-        tour_apply_html = self._get_tour_apply_html(rows, '12px')
+        tour_apply_html = self._get_tour_apply_html(rows, "12px")
         self.ui.textEdit_tour_apply.setHtml(tour_apply_html)
 
-    def _get_tour_apply_html(self, rows, font_size='12px'):
+    def _get_tour_apply_html(self, rows, font_size="12px"):
         doctor_list = self._get_doctor_list(rows, font_size)
         apply_list = self._get_apply_list(rows, font_size)
         apply_year = self.year - 1911
         apply_month = self.month
-        clinic_id = self.system_settings.field('院所代號')
-        clinic_name = self.system_settings.field('院所名稱')
-        owner = self.system_settings.field('負責醫師')
-        address = self.system_settings.field('院所地址')
-        telephone = self.system_settings.field('院所電話')
+        clinic_id = self.system_settings.field("院所代號")
+        clinic_name = self.system_settings.field("院所名稱")
+        owner = self.system_settings.field("負責醫師")
+        address = self.system_settings.field("院所地址")
+        telephone = self.system_settings.field("院所電話")
 
-        html = f'''
+        html = f"""
             <html>
             <body>
                 <h3 style="text-align: center;">全民健康保險中醫門診總額醫療資源不足地區醫療服務計畫論次費用申請表</h3>
@@ -507,40 +528,40 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
                 </table>
             </body>
             </html>
-        '''
+        """
 
         return html
 
     def _get_doctor_list(self, rows, font_size):
         row_count = len(rows)
 
-        html = ''
+        html = ""
         total_case_count = 0
         total_tour_fee = 0
         self.tour_ins_code_list = []
         for row_no, row in enumerate(rows):
-            if row['CaseDate'] is None:
+            if row["CaseDate"] is None:
                 continue
 
             sequence = row_no + 1
-            tour_area = string_utils.xstr(row['TourArea'])
-            case_date = date_utils.west_date_to_nhi_date(row['CaseDate'], '-')
-            case_count = self._get_case_count(row['CaseDate'])
+            tour_area = string_utils.xstr(row["TourArea"])
+            case_date = date_utils.west_date_to_nhi_date(row["CaseDate"], "-")
+            case_count = self._get_case_count(row["CaseDate"])
             total_case_count += case_count
-            if tour_area != '':
+            if tour_area != "":
                 tour_area_code = nhi_utils.TOUR_AREA_DICT[tour_area]
                 tour_ins_code = nhi_utils.TOUR_INS_CODE_DICT[tour_area_code]
                 tour_apply_fee = nhi_utils.TOUR_INS_FEE_DICT[tour_ins_code]
                 total_tour_fee += tour_apply_fee
                 self.tour_ins_code_list.append([tour_ins_code, case_count])
             else:
-                tour_ins_code = ''
-                tour_apply_fee = ''
+                tour_ins_code = ""
+                tour_apply_fee = ""
 
-            doctor_name = string_utils.xstr(row['DoctorName'])
-            doctor_id = string_utils.xstr(row['DoctorID'])
+            doctor_name = string_utils.xstr(row["DoctorName"])
+            doctor_id = string_utils.xstr(row["DoctorID"])
 
-            html += f'''
+            html += f"""
                 <tr style="font-size: {font_size}">
                     <td style="text-align: center; vertical-align: middle">{sequence}</td>
                     <td style="text-align: center; vertical-align: middle">{doctor_name}</td>
@@ -553,12 +574,12 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
                     <td style="text-align: center; vertical-align: middle">{case_count}</td>
                     <td style="text-align: center; vertical-align: middle">{tour_apply_fee}</td>
                 </tr>
-            '''
+            """
 
         total_row = 6
         if row_count < total_row:
-            for i in range(total_row-row_count):
-                html += '''
+            for i in range(total_row - row_count):
+                html += """
                     <tr>
                         <td style="text-align: center; vertical-align: middle"></td>
                         <td style="text-align: center; vertical-align: middle"></td>
@@ -573,9 +594,9 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
                         <td style="text-align: center; vertical-align: middle"></td>
                         <td style="text-align: center; vertical-align: middle"></td>
                     </tr>
-                '''
+                """
 
-        html += f'''
+        html += f"""
             <tr style="font-size: {font_size}">
                 <td style="text-align: center; vertical-align: middle" colspan="2">本頁小計</td>
                 <td style="text-align: center; vertical-align: middle"></td>
@@ -589,12 +610,12 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
                 <td style="text-align: center; vertical-align: middle"></td>
                 <td style="text-align: center; vertical-align: middle"></td>
             </tr>
-        '''
+        """
 
         return html
 
     def _get_apply_list(self, rows, font_size):
-        html = ''
+        html = ""
         col_no = 0
         total_ins_code_count = 0
         total_case_count = 0
@@ -613,7 +634,7 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
             total_case_count += case_count
             total_apply_fee = ins_code_count * tour_apply_fee
             total_fee += total_apply_fee
-            html += f'''
+            html += f"""
                 <tr style="font-size: {font_size}">
                     <td style="text-align: center; vertical-align: middle;">{ins_code}</td>
                     <td style="text-align: center; vertical-align: middle;">{ins_code_count}</td>
@@ -623,9 +644,9 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
                     <td style="text-align: center; vertical-align: middle;" colspan="2"></td>
                     <td style="text-align: center; vertical-align: middle;" colspan="2"></td>
                 </tr>
-            '''
+            """
 
-        html += f'''
+        html += f"""
             <tr style="font-size: {font_size}">
                 <td style="text-align: center; vertical-align: middle;">總計</td>
                 <td style="text-align: center; vertical-align: middle;">{total_ins_code_count}</td>
@@ -635,7 +656,7 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
                 <td style="text-align: center; vertical-align: middle;" colspan="2"></td>
                 <td style="text-align: center; vertical-align: middle;" colspan="2"></td>
             </tr>
-        '''
+        """
 
         return html
 
@@ -660,35 +681,48 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
             text_edit = self.ui.tableWidget_daily_list.cellWidget(row_no, 0)
             html = text_edit.toHtml()
             printer_utils.print_form_html(
-                self, self.database, self.system_settings, html, 'landscape'
+                self, self.database, self.system_settings, html, "landscape"
             )
 
     # 列印費用申請表
     def _print_tour_apply(self):
         html = self.ui.textEdit_tour_apply.toHtml()
         printer_utils.print_form_html(
-            self, self.database, self.system_settings, html, 'landscape'
+            self, self.database, self.system_settings, html, "landscape"
         )
 
     def _export_daily_list(self):
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "匯出提醒",
+            "<h3>請注意！匯出前要先執行過健保申報，產生過申報檔後才能正確匯出資料.</h3>",
+            "匯出前提醒.",
+        )
+
         options = QFileDialog.Options()
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            f'{self.year}年{self.month}月照護機構中醫照護方案門診日報表.xlsx',
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            f"{self.year}年{self.month}月照護機構中醫照護方案門診日報表.xlsx",
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
 
-        clinic_id = self.system_settings.field('院所代號')
+        clinic_id = self.system_settings.field("院所代號")
         export_utils.export_nursing_home_list_to_excel(
-            self.database, self.system_settings, excel_file_name, self.year, self.month, clinic_id,
+            self.database,
+            self.system_settings,
+            excel_file_name,
+            self.year,
+            self.month,
+            clinic_id,
         )
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            f'<h3>{excel_file_name}匯出完成.</h3>',
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            f"<h3>{excel_file_name}匯出完成.</h3>",
+            "Microsoft Excel 格式.",
         )
