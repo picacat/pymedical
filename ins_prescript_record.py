@@ -3745,6 +3745,8 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
                 self.ui.comboBox_package.currentText()
             )
 
+        self._set_total_dosage()
+
     # 服法變更
     def instruction_changed(self):
         if self.ui.comboBox_instruction.currentText() not in ["", None]:
@@ -4380,7 +4382,20 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         total_dosage, _ = prescript_utils.get_total_dosage(
             self.ui.tableWidget_prescript, database=self.database, medicine_set=1
         )
-        self.ui.label_total_dosage.setText(f"總量: {total_dosage:.1f}")
+        if self.system_settings.field("劑量模式") == "次劑量":
+            try:
+                packages = number_utils.get_integer(
+                    self.ui.comboBox_package.currentText()
+                )
+            except Exception:
+                packages = 1
+
+            dosage_per_day = total_dosage * packages
+            self.ui.label_total_dosage.setText(
+                f"包量: {total_dosage:.1f} 日量: {dosage_per_day:.1f}"
+            )
+        else:
+            self.ui.label_total_dosage.setText(f"總量: {total_dosage:.1f}")
 
     def _set_total_cost(self):
         if self.no_ins_cost == "Y":
