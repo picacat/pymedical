@@ -11,5 +11,5 @@ if not exist ".\venv\Scripts\activate.bat" (
 
 :: 啟用環境並執行
 call ".\venv\Scripts\activate.bat"
-start /min python pymedical.py
+start /min py -3-32 pymedical.py
 
