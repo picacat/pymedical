@@ -2633,7 +2633,8 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
     # 拷貝自費處方至健保處方
     def _copy_to_previous_prescript(self):
-        dest_tab_index = self.medicine_set - 2
+        # dest_tab_index = self.medicine_set - 2
+        dest_tab_index = 0  # 健保處方應該是0 2026-02-24 雲濤
         tab_prescript = self.parent.tab_list[dest_tab_index]
 
         if tab_prescript is None:

@@ -1,14 +1,9 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
 
-from libs import printer_utils
-from libs import system_utils
-from libs import string_utils
-from libs import number_utils
-from libs import case_utils
+from libs import case_utils, number_utils, printer_utils, string_utils, system_utils
 
 
 # 自費收據格式6 4.5 x 3 inches 友杏格式
@@ -28,7 +23,9 @@ class PrintReceiptSelfForm6:
 
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '自費醫療收據印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "自費醫療收據印表機"
+        )
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
 
         self.current_print = None
@@ -62,7 +59,9 @@ class PrintReceiptSelfForm6:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
@@ -71,10 +70,17 @@ class PrintReceiptSelfForm6:
         # self.printer.setPaperSize(QtCore.QSizeF(4.5, 3), QPrinter.Inch)
 
         height = 3.00
-        if self.system_settings.field('院所名稱') == '板橋聖昌中醫診所':
-          height = 3.66
+        if self.system_settings.field("院所名稱") == "板橋聖昌中醫診所":
+            height = 3.66
 
-        printer_utils.set_paper_size(self.printer, self.system_settings, 4.5, height, QPrinter.Inch, '自費醫療收據')
+        printer_utils.set_paper_size(
+            self.printer,
+            self.system_settings,
+            4.5,
+            height,
+            QPrinter.Inch,
+            "自費醫療收據",
+        )
 
         document = printer_utils.get_document(self.printer, self.font)
         document.setDocumentMargin(printer_utils.get_document_margin())
@@ -85,9 +91,14 @@ class PrintReceiptSelfForm6:
 
     def _get_prescript_html(self, row):
         case_record = printer_utils.get_case_html_6(
-            self.database, self.case_key, '自費', self.medicine_set,
+            self.database,
+            self.case_key,
+            "自費",
+            self.medicine_set,
         )
-        disease_record = printer_utils.get_disease_name(self.database, self.system_settings, self.case_key)
+        disease_record = printer_utils.get_disease_name(
+            self.database, self.system_settings, self.case_key
+        )
         # if disease_record != '':
         #     case_record += f'''
         #         <tr>
@@ -95,33 +106,39 @@ class PrintReceiptSelfForm6:
         #         </tr>
         #     '''
         prescript_record = printer_utils.get_prescript_html2(
-            self.database, self.system_settings,
-            self.case_key, self.medicine_set,
-            '費用收據', blocks=2, max_line=7, is_print_dosage=self.print_dosage)
+            self.database,
+            self.system_settings,
+            self.case_key,
+            self.medicine_set,
+            "費用收據",
+            blocks=2,
+            max_line=7,
+            is_print_dosage=self.print_dosage,
+        )
         instruction = printer_utils.get_instruction_html2(
             self.database, self.system_settings, self.case_key, self.medicine_set
         )
 
-        clinic_name = self.system_settings.field('院所名稱')
-        clinic_id = self.system_settings.field('院所代號')
-        clinic_telephone = self.system_settings.field('院所電話')
-        clinic_address = self.system_settings.field('院所地址')
+        clinic_name = self.system_settings.field("院所名稱")
+        clinic_id = self.system_settings.field("院所代號")
+        clinic_telephone = self.system_settings.field("院所電話")
+        clinic_address = self.system_settings.field("院所地址")
 
-        hint = '<br>* 本收據可為報稅之憑證, 請妥善保存, 遺失恕不補發'
-        sql = f'''
+        hint = "<br>* 本收據可為報稅之憑證, 請妥善保存, 遺失恕不補發"
+        sql = f"""
             SELECT TotalFee FROM cases
             WHERE
                 CaseKey = {self.case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) > 0:
-          row = rows[0]
-          total_fee = number_utils.get_integer(row['TotalFee'])
-          invoice_no = self.system_settings.field('統一編號')
-          if self.system_settings.field('列印印花稅總繳') == 'Y' and total_fee >= 250:
-              hint = f'<br>* 本收據印花稅已總繳, 統編: {invoice_no}'
+            row = rows[0]
+            total_fee = number_utils.get_integer(row["TotalFee"])
+            invoice_no = self.system_settings.field("統一編號")
+            if self.system_settings.field("列印印花稅總繳") == "Y" and total_fee >= 250:
+                hint = f"<br>* 本收據印花稅已總繳, 統編: {invoice_no}"
 
-        prescript_html = f'''
+        prescript_html = f"""
             <table cellspacing="0">
               <thead>
                 <tr>
@@ -148,58 +165,71 @@ class PrintReceiptSelfForm6:
             院所:{clinic_id} {clinic_name}<br>
             院址:{clinic_address} {clinic_telephone}
             {hint}
-        '''
+        """
 
         return prescript_html
 
     def _get_total_medicine_set(self):
-        sql = f'''
+        sql = f"""
             SELECT MedicineSet FROM prescript
             WHERE
               CaseKey = {self.case_key} AND
               MedicineSet >= 2
             GROUP BY MedicineSet
-        '''
+        """
         rows = self.database.select_record(sql)
 
         return len(rows)
 
     def _get_self_fees_html(self, row):
-        regist_no = number_utils.get_integer(row['RegistNo'])
+        regist_no = number_utils.get_integer(row["RegistNo"])
 
-        if string_utils.xstr(row['InsType']) == '健保':
+        if string_utils.xstr(row["InsType"]) == "健保":
             regist_fee = 0
         elif self.medicine_set == 2:
-            regist_fee = number_utils.get_integer(row['RegistFee'])
+            regist_fee = number_utils.get_integer(row["RegistFee"])
         else:
             regist_fee = 0
 
-        diag_fee = number_utils.get_integer(row['SDiagFee'])
-        drug_fee = number_utils.get_integer(row['SDrugFee'])
-        herb_fee = number_utils.get_integer(row['SHerbFee'])
-        expensive_fee = number_utils.get_integer(row['SExpensiveFee'])
-        acupuncture_fee = number_utils.get_integer(row['SAcupunctureFee'])
-        massage_fee = number_utils.get_integer(row['SMassageFee'])
-        dislocate_fee = number_utils.get_integer(row['SDislocateFee'])
-        material_fee = number_utils.get_integer(row['SMaterialFee'])
-        exam_fee = number_utils.get_integer(row['SExamFee'])
-        self_total_fee = number_utils.get_integer(row['SelfTotalFee'])
-        discount_fee = number_utils.get_integer(row['DiscountFee'])
-        total_fee = number_utils.get_integer(row['TotalFee'])
-        receipt_fee = number_utils.get_integer(row['ReceiptFee'])
+        diag_fee = number_utils.get_integer(row["SDiagFee"])
+        drug_fee = number_utils.get_integer(row["SDrugFee"])
+        herb_fee = number_utils.get_integer(row["SHerbFee"])
+        expensive_fee = number_utils.get_integer(row["SExpensiveFee"])
+        acupuncture_fee = number_utils.get_integer(row["SAcupunctureFee"])
+        massage_fee = number_utils.get_integer(row["SMassageFee"])
+        dislocate_fee = number_utils.get_integer(row["SDislocateFee"])
+        material_fee = number_utils.get_integer(row["SMaterialFee"])
+        exam_fee = number_utils.get_integer(row["SExamFee"])
+        self_total_fee = number_utils.get_integer(row["SelfTotalFee"])
+        discount_fee = number_utils.get_integer(row["DiscountFee"])
+        total_fee = number_utils.get_integer(row["TotalFee"])
+        receipt_fee = number_utils.get_integer(row["ReceiptFee"])
 
-        if self.system_settings.field('列印所有收費收據費用明細') == 'Y' and \
-                self.system_settings.field('列印所有收費收據各自金額') == 'Y':
+        if (
+            self.system_settings.field("列印所有收費收據費用明細") == "Y"
+            and self.system_settings.field("列印所有收費收據各自金額") == "Y"
+        ):
             self_total_fee = number_utils.get_integer(
-              case_utils.get_self_total_fee(self.database, self.case_key, self.medicine_set))
+                case_utils.get_self_total_fee(
+                    self.database, self.case_key, self.medicine_set
+                )
+            )
             discount_fee = number_utils.get_integer(
-              case_utils.get_discount_fee(self.database, self.case_key, self.medicine_set))
+                case_utils.get_discount_fee(
+                    self.database, self.case_key, self.medicine_set
+                )
+            )
             total_fee = number_utils.get_integer(
-              case_utils.get_total_fee(self.database, self.case_key, self.medicine_set))
+                case_utils.get_total_fee(
+                    self.database, self.case_key, self.medicine_set
+                )
+            )
 
             total_medicine_set = self._get_total_medicine_set()
 
-            if total_fee == 0 and total_medicine_set == 1:  # 只開自費1沒有批價，列印自費總批價
+            if (
+                total_fee == 0 and total_medicine_set == 1
+            ):  # 只開自費1沒有批價，列印自費總批價
                 pass
             else:
                 diag_fee = 0
@@ -231,7 +261,7 @@ class PrintReceiptSelfForm6:
             material_fee = 0
             exam_fee = 0
 
-        fees_html = f'''
+        fees_html = f"""
             <table width="100%" cellspacing="0">
               <tbody>
                 <tr>
@@ -303,16 +333,16 @@ class PrintReceiptSelfForm6:
                 </tr>
               </tbody>
             </table>
-        '''
+        """
 
         return fees_html
 
     def _html(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM cases
             WHERE
                 CaseKey = {self.case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
 
         if len(rows) <= 0:
@@ -321,14 +351,14 @@ class PrintReceiptSelfForm6:
         row = rows[0]
 
         prescript_html = self._get_prescript_html(row)
-        if self.system_settings.field('列印所有收費收據費用明細') == 'Y':
+        if self.system_settings.field("列印所有收費收據費用明細") == "Y":
             fees_html = self._get_self_fees_html(row)
         elif self.medicine_set == 2:  # 自費2才印費用
             fees_html = self._get_self_fees_html(row)
         else:
-            fees_html = ''
+            fees_html = ""
 
-        html = f'''
+        html = f"""
             <html>
               <body>
                 <table width="100%" cellspacing="0">
@@ -345,6 +375,6 @@ class PrintReceiptSelfForm6:
                 </table>
               </body>
             </html>
-        '''
+        """
 
         return html

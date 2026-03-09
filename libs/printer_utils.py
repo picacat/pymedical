@@ -2759,6 +2759,8 @@ def get_prescript_html2(
     wide_dosage=False,
     is_print_dosage=True,
 ):
+    clinic_name = system_setting.field("院所名稱")
+    special_clinic = ["鵲杏中醫診所"]
     print_location = system_setting.field("列印藥品存放位置")
     print_location_before_medicine = system_setting.field(
         "列印藥品存放位置在處方名稱前面"
@@ -3006,16 +3008,23 @@ def get_prescript_html2(
             unit = string_utils.xstr(prescript_block[3])
 
             try:
-                dosage_mode = string_utils.xstr(rows[row_no]["DosageMode"])
+                # dosage_mode = string_utils.xstr(rows[row_no]["DosageMode"])
+                dosage_mode = string_utils.xstr(prescript_block[8])
             except Exception:
                 dosage_mode = None
 
-            if (
-                medicine_set >= 2 and dosage_mode == "次劑量" and unit in ["顆", "錠"]
-            ):  # 悅兒親子 2024-08-23
-                total_dosage = number_utils.get_float(
-                    number_utils.get_float(dosage) * number_utils.get_integer(pres_days)
+            if medicine_set >= 2 and dosage_mode == "次劑量":  # 悅兒親子 2024-08-23
+                is_special_clinic_weight_loss = (
+                    clinic_name in special_clinic and "減重" in medicine_name
                 )
+                is_tablet_unit = clinic_name not in special_clinic and unit in [
+                    "顆",
+                    "錠",
+                ]
+                if is_special_clinic_weight_loss or is_tablet_unit:
+                    total_dosage = number_utils.get_float(
+                        dosage
+                    ) * number_utils.get_integer(pres_days)
 
             if total_dosage == "0.0":
                 dosage = ""
@@ -3149,13 +3158,28 @@ def get_prescript_html7(
         database, system_setting, case_key, medicine_set, instruction
     )
     order_script = "ORDER BY PrescriptNo, PrescriptKey"
+    # if system_setting.field("列印處方依照存放位置排序") == "Y":
+    #     order_script = """
+    #         ORDER BY
+    #             SUBSTRING(medicine.Location, 1, 1),
+    #             LENGTH(SUBSTRING(medicine.Location, 2)),
+    #             SUBSTRING(medicine.Location, 2)
+    #     """
     if system_setting.field("列印處方依照存放位置排序") == "Y":
         order_script = """
-            ORDER BY
-                SUBSTRING(medicine.Location, 1, 1), 
-                LENGTH(SUBSTRING(medicine.Location, 2)),
-                SUBSTRING(medicine.Location, 2)
+            ORDER BY 
+                -- 1. 先排純字母部分 (例如 A, B, AA)
+                REGEXP_SUBSTR(medicine.Location, '^[A-Za-z]+'),
+                
+                -- 2. 排字母後的第一組數字 (例如 A3 中的 3, B5-10 中的 5)
+                -- 先抓出數字部分，轉為數值排序
+                CAST(REGEXP_SUBSTR(medicine.Location, '[0-9]+') AS UNSIGNED),
+                
+                -- 3. 排槓號後的第二組數字 (處理 A3-1, A3-10)
+                -- 如果沒有槓號，這層會是 0，不影響排序
+                CAST(SUBSTRING_INDEX(CONCAT(medicine.Location, '-0'), '-', -2) AS UNSIGNED)
         """
+
     sql = f"""
         SELECT prescript.*, medicine.Location, medicine.MedicineAlias FROM prescript
             LEFT JOIN medicine ON medicine.MedicineKey = prescript.MedicineKey
@@ -4412,6 +4436,7 @@ def get_medicine_detail(
         ins_code,
         instruction,
         medicine_type,
+        dosage_mode,
     )
 
 
@@ -7648,10 +7673,11 @@ def get_prescript_html23(
         database, system_setting, case_key, medicine_set, instruction
     )
     order_script = "ORDER BY PrescriptNo, PrescriptKey"
+
     if system_setting.field("列印處方依照存放位置排序") == "Y":
         order_script = """
             ORDER BY
-                SUBSTRING(medicine.Location, 1, 1), 
+                SUBSTRING(medicine.Location, 1, 1),
                 LENGTH(SUBSTRING(medicine.Location, 2)),
                 SUBSTRING(medicine.Location, 2)
         """
@@ -8753,6 +8779,10 @@ def get_title_image(
             "明醫中醫診所",
         ]:
             br_line = "<br><br><br><br><br>"
+        elif clinic_name in [
+            "木林中醫診所",
+        ]:
+            br_line = "<br><br><br><br><br><br><br><br><br><br><br>"
         elif clinic_name in ["澄美中醫診所", "澄馨中醫診所"]:
             br_line = "<br><br>"
         else:
@@ -9356,7 +9386,7 @@ def get_prescript_html24(
     if system_setting.field("列印處方依照存放位置排序") == "Y":
         order_script = """
             ORDER BY
-                SUBSTRING(medicine.Location, 1, 1), 
+                SUBSTRING(medicine.Location, 1, 1),
                 LENGTH(SUBSTRING(medicine.Location, 2)),
                 SUBSTRING(medicine.Location, 2)
         """

@@ -1,10 +1,10 @@
-
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import QMessageBox, QPushButton
 import os
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox, QPushButton
 
 from libs import system_utils
 
@@ -12,13 +12,12 @@ try:
     # os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
     os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
     import cv2
+
     import_cv2 = True
 except ImportError:
     import_cv2 = False
 
-from libs import class_utils
-from libs import ui_utils
-from libs import string_utils
+from libs import class_utils, string_utils, ui_utils
 
 
 # 主視窗
@@ -42,9 +41,9 @@ class DialogCaptureImage(QtWidgets.QDialog):
         if not import_cv2:
             system_utils.show_message_box(
                 QMessageBox.Critical,
-                '模組未安裝',
+                "模組未安裝",
                 '<font size="5" color="red"><b>找不到OpenCV模組, 無法執行照相功能.</b></font>',
-                '請聯絡軟體工程師安裝OpenCV模組.'
+                "請聯絡軟體工程師安裝OpenCV模組.",
             )
             return
 
@@ -57,13 +56,13 @@ class DialogCaptureImage(QtWidgets.QDialog):
             if not self.camera.isOpened():
                 system_utils.show_message_box(
                     QMessageBox.Critical,
-                    '相機模組未安裝',
+                    "相機模組未安裝",
                     '<font size="5" color="red"><b>找不到相機模組, 無法執行照相功能.</b></font>',
-                    '請選購並安裝相機模組.'
+                    "請選購並安裝相機模組.",
                 )
                 return
 
-        self.image_file_path = self.system_settings.field('影像檔路徑')
+        self.image_file_path = self.system_settings.field("影像檔路徑")
         self.WIDTH, self.HEIGHT = self._get_camera_max_resolution(self.camera)
 
         # if self.WIDTH == 1920:
@@ -86,7 +85,7 @@ class DialogCaptureImage(QtWidgets.QDialog):
         self._timer.start()
         self._timer.timeout.connect(self._query_frame)
 
-        if self.capture_type == '病歷影像':
+        if self.capture_type == "病歷影像":
             self.read_images()
 
     def _get_camera_max_resolution(self, camera):
@@ -99,7 +98,7 @@ class DialogCaptureImage(QtWidgets.QDialog):
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
 
         # 2024-05-20 增加預覽速度
-        camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('M', 'J', 'P', 'G'))
+        camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc("M", "J", "P", "G"))
         # 2024-05-20 開啟自動對焦
         camera.set(cv2.CAP_PROP_AUTOFOCUS, 1)
 
@@ -112,15 +111,17 @@ class DialogCaptureImage(QtWidgets.QDialog):
     def __del__(self):
         self.close_all()
 
-    def closeEvent(self, event):
-        if self.camera is not None and self.camera.isOpened():
-            self._timer.stop()
-            self.camera.release()
-            cv2.destroyAllWindows()
-
-    # 關閉
     def close_all(self):
-        pass
+        if self.camera is not None:
+            if self._timer.isActive():
+                self._timer.stop()
+            self.camera.release()
+            self.camera = None  # 確保設為 None
+        cv2.destroyAllWindows()
+
+    def closeEvent(self, event):
+        self.close_all()
+        event.accept()
 
     # 設定GUI
     def _set_ui(self):
@@ -128,13 +129,13 @@ class DialogCaptureImage(QtWidgets.QDialog):
         # self.setFixedSize(self.size())  # non resizable dialog
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('關閉')
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("關閉")
         self.table_widget_capture_images = class_utils.get_table_widget(
             self.ui.tableWidget_capture_images, self.database
         )
         self._set_table_width()
 
-        if self.capture_type == '病患照片':
+        if self.capture_type == "病患照片":
             self.ui.tableWidget_capture_images.setVisible(False)
             self.resize(QtCore.QSize(800, 600))
 
@@ -167,7 +168,15 @@ class DialogCaptureImage(QtWidgets.QDialog):
         self.close()
 
     def _query_frame(self):
-        ret, self.frame = self.camera.read()
+        ret, frame = self.camera.read()
+
+        # 檢查影像是否成功讀取
+        if not ret or frame is None:
+            print("警告：無法讀取相機影像")
+            return  # 直接跳出函式，避免執行後續的 .shape
+
+        self.frame = frame  # 確保 self.frame 是有效的
+
         if self.ui.checkBox_flip_image.isChecked():
             self.frame = cv2.flip(self.frame, 1)
 
@@ -175,23 +184,35 @@ class DialogCaptureImage(QtWidgets.QDialog):
         bytes_per_line = channels * img_cols
 
         cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB, self.frame)
-        image = QtGui.QImage(self.frame.data, img_cols, img_rows, bytes_per_line, QtGui.QImage.Format_RGB888)
+        image = QtGui.QImage(
+            self.frame.data,
+            img_cols,
+            img_rows,
+            bytes_per_line,
+            QtGui.QImage.Format_RGB888,
+        )
 
         self.ui.label_camera.setPixmap(
             QtGui.QPixmap.fromImage(image).scaled(
-                self.PREVIEW_WIDTH, self.PREVIEW_HEIGHT,
-                QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
+                self.PREVIEW_WIDTH,
+                self.PREVIEW_HEIGHT,
+                QtCore.Qt.KeepAspectRatio,
+                QtCore.Qt.SmoothTransformation,
             )
         )
 
     def _capture_image(self):
-        if self.capture_type == '病患照片':
+        if self.capture_type == "病患照片":
             self._capture_personal_photo()
         else:
             self._capture_medical_record_images()
 
     def _capture_personal_photo(self):
-        filename = f'patient_{self.patient_key:0>6}.jpg'
+        if not hasattr(self, "frame") or self.frame is None:
+            QtWidgets.QMessageBox.warning(self, "錯誤", "目前沒有影像可供拍攝")
+            return
+
+        filename = f"patient_{self.patient_key:0>6}.jpg"
         full_filename = os.path.join(self.image_file_path, filename)
 
         frame = self.frame
@@ -201,6 +222,10 @@ class DialogCaptureImage(QtWidgets.QDialog):
         self.close()
 
     def _capture_medical_record_images(self):
+        # 確保 self.frame 真的有東西
+        if not hasattr(self, "frame") or self.frame is None:
+            return
+
         filename, full_filename = self._get_filename()
 
         frame = self.frame
@@ -211,25 +236,31 @@ class DialogCaptureImage(QtWidgets.QDialog):
         self.read_images()
 
     def _insert_record(self, filename):
-        fields = ['CaseKey', 'PatientKey', 'Filename']
+        fields = ["CaseKey", "PatientKey", "Filename"]
         data = [self.case_key, self.patient_key, filename]
-        self.database.insert_record('images', fields, data)
+        self.database.insert_record("images", fields, data)
 
     def _insert_table_widget(self, frame):
         img_rows, img_cols, channels = frame.shape
         bytes_per_line = channels * img_cols
         cv2.cvtColor(frame, cv2.COLOR_BGR2RGB, frame)
-        image = QtGui.QImage(frame.data, img_cols, img_rows, bytes_per_line, QtGui.QImage.Format_RGB888)
+        image = QtGui.QImage(
+            frame.data, img_cols, img_rows, bytes_per_line, QtGui.QImage.Format_RGB888
+        )
         image_size = QtCore.QSize(self.PREVIEW_WIDTH, self.PREVIEW_HEIGHT)
 
-        self.ui.tableWidget_capture_images.setRowCount(self.ui.tableWidget_capture_images.rowCount() + 1)
+        self.ui.tableWidget_capture_images.setRowCount(
+            self.ui.tableWidget_capture_images.rowCount() + 1
+        )
         row_no = self.ui.tableWidget_capture_images.rowCount() - 1
 
         image_label = QtWidgets.QLabel(self.ui.tableWidget_capture_images)
         image_label.setPixmap(
             QtGui.QPixmap.fromImage(image).scaled(
-                self.PREVIEW_WIDTH, self.PREVIEW_HEIGHT,
-                QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
+                self.PREVIEW_WIDTH,
+                self.PREVIEW_HEIGHT,
+                QtCore.Qt.KeepAspectRatio,
+                QtCore.Qt.SmoothTransformation,
             )
         )
         image_label.resize(image_size)
@@ -237,27 +268,27 @@ class DialogCaptureImage(QtWidgets.QDialog):
         self.ui.tableWidget_capture_images.resizeRowsToContents()
 
     def _get_filename(self):
-        sql = f'''
+        sql = f"""
             SELECT ImageKey FROM images
             WHERE
                 CaseKey = {self.case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
         sequence = len(rows) + 1
-        filename = f'{self.case_key}-{sequence}.jpg'
-        full_filename = os.path.join(self.system_settings.field('影像檔路徑'), filename)
+        filename = f"{self.case_key}-{sequence}.jpg"
+        full_filename = os.path.join(self.system_settings.field("影像檔路徑"), filename)
 
         return filename, full_filename
 
     def read_images(self):
         self.image_list = []
 
-        sql = f'''
+        sql = f"""
             SELECT * FROM images
             WHERE
                 images.CaseKey = {self.case_key}
             ORDER BY TimeStamp
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             return
@@ -279,8 +310,8 @@ class DialogCaptureImage(QtWidgets.QDialog):
                 if index >= image_count:
                     break
 
-                image_date = rows[index]['TimeStamp']
-                filename = string_utils.xstr(rows[index]['Filename'])
+                image_date = rows[index]["TimeStamp"]
+                filename = string_utils.xstr(rows[index]["Filename"])
                 full_filename = os.path.join(self.image_file_path, filename)
                 image_label = QtWidgets.QLabel(self.ui.tableWidget_capture_images)
                 image_label.setTextFormat(QtCore.Qt.RichText)
@@ -288,7 +319,9 @@ class DialogCaptureImage(QtWidgets.QDialog):
                     {image_date}<br>
                     <img src="{full_filename}" width="320" height="180" align=middle><br>
                 ''')
-                self.ui.tableWidget_capture_images.setCellWidget(row_no, col_no, image_label)
+                self.ui.tableWidget_capture_images.setCellWidget(
+                    row_no, col_no, image_label
+                )
                 self.image_list.append(filename)
 
         self.ui.tableWidget_capture_images.resizeRowsToContents()
@@ -300,10 +333,10 @@ class DialogCaptureImage(QtWidgets.QDialog):
             return
 
         filename = self.image_list[index]
-        full_filename = os.path.join(self.system_settings.field('影像檔路徑'), filename)
+        full_filename = os.path.join(self.system_settings.field("影像檔路徑"), filename)
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle('刪除影像檔')
+        msg_box.setWindowTitle("刪除影像檔")
         msg_box.setText(f'''
             <font size='4' color='red'>
                 <b>確定刪除此筆影像資料?</b>
@@ -318,7 +351,7 @@ class DialogCaptureImage(QtWidgets.QDialog):
             return
 
         filename = self.image_list[index]
-        full_filename = os.path.join(self.system_settings.field('影像檔路徑'), filename)
+        full_filename = os.path.join(self.system_settings.field("影像檔路徑"), filename)
         sql = f'''
             DELETE FROM images
             WHERE

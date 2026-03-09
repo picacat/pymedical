@@ -3600,7 +3600,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-647</y>
+              <y>-686</y>
               <width>1301</width>
               <height>1478</height>
              </rect>
@@ -4830,6 +4830,13 @@
                    <widget class="QCheckBox" name="checkBox_no_insufficent_medicine">
                     <property name="text">
                      <string>庫存量不足開藥不要提醒</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_no_deactivate_medicine">
+                    <property name="text">
+                     <string>不要顯示停用的藥品</string>
                     </property>
                    </widget>
                   </item>
