@@ -308,9 +308,13 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         #     self.database, self.system_settings, case_date, patient_key, card, course
         # )
 
-        primary_treatment, secondary_treatment = case_utils.extract_treatment(
-            self.parent.medical_record["Treatment"]
-        )
+        if self.call_from in ["參考病歷"]:
+            primary_treatment = None
+        else:
+            primary_treatment, secondary_treatment = case_utils.extract_treatment(
+                self.parent.medical_record["Treatment"]
+            )
+
         for treatment in ins_treat_list:
             ins_code = nhi_utils.TREAT_DICT[treatment]
 

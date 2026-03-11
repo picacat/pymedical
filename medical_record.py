@@ -80,7 +80,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self._set_data()
         self._set_prescript_tab_cornor_widget()
 
-        self.is_closed = bool(self.medical_record["IsClosed"])
+        try:
+            self.is_closed = bool(self.medical_record["IsClosed"])
+        except Exception:
+            self.is_closed = False
 
         if self.call_from == "醫師看診作業":
             self._set_in_progress('"Y"')
