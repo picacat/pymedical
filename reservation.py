@@ -3458,7 +3458,7 @@ class Reservation(QtWidgets.QMainWindow):
         msg_box.setWindowTitle("鎖定網路預約掛號")
         msg_box.setText(f"""
             <font size='4' color='red'>
-                <b>確定鎖定病歷號{patient_key}{name}的網路預約掛號?</b>
+                <b>確定鎖定或解除病歷號{patient_key}{name}的網路預約掛號?</b>
             </font>
         """)
         msg_box.setInformativeText("注意！預約掛號鎖定後, 將無法透過網路取消預約!")
