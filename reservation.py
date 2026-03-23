@@ -58,6 +58,7 @@ class Reservation(QtWidgets.QMainWindow):
         self.wide_table_header = ["時間", "診號", "姓名", "備註", "reserve_key"]
         self.wide_table_header_width = [60, 50, 100, 204, 60]
         self.no_reservation_time = self.system_settings.field("預約班表不顯示時間")
+        self.show_remain = self.system_settings.field("預約班表顯示剩餘次數")
         self.show_last_case_remark = self.system_settings.field(
             "預約名單顯示上次病歷備註"
         )
@@ -1957,6 +1958,29 @@ class Reservation(QtWidgets.QMainWindow):
         else:
             self._normal_arrival(reserve_key, name)
 
+    def _is_first_visit(self, patient_key, name):
+        sql = f'''
+            SELECT * FROM patient
+            WHERE
+                PatientKey = {patient_key} AND
+                Name = "{name}"
+        '''
+        rows = self.database.select_record(sql)
+        if rows:
+            return False
+
+        sql = f'''
+            SELECT * FROM temp_patient
+            WHERE
+                TempPatientKey = {patient_key} AND
+                Name = "{name}"
+        '''
+        rows = self.database.select_record(sql)
+        if rows:
+            return True
+        else:
+            return False
+
     def _check_reservation_first_visit(self, reserve_key):
         if reserve_key is None:
             return None
@@ -1972,8 +1996,10 @@ class Reservation(QtWidgets.QMainWindow):
 
         row = rows[0]
 
-        reservation_source = string_utils.xstr(row["Source"])
-        if reservation_source in ["初診預約", "網路初診預約", "視訊初診預約"]:
+        patient_key = string_utils.xstr(row["PatientKey"])
+        name = string_utils.xstr(row["Name"])
+
+        if self._is_first_visit(patient_key, name):
             sql = f"""
                 SELECT ID FROM temp_patient
                 WHERE
@@ -2619,9 +2645,43 @@ class Reservation(QtWidgets.QMainWindow):
                 reservation_count += 1
 
         if reservation_count > 0:
-            status = f"{period[:1]}: {reservation_count}人"
+            if self.show_remain == "Y":
+                remain = self._get_reservation_remain(reservation_date, period, doctor)
+                status = f"{period[:1]}: {reservation_count} 餘{remain}"
+            else:
+                status = f"{period[:1]}: {reservation_count}人"
 
         return status
+
+    def _get_reservation_remain(self, reservation_date, period, doctor):
+        # 1. 取得星期
+        date_obj = datetime.datetime.strptime(reservation_date, "%Y-%m-%d")
+        weekday_name = date_utils.get_weekday_name(date_obj.weekday())
+
+        # 2. 用一條 SQL 搞定：計算「時段表中有」但「預約表中沒有」的數量
+        # 我們利用 LEFT JOIN 結合 IS NULL 來過濾
+        sql = f'''
+            SELECT COUNT(T.Time) as remain_count
+            FROM (
+                -- 這是你的時段樣板子查詢
+                SELECT Time FROM reservation_table
+                WHERE Doctor = "{doctor}" 
+                AND Period = "{period}"
+                AND (Weekday = "{weekday_name}" OR (Weekday IS NULL AND ReserveNo IS NOT NULL))
+            ) AS T
+            LEFT JOIN reserve AS R ON 
+                R.ReserveDate = CONCAT("{reservation_date} ", T.Time, ":00") AND
+                R.Period = "{period}" AND
+                R.Doctor = "{doctor}"
+            WHERE R.ReserveKey IS NULL
+        '''
+
+        result = self.database.select_record(sql)
+
+        if result and len(result) > 0:
+            return result[0]["remain_count"]
+
+        return 0
 
     def _calendar_changed(self):
         current_row = self.ui.tableWidget_calendar.currentRow()

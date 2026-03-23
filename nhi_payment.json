@@ -153,7 +153,7 @@
         "InsCode": "A21",
         "Amount": 38,
         "Remark": "{\"原日期\": \"2025-05-01\",  \"原支付點數\": 37}",
-        "TimeStamp": "2025-04-26 07:56:17"
+        "TimeStamp": "2025-04-28 13:04:18"
     },
     {
         "ChargeSettingsKey": 13,
@@ -1334,9 +1334,9 @@
         "TreatType": null,
         "Course": null,
         "InsCode": "P5408C",
-        "Amount": 1553,
-        "Remark": "中醫師訪視費所訂點數含診察(含傷科指導)、處方、護理、電子資料處理及行政作業成本等。",
-        "TimeStamp": "2023-01-30 10:47:01"
+        "Amount": 1631,
+        "Remark": "{\"原日期\": \"2026-04-01\",  \"原支付點數\": 1553}",
+        "TimeStamp": "2026-03-23 15:11:40"
     },
     {
         "ChargeSettingsKey": 104,
@@ -1347,9 +1347,9 @@
         "TreatType": null,
         "Course": null,
         "InsCode": "P5409C",
-        "Amount": 1709,
-        "Remark": "中醫師訪視費所訂點數含診察(含傷科指導)、處方、護理、電子資料處理及行政作業成本等。",
-        "TimeStamp": "2023-01-30 10:47:01"
+        "Amount": 2154,
+        "Remark": "{\"原日期\": \"2026-04-01\",  \"原支付點數\": 1709}",
+        "TimeStamp": "2026-03-23 15:12:49"
     },
     {
         "ChargeSettingsKey": 200,
@@ -2236,7 +2236,7 @@
         "TimeStamp": "2023-02-28 09:03:45"
     },
     {
-        "ChargeSettingsKey": 318,
+        "ChargeSettingsKey": 317,
         "ChargeType": "照護費",
         "ItemName": "特定癌症照護藥品調劑費",
         "InsType": null,
@@ -2246,6 +2246,6 @@
         "InsCode": "P56008",
         "Amount": 50,
         "Remark": null,
-        "TimeStamp": "2025-05-06 09:08:56"
+        "TimeStamp": "2025-05-14 08:43:16"
     }
 ]

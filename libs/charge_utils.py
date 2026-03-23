@@ -1011,7 +1011,9 @@ def get_item_name_from_ins_code(database, ins_code):
 
 # 取得健保門診診察費
 # 取第一段診察費, 分有無護理人員, 支援醫師等到申報才調整
-def get_ins_diag_fee(database, system_settings, course=1, diag_code=None):
+def get_ins_diag_fee(
+    database, system_settings, course=1, diag_code=None, case_date=None
+):
     ins_diag_fee = 0
 
     if course >= 2:  # 療程無診察費
@@ -1024,7 +1026,7 @@ def get_ins_diag_fee(database, system_settings, course=1, diag_code=None):
         else:
             diag_code = "A02"
 
-    ins_diag_fee = get_ins_fee_from_ins_code(database, diag_code)
+    ins_diag_fee = get_ins_fee_from_ins_code(database, diag_code, case_date=case_date)
 
     return ins_diag_fee
 
@@ -1420,6 +1422,8 @@ def get_ins_fee(database, system_settings, table_widget_ins_care=None, **kwargs)
         integrate_care = None
 
     case_key = kwargs["case_key"]
+    case_date, _ = case_utils.get_case_date(database, case_key)
+
     if kwargs["treat_type"] in nhi_utils.CARE_TREAT:
         ins_fee = get_ins_special_care_fee(
             database,
@@ -1444,16 +1448,14 @@ def get_ins_fee(database, system_settings, table_widget_ins_care=None, **kwargs)
         database, case_key, kwargs["treatment"], integrate_care
     )
 
-    case_date, _ = case_utils.get_case_date(database, case_key)
-
     if kwargs["treat_type"] in nhi_utils.HOME_CARE:
         diag_code = nhi_utils.get_home_care_ins_code(database, kwargs["reg_type"])
         ins_fee["diag_fee"] = get_ins_diag_fee(
-            database, system_settings, kwargs["course"], diag_code
+            database, system_settings, kwargs["course"], diag_code, case_date=case_date
         )
     else:
         ins_fee["diag_fee"] = get_ins_diag_fee(
-            database, system_settings, kwargs["course"]
+            database, system_settings, kwargs["course"], case_date=case_date
         )
 
     ins_fee["diag_fee"] = check_markup_diag_fee(ins_fee["diag_fee"], kwargs["reg_type"])

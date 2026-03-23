@@ -384,6 +384,7 @@ class SystemSettings:
             "不申報傷科治療",
             "最少針灸穴道數",
             "不要顯示停用的藥品",
+            "預約班表顯示剩餘次數",
         ]:
             station_no = 0
         else:

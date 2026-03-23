@@ -3,7 +3,7 @@ import os
 
 from PyQt5 import QtCore, QtWidgets
 
-from libs import charge_utils, date_utils, system_utils
+from libs import charge_utils, date_utils, system_utils, update_utils
 
 UPDATE_RECORD_LOG = "update_records.log"
 
@@ -36,7 +36,7 @@ class CheckDatabase(QtWidgets.QDialog):
         self._alter_table()
         self._correct_records()
         self._check_additional_records()
-        # update_utils.update_database(self.parent, self.database)
+        update_utils.update_database(self.parent, self.database)
 
     def _alter_table(self):
         max_progress = 61

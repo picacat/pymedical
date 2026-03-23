@@ -808,6 +808,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
             self.ui.checkBox_show_last_case_remark, "預約名單顯示上次病歷備註"
         )
         self._set_check_box(self.ui.checkBox_show_late_number, "預約過號顯示過號序號")
+        self._set_check_box(self.ui.checkBox_show_remain, "預約班表顯示剩餘次數")
 
         self.ui.spinBox_reservation_limit.setValue(
             number_utils.get_integer(self.system_settings.field("預約次數限制"))
@@ -1968,6 +1969,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
             self.ui.checkBox_show_last_case_remark, "預約名單顯示上次病歷備註"
         )
         self._save_check_box(self.ui.checkBox_show_late_number, "預約過號顯示過號序號")
+        self._save_check_box(self.ui.checkBox_show_remain, "預約班表顯示剩餘次數")
 
         self.system_settings.post(
             "預約次數限制", self.ui.spinBox_reservation_limit.value()

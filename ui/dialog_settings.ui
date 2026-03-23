@@ -2322,6 +2322,13 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QCheckBox" name="checkBox_show_remain">
+                    <property name="text">
+                     <string>預約班表顯示剩餘次數</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <layout class="QHBoxLayout" name="horizontalLayout_5">
                     <item>
                      <widget class="QLabel" name="label_63">
@@ -3600,7 +3607,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-686</y>
+              <y>0</y>
               <width>1301</width>
               <height>1478</height>
              </rect>
