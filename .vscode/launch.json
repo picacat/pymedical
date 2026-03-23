@@ -2,11 +2,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Python File",
+            "name": "Python: Current File",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/pymedical.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "justMyCode": true    // 只停在你自己寫的程式碼
         }
     ]
 }

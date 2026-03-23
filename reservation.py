@@ -50,7 +50,7 @@ class Reservation(QtWidgets.QMainWindow):
         self.ui = None
 
         self.max_reservation_table_times = 4
-        self.max_reservation_table_rows = 30
+        self.max_reservation_table_rows = 40
 
         self.table_header = ["時間", "診號", "姓名", "reserve_key"]
         self.table_header_width = [60, 50, 94, 60]
