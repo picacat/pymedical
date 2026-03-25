@@ -4995,7 +4995,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-1527</y>
               <width>1301</width>
               <height>2319</height>
              </rect>
@@ -6827,6 +6827,13 @@
                    <widget class="QCheckBox" name="checkBox_no_massage_list">
                     <property name="text">
                      <string>開立費用證明不要列出民俗調理</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="24" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_ins_drug_order_by_location">
+                    <property name="text">
+                     <string>列印科學中藥才依照存放位置排序</string>
                     </property>
                    </widget>
                   </item>

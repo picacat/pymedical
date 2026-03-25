@@ -1338,6 +1338,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
             self.ui.checkBox_order_by_location, "列印處方依照存放位置排序"
         )
         self._set_check_box(
+            self.ui.checkBox_ins_drug_order_by_location, "列印科中處方依照存放位置排序"
+        )
+        self._set_check_box(
             self.ui.checkBox_no_massage_list, "開立費用證明不要列出民俗調理"
         )
         self._set_check_box(
@@ -2493,6 +2496,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self._save_check_box(
             self.ui.checkBox_order_by_location, "列印處方依照存放位置排序"
+        )
+        self._save_check_box(
+            self.ui.checkBox_ins_drug_order_by_location, "列印科中處方依照存放位置排序"
         )
         self._save_check_box(
             self.ui.checkBox_no_massage_list, "開立費用證明不要列出民俗調理"

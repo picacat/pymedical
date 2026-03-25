@@ -1482,7 +1482,40 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         self._calculate_total_costs()
         self._calculate_self_total_fee()
 
+    def _check_dosage_ok(self):
+        # 建議將 col 索引先拿出來，避免在迴圈內反覆查找
+        dosage_col = prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]
+        unit_col = prescript_utils.SELF_PRESCRIPT_COL_NO["Unit"]
+
+        for row_no in range(self.ui.tableWidget_prescript.rowCount()):
+            dosage_item = self.ui.tableWidget_prescript.item(row_no, dosage_col)
+            unit_item = self.ui.tableWidget_prescript.item(row_no, unit_col)
+
+            # 只要其中一個是空的，可能代表這行還沒開始填，或是資料殘缺
+            if not dosage_item or not unit_item:
+                continue
+
+            dosage_str = dosage_item.text().strip()
+            unit_str = unit_item.text().strip()
+
+            # 如果兩者皆空，視為跳過此行
+            if not dosage_str and not unit_str:
+                continue
+
+            dosage = number_utils.get_float(dosage_str)
+
+            # 核心邏輯：如果有單位但劑量為 0 或無效，則回傳不通過
+            if dosage <= 0.0 and unit_str != "":
+                self.ui.tableWidget_prescript.setCurrentCell(row_no, dosage_col)
+
+                return False
+
+        return True
+
     def save_prescript(self, check_prescript=True):
+        if not self._check_dosage_ok():
+            return False
+
         self._check_herb_single_day_price()
 
         prescript_utils.check_extend_ins_drug(self.parent.tab_list[0], self)

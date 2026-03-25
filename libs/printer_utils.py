@@ -7675,12 +7675,33 @@ def get_prescript_html23(
     order_script = "ORDER BY PrescriptNo, PrescriptKey"
 
     if system_setting.field("列印處方依照存放位置排序") == "Y":
-        order_script = """
-            ORDER BY
-                SUBSTRING(medicine.Location, 1, 1),
-                LENGTH(SUBSTRING(medicine.Location, 2)),
-                SUBSTRING(medicine.Location, 2)
-        """
+        if system_setting.field("列印科中處方依照存放位置排序") == "Y":
+            order_script = """
+                ORDER BY
+                    -- 第一階段：判斷是否為「單方」或「複方」並套用 Location 排序邏輯
+                    CASE 
+                        WHEN medicine.MedicineType IN ('單方', '複方') THEN SUBSTRING(medicine.Location, 1, 1)
+                        ELSE '0' -- 非目標類型的第一排序權重設為相同
+                    END,
+                    CASE 
+                        WHEN medicine.MedicineType IN ('單方', '複方') THEN LENGTH(SUBSTRING(medicine.Location, 2))
+                        ELSE 0
+                    END,
+                    CASE 
+                        WHEN medicine.MedicineType IN ('單方', '複方') THEN SUBSTRING(medicine.Location, 2)
+                        ELSE ''
+                    END,
+
+                    -- 第二階段：如果第一階段權重相同（即非單方、複方），則依照 PrescriptKey 排序
+                    PrescriptKey ASC
+            """
+        else:
+            order_script = """
+                ORDER BY
+                    SUBSTRING(medicine.Location, 1, 1),
+                    LENGTH(SUBSTRING(medicine.Location, 2)),
+                    SUBSTRING(medicine.Location, 2)
+            """
 
     sql = f"""
         SELECT prescript.*, medicine.Location, medicine.MedicineAlias FROM prescript

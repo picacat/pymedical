@@ -3970,7 +3970,14 @@ class MedicalRecord(QtWidgets.QMainWindow):
                     if not tab_prescript.save_prescript(
                         check_prescript=check_prescript
                     ):
+                        self.ui.tabWidget_prescript.setCurrentIndex(medicine_set - 1)
                         check_ok = False
+                        system_utils.show_message_box(
+                            QMessageBox.Critical,
+                            "劑量檢查結果提醒",
+                            '<h3><font color="red">劑量不可為0</font></h3>',
+                            "請注意劑量不可為0.",
+                        )
                 except RuntimeError:  # 關閉處方頁, 刪除整個處方
                     self.remove_prescript(medicine_set)
             else:
