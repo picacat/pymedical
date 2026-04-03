@@ -471,6 +471,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._set_check_box(
             self.ui.checkBox_ins_dosage_non_zero, "健保開藥劑量必須大於0"
         )
+        self._set_check_box(
+            self.ui.checkBox_self_dosage_non_zero, "自費開藥劑量必須大於0"
+        )
         self._set_check_box(self.ui.checkBox_same_disease_course2, "療程同病名超過兩個")
         self._set_check_box(self.ui.checkBox_strict_special_code, "慢性病開藥檢查")
 
@@ -1667,6 +1670,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._save_check_box(self.ui.checkBox_show_disease4, "顯示次診斷3")
         self._save_check_box(
             self.ui.checkBox_ins_dosage_non_zero, "健保開藥劑量必須大於0"
+        )
+        self._save_check_box(
+            self.ui.checkBox_self_dosage_non_zero, "自費開藥劑量必須大於0"
         )
         self._save_check_box(
             self.ui.checkBox_same_disease_course2, "療程同病名超過兩個"

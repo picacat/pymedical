@@ -1513,8 +1513,9 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         return True
 
     def save_prescript(self, check_prescript=True):
-        if not self._check_dosage_ok():
-            return False
+        if self.system_settings.field("自費開藥劑量必須大於0") == "Y":
+            if not self._check_dosage_ok():
+                return False
 
         self._check_herb_single_day_price()
 

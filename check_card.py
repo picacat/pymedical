@@ -31,6 +31,7 @@ class CheckCard(QtWidgets.QMainWindow):
         self.ui = None
         self.errors = 0
         self.rows = None
+        self.integrate_limit_count = 5
 
         self._set_ui()
         self._set_signal()
@@ -139,6 +140,8 @@ class CheckCard(QtWidgets.QMainWindow):
         self.ui.tableWidget_errors.setAlternatingRowColors(True)
 
         self._check_data()
+        self._set_integrate_limit()
+
         if self.errors <= 0:
             self.ui.toolButton_find_error.setEnabled(False)
         else:
@@ -146,6 +149,30 @@ class CheckCard(QtWidgets.QMainWindow):
 
         self.ui.tableWidget_errors.resizeRowsToContents()
         self._calculate_indicator()
+
+    def _calculate_integrate_count(self, case_key, patient_key):
+        # 1. 先確認是否為整合醫療案件，若不是則直接過關
+        if case_utils.get_case_extend(self.database, case_key, "整合醫療照護") != "Y":
+            return
+
+        # 2. 取得目前次數
+        current_count = self.integrate_limit.get(patient_key, 0)
+        self.integrate_limit[patient_key] = current_count + 1
+
+    def _set_integrate_limit(self):
+        row_count = self.ui.tableWidget_errors.rowCount()
+        for row_no in range(row_count):
+            patient_key = self.ui.tableWidget_errors.item(row_no, 3).text()
+            if self.integrate_limit.get(patient_key, 0) >= self.integrate_limit_count:
+                case_key = self.ui.tableWidget_errors.item(row_no, 0).text()
+                if (
+                    case_utils.get_case_extend(self.database, case_key, "整合醫療照護")
+                    == "Y"
+                ):
+                    self._set_error_message(
+                        row_no,
+                        [f"整合醫療照護(A91)超過{self.integrate_limit_count}次"],
+                    )
 
     def _check_data(self):
         row_count = self.ui.tableWidget_errors.rowCount()
@@ -159,6 +186,7 @@ class CheckCard(QtWidgets.QMainWindow):
         progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
         progress_dialog.setValue(0)
 
+        self.integrate_limit = {}
         for row_no in range(row_count):
             case_key = self.ui.tableWidget_errors.item(row_no, 0).text()
             case_date = self.ui.tableWidget_errors.item(row_no, 1).text()
@@ -180,6 +208,7 @@ class CheckCard(QtWidgets.QMainWindow):
                 continue
 
             try:
+                next_case_key = self.ui.tableWidget_errors.item(row_no + 1, 0).text()
                 next_case_date = self.ui.tableWidget_errors.item(row_no + 1, 1).text()
                 next_patient_key = self.ui.tableWidget_errors.item(row_no + 1, 3).text()
                 next_share_type = self.ui.tableWidget_errors.item(row_no + 1, 5).text()
@@ -192,6 +221,7 @@ class CheckCard(QtWidgets.QMainWindow):
                 ).text()
                 next_treat_type = self.ui.tableWidget_errors.item(row_no + 1, 10).text()
             except AttributeError:
+                next_case_key = None
                 next_case_date = None
                 next_patient_key = 0
                 next_card = None
@@ -212,6 +242,8 @@ class CheckCard(QtWidgets.QMainWindow):
 
             if card == "自動取得":
                 current_error_message.append("未取得卡序")
+
+            self._calculate_integrate_count(case_key, patient_key)
 
             if next_card == "":
                 error_message.append("卡序空白")

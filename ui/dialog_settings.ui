@@ -984,8 +984,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1322</width>
-              <height>792</height>
+              <width>1301</width>
+              <height>807</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -998,27 +998,6 @@
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_4">
-                <item row="4" column="1">
-                 <widget class="QCheckBox" name="checkBox_course_disease">
-                  <property name="text">
-                   <string>療程2-6次不同病名不能病歷存檔</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="10" column="0">
-                 <widget class="QCheckBox" name="checkBox_medicine_two_times">
-                  <property name="text">
-                   <string>療程開藥兩次(含)以上提醒</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="10" column="1">
-                 <widget class="QCheckBox" name="checkBox_calc_treat_drug">
-                  <property name="text">
-                   <string>醫師看診名單顯示針傷給藥人數</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="8" column="1">
                  <widget class="QCheckBox" name="checkBox_ins_dosage_non_zero">
                   <property name="text">
@@ -1026,24 +1005,17 @@
                   </property>
                  </widget>
                 </item>
-                <item row="8" column="0">
-                 <widget class="QCheckBox" name="checkBox_same_disease_course2">
+                <item row="7" column="0">
+                 <widget class="QCheckBox" name="checkBox_check_same_disease_pres_days">
                   <property name="text">
-                   <string>療程兩個月內同病名連續兩次無法存檔</string>
+                   <string>當日病歷主診斷碼與上次病歷相同, 但開藥天數少於上次病歷</string>
                   </property>
                  </widget>
                 </item>
-                <item row="5" column="1">
-                 <widget class="QCheckBox" name="checkBox_regist_yesterday_diag">
+                <item row="7" column="1">
+                 <widget class="QCheckBox" name="checkBox_show_disease4">
                   <property name="text">
-                   <string>隔日過卡不能掛號存檔</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="9" column="0">
-                 <widget class="QCheckBox" name="checkBox_strict_special_code">
-                  <property name="text">
-                   <string>非慢性病開藥&gt;7天不能存檔，慢性病開藥&lt;=7天僅提醒</string>
+                   <string>病歷顯示次診斷3</string>
                   </property>
                  </widget>
                 </item>
@@ -1078,6 +1050,175 @@
                   </item>
                   <item>
                    <spacer name="horizontalSpacer_32">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QCheckBox" name="checkBox_pres_days_duplicated">
+                  <property name="text">
+                   <string>用藥重複檢查: 以開藥次日起算 (1/1 七日藥, 1/8日才不算重複)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="0">
+                 <widget class="QCheckBox" name="checkBox_same_disease_course2">
+                  <property name="text">
+                   <string>療程兩個月內同病名連續兩次無法存檔</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1">
+                 <widget class="QCheckBox" name="checkBox_diagnostic_data_required">
+                  <property name="text">
+                   <string>開藥病歷: 主訴、舌診、脈象為必填欄位</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QCheckBox" name="checkBox_check_duplicate_2_days">
+                  <property name="text">
+                   <string>用藥重複&gt;=2日不能掛號及病歷存檔</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="1">
+                 <widget class="QCheckBox" name="checkBox_course_disease">
+                  <property name="text">
+                   <string>療程2-6次不同病名不能病歷存檔</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="0">
+                 <widget class="QCheckBox" name="checkBox_no_convert_general_treat">
+                  <property name="text">
+                   <string>中高度複雜性針灸及針傷合併治療超過限量不要自動轉換為一般針灸</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QGroupBox" name="groupBox_check_dosage">
+                  <property name="title">
+                   <string/>
+                  </property>
+                  <property name="flat">
+                   <bool>true</bool>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_81">
+                   <item>
+                    <widget class="QLabel" name="label_72">
+                     <property name="text">
+                      <string>健保處方給藥劑量上限</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="spinBox_dosage_limitation"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_73">
+                     <property name="text">
+                      <string>克</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QRadioButton" name="radioButton_input_dosage">
+                     <property name="text">
+                      <string>輸入處方時檢查</string>
+                     </property>
+                     <property name="checked">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QRadioButton" name="radioButton_save_dosage">
+                     <property name="text">
+                      <string>存檔時檢查</string>
+                     </property>
+                     <property name="checked">
+                      <bool>false</bool>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_24">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_39">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_check_same_disease">
+                    <property name="text">
+                     <string>當月內科同病名不可超過3次, 超過次數</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QWidget" name="widget" native="true">
+                    <layout class="QHBoxLayout" name="horizontalLayout_41">
+                     <property name="spacing">
+                      <number>0</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <widget class="QRadioButton" name="radioButton_same1">
+                       <property name="text">
+                        <string>存檔前提醒</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="radioButton_same2">
+                       <property name="text">
+                        <string>無法存檔</string>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_31">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -1156,17 +1297,10 @@
                   </item>
                  </layout>
                 </item>
-                <item row="4" column="0">
-                 <widget class="QCheckBox" name="checkBox_pres_days_duplicated">
+                <item row="5" column="0">
+                 <widget class="QCheckBox" name="checkBox_check_injury_period">
                   <property name="text">
-                   <string>用藥重複檢查: 以開藥次日起算 (1/1 七日藥, 1/8日才不算重複)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="0">
-                 <widget class="QCheckBox" name="checkBox_check_same_disease_pres_days">
-                  <property name="text">
-                   <string>當日病歷主診斷碼與上次病歷相同, 但開藥天數少於上次病歷</string>
+                   <string>檢查損傷診斷碼, 初期: 15日內 後續: 16-30日 , 後遺症: 超過30日</string>
                   </property>
                  </widget>
                 </item>
@@ -1229,165 +1363,24 @@
                   </layout>
                  </widget>
                 </item>
-                <item row="5" column="0">
-                 <widget class="QCheckBox" name="checkBox_check_injury_period">
+                <item row="5" column="1">
+                 <widget class="QCheckBox" name="checkBox_regist_yesterday_diag">
                   <property name="text">
-                   <string>檢查損傷診斷碼, 初期: 15日內 後續: 16-30日 , 後遺症: 超過30日</string>
+                   <string>隔日過卡不能掛號存檔</string>
                   </property>
                  </widget>
                 </item>
-                <item row="6" column="1">
-                 <widget class="QCheckBox" name="checkBox_diagnostic_data_required">
+                <item row="9" column="0">
+                 <widget class="QCheckBox" name="checkBox_strict_special_code">
                   <property name="text">
-                   <string>開藥病歷: 主訴、舌診、脈象為必填欄位</string>
+                   <string>非慢性病開藥&gt;7天不能存檔，慢性病開藥&lt;=7天僅提醒</string>
                   </property>
                  </widget>
                 </item>
-                <item row="3" column="1">
-                 <widget class="QCheckBox" name="checkBox_check_duplicate_2_days">
+                <item row="10" column="0">
+                 <widget class="QCheckBox" name="checkBox_medicine_two_times">
                   <property name="text">
-                   <string>用藥重複&gt;=2日不能掛號及病歷存檔</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_39">
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_check_same_disease">
-                    <property name="text">
-                     <string>當月內科同病名不可超過3次, 超過次數</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QWidget" name="widget" native="true">
-                    <layout class="QHBoxLayout" name="horizontalLayout_41">
-                     <property name="spacing">
-                      <number>0</number>
-                     </property>
-                     <property name="leftMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>0</number>
-                     </property>
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_same1">
-                       <property name="text">
-                        <string>存檔前提醒</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_same2">
-                       <property name="text">
-                        <string>無法存檔</string>
-                       </property>
-                       <property name="checked">
-                        <bool>false</bool>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_31">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item row="9" column="1">
-                 <widget class="QCheckBox" name="checkBox_medicine_duplicated">
-                  <property name="text">
-                   <string>開藥連續三次相同不能存檔</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QGroupBox" name="groupBox_check_dosage">
-                  <property name="title">
-                   <string/>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <layout class="QHBoxLayout" name="horizontalLayout_81">
-                   <item>
-                    <widget class="QLabel" name="label_72">
-                     <property name="text">
-                      <string>健保處方給藥劑量上限</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QSpinBox" name="spinBox_dosage_limitation"/>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="label_73">
-                     <property name="text">
-                      <string>克</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QRadioButton" name="radioButton_input_dosage">
-                     <property name="text">
-                      <string>輸入處方時檢查</string>
-                     </property>
-                     <property name="checked">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QRadioButton" name="radioButton_save_dosage">
-                     <property name="text">
-                      <string>存檔時檢查</string>
-                     </property>
-                     <property name="checked">
-                      <bool>false</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer_24">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item row="7" column="1">
-                 <widget class="QCheckBox" name="checkBox_show_disease4">
-                  <property name="text">
-                   <string>病歷顯示次診斷3</string>
+                   <string>療程開藥兩次(含)以上提醒</string>
                   </property>
                  </widget>
                 </item>
@@ -1398,10 +1391,24 @@
                   </property>
                  </widget>
                 </item>
-                <item row="6" column="0">
-                 <widget class="QCheckBox" name="checkBox_no_convert_general_treat">
+                <item row="12" column="0">
+                 <widget class="QCheckBox" name="checkBox_ins_prescript_only">
                   <property name="text">
-                   <string>中高度複雜性針灸及針傷合併治療超過限量不要自動轉換為一般針灸</string>
+                   <string>健保病歷只能開立健保處方，自費處方要另外產生一筆病歷</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="9" column="1">
+                 <widget class="QCheckBox" name="checkBox_medicine_duplicated">
+                  <property name="text">
+                   <string>開藥連續三次相同不能存檔</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="1">
+                 <widget class="QCheckBox" name="checkBox_calc_treat_drug">
+                  <property name="text">
+                   <string>醫師看診名單顯示針傷給藥人數</string>
                   </property>
                  </widget>
                 </item>
@@ -1425,16 +1432,16 @@
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_63">
                 <item>
-                 <widget class="QCheckBox" name="checkBox_ins_prescript_only">
+                 <widget class="QCheckBox" name="checkBox_single_self_case">
                   <property name="text">
-                   <string>健保病歷只能開立健保處方，自費處方要另外產生一筆病歷</string>
+                   <string>統計自費資料時，當日同一病患多筆自費病歷只算一筆自費病歷</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QCheckBox" name="checkBox_single_self_case">
+                 <widget class="QCheckBox" name="checkBox_self_dosage_non_zero">
                   <property name="text">
-                   <string>統計自費資料時，當日同一病患多筆自費病歷只算一筆自費病歷</string>
+                   <string>自費開藥所有劑量必須 &gt; 0</string>
                   </property>
                  </widget>
                 </item>
@@ -4995,7 +5002,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-1527</y>
+              <y>0</y>
               <width>1301</width>
               <height>2319</height>
              </rect>

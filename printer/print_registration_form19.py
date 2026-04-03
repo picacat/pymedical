@@ -1,12 +1,9 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
-from libs import printer_utils
-from libs import string_utils
-from libs import number_utils
-from libs import system_utils
+
+from libs import number_utils, printer_utils, string_utils, system_utils
 
 
 # 掛號收據格式19 80mm 熱感紙 人形圖
@@ -20,7 +17,9 @@ class PrintRegistrationForm19:
         self.case_key = args[2]
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '門診掛號單印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "門診掛號單印表機"
+        )
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
         self.return_card = None
@@ -53,7 +52,9 @@ class PrintRegistrationForm19:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
@@ -64,8 +65,8 @@ class PrintRegistrationForm19:
         painter = QtGui.QPainter()
         painter.setFont(self.font)
         painter.begin(self.printer)
-        painter.drawText(0, 10, 'print test line1 中文測試')
-        painter.drawText(0, 30, 'print test line2 中文測試')
+        painter.drawText(0, 10, "print test line1 中文測試")
+        painter.drawText(0, 30, "print test line2 中文測試")
         painter.end()
 
     def print_html(self, printing):
@@ -79,37 +80,39 @@ class PrintRegistrationForm19:
             document.print(self.printer)
 
     def _html(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM cases
             WHERE
                 CaseKey = {self.case_key}
-        '''
+        """
         row = self.database.select_record(sql)[0]
 
-        card = string_utils.xstr(row['Card'])
-        if number_utils.get_integer(row['Continuance']) >= 1:
-            card += '-' + string_utils.xstr(row['Continuance'])
+        card = string_utils.xstr(row["Card"])
+        if number_utils.get_integer(row["Continuance"]) >= 1:
+            card += "-" + string_utils.xstr(row["Continuance"])
 
-        clinic_name = self.system_settings.field('院所名稱')
-        case_date = row['CaseDate']
-        patient_key = number_utils.get_integer(row['PatientKey'])
-        name = string_utils.xstr(row['Name'])
-        ins_type = string_utils.xstr(row['InsType'])
-        treat_type = string_utils.xstr(row['TreatType'])
+        clinic_name = self.system_settings.field("院所名稱")
+        case_date = row["CaseDate"]
+        patient_key = number_utils.get_integer(row["PatientKey"])
+        name = string_utils.xstr(row["Name"])
+        ins_type = string_utils.xstr(row["InsType"])
+        treat_type = string_utils.xstr(row["TreatType"])
 
-        regist_fee = number_utils.get_integer(row['RegistFee'])
-        diag_share_fee = number_utils.get_integer(row['SDiagShareFee'])
-        deposit_fee = number_utils.get_integer(row['DepositFee'])
+        regist_fee = number_utils.get_integer(row["RegistFee"])
+        diag_share_fee = number_utils.get_integer(row["SDiagShareFee"])
+        deposit_fee = number_utils.get_integer(row["DepositFee"])
         total_fee = regist_fee + diag_share_fee + deposit_fee
 
-        room = string_utils.xstr(row['Room'])
-        doctor = string_utils.xstr(row['Doctor'])
-        regist_no = string_utils.xstr(row['RegistNo'])
+        room = string_utils.xstr(row["Room"])
+        doctor = string_utils.xstr(row["Doctor"])
+        regist_no = string_utils.xstr(row["RegistNo"])
 
-        if card == '欠卡':
-            total_label = f'<br>欠卡費: {str(deposit_fee)}元 實收金額: {str(total_fee)}元'
+        if card == "欠卡":
+            total_label = (
+                f"<br>欠卡費: {str(deposit_fee)}元 實收金額: {str(total_fee)}元"
+            )
         else:
-            total_label = f'<br>實收金額: {str(total_fee)}元'
+            total_label = f"<br>實收金額: {str(total_fee)}元"
 
         html = f'''
             <html>
@@ -127,13 +130,13 @@ class PrintRegistrationForm19:
                     <br><br>
                     <table style="border-collapse: collapse; border:1px #cccccc solid;" cellpadding="0" border="1">
                         <tr>
-                            <td>熏蒸</td>
-                            <td>傷科</td>
-                            <td>針灸</td>
-                            <td>電針</td>
-                            <td>滑罐</td>
-                            <td>電療</td>
-                            <td>藥膏</td>
+                            <td width="14%" align="center" vertival-align="middle">熏蒸</td>
+                            <td width="14%" align="center" vertival-align="middle">傷科</td>
+                            <td width="15%" align="center" vertival-align="middle">針灸</td>
+                            <td width="14%" align="center" vertival-align="middle">電針</td>
+                            <td width="14%" align="center" vertival-align="middle">滑罐</td>
+                            <td width="15%" align="center" vertival-align="middle">電療</td>
+                            <td width="14%" align="center" vertival-align="middle">藥</td>
                         </tr>
                         <tr>
                             <td></td>
@@ -145,7 +148,7 @@ class PrintRegistrationForm19:
                             <td></td>
                         </tr>
                     </table>
-                    <img src="{'./images/physical.jpg'}" height="200" width="200">
+                    <img src="{"./images/physical.jpg"}" height="200" width="200">
                 </body>
             </html>
         '''

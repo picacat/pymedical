@@ -3149,8 +3149,9 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if not self._check_self_pres_days():
             return
 
-        if not self._check_self_dosage():
-            return
+        # if self.system_settings.field("自費開藥劑量必須大於0") == 'Y':
+        #     if not self._check_self_dosage():
+        #         return
 
         if not self._check_fees():  # 檢查批價
             return

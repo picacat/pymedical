@@ -5003,7 +5003,8 @@ def get_instruction_html2(
             html += f"<br>醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}<br>"
         else:
             html = f"""
-                藥日: {packages}包 * {pres_days}天 共{packages * pres_days}包 {instruction} 總量: {total_dosage:.1f} {additional_label}<br>
+                藥日: {packages}包 * {pres_days}天 共{packages * pres_days}包 {instruction}服用
+                每包{single_day_dosage:.1f} 總量: {total_dosage:.1f} {additional_label}<br>
                 醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}<br>
             """
     else:

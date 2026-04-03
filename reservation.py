@@ -1422,9 +1422,12 @@ class Reservation(QtWidgets.QMainWindow):
         birthday = string_utils.xstr(row_data["Birthday"])
         telephone = string_utils.xstr(row_data["Telephone"])
         cellphone = string_utils.xstr(row_data["Cellphone"])
+
         if string_utils.xstr(row_data["Source"]) in [
+            "網路初診",
             "網路初診預約",
             "初診預約",
+            "視訊初診",
             "視訊初診預約",
         ]:
             patient_key = string_utils.xstr(row_data["Source"])[:4]
@@ -1499,6 +1502,9 @@ class Reservation(QtWidgets.QMainWindow):
                 item.setForeground(QtGui.QColor(color))
 
     def _get_last_case_remark(self, patient_key):
+        if patient_key in ["網路初診"]:
+            return None
+
         sql = f"""
             SELECT Remark FROM cases
             WHERE
@@ -3365,8 +3371,10 @@ class Reservation(QtWidgets.QMainWindow):
         name = string_utils.xstr(row["Name"])
 
         if string_utils.xstr(row["Source"]) in [
+            "網路初診",
             "網路初診預約",
             "初診預約",
+            "視訊初診",
             "視訊初診預約",
         ]:
             patient_key = string_utils.xstr(row["Source"])[:4]
