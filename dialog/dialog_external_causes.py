@@ -1,13 +1,11 @@
-
 # 病歷登錄之病名詞庫 2014.09.22
 # -*- coding: UTF-8 -*-
 
 import json
 
-from libs import (case_utils, class_utils, db_utils, icd10_utils, nhi_utils,
-                  string_utils, system_utils, ui_utils)
-from libs.alleypin_utils import change_appointment
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
+
+from libs import class_utils, db_utils, string_utils, system_utils, ui_utils
 
 
 # 外因碼詞庫 (from 病歷登錄)
@@ -45,11 +43,17 @@ class DialogExternalCauses(QtWidgets.QDialog):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_DIALOG_EXTERNAL_CAUSES, self)
         self.setFixedSize(self.size())  # non resizable dialog
         system_utils.set_css(self, self.system_settings)
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Save).setText('選取')
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Close).setText('關閉')
-        self.table_widget_groups = class_utils.get_table_widget(self.ui.tableWidget_groups, self.database)
-        self.table_widget_groups_name = class_utils.get_table_widget(self.ui.tableWidget_groups_name, self.database)
-        self.table_widget_disease = class_utils.get_table_widget(self.ui.tableWidget_disease, self.database)
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Save).setText("選取")
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Close).setText("關閉")
+        self.table_widget_groups = class_utils.get_table_widget(
+            self.ui.tableWidget_groups, self.database
+        )
+        self.table_widget_groups_name = class_utils.get_table_widget(
+            self.ui.tableWidget_groups_name, self.database
+        )
+        self.table_widget_disease = class_utils.get_table_widget(
+            self.ui.tableWidget_disease, self.database
+        )
         self.table_widget_disease.set_column_hidden([0])
 
         self._set_table_width()
@@ -59,13 +63,15 @@ class DialogExternalCauses(QtWidgets.QDialog):
         self.ui.buttonBox.accepted.connect(self.accepted_button_clicked)
         self.ui.buttonBox.rejected.connect(self.rejected_button_clicked)
         self.ui.tableWidget_groups.itemSelectionChanged.connect(self.groups_changed)
-        self.ui.tableWidget_groups_name.itemSelectionChanged.connect(self.groups_name_changed)
+        self.ui.tableWidget_groups_name.itemSelectionChanged.connect(
+            self.groups_name_changed
+        )
         self.ui.tableWidget_disease.doubleClicked.connect(self.accepted_button_clicked)
 
     # 存檔
     def accepted_button_clicked(self):
         icd10_key = self.table_widget_disease.field_value(0)
-        db_utils.increment_hit_rate(self.database, 'icd10', 'ICD10Key', icd10_key)
+        db_utils.increment_hit_rate(self.database, "icd10", "ICD10Key", icd10_key)
 
         self.line_edit_icd_code2.setText(self.table_widget_disease.field_value(1))
         self.line_edit_disease_name2.setText(self.table_widget_disease.field_value(2))
@@ -112,12 +118,12 @@ class DialogExternalCauses(QtWidgets.QDialog):
     def _set_groups_name(self, groups):
         groups_name_list = []
         for categroy_data in self.categories:
-            category_name = categroy_data['category']
+            category_name = categroy_data["category"]
             if category_name == groups:
-                codes = categroy_data['codes']
+                codes = categroy_data["codes"]
                 for groups_name in codes:
-                    groups_name_list.append(groups_name['desc'])
-                    
+                    groups_name_list.append(groups_name["desc"])
+
                 break
 
         self.ui.tableWidget_groups_name.setRowCount(0)
@@ -162,15 +168,13 @@ class DialogExternalCauses(QtWidgets.QDialog):
         self.table_widget_disease.set_db_data(sql, self._set_disease_data)
 
     def _set_disease_data(self, row_no, row):
-        icd_code = string_utils.xstr(row['ICDCode'])
+        icd_code = string_utils.xstr(row["ICDCode"])
         disease_row = [
-            string_utils.xstr(row['ICD10Key']),
+            string_utils.xstr(row["ICD10Key"]),
             icd_code,
-            string_utils.xstr(row['ChineseName']),
+            string_utils.xstr(row["ChineseName"]),
         ]
         for column in range(len(disease_row)):
             self.ui.tableWidget_disease.setItem(
-                row_no, column,
-                QtWidgets.QTableWidgetItem(disease_row[column])
+                row_no, column, QtWidgets.QTableWidgetItem(disease_row[column])
             )
-
