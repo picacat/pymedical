@@ -4978,6 +4978,10 @@ def get_instruction_html2(
     instruction = case_utils.get_instruction(database, case_key, medicine_set)
     total_fee = case_utils.get_total_fee(database, case_key, medicine_set)
     dosage_mode = case_utils.get_dosage_mode(database, case_key, medicine_set)
+    if dosage_mode in ["次劑量"]:
+        package_label = "包"
+    else:
+        package_label = "日"
 
     additional_label = ""
     if additional not in ["", None]:
@@ -4996,7 +5000,7 @@ def get_instruction_html2(
             html = ""
 
             if packages > 0:
-                html += f"每日{packages}次, {instruction}"
+                html += f"每{package_label}{packages}次, {instruction}"
             else:
                 html += instruction
 
@@ -5004,7 +5008,7 @@ def get_instruction_html2(
         else:
             html = f"""
                 藥日: {packages}包 * {pres_days}天 共{packages * pres_days}包 {instruction}服用
-                每包{single_day_dosage:.1f} 總量: {total_dosage:.1f} {additional_label}<br>
+                每{package_label}{single_day_dosage:.1f} 總量: {total_dosage:.1f} {additional_label}<br>
                 醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}<br>
             """
     else:
