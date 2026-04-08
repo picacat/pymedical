@@ -1,26 +1,23 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPushButton
-
-import socket
-import urllib.request
-import urllib.error
-import io
-
-import os.path
-from os import listdir
-import ntpath
-import stat
-import shutil
 import datetime
 import hashlib
+import io
+import ntpath
+import os
+import os.path
+import shutil
+import socket
+import stat
+import subprocess
+import urllib.error
+import urllib.request
+from os import listdir
 
-from libs import class_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import string_utils
-from libs import update_utils
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPushButton
+
+from libs import class_utils, string_utils, system_utils, ui_utils, update_utils
 
 
 # 醫療系統更新
@@ -38,6 +35,12 @@ class SystemUpdate(QtWidgets.QDialog):
         self._set_ui()
         self._set_signal()
 
+        # 1. 定義程式根目錄 (pymedical/)
+        self.base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # 2. 定義你的 git.exe 路徑 (現在是在 git_core/git.exe)
+        self.git_exe = os.path.join(self.base_path, "git_core", "git.exe")
+
     # 解構
     def __del__(self):
         self.close_all()
@@ -52,17 +55,16 @@ class SystemUpdate(QtWidgets.QDialog):
         self.setFixedSize(self.size())  # non resizable dialog
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('開始更新')
-        self.ui.buttonBox.button(
-            QtWidgets.QDialogButtonBox.Cancel).setText('取消')
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("開始更新")
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText("取消")
         self.ui.toolButton_open_file.clicked.connect(self._open_file)
         self.ui.lineEdit_file_name.textChanged.connect(self._file_name_changed)
 
-        self.ui.buttonBox.button(
-            QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
         self.table_widget_file_list = class_utils.get_table_widget(
-            self.ui.tableWidget_file_list, self.database)
+            self.ui.tableWidget_file_list, self.database
+        )
         self._set_table_width()
 
         self._set_radio_buttons()
@@ -90,24 +92,49 @@ class SystemUpdate(QtWidgets.QDialog):
         width = [200, 220, 350, 200]
         self.table_widget_file_list.set_table_heading_width(width)
 
+    def _run_git(self, args):
+        """核心：執行內置 Git 指令"""
+        if not os.path.exists(self.git_exe):
+            print(f"找不到 Git 執行檔: {self.git_exe}")
+            return None
+
+        try:
+            # 加上 creationflags=0x08000000 隱藏黑色視窗
+            # 使用 env 隔離環境，避免受到使用者電腦原本 Git 設定的影響
+            env = os.environ.copy()
+            env["GIT_TERMINAL_PROMPT"] = "0"  # 禁用任何互動式提示
+
+            result = subprocess.check_output(
+                [self.git_exe] + args,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                cwd=self.base_path,  # 務必在 pymedical 根目錄執行
+                env=env,
+                creationflags=0x08000000,
+            )
+            return result
+        except subprocess.CalledProcessError as e:
+            print(f"Git 錯誤: {e.output}")
+            return None
+
     def _open_file(self):
         options = QFileDialog.Options()
 
         filename, _ = QFileDialog.getOpenFileName(
             self,
-            '開啟更新檔',
-            '*.zip',
-            'zip 壓縮檔 (*.zip);;Text Files (*.txt)',
-            options=options)
+            "開啟更新檔",
+            "*.zip",
+            "zip 壓縮檔 (*.zip);;Text Files (*.txt)",
+            options=options,
+        )
         if filename:
             self.ui.lineEdit_file_name.setText(filename)
 
     def _file_name_changed(self):
-        self.ui.buttonBox.button(
-            QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
         file_name = self.ui.lineEdit_file_name.text()
-        if file_name == '':
+        if file_name == "":
             return
 
         if not os.path.isfile(file_name):
@@ -117,7 +144,20 @@ class SystemUpdate(QtWidgets.QDialog):
         self._check_files(zip_file_name)
 
     def accepted_button_clicked(self):
-        self._update_files()
+        # 判斷目前是 Git 模式還是手動/Dropbox 模式
+        # 如果是 Git 模式，tableWidget 第一個欄位通常是純檔名，且沒有 source_dir
+        if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
+            self.ui.label_status.setText("正在執行增量更新...")
+            # 執行強制覆蓋 (會遵守你的 .gitignore)
+            result = self._run_git(["reset", "--hard", "origin/main"])
+
+            if result is None:
+                QMessageBox.critical(self, "錯誤", "Git 更新失敗，請檢查網路。")
+                return
+        else:
+            # 原本的 Dropbox / 手動 ZIP 更新邏輯
+            self._update_files()
+
         update_utils.update_database(self.parent, self.database)
 
         self.restart_pymedical = True  # 暫時全部重新啟動
@@ -129,9 +169,10 @@ class SystemUpdate(QtWidgets.QDialog):
 
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Information)
-        msg_box.setWindowTitle('系統更新完成')
+        msg_box.setWindowTitle("系統更新完成")
         msg_box.setText(
-            "<font size='4'><b>恭喜您! 系統已更新至最新檔, 系統檔案全部更新成功.</b></font>")
+            "<font size='4'><b>恭喜您! 系統已更新至最新檔, 系統檔案全部更新成功.</b></font>"
+        )
         msg_box.setInformativeText(information)
         msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
         msg_box.exec_()
@@ -143,7 +184,7 @@ class SystemUpdate(QtWidgets.QDialog):
 
     def _check_files(self, zip_file_name):
         dest_root = os.path.dirname(os.path.abspath(__file__))
-        temp_dir = os.path.join(dest_root, '_temp')
+        temp_dir = os.path.join(dest_root, "_temp")
 
         try:
             if os.path.exists(temp_dir):
@@ -155,43 +196,44 @@ class SystemUpdate(QtWidgets.QDialog):
 
         system_utils.unzip_file(zip_file_name, temp_dir)
 
-        zip_dir = ntpath.basename(zip_file_name).split('.')[0]
+        zip_dir = ntpath.basename(zip_file_name).split(".")[0]
         zip_source_root = os.path.join(temp_dir, zip_dir)
 
         self.ui.tableWidget_file_list.setRowCount(0)
 
-        self._list_files(zip_source_root, dest_root, '')
-        self._list_files(zip_source_root, dest_root, 'classes')
-        self._list_files(zip_source_root, dest_root, 'convert')
-        self._list_files(zip_source_root, dest_root, 'css')
-        self._list_files(zip_source_root, dest_root, 'dialog')
-        self._list_files(zip_source_root, dest_root, 'libs')
-        self._list_files(zip_source_root, dest_root, 'slot_machine')
-        self._list_files(zip_source_root, dest_root, 'mysql')
-        self._list_files(zip_source_root, dest_root, 'mysql//default')
-        self._list_files(zip_source_root, dest_root, 'printer')
-        self._list_files(zip_source_root, dest_root, 'ui')
-        self._list_files(zip_source_root, dest_root, 'images')
-        self._list_files(zip_source_root, dest_root, 'icons')
-        self._list_files(zip_source_root, dest_root, 'tables')
-        self._list_files(zip_source_root, dest_root, 'payment_machine')
-        self._list_files(zip_source_root, dest_root, 'kiosk')
+        self._list_files(zip_source_root, dest_root, "")
+        self._list_files(zip_source_root, dest_root, "classes")
+        self._list_files(zip_source_root, dest_root, "convert")
+        self._list_files(zip_source_root, dest_root, "css")
+        self._list_files(zip_source_root, dest_root, "dialog")
+        self._list_files(zip_source_root, dest_root, "git_core")
+        self._list_files(zip_source_root, dest_root, "libs")
+        self._list_files(zip_source_root, dest_root, "slot_machine")
+        self._list_files(zip_source_root, dest_root, "mysql")
+        self._list_files(zip_source_root, dest_root, "mysql//default")
+        self._list_files(zip_source_root, dest_root, "printer")
+        self._list_files(zip_source_root, dest_root, "ui")
+        self._list_files(zip_source_root, dest_root, "images")
+        self._list_files(zip_source_root, dest_root, "icons")
+        self._list_files(zip_source_root, dest_root, "tables")
+        self._list_files(zip_source_root, dest_root, "payment_machine")
+        self._list_files(zip_source_root, dest_root, "kiosk")
 
         self.ui.tableWidget_file_list.resizeRowsToContents()
 
         if self.ui.tableWidget_file_list.rowCount() <= 0:
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Warning)
-            msg_box.setWindowTitle('系統更新完成')
+            msg_box.setWindowTitle("系統更新完成")
             msg_box.setText(
-                "<font size='4'><b>經過檢查更新檔案, 發現系統已經是最新檔, 不需更新.</b></font>")
+                "<font size='4'><b>經過檢查更新檔案, 發現系統已經是最新檔, 不需更新.</b></font>"
+            )
             msg_box.setInformativeText("請按取消鍵結束系統更新.")
             msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
             msg_box.exec_()
             return
 
-        self.ui.buttonBox.button(
-            QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
 
     def get_file_hash(self, file_path):
         """計算檔案的 MD5 雜湊值"""
@@ -199,7 +241,7 @@ class SystemUpdate(QtWidgets.QDialog):
             return None
         hasher = hashlib.md5()
         try:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 # 分塊讀取，避免大檔案佔用過多記憶體
                 for chunk in iter(lambda: f.read(4096), b""):
                     hasher.update(chunk)
@@ -216,7 +258,8 @@ class SystemUpdate(QtWidgets.QDialog):
             os.mkdir(dest_dir)
 
         source_files = [
-            f for f in listdir(source_dir)
+            f
+            for f in listdir(source_dir)
             if os.path.isfile(os.path.join(source_dir, f))
         ]
 
@@ -241,9 +284,11 @@ class SystemUpdate(QtWidgets.QDialog):
         for file in source_files:
             source_full_path = os.path.join(source_dir, file)
             dest_full_path = os.path.join(dest_dir, file)
-            
+
             # 取得來源檔的日期 (維持顯示用)
-            source_file_date = datetime.datetime.fromtimestamp(self.creation_date(source_full_path))
+            source_file_date = datetime.datetime.fromtimestamp(
+                self.creation_date(source_full_path)
+            )
             row = [file, source_dir, dest_dir, source_file_date]
 
             # 如果目標檔案不存在，直接加入更新清單
@@ -257,7 +302,7 @@ class SystemUpdate(QtWidgets.QDialog):
 
             if source_hash != dest_hash:
                 # 如果是核心檔案變更，標記需要重啟
-                if file == 'pymedical.py' or 'libs' in dest_dir:
+                if file == "pymedical.py" or "libs" in dest_dir:
                     self.restart_pymedical = True
 
                 self._add_list(row)
@@ -269,8 +314,10 @@ class SystemUpdate(QtWidgets.QDialog):
 
         for column in range(len(row)):
             self.ui.tableWidget_file_list.setItem(
-                row_no, column,
-                QtWidgets.QTableWidgetItem(string_utils.xstr(row[column])))
+                row_no,
+                column,
+                QtWidgets.QTableWidgetItem(string_utils.xstr(row[column])),
+            )
 
     def creation_date(self, file_name):
         # if sys.platform == 'win32':
@@ -293,11 +340,11 @@ class SystemUpdate(QtWidgets.QDialog):
                 os.mkdir(dest_dir)
 
             source_file_name = os.path.join(
-                source_dir,
-                self.ui.tableWidget_file_list.item(row_no, 0).text())
+                source_dir, self.ui.tableWidget_file_list.item(row_no, 0).text()
+            )
             dest_file_name = os.path.join(
-                dest_dir,
-                self.ui.tableWidget_file_list.item(row_no, 0).text())
+                dest_dir, self.ui.tableWidget_file_list.item(row_no, 0).text()
+            )
 
             # --- 新增的部分：解除唯讀屬性 ---
             if os.path.exists(dest_file_name):
@@ -311,12 +358,12 @@ class SystemUpdate(QtWidgets.QDialog):
 
     def _get_latest_url(self):
         # 這是你在 GitHub 點擊 "Raw" 後取得的網址
-        raw_url = 'https://raw.githubusercontent.com/picacat/pymedical_update/refs/heads/main/update.txt'
+        raw_url = "https://raw.githubusercontent.com/picacat/pymedical_update/refs/heads/main/update.txt"
         try:
             # 讀取網路上的純文字內容
             with urllib.request.urlopen(raw_url, timeout=5) as response:
                 # 讀取並去掉換行與空格
-                latest_url = response.read().decode('utf-8').strip()
+                latest_url = response.read().decode("utf-8").strip()
                 return latest_url
         except Exception as e:
             print(f"無法取得更新網址: {e}")
@@ -324,30 +371,35 @@ class SystemUpdate(QtWidgets.QDialog):
 
     def _download_dropbox_file(self, timeout=10):
         import ssl
+
         context = ssl._create_unverified_context()
 
         # --- 修改部分：動態獲取網址 ---
         dynamic_url = self._get_latest_url()
         if not dynamic_url:
-            url = 'https://www.dropbox.com/s/4h4a35ygzqx7duc/pymedical.zip?dl=1' 
+            url = "https://www.dropbox.com/s/4h4a35ygzqx7duc/pymedical.zip?dl=1"
         else:
             url = dynamic_url
 
         try:
             response = urllib.request.urlopen(url, context=context, timeout=timeout)
         except (urllib.error.URLError, socket.timeout) as e:
-            QtWidgets.QMessageBox.warning(self, '錯誤', '❌ 下載更新檔失敗，請檢查網路狀態。')
+            QtWidgets.QMessageBox.warning(
+                self, "錯誤", "❌ 下載更新檔失敗，請檢查網路狀態。"
+            )
             print(f"⚠️ 網路錯誤：{e}")
             return None
 
         try:
-            length = int(response.getheader('X-Dropbox-Content-Length'))
+            length = int(response.getheader("X-Dropbox-Content-Length"))
         except Exception:
             length = 8767142
 
         block_size = max(4096, length // 100)
 
-        progress_dialog = QtWidgets.QProgressDialog('正在下載系統更新檔中, 請稍後...', '取消', 0, length, self)
+        progress_dialog = QtWidgets.QProgressDialog(
+            "正在下載系統更新檔中, 請稍後...", "取消", 0, length, self
+        )
         progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
         progress_dialog.setValue(0)
 
@@ -365,7 +417,7 @@ class SystemUpdate(QtWidgets.QDialog):
 
         progress_dialog.setValue(length)
         progress_dialog.deleteLater()
-        download_file_name = 'pymedical.zip'
+        download_file_name = "pymedical.zip"
         with open(download_file_name, "wb") as f:
             f.write(buf.getbuffer())
 
@@ -373,6 +425,57 @@ class SystemUpdate(QtWidgets.QDialog):
 
     # 取得安全簽章
     def _check_downloaded_file(self):
+        if os.path.exists(self.git_exe):
+            self._download_by_git()
+        else:
+            self._download_by_dropbox()
+
+    def _download_by_git(self):
+        self._check_environment()
+        self._check_for_updates()
+
+    def _check_environment(self):
+        dot_git = os.path.join(self.base_path, ".git")
+        # 因為是 Public，直接用這個網址即可
+        repo_url = "https://github.com/picacat/pymedical.git"
+
+        if not os.path.exists(dot_git):
+            self.ui.label_status.setText("正在配置更新引擎...")
+            self._run_git(["init"])
+
+            # 確保遠端設定正確 (先刪再加比較保險)
+            self._run_git(["remote", "remove", "origin"])
+            self._run_git(["remote", "add", "origin", repo_url])
+
+            # Git 必要設定
+            self._run_git(["config", "user.email", "clinic@update.local"])
+            self._run_git(["config", "user.name", "ClinicUser"])
+
+            # --- 關鍵：建立本地追蹤 ---
+            self.ui.label_status.setText("正在連線至 GitHub 伺服器...")
+            self._run_git(["fetch", "origin", "main"])
+            # 強制將本地 main 分支指向遠端的 main，但不更動本地檔案內容
+            self._run_git(["reset", "--soft", "origin/main"])
+
+    def _check_for_updates(self):
+        self.ui.label_status.setText("正在檢查雲端版本...")
+        self._run_git(["fetch", "origin", "main"])
+        diff = self._run_git(["diff", "main", "origin/main", "--name-only"])
+
+        if diff and diff.strip():
+            files = diff.strip().split("\n")
+            self.ui.tableWidget_file_list.setRowCount(0)
+            for f in files:
+                # 補齊 4 個參數，讓 Table 顯示得更專業
+                self._add_list([f, "GitHub 伺服器", "本地系統", "待更新"])
+
+            self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+            self.ui.label_status.setText(f"發現 {len(files)} 個檔案需要更新")
+        else:
+            self.ui.label_status.setText("系統已是最新狀態")
+            QMessageBox.information(self, "更新", "系統目前已是最新狀態。")
+
+    def _download_by_dropbox(self):
         dropbox_file = self._download_dropbox_file()
 
         self._check_files(dropbox_file)

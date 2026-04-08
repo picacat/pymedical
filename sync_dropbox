@@ -42,5 +42,6 @@ zip -r "$zip_file_name" pymedical/ui/*.ui
 zip -r "$zip_file_name" pymedical/images/*.*
 zip -r "$zip_file_name" pymedical/icons/*.*
 zip -r "$zip_file_name" pymedical/tables/*.*
+zip -r "$zip_file_name" pymedical/git_core/*.*
 
 cp "$zip_file_name" "$dest_zip_file_name"
