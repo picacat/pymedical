@@ -119,6 +119,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QLabel" name="label_status">
+     <property name="text">
+      <string>更新狀態</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QProgressBar" name="progressBar">
      <property name="value">
       <number>0</number>

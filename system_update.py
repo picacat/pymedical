@@ -423,13 +423,13 @@ class SystemUpdate(QtWidgets.QDialog):
 
         return download_file_name
 
-    # 取得安全簽章
     def _check_downloaded_file(self):
         if os.path.exists(self.git_exe):
             self._download_by_git()
         else:
             self._download_by_dropbox()
 
+    # 新增git更新方式
     def _download_by_git(self):
         self._check_environment()
         self._check_for_updates()
