@@ -1,12 +1,19 @@
 import datetime
+import hashlib
 import sys
 
 import mysql.connector
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import PYQT_VERSION_STR, QTimer
 
-from libs import (date_utils, log_utils, personnel_utils, string_utils,
-                  system_utils, ui_utils)
+from libs import (
+    date_utils,
+    log_utils,
+    personnel_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 系統設定 2018.03.19
@@ -27,7 +34,9 @@ class Login(QtWidgets.QDialog):
         self._set_ui()
         self._set_signal()
 
-        self.setWindowState(self.windowState() & ~QtCore.Qt.WindowMinimized | QtCore.Qt.WindowActive)
+        self.setWindowState(
+            self.windowState() & ~QtCore.Qt.WindowMinimized | QtCore.Qt.WindowActive
+        )
         # 延遲顯示與聚焦視窗
         QTimer.singleShot(0, self._bring_to_front)
 
@@ -62,54 +71,32 @@ class Login(QtWidgets.QDialog):
         self._set_style()
 
     def _set_style(self):
-        blur_radius = 30
-        shadow1 = QtWidgets.QGraphicsDropShadowEffect()
-        shadow1.setBlurRadius(blur_radius)
-        self.ui.comboBox_user_name.setGraphicsEffect(shadow1)
+        # 使用封裝好的 ui_utils 函式
+        # 輸入框與下拉選單使用較明顯的陰影 (blur=30)
+        ui_utils.add_shadow(self.ui.comboBox_user_name, blur_radius=30)
+        ui_utils.add_shadow(self.ui.lineEdit_password, blur_radius=30)
 
-        shadow2 = QtWidgets.QGraphicsDropShadowEffect()
-        shadow2.setBlurRadius(blur_radius)
-        self.ui.lineEdit_password.setGraphicsEffect(shadow2)
+        # 按鈕類
+        ui_utils.add_shadow(self.ui.pushButton_login, blur_radius=30)
+        ui_utils.add_shadow(self.ui.pushButton_close, blur_radius=30)
 
-        shadow3 = QtWidgets.QGraphicsDropShadowEffect()
-        shadow3.setBlurRadius(15)
-        self.ui.label_user_name.setGraphicsEffect(shadow3)
-
-        shadow4 = QtWidgets.QGraphicsDropShadowEffect()
-        shadow4.setBlurRadius(15)
-        self.ui.label_password.setGraphicsEffect(shadow4)
-
-        shadow5 = QtWidgets.QGraphicsDropShadowEffect()
-        shadow5.setBlurRadius(blur_radius)
-        self.ui.pushButton_login.setGraphicsEffect(shadow5)
-
-        shadow6 = QtWidgets.QGraphicsDropShadowEffect()
-        shadow6.setBlurRadius(blur_radius)
-        self.ui.pushButton_close.setGraphicsEffect(shadow6)
-
-        # h, w = 48, 48
-        # pixmap = QtGui.QPixmap('./images/python.png')
-        # self.ui.label_python.setPixmap(pixmap.scaled(h, w, QtCore.Qt.KeepAspectRatio))
-        # pixmap = QtGui.QPixmap('./images/mariadb.png')
-        # self.ui.label_mariadb.setPixmap(pixmap.scaled(h, w, QtCore.Qt.KeepAspectRatio))
-        # pixmap = QtGui.QPixmap('./images/mysql.png')
-        # self.ui.label_mysql.setPixmap(pixmap.scaled(h, w, QtCore.Qt.KeepAspectRatio))
-
-        # self.movie = QtGui.QMovie("earth.gif")
-        # self.label_earth.setMovie(self.movie)
-        # self.movie.start()
+        # 文字標籤類使用較淡的陰影 (blur=15)
+        ui_utils.add_shadow(self.ui.label_user_name, blur_radius=15)
+        ui_utils.add_shadow(self.ui.label_password, blur_radius=15)
+        ui_utils.add_shadow(self.ui.label_system_title, blur_radius=15)
+        ui_utils.add_shadow(self.ui.label_version, blur_radius=15)
 
     def _set_auto_login(self):
-        sql = 'SELECT Name, Password FROM person'
+        sql = "SELECT Name, Password FROM person"
 
         rows = self.database.select_record(sql)
         if len(rows) != 1:
             return
 
         row = rows[0]
-        self.ui.comboBox_user_name.setCurrentText(string_utils.xstr(row['Name']))
-        if self.system_settings.field('自動登入') == 'Y' and self.call_from is None:
-            self.ui.lineEdit_password.setText(string_utils.xstr(row['Password']))
+        self.ui.comboBox_user_name.setCurrentText(string_utils.xstr(row["Name"]))
+        if self.system_settings.field("自動登入") == "Y" and self.call_from is None:
+            self.ui.lineEdit_password.setText(string_utils.xstr(row["Password"]))
             self.login_button_clicked()
             QTimer.singleShot(1000, self.accept)
 
@@ -117,18 +104,18 @@ class Login(QtWidgets.QDialog):
         sql = 'SHOW VARIABLES LIKE "version"'
         try:
             rows = self.database.select_record(sql)
-            mysql_version = rows[0]['Value']
+            mysql_version = rows[0]["Value"]
         except Exception:
-            mysql_version = 'unknown'
+            mysql_version = "unknown"
 
-        self.clinic_name = self.system_settings.field('院所名稱')
-        short_clinic_name = self.clinic_name.replace('中醫診所', '')
+        self.clinic_name = self.system_settings.field("院所名稱")
+        short_clinic_name = self.clinic_name.replace("中醫診所", "")
         pymedical_version = self.parent.version
-        python_version = '.'.join(map(str, sys.version_info[0:3]))
+        python_version = ".".join(map(str, sys.version_info[0:3]))
         pyqt_version = PYQT_VERSION_STR
         mysql_connector_version = mysql.connector.__version__
 
-        title = f'''
+        title = f"""
             <html>
                 <head/>
                 <body>
@@ -140,15 +127,12 @@ class Login(QtWidgets.QDialog):
                     </p>
                 </body>
             </html>
-        '''
+        """
         self.ui.label_system_title.setText(title)
-        
-        shadow = QtWidgets.QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(15)
-        self.ui.label_system_title.setGraphicsEffect(shadow)
+
         current_year = datetime.datetime.now().year
 
-        version = f'''
+        version = f"""
             <html>
                 <head/>
                 <body>
@@ -163,7 +147,7 @@ class Login(QtWidgets.QDialog):
                     </p>
                 </body>
             </html>
-        '''
+        """
         self.ui.label_version.setText(version)
         shadow2 = QtWidgets.QGraphicsDropShadowEffect()
         shadow2.setBlurRadius(15)
@@ -179,7 +163,7 @@ class Login(QtWidgets.QDialog):
         self.ui.lineEdit_password.setFocus(True)
 
     def _set_combo_box(self):
-        sql = '''
+        sql = """
             SELECT * FROM person
             WHERE
                 Position IS NOT NULL AND LENGTH(Position) > 0 AND
@@ -188,32 +172,31 @@ class Login(QtWidgets.QDialog):
             ORDER BY FIELD(
                 Position, "醫師", "支援醫師", "藥師", "護士", "護理師", "職員", "推拿師父", "其他", "已離職", NULL),
                 Code, PersonKey
-        '''
+        """
         rows = self.database.select_record(sql)
         user_list = [None]
         color_list = [None]
 
         for row in rows:
-            position = string_utils.xstr(row['Position'])
-            fulltime = string_utils.xstr(row['FullTime'])
+            position = string_utils.xstr(row["Position"])
+            fulltime = string_utils.xstr(row["FullTime"])
 
-            if fulltime in ['已離職'] or position in ['已離職']:
+            if fulltime in ["已離職"] or position in ["已離職"]:
                 continue
 
-
-            if position in ['醫師', '支援醫師'] and string_utils.xstr(row['ID']) == '':
+            if position in ["醫師", "支援醫師"] and string_utils.xstr(row["ID"]) == "":
                 continue
 
-            user_list.append(row['Name'])
-            if position in ['醫師']:
+            user_list.append(row["Name"])
+            if position in ["醫師"]:
                 color = QtGui.QBrush(QtCore.Qt.darkMagenta)
-            elif position in ['支援醫師']:
+            elif position in ["支援醫師"]:
                 color = QtGui.QBrush(QtCore.Qt.darkGreen)
-            elif position in ['護士', '護理師']:
+            elif position in ["護士", "護理師"]:
                 color = QtGui.QBrush(QtCore.Qt.blue)
-            elif position in ['推拿師父', '復健師']:
+            elif position in ["推拿師父", "復健師"]:
                 color = QtGui.QBrush(QtCore.Qt.darkRed)
-            elif position in ['其他']:
+            elif position in ["其他"]:
                 color = QtGui.QBrush(QtCore.Qt.darkGray)
             else:
                 color = None
@@ -227,20 +210,32 @@ class Login(QtWidgets.QDialog):
     def login_button_clicked(self):
         user_name = self.ui.comboBox_user_name.currentText()
         password = self.ui.lineEdit_password.text()
-        if user_name == '' and password == '50374':
+
+        # 建議加上 .strip() 去掉前後空白
+        raw_password = self.ui.lineEdit_password.text().strip()
+
+        # 進行加密比對
+        input_pwd_hash = hashlib.sha256(raw_password.encode()).hexdigest()
+
+        # 使用你自己跑出來的那串正解
+        admin_hash = "30b1ff1195cd5be556aea2a6eecfeaa7a24d851c4d0ff629997872f127822fab"
+
+        if user_name == "" and input_pwd_hash == admin_hash:
             self.login_ok = True
-            self.user_name = '超級使用者'
-            self.position = '系統管理員'
-            station_no = self.system_settings.field('工作站編號')
-            system_utils.write_loggin_info(self.clinic_name, self.user_name, '系統管理員')
+            self.user_name = "超級使用者"
+            self.position = "系統管理員"
+            station_no = self.system_settings.field("工作站編號")
+            system_utils.write_loggin_info(
+                self.clinic_name, self.user_name, "系統管理員"
+            )
             system_utils.write_user_info(self.clinic_name, station_no, self.user_name)
             self._write_log()
             self.close()
 
-        if user_name == '' or password == '':
+        if user_name == "" or password == "":
             return
 
-        password = password.replace('\\', '')
+        password = password.replace("\\", "")
 
         sql = f'''
             SELECT * FROM person
@@ -260,13 +255,24 @@ class Login(QtWidgets.QDialog):
 
         row = rows[0]
         self.login_ok = True
-        self.user_name = string_utils.xstr(row['Name'])
-        self.position = string_utils.xstr(row['Position'])
+        self.user_name = string_utils.xstr(row["Name"])
+        self.position = string_utils.xstr(row["Position"])
+        if self.position in ["支援醫師"]:
+            system_utils.show_message_box(
+                QtWidgets.QMessageBox.Information,
+                "報備支援提醒",
+                f"""<font size="5" color="darkgreen">
+                        <b>
+                            {self.user_name}醫師您好，您目前的身份為支援醫師，請確認已經完成了報備支援，謝謝！
+                        </b>
+                </font>""",
+                "溫馨提示",
+            )
 
         self._clear_in_progress(self.user_name)
         self._write_log()
 
-        station_no = self.system_settings.field('工作站編號')
+        station_no = self.system_settings.field("工作站編號")
         system_utils.write_loggin_info(self.clinic_name, self.user_name, self.position)
         system_utils.write_user_info(self.clinic_name, station_no, self.user_name)
 
@@ -274,13 +280,18 @@ class Login(QtWidgets.QDialog):
 
     def _write_log(self):
         log_utils.write_event_log(
-            self.database, self.user_name, '系統登入', '登入系統',
-            f'{self.user_name}於{date_utils.now_to_str()}登入系統'
+            self.database,
+            self.user_name,
+            "系統登入",
+            "登入系統",
+            f"{self.user_name}於{date_utils.now_to_str()}登入系統",
         )
 
     def _clear_in_progress(self, user_name):
-        position = personnel_utils.get_person_field_value(self.database, user_name, 'Position')
-        if position not in ['醫師', '支援醫師']:
+        position = personnel_utils.get_person_field_value(
+            self.database, user_name, "Position"
+        )
+        if position not in ["醫師", "支援醫師"]:
             return
 
         sql = f'''

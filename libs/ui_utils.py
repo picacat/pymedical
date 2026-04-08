@@ -1,42 +1,42 @@
 import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtCore import QByteArray, QPoint, QSettings, QSize, Qt, QTimer
+from PyQt5.QtCore import QByteArray, QPoint, QSettings, QSize
 from PyQt5.QtWidgets import QMessageBox, QPushButton
 
 from libs import nhi_utils, string_utils
 
-ICON_NO = QtGui.QIcon('./icons/gtk-no.svg')
-ICON_OK = QtGui.QIcon('./icons/gtk-ok.svg')
-ICON_STAR = QtGui.QIcon('./icons/gnome-app-install-star.svg')
-ICON_EYE = QtGui.QIcon('./icons/eye.svg')
-ICON_CHECK_LIST = QtGui.QIcon('./icons/check_list.svg')
-ICON_ADD = QtGui.QIcon('./icons/gtk-add.svg')
-ICON_REMOVE = QtGui.QIcon('./icons/gtk-remove.svg')
-ICON_CLEAR = QtGui.QIcon('./icons/gtk-clear.svg')
-ICON_HELP = QtGui.QIcon('./icons/help-contents.svg')
-ICON_INFO = QtGui.QIcon('./icons/gtk-info.svg')
-ICON_COPY = QtGui.QIcon('./icons/gtk-copy.svg')
-ICON_FINISH = QtGui.QIcon('./icons/finish.svg')
-ICON_REDO = QtGui.QIcon('./icons/redo.svg')
-ICON_DICT = QtGui.QIcon('./icons/address-book-new.svg')
+ICON_NO = QtGui.QIcon("./icons/gtk-no.svg")
+ICON_OK = QtGui.QIcon("./icons/gtk-ok.svg")
+ICON_STAR = QtGui.QIcon("./icons/gnome-app-install-star.svg")
+ICON_EYE = QtGui.QIcon("./icons/eye.svg")
+ICON_CHECK_LIST = QtGui.QIcon("./icons/check_list.svg")
+ICON_ADD = QtGui.QIcon("./icons/gtk-add.svg")
+ICON_REMOVE = QtGui.QIcon("./icons/gtk-remove.svg")
+ICON_CLEAR = QtGui.QIcon("./icons/gtk-clear.svg")
+ICON_HELP = QtGui.QIcon("./icons/help-contents.svg")
+ICON_INFO = QtGui.QIcon("./icons/gtk-info.svg")
+ICON_COPY = QtGui.QIcon("./icons/gtk-copy.svg")
+ICON_FINISH = QtGui.QIcon("./icons/finish.svg")
+ICON_REDO = QtGui.QIcon("./icons/redo.svg")
+ICON_DICT = QtGui.QIcon("./icons/address-book-new.svg")
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
 
-GRADIENT_COLOR = '''
+GRADIENT_COLOR = """
     background: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #d5dbdb, stop: 1 #eaeded);
     color: #000000;  /* 設定字體顏色 */
-'''
+"""
 
-VIDEO_DIAG_COLOR = '''
+VIDEO_DIAG_COLOR = """
     background: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f3dad8, stop: 1 #f7e8e7);
     color: #000000;  /* 設定字體顏色 */
-'''
+"""
 
-INFECTIOUS_DIAG_COLOR = '''
+INFECTIOUS_DIAG_COLOR = """
     background: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #a7fa9f, stop: 1 #c4e0e5);
     color: #000000;  /* 設定字體顏色 */
-'''
+"""
 
 UI_PATH = "ui"
 UI_PY_MEDICAL = "pymedical.ui"
@@ -132,7 +132,9 @@ UI_INS_APPLY_INFECTIOUS = "ins_apply_infectious.ui"
 UI_INS_APPLY_INDICATOR = "ins_apply_indicator.ui"
 
 UI_STATISTICS_MEDICAL_RECORD = "statistics_medical_record.ui"
-UI_STATISTICS_MEDICAL_RECORD_DIAG_TIME_LENGTH = "statistics_medical_record_diag_time_length.ui"
+UI_STATISTICS_MEDICAL_RECORD_DIAG_TIME_LENGTH = (
+    "statistics_medical_record_diag_time_length.ui"
+)
 UI_STATISTICS_MEDICAL_RECORD_DISEASE_RANK = "statistics_medical_record_disease_rank.ui"
 
 UI_STATISTICS_DAILY = "statistics_daily.ui"
@@ -184,10 +186,18 @@ UI_STATISTICS_INS_DISCOUNT_REGIST_FEE = "statistics_ins_discount_regist_fee.ui"
 UI_STATISTICS_INS_DISCOUNT_DIAG_SHARE_FEE = "statistics_ins_discount_diag_share_fee.ui"
 UI_STATISTICS_INS_DISCOUNT_DRUG_SHARE_FEE = "statistics_ins_discount_drug_share_fee.ui"
 UI_STATISTICS_MULTIPLE_PERFORMANCE = "statistics_multiple_performance.ui"
-UI_STATISTICS_MULTIPLE_PERFORMANCE_WEEK_PERSON = "statistics_multiple_performance_week_person.ui"
-UI_STATISTICS_MULTIPLE_PERFORMANCE_WEEK_INCOME = "statistics_multiple_performance_week_income.ui"
-UI_STATISTICS_MULTIPLE_PERFORMANCE_WEEK_PROJECT = "statistics_multiple_performance_week_project.ui"
-UI_STATISTICS_MULTIPLE_PERFORMANCE_WEEK_DOCTOR = "statistics_multiple_performance_week_doctor.ui"
+UI_STATISTICS_MULTIPLE_PERFORMANCE_WEEK_PERSON = (
+    "statistics_multiple_performance_week_person.ui"
+)
+UI_STATISTICS_MULTIPLE_PERFORMANCE_WEEK_INCOME = (
+    "statistics_multiple_performance_week_income.ui"
+)
+UI_STATISTICS_MULTIPLE_PERFORMANCE_WEEK_PROJECT = (
+    "statistics_multiple_performance_week_project.ui"
+)
+UI_STATISTICS_MULTIPLE_PERFORMANCE_WEEK_DOCTOR = (
+    "statistics_multiple_performance_week_doctor.ui"
+)
 UI_STATISTICS_INS_PREGNANT = "statistics_ins_pregnant.ui"
 UI_STATISTICS_INS_PREGNANT_FEMALE = "statistics_ins_pregnant_female.ui"
 UI_STATISTICS_INS_PREGNANT_MALE = "statistics_ins_pregnant_male.ui"
@@ -211,7 +221,9 @@ UI_STATISTICS_MASSAGER_LIST = "statistics_massager_list.ui"
 
 UI_STATISTICS_INS_PERFORMANCE = "statistics_ins_performance.ui"
 UI_STATISTICS_INS_PERFORMANCE_DOCTOR = "statistics_ins_performance_doctor.ui"
-UI_STATISTICS_INS_PERFORMANCE_MEDICAL_RECORD = "statistics_ins_performance_medical_record.ui"
+UI_STATISTICS_INS_PERFORMANCE_MEDICAL_RECORD = (
+    "statistics_ins_performance_medical_record.ui"
+)
 
 UI_STATISTICS_RETURN_RATE = "statistics_return_rate.ui"
 UI_STATISTICS_NO_RETURN_RATE = "statistics_no_return_rate.ui"
@@ -499,20 +511,29 @@ UI_KIOSK_COMPLETED = "kiosk_completed.ui"
 
 UI_USERS = "users.ui"
 UI_CONVERT = "convert.ui"
-UI_IC_RECORD_UPLOAD = 'ic_record_upload.ui'
-UI_STATISTICS_CORRECTION_REG = 'statistics_correction_reg.ui'
-UI_STATISTICS_TRACE = 'statistics_trace.ui'
-UI_STATISTICS_PATIENT_AGE_GROUP = 'statistics_patient_age_group.ui'
-UI_STATISTICS_INS_APPLY_YEAR = 'statistics_ins_apply_year.ui'
-UI_STATISTICS_PERIOD_YEAR = 'statistics_period_year.ui'
+UI_IC_RECORD_UPLOAD = "ic_record_upload.ui"
+UI_STATISTICS_CORRECTION_REG = "statistics_correction_reg.ui"
+UI_STATISTICS_TRACE = "statistics_trace.ui"
+UI_STATISTICS_PATIENT_AGE_GROUP = "statistics_patient_age_group.ui"
+UI_STATISTICS_INS_APPLY_YEAR = "statistics_ins_apply_year.ui"
+UI_STATISTICS_PERIOD_YEAR = "statistics_period_year.ui"
 
 UI_RESTORE_RECORDS = "restore_records.ui"
 UI_RESTORE_MEDICAL_RECORDS = "restore_medical_records.ui"
 
 UI_MASSAGE_REGISTRATION = "massage_registration.ui"
 
-THEME = ['Fusion', 'Windows', 'Cleanlooks', 'gtk2', 'motif', 'plastic', 'cde', 'qt5-ct-style']
-WIN32_THEME = ['Fusion', 'Windows', 'WindowsXP', 'WindowsVista']
+THEME = [
+    "Fusion",
+    "Windows",
+    "Cleanlooks",
+    "gtk2",
+    "motif",
+    "plastic",
+    "cde",
+    "qt5-ct-style",
+]
+WIN32_THEME = ["Fusion", "Windows", "WindowsXP", "WindowsVista"]
 
 
 # 載入 ui 檔
@@ -525,7 +546,7 @@ def load_ui_file(ui_file, self, native_menu_bar=False):
                 ui.menubar.setNativeMenuBar(False)
             except Exception:
                 pass
-        
+
         # try:
         #     set_all_input_widget_shadow(ui)
         # except Exception:
@@ -535,8 +556,10 @@ def load_ui_file(ui_file, self, native_menu_bar=False):
     except Exception:
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle('找不到ui檔')
-        msg_box.setText(f"<font size='4' color='red'><b>找不到 {ui_file_name}, 請檢查檔案是否存在.</b></font>")
+        msg_box.setWindowTitle("找不到ui檔")
+        msg_box.setText(
+            f"<font size='4' color='red'><b>找不到 {ui_file_name}, 請檢查檔案是否存在.</b></font>"
+        )
         msg_box.setInformativeText("請與本公司聯繫, 並告知上面的訊息.")
         msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
         msg_box.exec_()
@@ -608,7 +631,7 @@ def get_discount_type(database):
     sql = 'SELECT * from charge_settings where ChargeType IN ("掛號費優待", "自費掛號費優待")'
     rows = database.select_record(sql)
     for row in rows:
-        discount_type.append(row['ItemName'])
+        discount_type.append(row["ItemName"])
 
     return [None] + nhi_utils.DISCOUNT + discount_type
 
@@ -618,7 +641,7 @@ def set_combo_box(combobox, items, *args):
     combobox.clear()
 
     combobox.setMaxVisibleItems(30)
-    if items == '掛號優待':
+    if items == "掛號優待":
         items = get_discount_type(args[0])
         args = []
 
@@ -635,8 +658,7 @@ def set_combo_box_item_color(combobox, colors):
         if colors is None:
             continue
 
-        combobox.setItemData(
-            item_no, colors[item_no], QtCore.Qt.TextColorRole)
+        combobox.setItemData(item_no, colors[item_no], QtCore.Qt.TextColorRole)
 
 
 # 設定輸入文字補全
@@ -648,7 +670,7 @@ def set_completer(database, sql, field, widget):
     completer_list = []
     for row in rows:
         if type(field) is list:
-            field_name = ''
+            field_name = ""
             for f in field:
                 field_name += row[f]
         else:
@@ -669,8 +691,15 @@ def set_completer(database, sql, field, widget):
         widget.setCompleter(completer)
 
 
-def set_table_widget_field_icon(table_widget, row_no, col_no, icon_file_name,
-                                property_name, property_value, function_call):
+def set_table_widget_field_icon(
+    table_widget,
+    row_no,
+    col_no,
+    icon_file_name,
+    property_name,
+    property_value,
+    function_call,
+):
     icon = QtGui.QIcon(icon_file_name)
 
     button = QtWidgets.QPushButton(table_widget)
@@ -697,12 +726,12 @@ def set_table_widget_image(table_widget, row_no, col_no, image_file, image_size)
 def set_instruction_combo_box(database, combobox):
     set_combo_box(combobox, nhi_utils.INSTRUCTION, None)
 
-    sql = '''
+    sql = """
         SELECT * FROM clinic
         WHERE
             ClinicType = "指示"
         ORDER BY LENGTH(ClinicName), CAST(CONVERT(`ClinicName` using big5) AS BINARY)
-    '''
+    """
     rows = database.select_record(sql)
     if len(rows) <= 0:
         return
@@ -712,12 +741,12 @@ def set_instruction_combo_box(database, combobox):
     pc_sleep_exist = False
 
     for row in rows:
-        instruction = string_utils.xstr(row['ClinicName'])
-        if instruction == '飯前':
+        instruction = string_utils.xstr(row["ClinicName"])
+        if instruction == "飯前":
             ac_exist = True
-        elif instruction == '飯後':
+        elif instruction == "飯後":
             pc_exist = True
-        elif instruction == '飯後睡前':
+        elif instruction == "飯後睡前":
             pc_sleep_exist = True
 
         if instruction in nhi_utils.INSTRUCTION:
@@ -726,23 +755,23 @@ def set_instruction_combo_box(database, combobox):
         combobox.addItem(instruction[:20])
 
     if not ac_exist:
-        index = combobox.findText('飯前')
+        index = combobox.findText("飯前")
         if index != -1:
             combobox.removeItem(index)
     if not pc_exist:
-        index = combobox.findText('飯後')
+        index = combobox.findText("飯後")
         if index != -1:
             combobox.removeItem(index)
     if not pc_sleep_exist:
-        index = combobox.findText('飯後睡前')
+        index = combobox.findText("飯後睡前")
         if index != -1:
             combobox.removeItem(index)
 
 
 def get_medical_record_ui_file(system_settings):
-    if system_settings.field('病歷版面') == '版面1':
+    if system_settings.field("病歷版面") == "版面1":
         ui_file = UI_MEDICAL_RECORD
-    elif system_settings.field('病歷版面') == '版面2':
+    elif system_settings.field("病歷版面") == "版面2":
         ui_file = UI_MEDICAL_RECORD2
     else:
         ui_file = UI_MEDICAL_RECORD
@@ -756,9 +785,9 @@ def get_default_color(widget):
 
     return default_color
 
-    
+
 def save_settings(widget, setting_group):
-    settings = QSettings('__settings.ini', QSettings.IniFormat)
+    settings = QSettings("__settings.ini", QSettings.IniFormat)
     settings.beginGroup(setting_group)
     try:
         # 紀錄是否最大化（下次才知道要不要 showMaximized）
@@ -766,21 +795,23 @@ def save_settings(widget, setting_group):
 
         # 直接存目前的幾何；Qt 會把「正常狀態」大小保存好
         settings.setValue("geometry", widget.saveGeometry())  # QByteArray
-        settings.setValue("size", widget.size())              # QSize（備援）
-        settings.setValue("pos",  widget.pos())               # QPoint（備援）
+        settings.setValue("size", widget.size())  # QSize（備援）
+        settings.setValue("pos", widget.pos())  # QPoint（備援）
     finally:
         settings.endGroup()
 
 
-def restore_settings(widget, setting_group, qsize=QSize(858, 769), qpoint=QPoint(1054, 225)):
-    settings = QSettings('__settings.ini', QSettings.IniFormat)    
+def restore_settings(
+    widget, setting_group, qsize=QSize(858, 769), qpoint=QPoint(1054, 225)
+):
+    settings = QSettings("__settings.ini", QSettings.IniFormat)
     settings.beginGroup(setting_group)
     try:
         # 指定型別，避免還原失效
         geom = settings.value("geometry", QByteArray(), type=QByteArray)
         maximized = settings.value("maximized", False, bool)
         size = settings.value("size", qsize, type=QSize)
-        pos  = settings.value("pos",  qpoint, type=QPoint)
+        pos = settings.value("pos", qpoint, type=QPoint)
     finally:
         settings.endGroup()
 
@@ -797,3 +828,16 @@ def restore_settings(widget, setting_group, qsize=QSize(858, 769), qpoint=QPoint
         # 幾何要先還原完，再最大化
         widget.showMaximized()
 
+
+def add_shadow(
+    widget, blur_radius=15, x_offset=0, y_offset=0, color=QtGui.QColor(0, 0, 0, 150)
+):
+    """
+    為指定的 widget 增加陰影效果
+    """
+    shadow = QtWidgets.QGraphicsDropShadowEffect(widget)
+    shadow.setBlurRadius(blur_radius)
+    shadow.setOffset(x_offset, y_offset)
+    shadow.setColor(color)
+    widget.setGraphicsEffect(shadow)
+    return shadow  # 回傳物件，以防萬一之後需要動態調整

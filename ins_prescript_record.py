@@ -1476,6 +1476,14 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         if set_dosage_percent and self.doubleSpinBox_total_dosage.value() > 0:
             self._set_dosage_percent()
 
+        current_row = self.ui.tableWidget_prescript.currentRow()
+        for col_info in prescript_row:
+            col_no, col_val = col_info[0], col_info[1]
+            item = self.ui.tableWidget_prescript.item(current_row, col_no)
+            if item:
+                # 強制同步備份，確保第一次修改前就有值
+                item.setData(QtCore.Qt.UserRole, string_utils.xstr(col_val))
+
         return True
 
     def set_prescript(self, row, row_no=None, sort_prescript=True):
@@ -1902,9 +1910,18 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         ]
 
         for col_no in range(len(prescript_row)):
-            self.ui.tableWidget_prescript.setItem(
-                row_no, col_no, QtWidgets.QTableWidgetItem(prescript_row[col_no])
-            )
+            new_item = QtWidgets.QTableWidgetItem(prescript_row[col_no])
+
+            # 2. 存入初始值到 UserRole (作為日後還原的基準)
+            # 我們把每一格的初始文字都存起來，這樣以後每一欄都能做還原
+            new_item.setData(QtCore.Qt.UserRole, prescript_row[col_no])
+
+            # 3. 放入 Table
+            self.ui.tableWidget_prescript.setItem(row_no, col_no, new_item)
+
+            # self.ui.tableWidget_prescript.setItem(
+            #     row_no, col_no, QtWidgets.QTableWidgetItem(prescript_row[col_no])
+            # )
 
             self._adjust_prescript_align(row_no, col_no)
             if ins_code == "":
@@ -4330,36 +4347,48 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self.ui.toolButton_copy.setEnabled(enabled)
         self.ui.toolButton_copy_to_append.setEnabled(enabled)
 
-        # medicine_key_item = self.ui.tableWidget_prescript.item(
-        #     self.ui.tableWidget_prescript.currentRow(),
-        #     prescript_utils.INS_PRESCRIPT_COL_NO['MedicineKey']
-        # )
-        # if medicine_key_item is None:
-        #     return
-
-        # description = prescript_utils.get_medicine_description(self.database, medicine_key_item.text())
-        # if description is None:
-        #     self.ui.toolButton_medicine_info.setEnabled(False)
-
+    # 欄位資料暫存用: item.setData(QtCore.Qt.UserRole, item.text()) --> 在set_db_data
     def _prescript_item_changed(self, item):
         if item is None:
             return
 
-        col_no = item.column()
+        # 暫時阻斷訊號，防止「還原動作」再次觸發 itemChanged 導致無限迴圈
+        self.ui.tableWidget_prescript.blockSignals(True)
 
-        if col_no == prescript_utils.INS_PRESCRIPT_COL_NO["Dosage"]:
-            self._set_total_dosage()
-            self._set_total_cost()
-            # if self.parent.medical_record is not None and \
-            #     (string_utils.xstr(self.parent.medical_record['Share']) in nhi_utils.INFECTIOUS_TYPE or
-            #      string_utils.xstr(self.parent.medical_record['Injury']) in nhi_utils.INFECTIOUS_TYPE):
-            #     self.parent.calculate_ins_fees()
-        elif col_no == prescript_utils.INS_PRESCRIPT_COL_NO["MedicineName"]:
-            medicine_name = item.text()
-            if "清冠一號" in medicine_name:
-                self.parent.calculate_ins_fees()
-        elif col_no == prescript_utils.INS_PRESCRIPT_COL_NO["Instruction"]:
-            self._set_dosage_percent()
+        try:
+            col_no = item.column()
+            current_text = item.text().strip()  # 去除前後空白
+
+            # 取得存在 UserRole 裡的舊值
+            old_value = item.data(QtCore.Qt.UserRole)
+
+            if col_no == prescript_utils.INS_PRESCRIPT_COL_NO["MedicineName"]:
+                # 判斷是否為空字串
+                if not current_text:
+                    # 還原成舊值
+                    item.setText(old_value if old_value is not None else "")
+                else:
+                    # 輸入有效，更新 UserRole 以供下次比對，並執行後續邏輯
+                    item.setData(QtCore.Qt.UserRole, current_text)
+
+                    if "清冠一號" in current_text:
+                        self.parent.calculate_ins_fees()
+
+            elif col_no == prescript_utils.INS_PRESCRIPT_COL_NO["Dosage"]:
+                # 同理，如果劑量也需要防呆，可以比照辦理
+                if not current_text:
+                    item.setText(old_value)
+                else:
+                    item.setData(QtCore.Qt.UserRole, current_text)
+                    self._set_total_dosage()
+                    self._set_total_cost()
+
+            elif col_no == prescript_utils.INS_PRESCRIPT_COL_NO["Instruction"]:
+                self._set_dosage_percent()
+
+        finally:
+            # 務必恢復訊號監聽
+            self.ui.tableWidget_prescript.blockSignals(False)
 
     def _open_dosage(self):
         medicine_name_item = self.ui.tableWidget_prescript.item(

@@ -968,6 +968,19 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         ]
         self.set_prescript(prescript_row)
 
+        # 【新增：立即建立備份點】
+        # 取得當前操作的行號
+        current_row = self.ui.tableWidget_prescript.currentRow()
+        if current_row != -1:
+            for col_info in prescript_row:
+                col_no = col_info[0]  # 取得欄位索引
+                col_val = col_info[1]  # 取得寫入的值
+
+                item = self.ui.tableWidget_prescript.item(current_row, col_no)
+                if item:
+                    # 將文字同步存入 UserRole，這樣 itemChanged 就不會抓到 None 了
+                    item.setData(QtCore.Qt.UserRole, string_utils.xstr(col_val))
+
         return True
 
     def _get_ratio_price(self, medicine_type, price):
@@ -1306,14 +1319,31 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
             in_price_mark,
         ]
 
+        # for col_no in range(len(prescript_row)):
+        #     self.ui.tableWidget_prescript.setItem(
+        #         row_no, col_no, QtWidgets.QTableWidgetItem(prescript_row[col_no])
+        #     )
+
+        # self._adjust_prescript_column(row_no)
+        # # database._add_prescript_info_button(row_no, medicine_key)
+
+        # if medicine_name == "代煎水藥":
+        #     self.ui.radioButton_process_medicine.setChecked(True)
+
+        # ... 前面的程式碼保持不變 ...
+
         for col_no in range(len(prescript_row)):
-            self.ui.tableWidget_prescript.setItem(
-                row_no, col_no, QtWidgets.QTableWidgetItem(prescript_row[col_no])
-            )
+            # 1. 建立 QTableWidgetItem
+            item_text = prescript_row[col_no]
+            new_item = QtWidgets.QTableWidgetItem(item_text)
+
+            # 2. 關鍵：將初始值存入 UserRole，供日後還原使用
+            new_item.setData(QtCore.Qt.UserRole, item_text)
+
+            # 3. 放入 Table 中
+            self.ui.tableWidget_prescript.setItem(row_no, col_no, new_item)
 
         self._adjust_prescript_column(row_no)
-        # database._add_prescript_info_button(row_no, medicine_key)
-
         if medicine_name == "代煎水藥":
             self.ui.radioButton_process_medicine.setChecked(True)
 
@@ -1940,20 +1970,80 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 self.medicine_set - 1, QtGui.QIcon()
             )
 
-    def _prescript_item_changed(self, item):
-        self.set_tab_icon()
+    # def _prescript_item_changed(self, item):
+    #     self.set_tab_icon()
 
+    #     if item is None:
+    #         return
+
+    #     col_no = item.column()
+    #     row_no = item.row()
+
+    #     if col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["MedicineName"]:
+    #         prescript_utils.check_extend_ins_drug(self.parent.tab_list[0], self)
+    #     elif col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Instruction"]:
+    #         self._set_dosage_percent()
+
+    #     if col_no not in [
+    #         prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"],
+    #         prescript_utils.SELF_PRESCRIPT_COL_NO["Price"],
+    #         prescript_utils.SELF_PRESCRIPT_COL_NO["Instruction"],
+    #     ]:
+    #         return
+
+    #     self._calculate_total_price(row_no, col_no, item)
+    #     self._adjust_prescript_column_align(row_no)
+
+    #     # self._calculate_single_price_medicine()  # 計算是否有單日計價
+
+    #     self.ui.tableWidget_prescript.blockSignals(True)
+    #     self.parent.calculate_self_fees()
+    #     self._calculate_total_dosage()
+    #     self._calculate_total_costs()
+    #     self._calculate_self_total_fee()
+    #     self.ui.tableWidget_prescript.blockSignals(False)
+
+    def _prescript_item_changed(self, item):
         if item is None:
             return
 
         col_no = item.column()
         row_no = item.row()
 
+        # 取得目前文字與舊的備份值
+        current_text = item.text().strip()
+        old_value = item.data(QtCore.Qt.UserRole)
+
+        # 這裡以藥名、劑量、單價為例
+        target_cols = [
+            prescript_utils.SELF_PRESCRIPT_COL_NO["MedicineName"],
+            prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"],
+            prescript_utils.SELF_PRESCRIPT_COL_NO["Price"],
+        ]
+
+        if col_no in target_cols:
+            if not current_text:
+                # 【關鍵步驟 1】：發現空白，強制還原成「舊的有效值」
+                self.ui.tableWidget_prescript.blockSignals(True)
+                item.setText(old_value if old_value is not None else "")
+                self.ui.tableWidget_prescript.blockSignals(False)
+
+                # 【關鍵步驟 2】：直接結束！不要執行後面的「更新 UserRole」
+                return
+            else:
+                # 【關鍵步驟 3】：只有在確定有輸入內容時，才把新內容存成「下次的備份值」
+                item.setData(QtCore.Qt.UserRole, current_text)
+
+        # --- 以下為原本的邏輯 ---
+
+        self.set_tab_icon()
+
         if col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["MedicineName"]:
             prescript_utils.check_extend_ins_drug(self.parent.tab_list[0], self)
         elif col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Instruction"]:
             self._set_dosage_percent()
 
+        # 判斷是否需要執行計算邏輯
         if col_no not in [
             prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"],
             prescript_utils.SELF_PRESCRIPT_COL_NO["Price"],
@@ -1963,8 +2053,6 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
         self._calculate_total_price(row_no, col_no, item)
         self._adjust_prescript_column_align(row_no)
-
-        # self._calculate_single_price_medicine()  # 計算是否有單日計價
 
         self.ui.tableWidget_prescript.blockSignals(True)
         self.parent.calculate_self_fees()

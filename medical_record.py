@@ -89,11 +89,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
             self._set_in_progress('"Y"')
             self._prompt_hint()
 
-            try:
-                self._prompt_birth_date()
-            except Exception:
-                pass
-
         if self.case_key is None:
             return
 
@@ -114,7 +109,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
             self, self.database, self.system_settings, self.patient_key
         )
         self._set_case_closed()
-        # self._set_misc()
 
     def _set_case_closed(self):
         if self.medical_record is None:
@@ -233,6 +227,12 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
     def _prompt_hint(self):
         self._prompt_injury()
+        self._prompt_allergy()
+
+        try:
+            self._prompt_birth_date()
+        except Exception:
+            pass
 
     def _prompt_injury(self):
         if self.medical_record["Injury"] == "主訴職災":
@@ -271,6 +271,25 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self.ui.checkBox_complaint_injury.blockSignals(False)
         self.tab_registration.ui.comboBox_injury_type.setCurrentText("主訴職災")
         self.ui.checkBox_complaint_injury.setStyleSheet("color: red; font-weight: bold")
+
+    def _prompt_allergy(self):
+        allergy = string_utils.get_str(
+            self.patient_record["Allergy"], encoding="utf-8"
+        ).strip()
+        if allergy in [None, "", "無"]:
+            return
+
+        system_utils.show_message_box(
+            QMessageBox.Critical,
+            "過敏提醒",
+            f"""
+                <font size="5" color="red"><b>
+                    注意! 此病人有過敏史， 過敏內容為: <br>
+                    {allergy}
+                </b></font>
+            """,
+            "請注意病患過敏的用藥",
+        )
 
     def _set_symptom_large_font(self):
         style_sheet = self.ui.textEdit_symptom.styleSheet()
@@ -1946,8 +1965,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
                     PatientKey = {self.patient_key}
             """
             try:
-                self.patient_record = self.database.select_record(sql)[0]
+                self.patient_record: dict = self.database.select_record(sql)[0]
             except Exception:
+                self.patient_record = None
+
                 if self.call_from == "參考病歷":
                     self._insert_template_patient()
                 else:
@@ -1962,10 +1983,11 @@ class MedicalRecord(QtWidgets.QMainWindow):
                 WHERE
                     CaseKey = {self.case_key}
             """
-            self.medical_record = self.database.select_record(sql)[0]
+            self.medical_record: dict = self.database.select_record(sql)[0]
 
             self.ins_type = string_utils.xstr(self.medical_record["InsType"])
-        except IndexError:
+        except Exception:
+            self.medical_record = None
             system_utils.show_message_box(
                 QtWidgets.QMessageBox.Critical,
                 "資料遺失",
