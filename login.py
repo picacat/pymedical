@@ -257,17 +257,17 @@ class Login(QtWidgets.QDialog):
         self.login_ok = True
         self.user_name = string_utils.xstr(row["Name"])
         self.position = string_utils.xstr(row["Position"])
-        if self.position in ["支援醫師"]:
-            system_utils.show_message_box(
-                QtWidgets.QMessageBox.Information,
-                "報備支援提醒",
-                f"""<font size="5" color="darkgreen">
-                        <b>
-                            {self.user_name}醫師您好，您目前的身份為支援醫師，請確認已經完成了報備支援，謝謝！
-                        </b>
-                </font>""",
-                "溫馨提示",
-            )
+        # if self.position in ["支援醫師"]:
+        #     system_utils.show_message_box(
+        #         QtWidgets.QMessageBox.Information,
+        #         "報備支援提醒",
+        #         f"""<font size="5" color="darkgreen">
+        #                 <b>
+        #                     {self.user_name}醫師您好，您目前的身份為支援醫師，請確認已經完成了報備支援，謝謝！
+        #                 </b>
+        #         </font>""",
+        #         "溫馨提示",
+        #     )
 
         self._clear_in_progress(self.user_name)
         self._write_log()
