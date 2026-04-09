@@ -491,7 +491,6 @@ class SystemUpdate(QtWidgets.QDialog):
                 ":(exclude)pymedical.win32.bat",
             ]
         )
-
         # 檢查檔案的不同
         if diff and diff.strip():
             files = diff.strip().splitlines()
