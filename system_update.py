@@ -466,35 +466,6 @@ class SystemUpdate(QtWidgets.QDialog):
         return False
 
     # 檢查git環境
-    # def _check_environment(self):
-    #     dot_git = os.path.join(self.base_path, ".git")
-    #     repo_url = "https://github.com/picacat/pymedical.git"
-
-    #     self._run_git(["config", "--global", "--add", "safe.directory", "*"])
-
-    #     if not os.path.exists(dot_git):
-    #         self.ui.label_status.setText("正在配置更新引擎...")
-    #         self._run_git(["init"])
-    #         self._run_git(["remote", "add", "origin", repo_url])
-    #         self._run_git(["config", "user.email", "clinic@update.local"])
-    #         self._run_git(["config", "user.name", "ClinicUser"])
-    #         self._run_git(["config", "core.autocrlf", "false"])
-
-    #     self.ui.label_status.setText("正在同步雲端資料...")
-    #     self._run_git(["fetch", "origin", "main"])
-
-    #     # --- 核心修正：處理沒有 HEAD 的情況 ---
-    #     check_head = self._run_git(["rev-parse", "HEAD"])
-
-    #     if check_head is None:
-    #         # 如果沒有 HEAD，代表是空倉庫，我們強行對齊一次產生基礎
-    #         self.ui.label_status.setText("正在建立初始環境...")
-    #         self._run_git(["reset", "--hard", "FETCH_HEAD"])
-    #         self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
-    #         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
-
-    #     # 確保 HEAD 存在後，再打標籤才不會報錯
-    #     self._run_git(["update-index", "--skip-worktree", "pymedical.win32.bat"])
     def _check_environment(self):
         dot_git = os.path.join(self.base_path, ".git")
         repo_url = "https://github.com/picacat/pymedical.git"
