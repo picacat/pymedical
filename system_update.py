@@ -87,7 +87,7 @@ class SystemUpdate(QtWidgets.QDialog):
             self.ui.toolButton_open_file.setEnabled(True)
 
     def _set_table_width(self):
-        width = [200, 220, 350, 200]
+        width = [300, 180, 150, 200]
         self.table_widget_file_list.set_table_heading_width(width)
 
     def _run_git(self, args):
