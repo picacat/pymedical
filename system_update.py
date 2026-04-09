@@ -142,43 +142,27 @@ class SystemUpdate(QtWidgets.QDialog):
         self._check_files(zip_file_name)
 
     # 開始更新
-    # def accepted_button_clicked(self):
-    #     if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
-    #         bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
-
-    #         self.ui.label_status.setText("正在執行增量更新...")
-    #         # 1. 暴力同步指針
-    #         self._run_git(["reset", "--hard", "FETCH_HEAD"])
-
-    #         # 2. 核心修正：強制將 FETCH_HEAD 的檔案「抽離」出來覆蓋本地 (解決沒拷貝過去的問題)
-    #         # "--" 代表路徑分離，"." 代表當前目錄全部檔案
-    #         self._run_git(["checkout", "-f", "FETCH_HEAD", "--", "."])
-
-    #         # 3. 清理沒被追蹤的雜物 (預防萬一)
-    #         self._run_git(["clean", "-fd"])
-
-    #         # 2. 強制把本地的 main 分支指針移到最新的雜湊值
-    #         # 這是為了防止 reset 沒跑完導致的指針偏移
-    #         self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
-    #         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
-    #     else:
-    #         # 原本的 Dropbox / 手動 ZIP 更新邏輯
-    #         self._update_files()
-
     def accepted_button_clicked(self):
         if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
-            # --- 1. 物理防護：解除整個 ui 目錄的唯讀屬性 ---
-            ui_dir = os.path.join(self.base_path, "ui")
-            if os.path.exists(ui_dir):
-                self.ui.label_status.setText("正在解除檔案鎖定...")
-                for root, dirs, files in os.walk(ui_dir):
-                    for f in files:
-                        full_path = os.path.join(root, f)
-                        try:
-                            # 強制給予寫入權限 (S_IWRITE)
-                            os.chmod(full_path, stat.S_IWRITE)
-                        except Exception:
-                            pass
+            # --- 1. 全域物理防護：解除整個專案目錄的鎖定 ---
+            self.ui.label_status.setText("正在解除全系統檔案鎖定...")
+
+            # 定義需要排除的目錄，避免掃描到 .git 內部資料庫 (節省時間)
+            exclude_dirs = {".git", "PortableGit", "_temp"}
+
+            for root, dirs, files in os.walk(self.base_path):
+                # 過濾不需要解鎖的系統目錄
+                dirs[:] = [d for d in dirs if d not in exclude_dirs]
+
+                for f in files:
+                    full_path = os.path.join(root, f)
+                    try:
+                        # 核心動作：強制拔掉「唯讀」屬性，確保 Git 有最高寫入權
+                        current_mode = os.stat(full_path).st_mode
+                        if not (current_mode & stat.S_IWRITE):
+                            os.chmod(full_path, current_mode | stat.S_IWRITE)
+                    except Exception:
+                        pass  # 遇到系統鎖定檔案跳過即可
 
             bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
 
