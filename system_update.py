@@ -167,6 +167,19 @@ class SystemUpdate(QtWidgets.QDialog):
 
     def accepted_button_clicked(self):
         if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
+            # --- 1. 物理防護：解除整個 ui 目錄的唯讀屬性 ---
+            ui_dir = os.path.join(self.base_path, "ui")
+            if os.path.exists(ui_dir):
+                self.ui.label_status.setText("正在解除檔案鎖定...")
+                for root, dirs, files in os.walk(ui_dir):
+                    for f in files:
+                        full_path = os.path.join(root, f)
+                        try:
+                            # 強制給予寫入權限 (S_IWRITE)
+                            os.chmod(full_path, stat.S_IWRITE)
+                        except Exception:
+                            pass
+
             bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
 
             # --- 1. 物理備份：更新前先讀取 .bat 內容 ---
