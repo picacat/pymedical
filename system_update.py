@@ -424,7 +424,7 @@ class SystemUpdate(QtWidgets.QDialog):
         else:
             self._download_by_dropbox()
 
-    # 新增git更新方式
+    # 新增git更新方式 2026-04-09
     def _download_by_git(self):
         self._prepare_git_engine()
         self._check_environment()
