@@ -1540,7 +1540,7 @@ def check_cancer_acupuncture_times(database, system_settings, patient_key):
     if cancer_acupuncture_times > CANCER_ACUPUNCTURE_TIMES_LIMIT:
         message = f"""
             * 癌症針灸次數警告:<br>
-            本月癌症門診針灸次數共{cancer_acupuncture_times}次, 已達系統設定{CANCER_ACUPUNCTURE_TIMES_LIMIT}次的限制.
+            本月癌症照護針灸次數已{cancer_acupuncture_times}次.
             <br>
         """
 
