@@ -791,6 +791,15 @@ def get_diag_share_fee(
     try:
         row = database.select_record(sql)[0]
     except IndexError:
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setIcon(QtWidgets.QMessageBox.Critical)
+        msg_box.setWindowTitle("遺失部份負擔設定")
+        msg_box.setText(
+            f"<font size='4' color='red'><b>遺失{share_type}{treat_type}{course_type}部份負擔設定，請檢查！</b></font>"
+        )
+        msg_box.setInformativeText("請至收費設定的「部份負擔」頁面新增")
+        msg_box.addButton(QtWidgets.QPushButton("確定"), QtWidgets.QMessageBox.YesRole)
+        msg_box.exec_()
         return diag_share_fee
 
     if len(row) > 0:
