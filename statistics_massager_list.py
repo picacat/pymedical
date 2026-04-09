@@ -263,6 +263,7 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
 
         self.parent.parent.open_medical_record(case_key)
 
+    # 匯出Excel
     def _export_to_excel(self):
         options = QFileDialog.Options()
         excel_file_name, _ = QFileDialog.getSaveFileName(
