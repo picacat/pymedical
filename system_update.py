@@ -474,6 +474,15 @@ class SystemUpdate(QtWidgets.QDialog):
             # 建立一個空的本地 main
             self._run_git(["branch", "main"])
 
+        self._run_git(["config", "core.autocrlf", "false"])  # 關閉自動換行轉換
+        self._run_git(["config", "core.filemode", "false"])  # 忽略 Windows 檔案權限變動
+        self._run_git(["config", "core.quotepath", "off"])  # 正常顯示中文檔名
+
+        # 確保 remote 網址始終正確
+        self._run_git(
+            ["remote", "set-url", "origin", "https://github.com/picacat/pymedical.git"]
+        )
+
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
         # 抓取雲端最新狀態到 origin/main，但「不更新」本地 main
