@@ -19,7 +19,6 @@ __pycache__/
 .vscode/
 _temp/
 cfg/
-git_core/
 install/
 documents/
 history/
