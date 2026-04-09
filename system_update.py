@@ -464,7 +464,7 @@ class SystemUpdate(QtWidgets.QDialog):
 
         return False
 
-    # 檢查環境
+    # 檢查git環境
     def _check_environment(self):
         dot_git = os.path.join(self.base_path, ".git")
         repo_url = "https://github.com/picacat/pymedical.git"
