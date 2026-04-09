@@ -477,7 +477,7 @@ class SystemUpdate(QtWidgets.QDialog):
         self._run_git(["fetch", "origin", "main"])
         self._run_git(["update-index", "--skip-worktree", "pymedical.win32.bat"])
 
-    # 檢查更新 new
+    # 檢查更新
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
         self._run_git(["fetch", "origin", "main"])
