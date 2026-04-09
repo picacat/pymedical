@@ -482,6 +482,7 @@ class SystemUpdate(QtWidgets.QDialog):
         # 3. 確保 HEAD 指向 main
         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
 
+    # 檢查更新
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
         # 抓取雲端最新狀態到 origin/main，但「不更新」本地 main
