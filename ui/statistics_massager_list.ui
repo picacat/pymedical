@@ -59,7 +59,7 @@
               <item>
                <widget class="QToolButton" name="toolButton_export_to_excel">
                 <property name="text">
-                 <string>匯出Excel</string>
+                 <string>匯出至Excel</string>
                 </property>
                 <property name="icon">
                  <iconset>
