@@ -37,9 +37,7 @@ class SystemUpdate(QtWidgets.QDialog):
 
         # 1. 定義程式根目錄 (pymedical/)
         self.base_path = os.path.dirname(os.path.abspath(__file__))
-
-        # 2. 定義你的 git.exe 路徑 (現在是在 git_core/git.exe)
-        self.git_exe = os.path.join(self.base_path, "git_core", "git.exe")
+        self.git_exe = os.path.join(self.base_path, "PortableGit", "bin", "git.exe")
 
     # 解構
     def __del__(self):
@@ -144,8 +142,6 @@ class SystemUpdate(QtWidgets.QDialog):
         self._check_files(zip_file_name)
 
     def accepted_button_clicked(self):
-        # 判斷目前是 Git 模式還是手動/Dropbox 模式
-        # 如果是 Git 模式，tableWidget 第一個欄位通常是純檔名，且沒有 source_dir
         if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
             self.ui.label_status.setText("正在執行增量更新...")
             # 執行強制覆蓋 (會遵守你的 .gitignore)
@@ -206,7 +202,6 @@ class SystemUpdate(QtWidgets.QDialog):
         self._list_files(zip_source_root, dest_root, "convert")
         self._list_files(zip_source_root, dest_root, "css")
         self._list_files(zip_source_root, dest_root, "dialog")
-        self._list_files(zip_source_root, dest_root, "git_core")
         self._list_files(zip_source_root, dest_root, "libs")
         self._list_files(zip_source_root, dest_root, "slot_machine")
         self._list_files(zip_source_root, dest_root, "mysql")
@@ -431,31 +426,51 @@ class SystemUpdate(QtWidgets.QDialog):
 
     # 新增git更新方式
     def _download_by_git(self):
+        self._prepare_git_engine()
         self._check_environment()
         self._check_for_updates()
 
+    def _prepare_git_engine(self):
+        # 1. 檢查 git 是否已經存在
+        if os.path.exists(self.git_exe):
+            return True
+
+        # 2. 如果不存在，尋找安裝檔
+        installer = os.path.join(self.base_path, "PortableGit.exe")
+        if os.path.exists(installer):
+            self.ui.label_status.setText("第一次執行，正在初始化更新引擎...")
+            # 執行靜默解壓
+            subprocess.run([installer, "-y"], creationflags=0x08000000)
+
+            # 3. 解壓完後可以把安裝檔刪掉，省下 40MB 空間
+            try:
+                os.remove(installer)
+            except Exception:
+                pass
+            return True
+
+        return False
+
     def _check_environment(self):
         dot_git = os.path.join(self.base_path, ".git")
-        # 因為是 Public，直接用這個網址即可
         repo_url = "https://github.com/picacat/pymedical.git"
 
         if not os.path.exists(dot_git):
             self.ui.label_status.setText("正在配置更新引擎...")
             self._run_git(["init"])
-
-            # 確保遠端設定正確 (先刪再加比較保險)
-            self._run_git(["remote", "remove", "origin"])
             self._run_git(["remote", "add", "origin", repo_url])
-
-            # Git 必要設定
             self._run_git(["config", "user.email", "clinic@update.local"])
             self._run_git(["config", "user.name", "ClinicUser"])
 
-            # --- 關鍵：建立本地追蹤 ---
-            self.ui.label_status.setText("正在連線至 GitHub 伺服器...")
-            self._run_git(["fetch", "origin", "main"])
-            # 強制將本地 main 分支指向遠端的 main，但不更動本地檔案內容
-            self._run_git(["reset", "--soft", "origin/main"])
+        # 每次檢查環境都確保遠端網址是對的
+        self._run_git(["remote", "set-url", "origin", repo_url])
+
+        # 關鍵：先抓取
+        self._run_git(["fetch", "origin", "main"])
+
+        # 強制讓本地的 main 分支「對齊」遠端的 origin/main
+        # -B 代表：如果 main 不存在就建立，如果存在就強制重設位置
+        self._run_git(["checkout", "-B", "main", "origin/main"])
 
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")

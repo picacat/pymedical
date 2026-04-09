@@ -22,6 +22,7 @@ zip -r "$zip_file_name" pymedical/chronic_condition.json
 zip -r "$zip_file_name" pymedical/compound.json
 zip -r "$zip_file_name" pymedical/mysqldump.exe
 zip -r "$zip_file_name" pymedical/mysqldump50.exe
+zip -r "$zip_file_name" pymedical/PortableGit.exe
 zip -r "$zip_file_name" pymedical/2023_ICD10.json
 zip -r "$zip_file_name" pymedical/2023_ICD10_disable.json
 zip -r "$zip_file_name" pymedical/2023_ICD_MAP.json
@@ -42,6 +43,5 @@ zip -r "$zip_file_name" pymedical/ui/*.ui
 zip -r "$zip_file_name" pymedical/images/*.*
 zip -r "$zip_file_name" pymedical/icons/*.*
 zip -r "$zip_file_name" pymedical/tables/*.*
-zip -r "$zip_file_name" pymedical/git_core/*.*
 
 cp "$zip_file_name" "$dest_zip_file_name"
