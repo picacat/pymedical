@@ -148,10 +148,10 @@ class SystemUpdate(QtWidgets.QDialog):
             # 1. 執行暴力更新
             self._run_git(["reset", "--hard", "FETCH_HEAD"])
 
-            # 2. 強制把本地的 main 分支指針移到最新的雜湊值
-            # 這是為了防止 reset 沒跑完導致的指針偏移
-            self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
-            self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
+            # # 2. 強制把本地的 main 分支指針移到最新的雜湊值
+            # # 這是為了防止 reset 沒跑完導致的指針偏移
+            # self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+            # self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
         else:
             # 原本的 Dropbox / 手動 ZIP 更新邏輯
             self._update_files()
