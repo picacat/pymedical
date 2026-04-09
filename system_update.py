@@ -141,7 +141,7 @@ class SystemUpdate(QtWidgets.QDialog):
         zip_file_name = self.ui.lineEdit_file_name.text()
         self._check_files(zip_file_name)
 
-    # 開始更新軟體
+    # 開始更新
     def accepted_button_clicked(self):
         if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
             self.ui.label_status.setText("正在執行增量更新...")
