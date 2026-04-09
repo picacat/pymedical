@@ -477,7 +477,6 @@ class SystemUpdate(QtWidgets.QDialog):
 
         # 2. 不要用 checkout，因為 checkout 會檢查檔案有沒有被改動，容易中斷
         # 直接把本地的 main 分支「指標」硬指到剛剛抓下來的 origin/main
-        # 這樣 Git 之後就絕對認識 'main' 這個字了
         self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
 
         # 3. 確保 HEAD 指向 main
