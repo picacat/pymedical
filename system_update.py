@@ -488,15 +488,16 @@ class SystemUpdate(QtWidgets.QDialog):
         self._run_git(["fetch", "origin", "main"])
 
         # 比對「本地目前的 main」與「遠端的 origin/main」
-        diff = self._run_git(["diff", "main", "origin/main", "--name-only"])
+        diff = self._run_git(["diff", "HEAD", "FETCH_HEAD", "--name-only"])
 
         if diff and diff.strip():
-            files = diff.strip().split("\n")
+            files = diff.strip().splitlines()
             self.ui.tableWidget_file_list.setRowCount(0)
             for f in files:
                 self._add_list([f, "GitHub 伺服器", "本地系統", "待更新"])
             self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
-            self.ui.label_status.setText(f"發現 {len(files)} 個檔案需要更新")
+            count = len(files)
+            self.ui.label_status.setText(f"發現 {count} 個檔案需要更新")
         else:
             self.ui.label_status.setText("系統已是最新狀態")
             QMessageBox.information(self, "更新", "系統目前已是最新狀態。")
