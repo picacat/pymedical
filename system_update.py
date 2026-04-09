@@ -462,32 +462,30 @@ class SystemUpdate(QtWidgets.QDialog):
             self._run_git(["config", "user.email", "clinic@update.local"])
             self._run_git(["config", "user.name", "ClinicUser"])
 
-        # 強制抓取雲端 main 分支的最新狀態到 FETCH_HEAD
+        # 1. 每次都先 Fetch，把遠端的清單抓回來 (這步很重要，否則 Git 不認識 origin/main)
         self.ui.label_status.setText("正在同步雲端資料...")
         self._run_git(["fetch", "origin", "main"])
 
-        # --- 核心修正：強制建立/更新本地 main 指向 FETCH_HEAD ---
-        # 這一行會直接跳過所有檢查，強制在 .git 裡寫入 main 的記錄
-        self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+        # 2. 修正錯誤的重點：
+        # 如果 Git 報錯說不認識 main，我們強制把本地指標指到遠端的 origin/main
+        # checkout -B 會「強制建立或重設」本地分支
+        check_branch = self._run_git(["checkout", "-B", "main", "origin/main"])
 
-        # 強制切換到 main (不檢查檔案差異，直接硬切)
-        self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
+        if check_branch is None:
+            # 如果還是失敗，可能是遠端名稱問題，嘗試 reset 到遠端
+            self._run_git(["reset", "--hard", "origin/main"])
 
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
-
-        # 1. 抓取最新資訊
         self._run_git(["fetch", "origin", "main"])
-
-        # 2. 直接比對目前的 HEAD 與剛抓下來的 FETCH_HEAD
-        # 如果這兩個一樣，diff 就會是空的
-        diff = self._run_git(["diff", "HEAD", "FETCH_HEAD", "--name-only"])
+        diff = self._run_git(["diff", "main", "origin/main", "--name-only"])
 
         if diff and diff.strip():
             files = diff.strip().split("\n")
             self.ui.tableWidget_file_list.setRowCount(0)
             for f in files:
-                self._add_list([f, "GitHub 雲端", "本地系統", "待更新"])
+                # 補齊 4 個參數，讓 Table 顯示得更專業
+                self._add_list([f, "GitHub 伺服器", "本地系統", "待更新"])
 
             self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
             self.ui.label_status.setText(f"發現 {len(files)} 個檔案需要更新")
