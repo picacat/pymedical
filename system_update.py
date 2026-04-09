@@ -470,12 +470,12 @@ class SystemUpdate(QtWidgets.QDialog):
             self._run_git(["config", "user.email", "clinic@update.local"])
             self._run_git(["config", "user.name", "ClinicUser"])
             self._run_git(["config", "core.autocrlf", "false"])
-            self._run_git(["update-index", "--skip-worktree", "pymedical.win32.bat"])
 
         # 這裡只做 fetch，把雲端資訊抓回來儲存在 FETCH_HEAD
         # 絕對不要在這裡跑 update-ref 或 reset --hard
         self.ui.label_status.setText("正在同步雲端資料...")
         self._run_git(["fetch", "origin", "main"])
+        self._run_git(["update-index", "--skip-worktree", "pymedical.win32.bat"])
 
     # 檢查更新 new
     def _check_for_updates(self):
