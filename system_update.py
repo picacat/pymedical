@@ -469,20 +469,14 @@ class SystemUpdate(QtWidgets.QDialog):
             self._run_git(["remote", "add", "origin", repo_url])
             self._run_git(["config", "user.email", "clinic@update.local"])
             self._run_git(["config", "user.name", "ClinicUser"])
+            self._run_git(["config", "core.autocrlf", "false"])
 
-        # --- 解決「有的會報錯」的核心改動 ---
-        # 1. 強制從雲端抓取最新 main 的進度
+        # 這裡只做 fetch，把雲端資訊抓回來儲存在 FETCH_HEAD
+        # 絕對不要在這裡跑 update-ref 或 reset --hard
         self.ui.label_status.setText("正在同步雲端資料...")
         self._run_git(["fetch", "origin", "main"])
 
-        # 2. 不要用 checkout，因為 checkout 會檢查檔案有沒有被改動，容易中斷
-        # 直接把本地的 main 分支「指標」硬指到剛剛抓下來的 origin/main
-        self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
-
-        # 3. 確保 HEAD 指向 main
-        self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
-
-    # 檢查更新
+    # 檢查更新，不要自動更新
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
         # 抓取雲端最新狀態到 origin/main，但「不更新」本地 main
@@ -499,14 +493,6 @@ class SystemUpdate(QtWidgets.QDialog):
                 ":(exclude)pymedical.win32.bat",
             ]
         )
-
-        # --- 除錯專用：印出原始資料 ---
-        print("--- Git Diff Debug Start ---")
-        print(f"Raw Diff Output: {repr(diff)}")
-        if diff:
-            print(f"Strip Diff: {repr(diff.strip())}")
-        print("--- Git Diff Debug End ---")
-        # ----------------------------
 
         # 檢查檔案的不同
         if diff and diff.strip():
