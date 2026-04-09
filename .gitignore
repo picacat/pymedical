@@ -1,4 +1,5 @@
 # Project exclude paths
+*.bat
 *.conf
 *.db
 *.db-journal
@@ -9,11 +10,11 @@
 *.log
 *.pyc
 *.sqlite
+*.zip
 *診所*.json
 pymedical.json
 __pycache__/
 .idea/
-*.zip
 .vscode/
 _temp/
 cfg/
