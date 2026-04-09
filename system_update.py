@@ -480,7 +480,6 @@ class SystemUpdate(QtWidgets.QDialog):
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
         self._run_git(["fetch", "origin", "main"])
-
         diff = self._run_git(
             [
                 "diff",
