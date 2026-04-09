@@ -414,35 +414,46 @@ class SystemUpdate(QtWidgets.QDialog):
         return download_file_name
 
     def _check_downloaded_file(self):
-        if os.path.exists(self.git_exe):
+        # 1. 不管有沒有 git.exe，先嘗試準備環境 (包含解壓 PortableGit.exe)
+        git_ready = self._prepare_git_engine()
+
+        # 2. 根據準備結果決定路徑
+        if git_ready:
+            # 這裡進去後，self.git_exe 應該已經存在了
             self._download_by_git()
         else:
+            # 如果連解壓都沒辦法 (沒安裝檔)，才走舊路徑
             self._download_by_dropbox()
 
     # 新增git更新方式 2026-04-09
     def _download_by_git(self):
-        self._prepare_git_engine()
         self._check_environment()
         self._check_for_updates()
 
     def _prepare_git_engine(self):
-        # 1. 檢查 git 是否已經存在
+        # 如果 git.exe 已經在那裡了，直接通過
         if os.path.exists(self.git_exe):
             return True
 
-        # 2. 如果不存在，尋找安裝檔
+        # 如果沒有 git.exe，看看有沒有自解壓檔
         installer = os.path.join(self.base_path, "PortableGit.exe")
         if os.path.exists(installer):
-            self.ui.label_status.setText("第一次執行，正在初始化更新引擎...")
-            # 執行靜默解壓
-            subprocess.run([installer, "-y"], creationflags=0x08000000)
-
-            # 3. 解壓完後可以把安裝檔刪掉，省下 40MB 空間
+            self.ui.label_status.setText("正在初始化更新引擎 (第一次執行較慢)...")
             try:
-                os.remove(installer)
-            except Exception:
-                pass
-            return True
+                # 執行靜默解壓 (解壓到 PortableGit 資料夾)
+                # 注意：這裡的 -o. 會解壓出一個 PortableGit 目錄
+                subprocess.run([installer, "-y"], check=True, creationflags=0x08000000)
+
+                # 再次確認解壓後 git.exe 是否真的出現了
+                if os.path.exists(self.git_exe):
+                    # 成功後刪除安裝檔
+                    try:
+                        os.remove(installer)
+                    except Exception:
+                        pass
+                    return True
+            except Exception as e:
+                print(f"解壓失敗: {e}")
 
         return False
 
