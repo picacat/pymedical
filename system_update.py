@@ -144,12 +144,7 @@ class SystemUpdate(QtWidgets.QDialog):
     def accepted_button_clicked(self):
         if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
             self.ui.label_status.setText("正在執行增量更新...")
-            # 執行強制覆蓋 (會遵守你的 .gitignore)
-            result = self._run_git(["reset", "--hard", "origin/main"])
-
-            if result is None:
-                QMessageBox.critical(self, "錯誤", "Git 更新失敗，請檢查網路。")
-                return
+            self._run_git(["reset", "--hard", "origin/main"])
         else:
             # 原本的 Dropbox / 手動 ZIP 更新邏輯
             self._update_files()
@@ -462,31 +457,24 @@ class SystemUpdate(QtWidgets.QDialog):
             self._run_git(["config", "user.email", "clinic@update.local"])
             self._run_git(["config", "user.name", "ClinicUser"])
 
-        # 1. 每次都先 Fetch，把遠端的清單抓回來 (這步很重要，否則 Git 不認識 origin/main)
-        self.ui.label_status.setText("正在同步雲端資料...")
-        self._run_git(["fetch", "origin", "main"])
-
-        # 2. 修正錯誤的重點：
-        # 如果 Git 報錯說不認識 main，我們強制把本地指標指到遠端的 origin/main
-        # checkout -B 會「強制建立或重設」本地分支
-        check_branch = self._run_git(["checkout", "-B", "main", "origin/main"])
-
-        if check_branch is None:
-            # 如果還是失敗，可能是遠端名稱問題，嘗試 reset 到遠端
-            self._run_git(["reset", "--hard", "origin/main"])
+            # 第一次初始化時，抓取資料但不急著對齊
+            self._run_git(["fetch", "origin", "main"])
+            # 建立一個空的本地 main
+            self._run_git(["branch", "main"])
 
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
+        # 抓取雲端最新狀態到 origin/main，但「不更新」本地 main
         self._run_git(["fetch", "origin", "main"])
+
+        # 比對「本地目前的 main」與「遠端的 origin/main」
         diff = self._run_git(["diff", "main", "origin/main", "--name-only"])
 
         if diff and diff.strip():
             files = diff.strip().split("\n")
             self.ui.tableWidget_file_list.setRowCount(0)
             for f in files:
-                # 補齊 4 個參數，讓 Table 顯示得更專業
                 self._add_list([f, "GitHub 伺服器", "本地系統", "待更新"])
-
             self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
             self.ui.label_status.setText(f"發現 {len(files)} 個檔案需要更新")
         else:
