@@ -466,32 +466,78 @@ class SystemUpdate(QtWidgets.QDialog):
         return False
 
     # 檢查git環境
+    # def _check_environment(self):
+    #     dot_git = os.path.join(self.base_path, ".git")
+    #     repo_url = "https://github.com/picacat/pymedical.git"
+
+    #     self._run_git(["config", "--global", "--add", "safe.directory", "*"])
+
+    #     if not os.path.exists(dot_git):
+    #         self.ui.label_status.setText("正在配置更新引擎...")
+    #         self._run_git(["init"])
+    #         self._run_git(["remote", "add", "origin", repo_url])
+    #         self._run_git(["config", "user.email", "clinic@update.local"])
+    #         self._run_git(["config", "user.name", "ClinicUser"])
+    #         self._run_git(["config", "core.autocrlf", "false"])
+
+    #     self.ui.label_status.setText("正在同步雲端資料...")
+    #     self._run_git(["fetch", "origin", "main"])
+
+    #     # --- 核心修正：處理沒有 HEAD 的情況 ---
+    #     check_head = self._run_git(["rev-parse", "HEAD"])
+
+    #     if check_head is None:
+    #         # 如果沒有 HEAD，代表是空倉庫，我們強行對齊一次產生基礎
+    #         self.ui.label_status.setText("正在建立初始環境...")
+    #         self._run_git(["reset", "--hard", "FETCH_HEAD"])
+    #         self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+    #         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
+
+    #     # 確保 HEAD 存在後，再打標籤才不會報錯
+    #     self._run_git(["update-index", "--skip-worktree", "pymedical.win32.bat"])
     def _check_environment(self):
         dot_git = os.path.join(self.base_path, ".git")
         repo_url = "https://github.com/picacat/pymedical.git"
 
+        # 1. 修正安全性設定重複的問題
+        # 使用 --replace-all 確保把之前亂掉的設定全部清掉，只保留一個 "*"
+        self._run_git(["config", "--global", "--replace-all", "safe.directory", "*"])
+
+        # 2. 初始化檢查
         if not os.path.exists(dot_git):
             self.ui.label_status.setText("正在配置更新引擎...")
             self._run_git(["init"])
-            self._run_git(["remote", "add", "origin", repo_url])
-            self._run_git(["config", "user.email", "clinic@update.local"])
-            self._run_git(["config", "user.name", "ClinicUser"])
-            self._run_git(["config", "core.autocrlf", "false"])
 
+        # 3. 強制校正 Remote (解決 'origin' 不存在或讀不到的問題)
+        # 先嘗試移除，再重新加入，確保 origin 乾乾淨淨
+        self._run_git(["remote", "remove", "origin"])
+        self._run_git(["remote", "add", "origin", repo_url])
+
+        # 4. 基本配置
+        self._run_git(["config", "user.email", "clinic@update.local"])
+        self._run_git(["config", "user.name", "ClinicUser"])
+        self._run_git(["config", "core.autocrlf", "false"])
+
+        # 5. 執行 Fetch (這步成功後才會產生 FETCH_HEAD)
         self.ui.label_status.setText("正在同步雲端資料...")
-        self._run_git(["fetch", "origin", "main"])
+        fetch_res = self._run_git(["fetch", "origin", "main"])
 
-        # --- 核心修正：處理沒有 HEAD 的情況 ---
+        if fetch_res is None:
+            print("無法連接到 GitHub，請檢查診所網路環境。")
+            return
+
+        # 6. 建立 HEAD 起點 (解決 bad revision 'HEAD')
         check_head = self._run_git(["rev-parse", "HEAD"])
-
         if check_head is None:
-            # 如果沒有 HEAD，代表是空倉庫，我們強行對齊一次產生基礎
-            self.ui.label_status.setText("正在建立初始環境...")
-            self._run_git(["reset", "--hard", "FETCH_HEAD"])
+            self.ui.label_status.setText("正在建立本地起點...")
+            # 先建立分支紀錄
             self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+            # 強制對齊內容
+            self._run_git(["reset", "--hard", "FETCH_HEAD"])
+            # 鎖定 HEAD 指標
             self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
 
-        # 確保 HEAD 存在後，再打標籤才不會報錯
+        # 7. 最後才標記跳過更新 (檔案必須在 Git 追蹤內才能 mark)
         self._run_git(["update-index", "--skip-worktree", "pymedical.win32.bat"])
 
     # 檢查更新
