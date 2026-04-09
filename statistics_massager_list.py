@@ -59,6 +59,7 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
         self.ui.tableWidget_massager_list.doubleClicked.connect(
             self._open_medical_record
         )
+        self.ui.toolButton_export_to_excel.clicked.connect(self._export_to_excel)
 
     def close_tab(self):
         current_tab = self.parent.ui.tabWidget_window.currentIndex()
@@ -261,3 +262,26 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
             return
 
         self.parent.parent.open_medical_record(case_key)
+
+    def _export_to_excel(self):
+        options = QFileDialog.Options()
+        excel_file_name, _ = QFileDialog.getSaveFileName(
+            self.parent,
+            "資料匯出",
+            "推拿業績明細.xlsx",
+            "excel檔案 (*.xlsx)",
+            options=options,
+        )
+        if not excel_file_name:
+            return
+
+        export_utils.export_table_widget_to_excel(
+            excel_file_name, self.ui.tableWidget_massager_list, [0]
+        )
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "資料匯出完成",
+            f"<h3>{excel_file_name}匯出完成.</h3>",
+            "Microsoft Excel 格式.",
+        )

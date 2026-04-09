@@ -36,11 +36,54 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>銷售明細</string>
+             <layout class="QHBoxLayout" name="horizontalLayout_7">
+              <property name="spacing">
+               <number>10</number>
               </property>
-             </widget>
+              <property name="topMargin">
+               <number>3</number>
+              </property>
+              <property name="bottomMargin">
+               <number>3</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>銷售明細</string>
+                </property>
+                <property name="indent">
+                 <number>10</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="toolButton_export_to_excel">
+                <property name="text">
+                 <string>匯出Excel</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextBesideIcon</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
             </item>
             <item>
              <widget class="QTableWidget" name="tableWidget_massager_list">
@@ -121,7 +164,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>25</height>
+     <height>33</height>
     </rect>
    </property>
   </widget>
