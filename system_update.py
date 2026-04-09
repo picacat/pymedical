@@ -535,6 +535,7 @@ class SystemUpdate(QtWidgets.QDialog):
             self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
             count = len(files)
             self.ui.label_status.setText(f"發現 {count} 個檔案需要更新")
+            self.ui.tableWidget_file_list.resizeRowsToContents()
         else:
             self.ui.label_status.setText("系統已是最新狀態")
             QMessageBox.information(self, "更新", "系統目前已是最新狀態。")
