@@ -487,6 +487,18 @@ class SystemUpdate(QtWidgets.QDialog):
         # 抓取雲端最新狀態到 origin/main，但「不更新」本地 main
         self._run_git(["fetch", "origin", "main"])
 
+        diff = self._run_git(
+            [
+                "diff",
+                "HEAD",
+                "FETCH_HEAD",
+                "--name-only",
+                "--",
+                ".",
+                ":(exclude)pymedical.win32.bat",
+            ]
+        )
+
         # 比對「本地目前的 main」與「遠端的 origin/main」
         diff = self._run_git(["diff", "HEAD", "FETCH_HEAD", "--name-only"])
 
