@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QMessageBox, QPushButton
 
 from libs import date_utils, nhi_utils, number_utils, personnel_utils, string_utils
 
-CANCER_ACUPUNCTURE_TIMES_LIMIT = 10
+CANCER_ACUPUNCTURE_TIMES_LIMIT = 9
 
 
 # 取得班別
