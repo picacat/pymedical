@@ -437,7 +437,7 @@ class SystemUpdate(QtWidgets.QDialog):
         self._check_environment()
         self._check_for_updates()
 
-    # 安裝portable git
+    # 安裝 portable git
     def _prepare_git_engine(self):
         # 如果 git.exe 已經在那裡了，直接通過
         if os.path.exists(self.git_exe):
