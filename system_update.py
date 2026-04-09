@@ -145,7 +145,13 @@ class SystemUpdate(QtWidgets.QDialog):
     def accepted_button_clicked(self):
         if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
             self.ui.label_status.setText("正在執行增量更新...")
-            self._run_git(["reset", "--hard", "origin/main"])
+            # 1. 執行暴力更新
+            self._run_git(["reset", "--hard", "FETCH_HEAD"])
+
+            # 2. 強制把本地的 main 分支指針移到最新的雜湊值
+            # 這是為了防止 reset 沒跑完導致的指針偏移
+            self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+            self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
         else:
             # 原本的 Dropbox / 手動 ZIP 更新邏輯
             self._update_files()
