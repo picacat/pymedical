@@ -5,7 +5,6 @@
 *.db-shm
 *.db-wal
 *.env
-*.exe
 *.ini
 *.log
 *.pyc
