@@ -477,7 +477,7 @@ class SystemUpdate(QtWidgets.QDialog):
         self.ui.label_status.setText("正在同步雲端資料...")
         self._run_git(["fetch", "origin", "main"])
 
-    # 檢查更新
+    # 檢查更新 new
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
         self._run_git(["fetch", "origin", "main"])
