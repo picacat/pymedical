@@ -115,6 +115,7 @@ class SystemUpdate(QtWidgets.QDialog):
             print(f"Git 錯誤: {e.output}")
             return None
 
+    # 手動更新
     def _open_file(self):
         options = QFileDialog.Options()
 
