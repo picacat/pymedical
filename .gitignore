@@ -13,6 +13,7 @@
 *.zip
 *診所*.json
 pymedical.json
+pymedical.win32.bat
 __pycache__/
 .idea/
 .vscode/
