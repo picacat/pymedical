@@ -1765,7 +1765,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self._read_dosage()
         self._read_misc()
 
-        self._calculate_total_costs()
+        self._set_total_cost()
 
         self.append_null_medicine()
         if self.treatment is not None or str(self.treatment).strip() != "":
