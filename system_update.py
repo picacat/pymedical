@@ -142,18 +142,70 @@ class SystemUpdate(QtWidgets.QDialog):
         self._check_files(zip_file_name)
 
     # 開始更新
+    # def accepted_button_clicked(self):
+    #     if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
+    #         bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
+
+    #         self.ui.label_status.setText("正在執行增量更新...")
+    #         # 1. 暴力同步指針
+    #         self._run_git(["reset", "--hard", "FETCH_HEAD"])
+
+    #         # 2. 核心修正：強制將 FETCH_HEAD 的檔案「抽離」出來覆蓋本地 (解決沒拷貝過去的問題)
+    #         # "--" 代表路徑分離，"." 代表當前目錄全部檔案
+    #         self._run_git(["checkout", "-f", "FETCH_HEAD", "--", "."])
+
+    #         # 3. 清理沒被追蹤的雜物 (預防萬一)
+    #         self._run_git(["clean", "-fd"])
+
+    #         # 2. 強制把本地的 main 分支指針移到最新的雜湊值
+    #         # 這是為了防止 reset 沒跑完導致的指針偏移
+    #         self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+    #         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
+    #     else:
+    #         # 原本的 Dropbox / 手動 ZIP 更新邏輯
+    #         self._update_files()
+
     def accepted_button_clicked(self):
         if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
-            self.ui.label_status.setText("正在執行增量更新...")
-            # 1. 執行暴力更新
+            bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
+
+            # --- 1. 物理備份：更新前先讀取 .bat 內容 ---
+            original_bat_content = None
+            if os.path.exists(bat_path):
+                try:
+                    with open(bat_path, "rb") as f:
+                        original_bat_content = f.read()
+                except Exception:
+                    pass
+
+            self.ui.label_status.setText("正在執行強制更新...")
+
+            # --- 2. 執行核心更新組合拳 ---
+            # (A) 強制對齊指針與索引
             self._run_git(["reset", "--hard", "FETCH_HEAD"])
 
-            # 2. 強制把本地的 main 分支指針移到最新的雜湊值
-            # 這是為了防止 reset 沒跑完導致的指針偏移
+            # (B) 暴力覆蓋實體檔案 (解決你說的 ui/ 沒拷貝過去的問題)
+            self._run_git(["checkout", "-f", "FETCH_HEAD", "--", "."])
+
+            # (C) 修正分支指針 (確保 HEAD 乖乖待在 main 上)
             self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
             self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
+
+            # --- 3. 物理還原：更新後把 .bat 寫回去 ---
+            if original_bat_content:
+                try:
+                    with open(bat_path, "wb") as f:
+                        f.write(original_bat_content)
+                    print("已成功保護診所專屬 .bat 設定")
+                except Exception:
+                    pass
+
+            # --- 4. 清理 (選用) ---
+            # 注意：clean -fd 會刪除所有不在 Git 追蹤名單內的檔案。
+            # 如果診所有自己放一些暫存檔，這行要小心使用。
+            # self._run_git(["clean", "-fd"])
+
         else:
-            # 原本的 Dropbox / 手動 ZIP 更新邏輯
             self._update_files()
 
         update_utils.update_database(self.parent, self.database)
