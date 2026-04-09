@@ -470,26 +470,18 @@ class SystemUpdate(QtWidgets.QDialog):
             self._run_git(["config", "user.email", "clinic@update.local"])
             self._run_git(["config", "user.name", "ClinicUser"])
 
-            # 第一次初始化時，抓取資料但不急著對齊
-            self._run_git(["fetch", "origin", "main"])
-            # 建立一個空的本地 main
-            self._run_git(["branch", "main"])
+        # --- 解決「有的會報錯」的核心改動 ---
+        # 1. 強制從雲端抓取最新 main 的進度
+        self.ui.label_status.setText("正在同步雲端資料...")
+        self._run_git(["fetch", "origin", "main"])
 
-            self._run_git(["config", "core.autocrlf", "false"])  # 關閉自動換行轉換
-            self._run_git(
-                ["config", "core.filemode", "false"]
-            )  # 忽略 Windows 檔案權限變動
-            self._run_git(["config", "core.quotepath", "off"])  # 正常顯示中文檔名
+        # 2. 不要用 checkout，因為 checkout 會檢查檔案有沒有被改動，容易中斷
+        # 直接把本地的 main 分支「指標」硬指到剛剛抓下來的 origin/main
+        # 這樣 Git 之後就絕對認識 'main' 這個字了
+        self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
 
-            # 確保 remote 網址始終正確
-            self._run_git(
-                [
-                    "remote",
-                    "set-url",
-                    "origin",
-                    repo_url,
-                ]
-            )
+        # 3. 確保 HEAD 指向 main
+        self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
 
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
