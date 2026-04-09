@@ -500,6 +500,14 @@ class SystemUpdate(QtWidgets.QDialog):
             ]
         )
 
+        # --- 除錯專用：印出原始資料 ---
+        print("--- Git Diff Debug Start ---")
+        print(f"Raw Diff Output: {repr(diff)}")
+        if diff:
+            print(f"Strip Diff: {repr(diff.strip())}")
+        print("--- Git Diff Debug End ---")
+        # ----------------------------
+
         # 檢查檔案的不同
         if diff and diff.strip():
             files = diff.strip().splitlines()
