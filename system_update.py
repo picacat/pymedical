@@ -500,9 +500,7 @@ class SystemUpdate(QtWidgets.QDialog):
             ]
         )
 
-        # 比對「本地目前的 main」與「遠端的 origin/main」
-        diff = self._run_git(["diff", "HEAD", "FETCH_HEAD", "--name-only"])
-
+        # 檢查檔案的不同
         if diff and diff.strip():
             files = diff.strip().splitlines()
             self.ui.tableWidget_file_list.setRowCount(0)
