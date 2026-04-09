@@ -462,27 +462,32 @@ class SystemUpdate(QtWidgets.QDialog):
             self._run_git(["config", "user.email", "clinic@update.local"])
             self._run_git(["config", "user.name", "ClinicUser"])
 
-        # 每次檢查環境都確保遠端網址是對的
-        self._run_git(["remote", "set-url", "origin", repo_url])
-
-        # 關鍵：先抓取
+        # 強制抓取雲端 main 分支的最新狀態到 FETCH_HEAD
+        self.ui.label_status.setText("正在同步雲端資料...")
         self._run_git(["fetch", "origin", "main"])
 
-        # 強制讓本地的 main 分支「對齊」遠端的 origin/main
-        # -B 代表：如果 main 不存在就建立，如果存在就強制重設位置
-        self._run_git(["checkout", "-B", "main", "origin/main"])
+        # --- 核心修正：強制建立/更新本地 main 指向 FETCH_HEAD ---
+        # 這一行會直接跳過所有檢查，強制在 .git 裡寫入 main 的記錄
+        self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+
+        # 強制切換到 main (不檢查檔案差異，直接硬切)
+        self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
 
     def _check_for_updates(self):
         self.ui.label_status.setText("正在檢查雲端版本...")
+
+        # 1. 抓取最新資訊
         self._run_git(["fetch", "origin", "main"])
-        diff = self._run_git(["diff", "main", "origin/main", "--name-only"])
+
+        # 2. 直接比對目前的 HEAD 與剛抓下來的 FETCH_HEAD
+        # 如果這兩個一樣，diff 就會是空的
+        diff = self._run_git(["diff", "HEAD", "FETCH_HEAD", "--name-only"])
 
         if diff and diff.strip():
             files = diff.strip().split("\n")
             self.ui.tableWidget_file_list.setRowCount(0)
             for f in files:
-                # 補齊 4 個參數，讓 Table 顯示得更專業
-                self._add_list([f, "GitHub 伺服器", "本地系統", "待更新"])
+                self._add_list([f, "GitHub 雲端", "本地系統", "待更新"])
 
             self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
             self.ui.label_status.setText(f"發現 {len(files)} 個檔案需要更新")
