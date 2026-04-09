@@ -115,7 +115,6 @@ class SystemUpdate(QtWidgets.QDialog):
             print(f"Git 錯誤: {e.output}")
             return None
 
-    # 手動更新
     def _open_file(self):
         options = QFileDialog.Options()
 
@@ -478,10 +477,20 @@ class SystemUpdate(QtWidgets.QDialog):
             self._run_git(["config", "user.name", "ClinicUser"])
             self._run_git(["config", "core.autocrlf", "false"])
 
-        # 這裡只做 fetch，把雲端資訊抓回來儲存在 FETCH_HEAD
-        # 絕對不要在這裡跑 update-ref 或 reset --hard
         self.ui.label_status.setText("正在同步雲端資料...")
         self._run_git(["fetch", "origin", "main"])
+
+        # --- 核心修正：處理沒有 HEAD 的情況 ---
+        check_head = self._run_git(["rev-parse", "HEAD"])
+
+        if check_head is None:
+            # 如果沒有 HEAD，代表是空倉庫，我們強行對齊一次產生基礎
+            self.ui.label_status.setText("正在建立初始環境...")
+            self._run_git(["reset", "--hard", "FETCH_HEAD"])
+            self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+            self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
+
+        # 確保 HEAD 存在後，再打標籤才不會報錯
         self._run_git(["update-index", "--skip-worktree", "pymedical.win32.bat"])
 
     # 檢查更新
