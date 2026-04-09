@@ -144,66 +144,9 @@ class SystemUpdate(QtWidgets.QDialog):
     # 開始更新
     def accepted_button_clicked(self):
         if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
-            # --- 1. 全域物理防護：解除整個專案目錄的鎖定 ---
-            self.ui.label_status.setText("正在解除全系統檔案鎖定...")
-
-            # 定義需要排除的目錄，避免掃描到 .git 內部資料庫 (節省時間)
-            exclude_dirs = {".git", "PortableGit", "_temp"}
-
-            for root, dirs, files in os.walk(self.base_path):
-                # 過濾不需要解鎖的系統目錄
-                dirs[:] = [d for d in dirs if d not in exclude_dirs]
-
-                for f in files:
-                    full_path = os.path.join(root, f)
-                    try:
-                        # 核心動作：強制拔掉「唯讀」屬性，確保 Git 有最高寫入權
-                        current_mode = os.stat(full_path).st_mode
-                        if not (current_mode & stat.S_IWRITE):
-                            os.chmod(full_path, current_mode | stat.S_IWRITE)
-                    except Exception:
-                        pass  # 遇到系統鎖定檔案跳過即可
-
-            bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
-
-            # --- 1. 物理備份：更新前先讀取 .bat 內容 ---
-            original_bat_content = None
-            if os.path.exists(bat_path):
-                try:
-                    with open(bat_path, "rb") as f:
-                        original_bat_content = f.read()
-                except Exception:
-                    pass
-
-            self.ui.label_status.setText("正在執行強制更新...")
-
-            # --- 2. 執行核心更新組合拳 ---
-            # (A) 強制對齊指針與索引
-            self._run_git(["reset", "--hard", "FETCH_HEAD"])
-
-            # (B) 暴力覆蓋實體檔案 (解決你說的 ui/ 沒拷貝過去的問題)
-            self._run_git(["checkout", "-f", "FETCH_HEAD", "--", "."])
-
-            # (C) 修正分支指針 (確保 HEAD 乖乖待在 main 上)
-            self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
-            self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
-
-            # --- 3. 物理還原：更新後把 .bat 寫回去 ---
-            if original_bat_content:
-                try:
-                    with open(bat_path, "wb") as f:
-                        f.write(original_bat_content)
-                    print("已成功保護診所專屬 .bat 設定")
-                except Exception:
-                    pass
-
-            # --- 4. 清理 (選用) ---
-            # 注意：clean -fd 會刪除所有不在 Git 追蹤名單內的檔案。
-            # 如果診所有自己放一些暫存檔，這行要小心使用。
-            # self._run_git(["clean", "-fd"])
-
+            self._update_github()
         else:
-            self._update_files()
+            self._update_dropbox_files()
 
         update_utils.update_database(self.parent, self.database)
 
@@ -228,6 +171,99 @@ class SystemUpdate(QtWidgets.QDialog):
             self.parent.restart_pymedical()
         else:
             self.parent.close_all_tabs()
+
+    def _update_github(self):
+        # --- 1. 全域物理防護：解除整個專案目錄的鎖定 ---
+        self.ui.label_status.setText("正在解除全系統檔案鎖定...")
+
+        # 定義需要排除的目錄，避免掃描到 .git 內部資料庫 (節省時間)
+        exclude_dirs = {".git", "PortableGit", "_temp"}
+
+        for root, dirs, files in os.walk(self.base_path):
+            # 過濾不需要解鎖的系統目錄
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
+
+            for f in files:
+                full_path = os.path.join(root, f)
+                try:
+                    # 核心動作：強制拔掉「唯讀」屬性，確保 Git 有最高寫入權
+                    current_mode = os.stat(full_path).st_mode
+                    if not (current_mode & stat.S_IWRITE):
+                        os.chmod(full_path, current_mode | stat.S_IWRITE)
+                except Exception:
+                    pass  # 遇到系統鎖定檔案跳過即可
+
+        # --- 💡 優化點：確保檔案真的是最新被抓下來的 ---
+        # 雖然檢查階段跑過 fetch，但這裡再跑一次可以防止使用者「開著更新視窗太久」
+        # 導致按下按鈕時，雲端其實又有新 Commit 了
+        self._run_git(["fetch", "origin", "main"])
+
+        bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
+
+        # --- 1. 物理備份：更新前先讀取 .bat 內容 ---
+        original_bat_content = None
+        if os.path.exists(bat_path):
+            try:
+                with open(bat_path, "rb") as f:
+                    original_bat_content = f.read()
+            except Exception:
+                pass
+
+        self.ui.label_status.setText("正在執行強制更新...")
+
+        # --- 2. 執行核心更新組合拳 ---
+        # (A) 強制對齊指針與索引
+        self._run_git(["reset", "--hard", "FETCH_HEAD"])
+
+        # (B) 暴力覆蓋實體檔案 (解決你說的 ui/ 沒拷貝過去的問題)
+        self._run_git(["checkout", "-f", "FETCH_HEAD", "--", "."])
+
+        # (C) 修正分支指針 (確保 HEAD 乖乖待在 main 上)
+        self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+        self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
+
+        # --- 3. 物理還原：更新後把 .bat 寫回去 ---
+        if original_bat_content:
+            try:
+                with open(bat_path, "wb") as f:
+                    f.write(original_bat_content)
+                print("已成功保護診所專屬 .bat 設定")
+            except Exception:
+                pass
+
+        # --- 4. 清理 (選用) ---
+        # 注意：clean -fd 會刪除所有不在 Git 追蹤名單內的檔案。
+        # 如果診所有自己放一些暫存檔，這行要小心使用。
+        # self._run_git(["clean", "-fd"])
+
+    def _update_dropbox_files(self):
+        row_count = self.ui.tableWidget_file_list.rowCount()
+        self.ui.progressBar.setMaximum(row_count)
+
+        for row_no in range(row_count):
+            self.ui.progressBar.setValue(row_no)
+            source_dir = self.ui.tableWidget_file_list.item(row_no, 1).text()
+            dest_dir = self.ui.tableWidget_file_list.item(row_no, 2).text()
+
+            if not os.path.exists(dest_dir):
+                os.mkdir(dest_dir)
+
+            source_file_name = os.path.join(
+                source_dir, self.ui.tableWidget_file_list.item(row_no, 0).text()
+            )
+            dest_file_name = os.path.join(
+                dest_dir, self.ui.tableWidget_file_list.item(row_no, 0).text()
+            )
+
+            # --- 新增的部分：解除唯讀屬性 ---
+            if os.path.exists(dest_file_name):
+                # 取得目前的權限狀態
+                current_mode = os.stat(dest_file_name).st_mode
+                # 使用位元運算移除「唯讀」標誌 (S_IWRITE 代表可寫入)
+                os.chmod(dest_file_name, current_mode | stat.S_IWRITE)
+            # ----------------------------
+
+            shutil.copy2(source_file_name, dest_file_name)
 
     def _check_files(self, zip_file_name):
         dest_root = os.path.dirname(os.path.abspath(__file__))
@@ -372,35 +408,6 @@ class SystemUpdate(QtWidgets.QDialog):
         #     return os.stat(file_name).st_mtime
 
         return os.stat(file_name).st_mtime
-
-    def _update_files(self):
-        row_count = self.ui.tableWidget_file_list.rowCount()
-        self.ui.progressBar.setMaximum(row_count)
-
-        for row_no in range(row_count):
-            self.ui.progressBar.setValue(row_no)
-            source_dir = self.ui.tableWidget_file_list.item(row_no, 1).text()
-            dest_dir = self.ui.tableWidget_file_list.item(row_no, 2).text()
-
-            if not os.path.exists(dest_dir):
-                os.mkdir(dest_dir)
-
-            source_file_name = os.path.join(
-                source_dir, self.ui.tableWidget_file_list.item(row_no, 0).text()
-            )
-            dest_file_name = os.path.join(
-                dest_dir, self.ui.tableWidget_file_list.item(row_no, 0).text()
-            )
-
-            # --- 新增的部分：解除唯讀屬性 ---
-            if os.path.exists(dest_file_name):
-                # 取得目前的權限狀態
-                current_mode = os.stat(dest_file_name).st_mode
-                # 使用位元運算移除「唯讀」標誌 (S_IWRITE 代表可寫入)
-                os.chmod(dest_file_name, current_mode | stat.S_IWRITE)
-            # ----------------------------
-
-            shutil.copy2(source_file_name, dest_file_name)
 
     def _get_latest_url(self):
         # 這是你在 GitHub 點擊 "Raw" 後取得的網址
