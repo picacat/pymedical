@@ -647,8 +647,6 @@ class SystemUpdate(QtWidgets.QDialog):
             cursor.execute(delete_query, (clinic_name, pc_name))
 
             # 3. 寫入記錄
-            # 使用 INSERT，這樣你可以保留歷史紀錄；
-            # 或者使用 REPLACE，這樣每台電腦永遠只會更新最後一筆
             query = """
                 INSERT INTO update_logs 
                 (clinic_name, pc_name, current_version, os_version, update_time)
