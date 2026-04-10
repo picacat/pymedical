@@ -643,6 +643,7 @@ class SystemUpdate(QtWidgets.QDialog):
             if conn and conn.is_connected():
                 conn.close()
 
+    # 取得資料庫連線
     def _get_db_connection(self):
         u_b64 = "cm9vdA=="
         p_b64 = "MTUzZmlzaA=="
