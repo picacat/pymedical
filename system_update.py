@@ -630,10 +630,10 @@ class SystemUpdate(QtWidgets.QDialog):
 
             os_info = f"{actual_os} (Build {version})"
 
-            # 取得更新後的 Git Hash (前 7 碼)
-            current_hash = "Unknown"
+            # 抓取最新的 Commit 標題 (-1 代表只抓一筆, %s 代表主旨)
+            commit_msg = "Unknown"
             try:
-                current_hash = self._run_git(["rev-parse", "--short", "HEAD"]).strip()
+                commit_msg = self._run_git(["log", "-1", "--pretty=%s"]).strip()
             except Exception:
                 pass
 
@@ -654,7 +654,7 @@ class SystemUpdate(QtWidgets.QDialog):
                 (clinic_name, pc_name, current_version, os_version, update_time)
                 VALUES (%s, %s, %s, %s, NOW())
             """
-            cursor.execute(query, (clinic_name, pc_name, current_hash, os_info))
+            cursor.execute(query, (clinic_name, pc_name, commit_msg, os_info))
             conn.commit()
 
             cursor.close()
