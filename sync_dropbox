@@ -32,6 +32,7 @@ zip -r "$zip_file_name" pymedical/classes/*.py
 zip -r "$zip_file_name" pymedical/convert/*.py
 zip -r "$zip_file_name" pymedical/css/*.css
 zip -r "$zip_file_name" pymedical/dialog/*.py
+zip -r "$zip_file_name" pymedical/git_core/*.*
 zip -r "$zip_file_name" pymedical/libs/*.py
 zip -r "$zip_file_name" pymedical/slot_machine/*.py
 zip -r "$zip_file_name" pymedical/payment_machine/*.*
