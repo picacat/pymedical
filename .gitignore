@@ -12,6 +12,7 @@
 *.sqlite
 *.zip
 *診所*.json
+pymedical.conf
 pymedical.json
 pybulletin.win32.bat
 pymedical.win32.bat
