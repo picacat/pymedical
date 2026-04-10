@@ -13,6 +13,7 @@
 *.zip
 *診所*.json
 pymedical.json
+pybulletin.win32.bat
 pymedical.win32.bat
 sync_dropbox
 __pycache__/
