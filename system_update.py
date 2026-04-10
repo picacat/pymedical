@@ -6,6 +6,7 @@ import io
 import ntpath
 import os
 import os.path
+import platform
 import shutil
 import socket
 import stat
@@ -14,6 +15,7 @@ import urllib.error
 import urllib.request
 from os import listdir
 
+import mysql.connector
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPushButton
 
@@ -235,6 +237,7 @@ class SystemUpdate(QtWidgets.QDialog):
         # 注意：clean -fd 會刪除所有不在 Git 追蹤名單內的檔案。
         # 如果診所有自己放一些暫存檔，這行要小心使用。
         # self._run_git(["clean", "-fd"])
+        self._report_to_zoho_server()
 
     def _update_dropbox_files(self):
         row_count = self.ui.tableWidget_file_list.rowCount()
@@ -600,3 +603,48 @@ class SystemUpdate(QtWidgets.QDialog):
         dropbox_file = self._download_dropbox_file()
 
         self._check_files(dropbox_file)
+
+    def _report_to_zoho_server(self):
+        """將更新結果回報至 www.zoho.net.tw 的 MariaDB"""
+        conn = None
+        try:
+            # 1. 取得診所基本資訊
+            clinic_name = self.system_settings.field("院所名稱")
+            pc_name = socket.gethostname()
+            os_info = f"{platform.system()} {platform.release()}"
+
+            # 取得更新後的 Git Hash (前 7 碼)
+            current_hash = "Unknown"
+            try:
+                current_hash = self._run_git(["rev-parse", "--short", "HEAD"]).strip()
+            except Exception:
+                pass
+
+            # 2. 連接遠端資料庫 (務必設定短逾時)
+            conn = mysql.connector.connect(
+                host="www.zoho.net.tw",
+                user="update_reporter",  # 建議建立專用唯寫帳號
+                password="153fishes",
+                database="zoho",
+                connect_timeout=5,  # 5秒逾時，避免診所網路不通時程式卡死
+            )
+            cursor = conn.cursor()
+
+            # 3. 寫入記錄
+            # 使用 INSERT，這樣你可以保留歷史紀錄；
+            # 或者使用 REPLACE，這樣每台電腦永遠只會更新最後一筆
+            query = """
+                INSERT INTO update_logs 
+                (clinic_name, pc_name, current_version, os_version, update_time)
+                VALUES (%s, %s, %s, %s, NOW())
+            """
+            cursor.execute(query, (clinic_name, pc_name, current_hash, os_info))
+            conn.commit()
+
+            cursor.close()
+        except Exception as e:
+            # 這裡的錯誤只記錄在本地 log，不要噴給使用者看
+            print(f"遠端回報失敗 (zoho.net.tw): {e}")
+        finally:
+            if conn and conn.is_connected():
+                conn.close()
