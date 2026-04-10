@@ -14,11 +14,13 @@
 *診所*.json
 pymedical.json
 pymedical.win32.bat
+sync_dropbox
 __pycache__/
 .idea/
 .vscode/
 _temp/
 cfg/
+git_core/
 install/
 documents/
 history/
