@@ -659,7 +659,6 @@ class SystemUpdate(QtWidgets.QDialog):
 
             cursor.close()
         except Exception as e:
-            # 這裡的錯誤只記錄在本地 log，不要噴給使用者看
             print(f"遠端回報失敗 (zoho.net.tw): {e}")
         finally:
             if conn and conn.is_connected():
