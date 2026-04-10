@@ -612,7 +612,23 @@ class SystemUpdate(QtWidgets.QDialog):
             # 1. 取得診所基本資訊
             clinic_name = self.system_settings.field("院所名稱")
             pc_name = socket.gethostname()
-            os_info = f"{platform.system()} {platform.release()}"
+
+            system = platform.system()  # 通常是 "Windows"
+            release = platform.release()  # 在 Win11 可能還是會回傳 "10"
+            version = platform.version()  # 這裡會拿到 Build number，例如 "10.0.22621"
+
+            # 邏輯判斷：如果 Build number >= 22000 就是 Windows 11
+            actual_os = f"{system} {release}"
+            try:
+                build_number = int(version.split(".")[-1])
+                if system == "Windows" and release == "10" and build_number >= 22000:
+                    actual_os = "Windows 11"
+                else:
+                    actual_os = f"{system} {release}"
+            except Exception:
+                actual_os = f"{system} {release}"
+
+            os_info = f"{actual_os} (Build {version})"
 
             # 取得更新後的 Git Hash (前 7 碼)
             current_hash = "Unknown"
@@ -623,6 +639,12 @@ class SystemUpdate(QtWidgets.QDialog):
 
             conn = self._get_db_connection()
             cursor = conn.cursor()
+
+            # 2. 刪除舊的記錄
+            delete_query = (
+                "DELETE FROM update_logs WHERE clinic_name = %s AND pc_name = %s"
+            )
+            cursor.execute(delete_query, (clinic_name, pc_name))
 
             # 3. 寫入記錄
             # 使用 INSERT，這樣你可以保留歷史紀錄；
