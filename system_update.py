@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+import base64
 import datetime
 import hashlib
 import io
@@ -620,14 +621,7 @@ class SystemUpdate(QtWidgets.QDialog):
             except Exception:
                 pass
 
-            # 2. 連接遠端資料庫 (務必設定短逾時)
-            conn = mysql.connector.connect(
-                host="www.zoho.net.tw",
-                user="update_reporter",  # 建議建立專用唯寫帳號
-                password="153fishes",
-                database="zoho",
-                connect_timeout=5,  # 5秒逾時，避免診所網路不通時程式卡死
-            )
+            conn = self._get_db_connection()
             cursor = conn.cursor()
 
             # 3. 寫入記錄
@@ -648,3 +642,23 @@ class SystemUpdate(QtWidgets.QDialog):
         finally:
             if conn and conn.is_connected():
                 conn.close()
+
+    def _get_db_connection(self):
+        u_b64 = "cm9vdA=="
+        p_b64 = "MTUzZmlzaA=="
+
+        uid = base64.b64decode(u_b64).decode("utf-8")
+        pwd = base64.b64decode(p_b64).decode("utf-8")
+
+        try:
+            conn = mysql.connector.connect(
+                host="www.zoho.net.tw",
+                user=uid,
+                password=pwd,
+                database="zoho",
+                connect_timeout=5,
+            )
+            return conn
+        except Exception:
+            # 在診所端建議把這個 print 拿掉，或寫入 log 檔，避免使用者看到錯誤訊息
+            return None
