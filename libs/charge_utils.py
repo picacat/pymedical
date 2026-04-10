@@ -1911,6 +1911,7 @@ def calculate_self_fee(
     dosage_mode = system_settings.field("劑量模式")
     by_package = system_settings.field("自費處方次劑量")
     clinic_name = system_settings.field("院所名稱")
+    dosage_percent = system_settings.field("比例法劑量")
 
     try:
         row_count = table_widget_prescript.rowCount()
@@ -1959,7 +1960,9 @@ def calculate_self_fee(
         except Exception:
             treat_type = None
 
-        if (
+        if this_pres_days <= 0:
+            this_pres_days = 1
+        elif (
             treat_type != "自購"
             and instruction_item is not None
             and instruction_item.text() != ""
@@ -1973,7 +1976,7 @@ def calculate_self_fee(
             if this_pres_days <= 0:
                 this_pres_days = pres_days
 
-        if this_pres_days <= 0:
+        if dosage_percent == "Y":
             this_pres_days = 1
 
         subtotal = get_subtotal_fee(amount, this_pres_days)
