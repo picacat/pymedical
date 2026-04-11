@@ -613,6 +613,7 @@ class SystemUpdate(QtWidgets.QDialog):
         try:
             # 取得診所基本資訊
             clinic_name = self.system_settings.field("院所名稱")
+            current_user = self.system_settings.field("使用者")
             pc_name = socket.gethostname()
             os_info = self._get_os_info()
             commit_msg = self._get_commit_msg()
@@ -629,11 +630,12 @@ class SystemUpdate(QtWidgets.QDialog):
             # REPLACE 會自動判斷：如果 key 重複就刪除舊的再插入新的，如果不重複就直接插入
             query = """
                 REPLACE INTO update_logs
-                (clinic_name, pc_name, current_version, os_version, ip_address, update_time)
-                VALUES (%s, %s, %s, %s, %s, NOW())
+                (clinic_name, pc_name, current_user, current_version, os_version, ip_address, update_time)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW())
             """
             cursor.execute(
-                query, (clinic_name, pc_name, commit_msg, os_info, ip_address)
+                query,
+                (clinic_name, pc_name, current_user, commit_msg, os_info, ip_address),
             )
             conn.commit()
 
