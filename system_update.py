@@ -600,6 +600,7 @@ class SystemUpdate(QtWidgets.QDialog):
             self.ui.label_status.setText("系統已是最新狀態")
             QMessageBox.information(self, "更新", "系統目前已是最新狀態。")
 
+    # 開始下載
     def _download_by_dropbox(self):
         dropbox_file = self._download_dropbox_file()
 
