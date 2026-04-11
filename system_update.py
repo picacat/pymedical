@@ -606,7 +606,7 @@ class SystemUpdate(QtWidgets.QDialog):
 
         self._check_files(dropbox_file)
 
-    # 回報更新
+    # 回報更新.
     def _report_to_zoho_server(self):
         """將更新結果回報至 www.zoho.net.tw 的 MariaDB"""
         conn = None
