@@ -614,30 +614,9 @@ class SystemUpdate(QtWidgets.QDialog):
             # 取得診所基本資訊
             clinic_name = self.system_settings.field("院所名稱")
             pc_name = socket.gethostname()
-
-            system = platform.system()  # 通常是 "Windows"
-            release = platform.release()  # 在 Win11 可能還是會回傳 "10"
-            version = platform.version()  # 這裡會拿到 Build number，例如 "10.0.22621"
-
-            # 邏輯判斷：如果 Build number >= 22000 就是 Windows 11
-            actual_os = f"{system} {release}"
-            try:
-                build_number = int(version.split(".")[-1])
-                if system == "Windows" and release == "10" and build_number >= 22000:
-                    actual_os = "Windows 11"
-                else:
-                    actual_os = f"{system} {release}"
-            except Exception:
-                actual_os = f"{system} {release}"
-
-            os_info = f"{actual_os} (Build {version})"
-
-            # 抓取最新的 Commit 標題 (-1 代表只抓一筆, %s 代表主旨)
-            commit_msg = "Unknown"
-            try:
-                commit_msg = self._run_git(["log", "-1", "--pretty=%s"]).strip()
-            except Exception:
-                pass
+            os_info = self._get_os_info()
+            commit_msg = self._get_commit_msg()
+            ip_address = self._get_ip_address(pc_name)
 
             # 建立連線
             conn = self._get_db_connection()
@@ -646,21 +625,6 @@ class SystemUpdate(QtWidgets.QDialog):
 
             cursor = conn.cursor()
 
-            # --- 核心修改：取得內部 IP ---
-            local_ip = "127.0.0.1"
-            try:
-                # 建立一個 UDP socket，不需要真的連通，只是為了誘騙系統回傳目前的網卡 IP
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("8.8.8.8", 80))  # 這裡可以用任何外部 IP，不會真的傳送資料
-                local_ip = s.getsockname()[0]
-                s.close()
-            except Exception:
-                # 如果完全沒網路，就抓基本的 hostname IP
-                try:
-                    local_ip = socket.gethostbyname(pc_name)
-                except Exception:
-                    pass
-
             # 寫入記錄
             # REPLACE 會自動判斷：如果 key 重複就刪除舊的再插入新的，如果不重複就直接插入
             query = """
@@ -668,7 +632,9 @@ class SystemUpdate(QtWidgets.QDialog):
                 (clinic_name, pc_name, current_version, os_version, ip_address, update_time)
                 VALUES (%s, %s, %s, %s, %s, NOW())
             """
-            cursor.execute(query, (clinic_name, pc_name, commit_msg, os_info, local_ip))
+            cursor.execute(
+                query, (clinic_name, pc_name, commit_msg, os_info, ip_address)
+            )
             conn.commit()
 
             cursor.close()
@@ -677,6 +643,36 @@ class SystemUpdate(QtWidgets.QDialog):
         finally:
             if conn and conn.is_connected():
                 conn.close()
+
+    def _get_os_info(self):
+        system = platform.system()  # 通常是 "Windows"
+        release = platform.release()  # 在 Win11 可能還是會回傳 "10"
+        version = platform.version()  # 這裡會拿到 Build number，例如 "10.0.22621"
+
+        # 邏輯判斷：如果 Build number >= 22000 就是 Windows 11
+        actual_os = f"{system} {release}"
+        try:
+            build_number = int(version.split(".")[-1])
+            if system == "Windows" and release == "10" and build_number >= 22000:
+                actual_os = "Windows 11"
+            else:
+                actual_os = f"{system} {release}"
+        except Exception:
+            actual_os = f"{system} {release}"
+
+        os_info = f"{actual_os} (Build {version})"
+
+        return os_info
+
+    def _get_commit_msg(self):
+        # 抓取最新的 Commit 標題 (-1 代表只抓一筆, %s 代表主旨)
+        commit_msg = "Unknown"
+        try:
+            commit_msg = self._run_git(["log", "-1", "--pretty=%s"]).strip()
+        except Exception:
+            pass
+
+        return commit_msg
 
     # 取得資料庫連線
     def _get_db_connection(self):
@@ -698,3 +694,20 @@ class SystemUpdate(QtWidgets.QDialog):
         except Exception:
             # 在診所端建議把這個 print 拿掉，或寫入 log 檔，避免使用者看到錯誤訊息
             return None
+
+    def _get_ip_address(self, pc_name):
+        local_ip = "127.0.0.1"
+        try:
+            # 建立一個 UDP socket，不需要真的連通，只是為了誘騙系統回傳目前的網卡 IP
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))  # 這裡可以用任何外部 IP，不會真的傳送資料
+            local_ip = s.getsockname()[0]
+            s.close()
+        except Exception:
+            # 如果完全沒網路，就抓基本的 hostname IP
+            try:
+                local_ip = socket.gethostbyname(pc_name)
+            except Exception:
+                pass
+
+        return local_ip
