@@ -609,7 +609,7 @@ class SystemUpdate(QtWidgets.QDialog):
         """將更新結果回報至 www.zoho.net.tw 的 MariaDB"""
         conn = None
         try:
-            # 1. 取得診所基本資訊
+            # 取得診所基本資訊
             clinic_name = self.system_settings.field("院所名稱")
             pc_name = socket.gethostname()
 
@@ -637,22 +637,36 @@ class SystemUpdate(QtWidgets.QDialog):
             except Exception:
                 pass
 
+            # 建立連線
             conn = self._get_db_connection()
+            if not conn:
+                return
+
             cursor = conn.cursor()
 
-            # 2. 刪除舊的記錄
-            delete_query = (
-                "DELETE FROM update_logs WHERE clinic_name = %s AND pc_name = %s"
-            )
-            cursor.execute(delete_query, (clinic_name, pc_name))
+            # --- 核心修改：取得內部 IP ---
+            local_ip = "127.0.0.1"
+            try:
+                # 建立一個 UDP socket，不需要真的連通，只是為了誘騙系統回傳目前的網卡 IP
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))  # 這裡可以用任何外部 IP，不會真的傳送資料
+                local_ip = s.getsockname()[0]
+                s.close()
+            except Exception:
+                # 如果完全沒網路，就抓基本的 hostname IP
+                try:
+                    local_ip = socket.gethostbyname(pc_name)
+                except Exception:
+                    pass
 
-            # 3. 寫入記錄
+            # 寫入記錄
+            # REPLACE 會自動判斷：如果 key 重複就刪除舊的再插入新的，如果不重複就直接插入
             query = """
-                INSERT INTO update_logs 
-                (clinic_name, pc_name, current_version, os_version, update_time)
-                VALUES (%s, %s, %s, %s, NOW())
+                REPLACE INTO update_logs
+                (clinic_name, pc_name, current_version, os_version, ip_adadress, update_time)
+                VALUES (%s, %s, %s, %s, %s, NOW())
             """
-            cursor.execute(query, (clinic_name, pc_name, commit_msg, os_info))
+            cursor.execute(query, (clinic_name, pc_name, commit_msg, os_info, local_ip))
             conn.commit()
 
             cursor.close()
