@@ -525,21 +525,37 @@ def get_reg_no_by_mode(database, system_settings, period, room, doctor, reg_no):
     elif system_settings.field("現場掛號給號模式") == "預約班表":
         period_condition = ""
         doctor_condition = ""
+        today = datetime.datetime.today()
+        weekday_name = date_utils.get_weekday_name(today.weekday())
+
         if period is not None:
             period_condition = f'AND Period = "{period}"'
         if doctor is not None:
             doctor_condition = f'AND Doctor = "{doctor}"'
 
+        weekday_condition = f'AND Weekday = "{weekday_name}"'
+
         reg_no += 1
+
         sql = f"""
             SELECT * FROM reservation_table
             WHERE
                 ReserveNo >= {reg_no}
                 {period_condition}
                 {doctor_condition}
+                {weekday_condition}
             ORDER BY ReserveNo
         """
         rows = database.select_record(sql)
+        if not rows:
+            sql = f"""
+                SELECT * FROM reservation_table
+                WHERE
+                    ReserveNo >= {reg_no}
+                    {period_condition}
+                    {doctor_condition}
+                ORDER BY ReserveNo
+            """
 
         for row in rows:
             if reg_no != row["ReserveNo"]:
