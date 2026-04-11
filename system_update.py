@@ -665,7 +665,7 @@ class SystemUpdate(QtWidgets.QDialog):
             # REPLACE 會自動判斷：如果 key 重複就刪除舊的再插入新的，如果不重複就直接插入
             query = """
                 REPLACE INTO update_logs
-                (clinic_name, pc_name, current_version, os_version, ip_adadress, update_time)
+                (clinic_name, pc_name, current_version, os_version, ip_address, update_time)
                 VALUES (%s, %s, %s, %s, %s, NOW())
             """
             cursor.execute(query, (clinic_name, pc_name, commit_msg, os_info, local_ip))
