@@ -646,6 +646,7 @@ class SystemUpdate(QtWidgets.QDialog):
             if conn and conn.is_connected():
                 conn.close()
 
+    # 取得客戶端的作業系統版本
     def _get_os_info(self):
         system = platform.system()  # 通常是 "Windows"
         release = platform.release()  # 在 Win11 可能還是會回傳 "10"
