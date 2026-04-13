@@ -55,6 +55,7 @@ def install_pycaw():
     return AudioUtilities, ISimpleAudioVolume
 
 
+# 取得醫療系統版本資訊
 def get_system_version():
     version_file = "version.txt"
     if os.path.exists(version_file):
