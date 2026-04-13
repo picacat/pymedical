@@ -20,7 +20,6 @@ if sys.platform == "linux":
 
 
 import traceback
-import urllib
 from ctypes import wintypes
 from queue import Queue
 from threading import Thread
@@ -150,6 +149,8 @@ class PyMedical(QtWidgets.QMainWindow):
         self.version = system_utils.get_system_version()
         self._deleted = False
         self.host = None
+        self.base_path = os.path.dirname(os.path.abspath(__file__))
+
         try:
             config_file = self.args[0][1]
         except IndexError:
@@ -603,12 +604,24 @@ class PyMedical(QtWidgets.QMainWindow):
             self.ui.textBrowser.hide()
             return
 
-        import ssl
+        # import ssl
 
-        context = ssl._create_unverified_context()
-        url = "https://raw.githubusercontent.com/picacat/medical-announcements/refs/heads/main/bulletin.html"
-        with urllib.request.urlopen(url, context=context, timeout=10) as response:
-            html = response.read().decode("utf-8")
+        # context = ssl._create_unverified_context()
+        # url = "https://raw.githubusercontent.com/picacat/medical-announcements/refs/heads/main/bulletin.html"
+        # with urllib.request.urlopen(url, context=context, timeout=10) as response:
+        #     html = response.read().decode("utf-8")
+
+        bulletin_path = os.path.join(self.base_path, "html", "bulletin.html")
+        html = ""
+        if os.path.exists(bulletin_path):
+            try:
+                with open(bulletin_path, "r", encoding="utf-8") as f:
+                    html = f.read()
+            except Exception as e:
+                html = f"<html><body>讀取公告失敗: {e}</body></html>"
+        else:
+            # 備援：如果檔案不存在，顯示提示
+            html = "<html><body>目前沒有新的公告。</body></html>"
 
         shadow1 = QtWidgets.QGraphicsDropShadowEffect()
         shadow1.setBlurRadius(40)
