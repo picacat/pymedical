@@ -556,6 +556,7 @@ def get_reg_no_by_mode(database, system_settings, period, room, doctor, reg_no):
                     {doctor_condition}
                 ORDER BY ReserveNo
             """
+            rows = database.select_record(sql)
 
         for row in rows:
             if reg_no != row["ReserveNo"]:
