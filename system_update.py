@@ -40,7 +40,18 @@ class SystemUpdate(QtWidgets.QDialog):
 
         # 1. 定義程式根目錄 (pymedical/)
         self.base_path = os.path.dirname(os.path.abspath(__file__))
-        self.git_exe = os.path.join(self.base_path, "PortableGit", "bin", "git.exe")
+
+        # 如果你擔心未來目錄又變，可以用這個「自動偵測」邏輯：
+        possible_paths = [
+            os.path.join(self.base_path, "PortableGit", "bin", "git.exe"),
+            os.path.join(self.base_path, "PortableGit", "cmd", "git.exe"),
+            os.path.join(self.base_path, "PortableGit", "mingw32", "bin", "git.exe"),
+        ]
+
+        for path in possible_paths:
+            if os.path.exists(path):
+                self.git_exe = path
+                break
 
     # 解構
     def __del__(self):
