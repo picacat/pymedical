@@ -47,17 +47,25 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
         self.table_widget_massager_list = class_utils.get_table_widget(
             self.ui.tableWidget_massager_list, self.database
         )
+        self.table_widget_massager_ins_list = class_utils.get_table_widget(
+            self.ui.tableWidget_massager_ins_list, self.database
+        )
         self.table_widget_massager_list.set_column_hidden([0])
+        self.table_widget_massager_ins_list.set_column_hidden([0])
         self._set_table_width()
 
     def _set_table_width(self):
-        width = [100, 130, 70, 90, 50, 150, 90, 50, 90, 100]
+        width = [100, 120, 70, 90, 50, 120, 70, 50, 80, 100]
         self.table_widget_massager_list.set_table_heading_width(width)
+        self.table_widget_massager_ins_list.set_table_heading_width(width)
 
     # 設定信號
     def _set_signal(self):
         self.ui.tableWidget_massager_list.doubleClicked.connect(
             self._open_medical_record
+        )
+        self.ui.tableWidget_massager_ins_list.doubleClicked.connect(
+            self._open_medical_record2
         )
         self.ui.toolButton_export_to_excel.clicked.connect(self._export_to_excel)
 
@@ -71,11 +79,13 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
 
     def start_calculate(self):
         self.ui.tableWidget_massager_list.setRowCount(0)
-        self._read_data()
-        self._calculate_total()
+        self._read_data("自費", ins_massage_fee=50)
+        self._read_data("健保", ins_massage_fee=50)
+        self._calculate_total("自費")
+        self._calculate_total("健保")
         # self._plot_chart()
 
-    def _read_data(self):
+    def _read_data(self, ins_type, ins_massage_fee):
         only_traditional_massage_condition = ""
         if self.only_traditional_massage:
             only_traditional_massage_condition = ' AND TreatType = "民俗調理"'
@@ -92,7 +102,10 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
 
         massage_fee_condition = ""
         if self.system_settings.field("院所名稱") == "耀康中醫診所":
-            massage_fee_condition = " AND SMassageFee > 50"
+            if ins_type == "自費":
+                massage_fee_condition = f" AND SMassageFee > {ins_massage_fee}"
+            else:
+                massage_fee_condition = f" AND SMassageFee = {ins_massage_fee}"
 
         sql = f'''
             SELECT
@@ -120,7 +133,13 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
         self.progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
         self.progress_dialog.setValue(0)
 
-        self.table_widget_massager_list.set_db_data(sql, self._set_table_data)
+        if ins_type == "自費":
+            self.table_widget_massager_list.set_db_data(sql, self._set_table_data)
+        else:
+            self.table_widget_massager_ins_list.set_db_data(
+                sql, self._set_ins_table_data
+            )
+
         self.progress_dialog.setValue(row_count)
         self.progress_dialog.deleteLater()
 
@@ -169,6 +188,51 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
                     QtGui.QColor("blue")
                 )
 
+    def _set_ins_table_data(self, row_no, row):
+        self.progress_dialog.setValue(row_no)
+        case_key = row["CaseKey"]
+        ins_type = string_utils.xstr(row["InsType"])
+        treat_type = string_utils.xstr(row["TreatType"])
+        massage_fee = number_utils.get_integer(row["SMassageFee"])
+
+        massager_row = [
+            string_utils.xstr(case_key),
+            string_utils.xstr(row["CaseDate"].date()),
+            string_utils.xstr(row["PatientKey"]),
+            string_utils.xstr(row["Name"]),
+            ins_type,
+            string_utils.xstr(row["TreatType"]),
+            string_utils.xstr(row["Card"]),
+            string_utils.xstr(row["Continuance"]),
+            string_utils.xstr(row["Massager"]),
+            massage_fee,
+        ]
+
+        for col_no in range(len(massager_row)):
+            item = QtWidgets.QTableWidgetItem()
+            item.setData(QtCore.Qt.EditRole, massager_row[col_no])
+            self.ui.tableWidget_massager_ins_list.setItem(row_no, col_no, item)
+
+            if col_no in [2, 9]:
+                align = QtCore.Qt.AlignRight
+            elif col_no in [4, 7]:
+                align = QtCore.Qt.AlignCenter
+            else:
+                align = QtCore.Qt.AlignLeft
+
+            self.ui.tableWidget_massager_ins_list.item(row_no, col_no).setTextAlignment(
+                align | QtCore.Qt.AlignVCenter
+            )
+
+            if treat_type in ["自購"]:
+                self.ui.tableWidget_massager_ins_list.item(
+                    row_no, col_no
+                ).setForeground(QtGui.QColor("darkgreen"))
+            elif ins_type in ["自費"]:
+                self.ui.tableWidget_massager_ins_list.item(
+                    row_no, col_no
+                ).setForeground(QtGui.QColor("blue"))
+
     def export_to_excel(self):
         start_date = self.start_date[:10]
         end_date = self.end_date[:10]
@@ -194,24 +258,27 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
             "Microsoft Excel 格式.",
         )
 
-    def _calculate_total(self):
+    def _calculate_total(self, ins_type):
         total_amount = 0
 
-        row_count = self.ui.tableWidget_massager_list.rowCount()
+        if ins_type == "自費":
+            table_widget_list = self.ui.tableWidget_massager_list
+        else:
+            table_widget_list = self.ui.tableWidget_massager_ins_list
+
+        row_count = table_widget_list.rowCount()
         for row_no in range(row_count):
-            amount = self.ui.tableWidget_massager_list.item(row_no, 9)
+            amount = table_widget_list.item(row_no, 9)
             if amount is not None:
                 total_amount += number_utils.get_float(amount.text())
 
-        self.ui.tableWidget_massager_list.insertRow(row_count)
-        self.ui.tableWidget_massager_list.setItem(
-            row_count, 1, QtWidgets.QTableWidgetItem("總計")
-        )
+        table_widget_list.insertRow(row_count)
+        table_widget_list.setItem(row_count, 1, QtWidgets.QTableWidgetItem("總計"))
         total_amount = round(total_amount)
-        self.ui.tableWidget_massager_list.setItem(
+        table_widget_list.setItem(
             row_count, 9, QtWidgets.QTableWidgetItem(string_utils.xstr(total_amount))
         )
-        self.ui.tableWidget_massager_list.item(row_count, 9).setTextAlignment(
+        table_widget_list.item(row_count, 9).setTextAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         )
 
@@ -258,6 +325,13 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
 
     def _open_medical_record(self):
         case_key = self.table_widget_massager_list.field_value(0)
+        if case_key is None:
+            return
+
+        self.parent.parent.open_medical_record(case_key)
+
+    def _open_medical_record2(self):
+        case_key = self.table_widget_massager_ins_list.field_value(0)
         if case_key is None:
             return
 

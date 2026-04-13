@@ -2504,13 +2504,14 @@ def get_prescript_html(
     print_total_dosage=None,
     print_treat_item=True,
 ):
+    prescript = """
+        <tr>
+            <td>無處方</td>
+        </tr>
+        <hr>
+    """
+
     if medicine_set is None:
-        prescript = """
-            <tr>
-              <td>無處方</td>
-            </tr>
-            <hr>
-        """
         return prescript
 
     pres_days = case_utils.get_pres_days(database, case_key, medicine_set)
@@ -2524,6 +2525,8 @@ def get_prescript_html(
             CaseKey = {case_key}
     """
     rows = database.select_record(sql)
+    if not rows:
+        return prescript
 
     treatment = rows[0]["Treatment"]
     treat_type = rows[0]["TreatType"]

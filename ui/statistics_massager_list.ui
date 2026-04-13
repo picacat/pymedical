@@ -86,67 +86,156 @@
              </layout>
             </item>
             <item>
-             <widget class="QTableWidget" name="tableWidget_massager_list">
-              <property name="editTriggers">
-               <set>QAbstractItemView::NoEditTriggers</set>
-              </property>
-              <property name="selectionMode">
-               <enum>QAbstractItemView::SingleSelection</enum>
-              </property>
-              <property name="selectionBehavior">
-               <enum>QAbstractItemView::SelectRows</enum>
-              </property>
-              <column>
-               <property name="text">
-                <string>case_key</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>推拿日期</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>病歷號</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>姓名</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>保險</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>就醫類別</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>卡序</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>療程</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>推拿師</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>民俗調理費</string>
-               </property>
-              </column>
-             </widget>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_2">
+                <item>
+                 <widget class="QLabel" name="label">
+                  <property name="text">
+                   <string>自費推拿明細</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTableWidget" name="tableWidget_massager_list">
+                  <property name="editTriggers">
+                   <set>QAbstractItemView::NoEditTriggers</set>
+                  </property>
+                  <property name="selectionMode">
+                   <enum>QAbstractItemView::SingleSelection</enum>
+                  </property>
+                  <property name="selectionBehavior">
+                   <enum>QAbstractItemView::SelectRows</enum>
+                  </property>
+                  <column>
+                   <property name="text">
+                    <string>case_key</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>推拿日期</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>病歷號</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>姓名</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>保險</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>就醫類別</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>卡序</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>療程</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>推拿師</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>民俗調理費</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_4">
+                <item>
+                 <widget class="QLabel" name="label_3">
+                  <property name="text">
+                   <string>健保推拿明細</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTableWidget" name="tableWidget_massager_ins_list">
+                  <property name="editTriggers">
+                   <set>QAbstractItemView::NoEditTriggers</set>
+                  </property>
+                  <property name="selectionMode">
+                   <enum>QAbstractItemView::SingleSelection</enum>
+                  </property>
+                  <property name="selectionBehavior">
+                   <enum>QAbstractItemView::SelectRows</enum>
+                  </property>
+                  <column>
+                   <property name="text">
+                    <string>case_key</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>推拿日期</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>病歷號</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>姓名</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>保險</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>就醫類別</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>卡序</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>療程</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>推拿師</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>民俗調理費</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
