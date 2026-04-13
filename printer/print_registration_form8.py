@@ -1,14 +1,15 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
 
-from libs import printer_utils
-from libs import string_utils
-from libs import number_utils
-from libs import system_utils
-from libs import registration_utils
+from libs import (
+    number_utils,
+    printer_utils,
+    registration_utils,
+    string_utils,
+    system_utils,
+)
 
 
 # 掛號收據格式8 3"空白掛號單
@@ -22,7 +23,9 @@ class PrintRegistrationForm8:
         self.case_key = args[2]
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '門診掛號單印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "門診掛號單印表機"
+        )
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
         self.return_card = None
@@ -56,7 +59,9 @@ class PrintRegistrationForm8:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
@@ -67,8 +72,8 @@ class PrintRegistrationForm8:
         painter = QtGui.QPainter()
         painter.setFont(self.font)
         painter.begin(self.printer)
-        painter.drawText(0, 10, 'print test line1 中文測試')
-        painter.drawText(0, 30, 'print test line2 中文測試')
+        painter.drawText(0, 10, "print test line1 中文測試")
+        painter.drawText(0, 30, "print test line2 中文測試")
         painter.end()
 
     def print_html(self, printing):
@@ -82,51 +87,56 @@ class PrintRegistrationForm8:
             document.print(self.printer)
 
     def _html(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM cases
             WHERE
                 CaseKey = {self.case_key}
-        '''
-        row = self.database.select_record(sql)[0]
+        """
+        try:
+            row = self.database.select_record(sql)[0]
+        except Exception:
+            return ""
 
-        card = string_utils.xstr(row['Card'])
-        if number_utils.get_integer(row['Continuance']) >= 1:
-            card += '-' + string_utils.xstr(row['Continuance'])
+        card = string_utils.xstr(row["Card"])
+        if number_utils.get_integer(row["Continuance"]) >= 1:
+            card += "-" + string_utils.xstr(row["Continuance"])
 
-        if self.system_settings.field('列印院所名稱') == 'Y':
-            clinic_name = self.system_settings.field('院所名稱')
+        if self.system_settings.field("列印院所名稱") == "Y":
+            clinic_name = self.system_settings.field("院所名稱")
         else:
-            clinic_name = ''
+            clinic_name = ""
 
-        regist_fee = number_utils.get_integer(row['RegistFee'])
-        diag_share_fee = number_utils.get_integer(row['SDiagShareFee'])
-        deposit_fee = number_utils.get_integer(row['DepositFee'])
+        regist_fee = number_utils.get_integer(row["RegistFee"])
+        diag_share_fee = number_utils.get_integer(row["SDiagShareFee"])
+        deposit_fee = number_utils.get_integer(row["DepositFee"])
 
-        clinic_telephone = self.system_settings.field('院所電話')
-        patient_key = string_utils.xstr(row['PatientKey'])
-        patient_name = string_utils.xstr(row['Name'])
-        registration_no = string_utils.xstr(row['RegistNo'])
-        room = string_utils.xstr(row['Room'])
-        ins_type = string_utils.xstr(row['InsType'])
-        case_date = string_utils.xstr(row['CaseDate'].date())
-        case_time = string_utils.xstr(row['CaseDate'].time())[:5]
-        period = string_utils.xstr(row['Period'])
+        clinic_telephone = self.system_settings.field("院所電話")
+        patient_key = string_utils.xstr(row["PatientKey"])
+        patient_name = string_utils.xstr(row["Name"])
+        registration_no = string_utils.xstr(row["RegistNo"])
+        room = string_utils.xstr(row["Room"])
+        ins_type = string_utils.xstr(row["InsType"])
+        case_date = string_utils.xstr(row["CaseDate"].date())
+        case_time = string_utils.xstr(row["CaseDate"].time())[:5]
+        period = string_utils.xstr(row["Period"])
         total_fee = regist_fee + diag_share_fee + deposit_fee
-        deposit_hint = ''
-        title = '掛號收據'
-        if '欠卡' in card:
-            return_card_days = registration_utils.get_return_card_days(self.system_settings)
-            deposit_hint = f'<br>* 欠卡請於{return_card_days}日內持健保卡還卡退押金'
+        deposit_hint = ""
+        title = "掛號收據"
+        if "欠卡" in card:
+            return_card_days = registration_utils.get_return_card_days(
+                self.system_settings
+            )
+            deposit_hint = f"<br>* 欠卡請於{return_card_days}日內持健保卡還卡退押金"
 
-        deposit_label = '欠卡費'
-        if self.return_card == '還卡收據':
-            title = '還卡收據'
-            deposit_label = '還卡費'
+        deposit_label = "欠卡費"
+        if self.return_card == "還卡收據":
+            title = "還卡收據"
+            deposit_label = "還卡費"
             regist_fee = 0
             diag_share_fee = 0
             total_fee = regist_fee + diag_share_fee + deposit_fee
 
-        html = f'''
+        html = f"""
             <html>
                 <body>
                     <p style="font-size:20px;">
@@ -188,6 +198,6 @@ class PrintRegistrationForm8:
                     {deposit_hint}
                 </body>
             </html>
-        '''
+        """
 
         return html
