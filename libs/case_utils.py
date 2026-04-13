@@ -792,6 +792,7 @@ def get_prescript_html_data(
             """
 
     total_fee = number_utils.round_up(total_amount * pres_days)
+
     return (
         prescript_data,
         round(total_pres_dosage, 3),
