@@ -657,6 +657,12 @@ class SystemUpdate(QtWidgets.QDialog):
             if conn and conn.is_connected():
                 conn.close()
 
+        version_info = commit_msg
+        with open(
+            os.path.join(self.base_path, "version.txt"), "w", encoding="utf-8"
+        ) as f:
+            f.write(version_info)
+
     # 取得客戶端的作業系統版本
     def _get_os_info(self):
         system = platform.system()  # 通常是 "Windows"

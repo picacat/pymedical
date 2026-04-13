@@ -19,6 +19,7 @@ pymedical.json
 pybulletin.win32.bat
 pymedical.win32.bat
 sync_dropbox
+version.txt
 __pycache__/
 .idea/
 .vscode/

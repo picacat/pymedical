@@ -14,33 +14,34 @@ import sys
 import tempfile
 import threading
 import time
-import requests
 import urllib.parse
-
 from os import listdir
 from pathlib import Path
 
 import pygame
+import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QSettings, QStandardPaths
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (QFileDialog, QInputDialog,
-                             QMessageBox, QProgressDialog, QPushButton)
+from PyQt5.QtWidgets import (
+    QFileDialog,
+    QInputDialog,
+    QMessageBox,
+    QProgressDialog,
+    QPushButton,
+)
 
-if sys.platform == 'win32':
-    os.environ["PYTHON_VLC_MODULE_PATH"] = './vlc'
+if sys.platform == "win32":
+    os.environ["PYTHON_VLC_MODULE_PATH"] = "./vlc"
 
 import json
 import logging
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from io import BytesIO
 
 from libs import dialog_utils, nhi_utils, number_utils, ui_utils
 
-PY_MEDICAL_JSON_FILE = 'pymedical.json'
-COMPLICATED_TREATMENT_DISEASE_FILE = 'complicated_treatment_disease.json'
+PY_MEDICAL_JSON_FILE = "pymedical.json"
+COMPLICATED_TREATMENT_DISEASE_FILE = "complicated_treatment_disease.json"
 
 
 def install_pycaw():
@@ -55,12 +56,17 @@ def install_pycaw():
 
 
 def get_system_version():
-    try:
-        file_date = get_file_date('pymedical.zip')
-    except FileNotFoundError:
-        file_date = get_file_date('pymedical.py')
+    version_file = "version.txt"
+    if os.path.exists(version_file):
+        with open(version_file, "r", encoding="utf-8") as f:
+            return f.read().strip()
 
-    version = f'PyMed{file_date}'
+    try:
+        file_date = get_file_date("pymedical.zip")
+    except FileNotFoundError:
+        file_date = get_file_date("pymedical.py")
+
+    version = f"PyMed{file_date}"
 
     return version
 
@@ -77,42 +83,42 @@ def get_file_date(filename, created_date=None):
 
 
 def get_mariadb_version(database):
-    rows = database.select_record('SELECT VERSION() AS version')
-    version = rows[0]['version']
-    if 'MariaDB' in version:
-        version = 'MariaDB'
+    rows = database.select_record("SELECT VERSION() AS version")
+    version = rows[0]["version"]
+    if "MariaDB" in version:
+        version = "MariaDB"
     else:
-        version = 'MySQL'
+        version = "MySQL"
 
     return version
 
 
 def get_mariadb_dump(version):
-    if sys.platform == 'win32':
-        if version == 'MariaDB':
-            backup_cmd = 'mysqldump.exe'
+    if sys.platform == "win32":
+        if version == "MariaDB":
+            backup_cmd = "mysqldump.exe"
         else:
-            backup_cmd = 'mysqldump50.exe'
+            backup_cmd = "mysqldump50.exe"
     else:
-        backup_cmd = 'mysqldump'
+        backup_cmd = "mysqldump"
 
     return backup_cmd
 
 
 def get_mysql_dump():
-    if sys.platform == 'win32':
-        backup_cmd = 'mysqldump50.exe'
+    if sys.platform == "win32":
+        backup_cmd = "mysqldump50.exe"
     else:
-        backup_cmd = 'mysqldump'
+        backup_cmd = "mysqldump"
 
     return backup_cmd
 
 
 def get_restore_cmd():
-    if sys.platform == 'win32':
-        restore_cmd = 'mysql.exe'
+    if sys.platform == "win32":
+        restore_cmd = "mysql.exe"
     else:
-        restore_cmd = 'mysql'
+        restore_cmd = "mysql"
 
     return restore_cmd
 
@@ -121,13 +127,13 @@ def dump_database(database, backup_path, dump_filename=None, exclude_tables=None
     config = configparser.ConfigParser()
     config.read(database.CONFIG_FILE)
 
-    host_name = config['db']['host']
-    user_name = config['db']['user']
-    password = config['db']['password']
-    database_name = config['db']['database']
+    host_name = config["db"]["host"]
+    user_name = config["db"]["user"]
+    password = config["db"]["password"]
+    database_name = config["db"]["database"]
 
     if dump_filename is None:
-        dump_filename = os.path.join(backup_path, f'{database_name}.sql')
+        dump_filename = os.path.join(backup_path, f"{database_name}.sql")
 
     # 確保備份路徑存在
     os.makedirs(backup_path, exist_ok=True)
@@ -136,25 +142,27 @@ def dump_database(database, backup_path, dump_filename=None, exclude_tables=None
     version = get_mariadb_version(database)
     mariadb_dump_cmd = [
         get_mariadb_dump(version),
-        f'--host={host_name}',
-        f'--user={user_name}',
-        f'--password={password}',
-        '--skip-lock-tables',
-        '--complete-insert',
-        database_name
+        f"--host={host_name}",
+        f"--user={user_name}",
+        f"--password={password}",
+        "--skip-lock-tables",
+        "--complete-insert",
+        database_name,
     ]
 
-     # 如果有排除的表格，加入 --ignore-table 參數
+    # 如果有排除的表格，加入 --ignore-table 參數
     if exclude_tables:
         for table in exclude_tables:
-            mariadb_dump_cmd.append(f'--ignore-table={database_name}.{table}')
+            mariadb_dump_cmd.append(f"--ignore-table={database_name}.{table}")
 
     try:
-        with open(dump_filename, 'w') as f:
-            subprocess.run(mariadb_dump_cmd, stdout=f, stderr=subprocess.PIPE, check=True)
-        
+        with open(dump_filename, "w") as f:
+            subprocess.run(
+                mariadb_dump_cmd, stdout=f, stderr=subprocess.PIPE, check=True
+            )
+
         print(f"✅ 資料庫 {database_name} 備份完成: {dump_filename}")
-        zip_filename = dump_filename.replace('.sql', '.zip')
+        zip_filename = dump_filename.replace(".sql", ".zip")
         zip_file(zip_filename, dump_filename, backup_path)
 
         return 0  # 成功時返回 0
@@ -168,74 +176,75 @@ def import_database(database, restore_filename):
     config = configparser.ConfigParser()
     config.read(database.CONFIG_FILE)
 
-    host = config['db']['host']
-    user_name = config['db']['user']
-    password = config['db']['password']
-    database = config['db']['database']
-    charset = '--default-character-set=utf8'
+    host = config["db"]["host"]
+    user_name = config["db"]["user"]
+    password = config["db"]["password"]
+    database = config["db"]["database"]
+    charset = "--default-character-set=utf8"
 
     restore_cmd = get_restore_cmd()
-    dump_cmd = f'''
+    dump_cmd = f"""
         {restore_cmd} {charset} --host={host} --user={user_name} --password={password} {database} < {restore_filename}
-    '''
+    """
 
     err_no = os.system(dump_cmd)
 
     return err_no
 
-import configparser
+
 import os
-import subprocess
 import sys
 
 
-def dump_table(database, version, backup_path, in_filename, where_script=None, use_docker=False):
+def dump_table(
+    database, version, backup_path, in_filename, where_script=None, use_docker=False
+):
     config = configparser.ConfigParser()
     config.read(database.CONFIG_FILE)
 
-    host_name = config['db']['host']
-    user_name = config['db']['user']
-    password = config['db']['password']
-    database_name = config['db']['database']
+    host_name = config["db"]["host"]
+    user_name = config["db"]["user"]
+    password = config["db"]["password"]
+    database_name = config["db"]["database"]
 
     dump_file = os.path.join(backup_path, in_filename)
-    table_name = in_filename.split('.')[0]
+    table_name = in_filename.split(".")[0]
 
     # 判斷是否使用 WHERE 限制
     if where_script:
         where_clause = f'--where="{where_script}"'
-        extra_opts = ['--no-create-info']  # 只導出資料
+        extra_opts = ["--no-create-info"]  # 只導出資料
     else:
-        where_clause = ''
+        where_clause = ""
         extra_opts = []
 
     # ✅ 查詢這張表的 ENGINE 類型（InnoDB 或 MyISAM）
-    engine_sql = f'''
+    engine_sql = f"""
         SELECT ENGINE FROM information_schema.TABLES
         WHERE TABLE_SCHEMA = '{database_name}' AND TABLE_NAME = '{table_name}'
-    '''
+    """
     engine_rows = database.select_record(engine_sql)
-    engine_type = engine_rows[0]['ENGINE'] if engine_rows else ''
+    engine_type = engine_rows[0]["ENGINE"] if engine_rows else ""
 
     # ✅ 若是 InnoDB，加入 --single-transaction，避免鎖表且確保一致性
     extra_flags = []
-    if engine_type.upper() == 'INNODB':
-        extra_flags.extend(['--single-transaction', '--skip-lock-tables'])
+    if engine_type.upper() == "INNODB":
+        extra_flags.extend(["--single-transaction", "--skip-lock-tables"])
 
     # ✅ 組裝 mysqldump 指令
     if use_docker:
         mariadb_dump_cmd = [
-            'docker',
-            'exec',
-            '-it',
-            'mariadb-db-service',
-            'mariadb-dump',
-            f'--host={host_name}',
-            f'--user={user_name}',
-            f'--password={password}',
+            "docker",
+            "exec",
+            "-it",
+            "mariadb-db-service",
+            "mariadb-dump",
+            f"--host={host_name}",
+            f"--user={user_name}",
+            f"--password={password}",
             where_clause,
-            '--skip-extended-insert',
-            '--compress',
+            "--skip-extended-insert",
+            "--compress",
             *extra_opts,
             *extra_flags,
             database_name,
@@ -244,12 +253,12 @@ def dump_table(database, version, backup_path, in_filename, where_script=None, u
     else:
         mariadb_dump_cmd = [
             get_mariadb_dump(version),
-            f'--host={host_name}',
-            f'--user={user_name}',
-            f'--password={password}',
+            f"--host={host_name}",
+            f"--user={user_name}",
+            f"--password={password}",
             where_clause,
-            '--skip-extended-insert',
-            '--compress',
+            "--skip-extended-insert",
+            "--compress",
             *extra_opts,
             *extra_flags,
             database_name,
@@ -259,13 +268,19 @@ def dump_table(database, version, backup_path, in_filename, where_script=None, u
     args = [arg for arg in mariadb_dump_cmd if arg]  # 過濾空白參數
 
     # ✅ 執行備份
-    with open(dump_file, 'w') as f:
+    with open(dump_file, "w") as f:
         try:
-            if sys.platform == 'win32':
+            if sys.platform == "win32":
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                 startupinfo.wShowWindow = subprocess.SW_HIDE
-                subprocess.run(args, stdout=f, stderr=subprocess.PIPE, startupinfo=startupinfo, check=True)
+                subprocess.run(
+                    args,
+                    stdout=f,
+                    stderr=subprocess.PIPE,
+                    startupinfo=startupinfo,
+                    check=True,
+                )
             else:
                 subprocess.run(args, stdout=f, stderr=subprocess.PIPE, check=True)
 
@@ -274,7 +289,7 @@ def dump_table(database, version, backup_path, in_filename, where_script=None, u
         except subprocess.CalledProcessError as e:
             print("❌ 備份失敗，指令如下：")
             print(" ".join(args))
-            print("🔴 stderr 錯誤訊息：", e.stderr.decode('utf-8'))
+            print("🔴 stderr 錯誤訊息：", e.stderr.decode("utf-8"))
             raise RuntimeError(f"資料表 {table_name} 備份失敗，錯誤: {e}")
 
 
@@ -292,7 +307,7 @@ def pip3_uninstall(package):
         pass
 
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     import win32api
     import win32gui
     from win32con import WM_INPUTLANGCHANGEREQUEST
@@ -301,8 +316,8 @@ try:
     from gtts import gTTS
     from pygame import mixer
 except ModuleNotFoundError:
-    pip3_install('gtts')
-    pip3_install('pygame')
+    pip3_install("gtts")
+    pip3_install("pygame")
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
 CSS_PATH = "css"
@@ -329,15 +344,16 @@ def center_window(window):
 
 #     return ip
 
+
 def get_ip():
-    ip = '無網路連線'
+    ip = "無網路連線"
     try:
         # 嘗試從所有網路介面中獲取 IP 地址
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(0)
         try:
             # 這個 IP 地址是無效的，但會觸發系統選擇合適的本地 IP 地址
-            s.connect(('10.254.254.254', 1))
+            s.connect(("10.254.254.254", 1))
             ip = s.getsockname()[0]
         except Exception:
             pass
@@ -350,96 +366,96 @@ def get_ip():
 
 
 def get_font(system_settings=None):
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         font = "Microsoft JhengHei"
         if system_settings is not None:
-            print_font = system_settings.field('列印預設字體')
-            if print_font not in ['', None]:
+            print_font = system_settings.field("列印預設字體")
+            if print_font not in ["", None]:
                 font = print_font
     else:
-        font = 'Noto Sans'
+        font = "Noto Sans"
 
     return font
 
 
 def set_login_image(widget, system_settings):
-    image_file = 'login_blue.jpg'
+    image_file = "login_blue.jpg"
 
-    if system_settings.field('外觀顏色') == '紅色':
-        image_file = 'login_red.jpg'
-    elif system_settings.field('外觀顏色') == '綠色':
-        image_file = 'login_green.jpg'
-    elif system_settings.field('外觀顏色') == '藍色':
-        image_file = 'login_blue.jpg'
-    elif system_settings.field('外觀顏色') == '灰色':
-        image_file = 'login_gray.jpg'
+    if system_settings.field("外觀顏色") == "紅色":
+        image_file = "login_red.jpg"
+    elif system_settings.field("外觀顏色") == "綠色":
+        image_file = "login_green.jpg"
+    elif system_settings.field("外觀顏色") == "藍色":
+        image_file = "login_blue.jpg"
+    elif system_settings.field("外觀顏色") == "灰色":
+        image_file = "login_gray.jpg"
     else:
-        image_file = 'login_gray.jpg'
+        image_file = "login_gray.jpg"
 
-    style = f'''
+    style = f"""
         QDialog#Dialog_login
         {{background-image: url(./images/{image_file});}}
-    '''
+    """
     widget.setStyleSheet(style)
 
 
 def set_background_image(widget, system_settings):
-    image_file = 'home_blue.jpg'
+    image_file = "home_blue.jpg"
 
-    if system_settings.field('外觀顏色') == '紅色':
-        image_file = 'home_red.jpg'
-    elif system_settings.field('外觀顏色') == '綠色':
-        image_file = 'home_green.jpg'
-    elif system_settings.field('外觀顏色') == '藍色':
-        image_file = 'home_blue.jpg'
-    elif system_settings.field('外觀顏色') == '灰色':
-        image_file = 'home_gray.jpg'
+    if system_settings.field("外觀顏色") == "紅色":
+        image_file = "home_red.jpg"
+    elif system_settings.field("外觀顏色") == "綠色":
+        image_file = "home_green.jpg"
+    elif system_settings.field("外觀顏色") == "藍色":
+        image_file = "home_blue.jpg"
+    elif system_settings.field("外觀顏色") == "灰色":
+        image_file = "home_gray.jpg"
 
-    style = f'''
+    style = f"""
         QWidget#tab_home
         {{background-image: url(./images/{image_file});}}
-    '''
+    """
     widget.setStyleSheet(style)
 
 
 def set_css(widget, system_settings):
     css_file = os.path.join(BASE_DIR, CSS_PATH, get_css_file(system_settings))
 
-    widget.setStyleSheet(open(css_file, "r", encoding='utf-8').read())
+    widget.setStyleSheet(open(css_file, "r", encoding="utf-8").read())
 
 
 def get_css_file(system_settings):
-    css_file = 'style'
+    css_file = "style"
 
-    if system_settings.field('外觀顏色') == '紅色':
-        css_file += '.red'
-    elif system_settings.field('外觀顏色') == '綠色':
-        css_file += '.green'
-    elif system_settings.field('外觀顏色') == '藍色':
-        css_file += '.blue'
-    elif system_settings.field('外觀顏色') == '灰色':
-        css_file += '.gray'
-    elif system_settings.field('外觀顏色') == '自訂1':
-        css_file += '.custom1'
+    if system_settings.field("外觀顏色") == "紅色":
+        css_file += ".red"
+    elif system_settings.field("外觀顏色") == "綠色":
+        css_file += ".green"
+    elif system_settings.field("外觀顏色") == "藍色":
+        css_file += ".blue"
+    elif system_settings.field("外觀顏色") == "灰色":
+        css_file += ".gray"
+    elif system_settings.field("外觀顏色") == "自訂1":
+        css_file += ".custom1"
 
-    if sys.platform == 'win32':
-        css_file += '.win32'
+    if sys.platform == "win32":
+        css_file += ".win32"
 
-    css_file += '.css'
+    css_file += ".css"
 
     return css_file
 
 
 # 設定主題
 def set_theme(ui, system_settings):
-    style = system_settings.field('外觀主題')
+    style = system_settings.field("外觀主題")
     if style is None:
-        style = 'Fusion'
+        style = "Fusion"
 
     ui.setStyle(QtWidgets.QStyleFactory.create(style))
 
 
-def show_message_box(message_icon, title, text, informative, button_text='確定'):
+def show_message_box(message_icon, title, text, informative, button_text="確定"):
     msg_box = QMessageBox()
     msg_box.setWindowFlags(QtCore.Qt.Dialog)
     msg_box.setIcon(message_icon)
@@ -453,42 +469,37 @@ def show_message_box(message_icon, title, text, informative, button_text='確定
 def show_message(text):
     msg_box = QMessageBox()
     msg_box.setWindowFlags(QtCore.Qt.Dialog)
-    msg_box.setIcon(QMessageBox.Information),
-    msg_box.setWindowTitle('系統測試')
+    (msg_box.setIcon(QMessageBox.Information),)
+    msg_box.setWindowTitle("系統測試")
     msg_box.setText(text)
-    msg_box.setInformativeText('系統測試')
+    msg_box.setInformativeText("系統測試")
     msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
     msg_box.exec_()
 
 
 def set_keyboard_layout(lang):
-    if sys.platform != 'win32':
+    if sys.platform != "win32":
         return
 
     chinese = 0x0404
     english = 0x0409
 
-    if lang == '中文':
+    if lang == "中文":
         keyboard = chinese
     else:
         keyboard = english
 
     hwnd = win32gui.GetForegroundWindow()
 
-    win32api.SendMessage(
-        hwnd,
-        WM_INPUTLANGCHANGEREQUEST,
-        0,
-        keyboard
-    )
+    win32api.SendMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, keyboard)
 
 
 def unzip_file(zip_file, output_directory):
-    if sys.platform == 'darwin':
-        cmd = f'unzip {zip_file} -d {output_directory}'
+    if sys.platform == "darwin":
+        cmd = f"unzip {zip_file} -d {output_directory}"
         os.system(cmd)
     else:
-        cmd = ['7z', 'x', zip_file, f'-o{output_directory}']
+        cmd = ["7z", "x", zip_file, f"-o{output_directory}"]
         sp = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
         sp.communicate()
 
@@ -497,28 +508,33 @@ def zip_file(zip_file, source_file, output_directory):
     source_file = os.path.join(output_directory, source_file)
     zip_file = os.path.join(output_directory, zip_file)
 
-    cmd = ['7z', 'a', '-tzip', zip_file, source_file, f'-o{output_directory}']
+    cmd = ["7z", "a", "-tzip", zip_file, source_file, f"-o{output_directory}"]
 
     if platform.system() == "Windows":
         # 隱藏 CMD 視窗的方法
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = subprocess.SW_HIDE  # 隱藏 CMD 視窗
-        sp = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, startupinfo=startupinfo)
+        sp = subprocess.Popen(
+            cmd,
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
+            startupinfo=startupinfo,
+        )
     else:
         sp = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     sp.communicate()
 
     os.remove(source_file)
-    
+
 
 def get_host_ip():
     import socket
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        s.connect(('8.8.8.8', 80))
+        s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
     finally:
         s.close()
@@ -527,7 +543,7 @@ def get_host_ip():
 
 
 def set_widget_image(widget, image_file):
-    style_sheet = f'''
+    style_sheet = f"""
         QWidget {{
             background-image: url({image_file});
             background-repeat: none;
@@ -537,7 +553,7 @@ def set_widget_image(widget, image_file):
             color: rgb(255, 0, 0);
             font: 10pt;
         }}
-    '''
+    """
     widget.setStyleSheet(style_sheet)
 
 
@@ -553,6 +569,7 @@ def set_combo_box_item(combo_box, item_text):
 
     combo_box.setCurrentText(item_text)
 
+
 # Windows: 獲取與設定音量
 def get_volume_windows():
     AudioUtilities, ISimpleAudioVolume = install_pycaw()
@@ -565,11 +582,18 @@ def get_volume_windows():
 # Linux: 使用 amixer 或 pactl 獲取與設定音量
 def get_volume_linux():
     if shutil.which("pactl"):
-        result = subprocess.run("pactl get-sink-volume @DEFAULT_SINK@", shell=True, capture_output=True, text=True)
-        return int(result.stdout.split('/')[1].strip().replace('%', '')) / 100
+        result = subprocess.run(
+            "pactl get-sink-volume @DEFAULT_SINK@",
+            shell=True,
+            capture_output=True,
+            text=True,
+        )
+        return int(result.stdout.split("/")[1].strip().replace("%", "")) / 100
     elif shutil.which("amixer"):
-        result = subprocess.run("amixer get Master", shell=True, capture_output=True, text=True)
-        return int(result.stdout.split('[')[1].split('%')[0]) / 100
+        result = subprocess.run(
+            "amixer get Master", shell=True, capture_output=True, text=True
+        )
+        return int(result.stdout.split("[")[1].split("%")[0]) / 100
 
     return None
 
@@ -602,7 +626,12 @@ def restore_volume(volume_level):
 
 # macOS: 使用 osascript 獲取與設定音量
 def get_volume_mac():
-    result = subprocess.run("osascript -e 'output volume of (get volume settings)'", shell=True, capture_output=True, text=True)
+    result = subprocess.run(
+        "osascript -e 'output volume of (get volume settings)'",
+        shell=True,
+        capture_output=True,
+        text=True,
+    )
     return int(result.stdout.strip()) / 100
 
 
@@ -642,12 +671,12 @@ def set_volume(volume_level=0.2):
 
 
 def speak(sentence, threading=False):
-    if sys.platform == 'linux':
+    if sys.platform == "linux":
         if threading:
             speak_linux_thread(sentence)
         else:
             speak_linux(sentence)
-    elif sys.platform == 'win32':
+    elif sys.platform == "win32":
         if threading:
             speak_win32_thread(sentence)
         else:
@@ -657,7 +686,7 @@ def speak(sentence, threading=False):
 
 
 def speak_linux(sentence):
-    tts = gTTS(text=sentence, lang='zh-tw')
+    tts = gTTS(text=sentence, lang="zh-tw")
     fp = BytesIO()
     tts.write_to_fp(fp)
     fp.seek(0)
@@ -665,7 +694,7 @@ def speak_linux(sentence):
     # ------------------ 替換 pydub ------------------
     # 1. 載入音訊
     pygame.mixer.init()
-    pygame.mixer.music.load(fp, 'mp3') 
+    pygame.mixer.music.load(fp, "mp3")
 
     # 2. 播放
     pygame.mixer.music.play()
@@ -678,17 +707,17 @@ def speak_linux(sentence):
 
 def speak_linux_thread(sentence):
     def _play_audio():
-        tts = gTTS(text=sentence, lang='zh-tw')
+        tts = gTTS(text=sentence, lang="zh-tw")
         fp = BytesIO()
         tts.write_to_fp(fp)
         fp.seek(0)
-        
+
         # 載入音訊
-        pygame.mixer.music.load(fp, 'mp3')
-        
+        pygame.mixer.music.load(fp, "mp3")
+
         # 播放
         pygame.mixer.music.play()
-        
+
         # 等待播放完成
         while pygame.mixer.music.get_busy():
             pygame.time.Clock().tick(10)
@@ -697,7 +726,7 @@ def speak_linux_thread(sentence):
     thread = threading.Thread(target=_play_audio, daemon=True)
     thread.start()
 
-    
+
 # 💡 備註：pygame.mixer.music.load() 不支援音量正規化 (voice.normalize())。
 # gTTS 的音量通常是固定的，如果需要正規化，則需要額外的步驟。
 
@@ -706,9 +735,9 @@ def speak_win32(sentence):
     # original_volume = save_volume()  # 保存原始音量
 
     with tempfile.NamedTemporaryFile(delete=True) as fp:
-        filename = f'{fp.name}.mp3'
+        filename = f"{fp.name}.mp3"
 
-        tts = gTTS(text=sentence, lang='zh-tw', slow=False)
+        tts = gTTS(text=sentence, lang="zh-tw", slow=False)
         tts.save(filename)
 
         # set_volume(0.1)
@@ -729,9 +758,9 @@ def speak_win32(sentence):
 def speak_win32_thread(sentence):
     def _play_audio():
         with tempfile.NamedTemporaryFile(delete=True) as fp:
-            filename = f'{fp.name}.mp3'
+            filename = f"{fp.name}.mp3"
 
-            tts = gTTS(text=sentence, lang='zh-tw', slow=False)
+            tts = gTTS(text=sentence, lang="zh-tw", slow=False)
             tts.save(filename)
 
             try:
@@ -751,22 +780,24 @@ def speak_win32_thread(sentence):
 
 def loggin_error(filename, error_message):
     if os.path.exists(filename):
-        file_mode = 'a'
+        file_mode = "a"
     else:
-        file_mode = 'w'
+        file_mode = "w"
 
     logging.basicConfig(
-        level=logging.INFO, filename=filename, filemode=file_mode,
-        format='[%(asctime)s %(levelname)s]\n%(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
+        level=logging.INFO,
+        filename=filename,
+        filemode=file_mode,
+        format="[%(asctime)s %(levelname)s]\n%(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     logging.error(error_message)
 
 
 def send_telegram_alert(json_data, mail_content):
     # --- 步驟 1: 配置您的 Token 和 Chat ID ---
-    BOT_TOKEN = '8235563099:AAFBSEhk0BgQFRUjsH87iO38Gn70ZGo1GMI'
-    CHAT_ID = '7646915984'
+    BOT_TOKEN = "8235563099:AAFBSEhk0BgQFRUjsH87iO38Gn70ZGo1GMI"
+    CHAT_ID = "7646915984"
 
     # --- 步驟 2: 組織訊息內容 ---
 
@@ -778,7 +809,7 @@ def send_telegram_alert(json_data, mail_content):
         f"🚨 **PyMedical 系統警報** 🚨\n\n"
         f"**主旨：** {subject}\n"
         f"**詳細錯誤：**\n"
-        f"```\n{mail_content}\n```" # 使用三引號讓錯誤訊息格式化
+        f"```\n{mail_content}\n```"  # 使用三引號讓錯誤訊息格式化
     )
 
     # URL 編碼訊息內容，確保特殊字符不會破壞 URL
@@ -790,16 +821,16 @@ def send_telegram_alert(json_data, mail_content):
     # --- 步驟 3: 發送 HTTP 請求 ---
     try:
         payload = {
-            'chat_id': CHAT_ID,
-            'text': text_message,
-            'parse_mode': 'Markdown'  # 告訴 Telegram 啟用 Markdown 格式
+            "chat_id": CHAT_ID,
+            "text": text_message,
+            "parse_mode": "Markdown",  # 告訴 Telegram 啟用 Markdown 格式
         }
 
         response = requests.post(url, data=payload)
         response.raise_for_status()  # 檢查是否有 HTTP 錯誤 (例如 404, 500)
 
         # 檢查 Telegram API 是否回傳成功
-        if response.json().get('ok'):
+        if response.json().get("ok"):
             print("Telegram 訊息發送成功。")
         else:
             print(f"Telegram API 錯誤: {response.text}")
@@ -810,11 +841,11 @@ def send_telegram_alert(json_data, mail_content):
 
 def write_loggin_info(clinic_name, user_name, position):
     clinic_info = {
-        '院所名稱': clinic_name,
-        '使用者': user_name,
-        '職稱': position,
+        "院所名稱": clinic_name,
+        "使用者": user_name,
+        "職稱": position,
     }
-    with open(PY_MEDICAL_JSON_FILE, 'w') as f:
+    with open(PY_MEDICAL_JSON_FILE, "w") as f:
         json.dump(clinic_info, f)
 
 
@@ -828,26 +859,28 @@ def read_loggin_info(field):
 
 def write_user_info(clinic_name, station_no, user_name):
     clinic_info = {
-        '院所名稱': clinic_name,
-        '使用者': user_name,
+        "院所名稱": clinic_name,
+        "使用者": user_name,
     }
-    filename = f'{clinic_name}{station_no}.json'
-    with open(filename, 'w') as f:
+    filename = f"{clinic_name}{station_no}.json"
+    with open(filename, "w") as f:
         json.dump(clinic_info, f)
 
 
 def get_user_name(system_settings):
-    json_file = f"{system_settings.field('院所名稱')}{system_settings.field('工作站編號')}.json"
+    json_file = (
+        f"{system_settings.field('院所名稱')}{system_settings.field('工作站編號')}.json"
+    )
 
     try:
         json_file = open(json_file)
     except FileNotFoundError:
-        return system_settings.field('使用者')
+        return system_settings.field("使用者")
 
     json_data = json.load(json_file)
     json_file.close()
 
-    user_name = json_data['使用者']
+    user_name = json_data["使用者"]
 
     return user_name
 
@@ -859,37 +892,35 @@ def remove_user_info(system_settings):
     # except Exception:
     #     pass
 
-    source_dir = os.getcwd()    
+    source_dir = os.getcwd()
     source_files = [
-        f for f in listdir(source_dir)
-        if os.path.isfile(os.path.join(source_dir, f))
+        f for f in listdir(source_dir) if os.path.isfile(os.path.join(source_dir, f))
     ]
     for file in source_files:
-        if '衝突的複本' in file:
+        if "衝突的複本" in file:
             try:
                 os.remove(file)
             except Exception:
                 pass
 
-        if '中醫診所' in file:
+        if "中醫診所" in file:
             try:
                 os.remove(file)
             except Exception:
                 pass
 
-        if 'conflicted copy' in file:
+        if "conflicted copy" in file:
             try:
                 os.remove(file)
             except Exception:
                 pass
 
-    icon_dir = os.path.join(source_dir, 'icons')
+    icon_dir = os.path.join(source_dir, "icons")
     icon_files = [
-        f for f in listdir(icon_dir)
-        if os.path.isfile(os.path.join(icon_dir, f))
+        f for f in listdir(icon_dir) if os.path.isfile(os.path.join(icon_dir, f))
     ]
     for file in icon_files:
-        if '衝突的複本' in file:
+        if "衝突的複本" in file:
             try:
                 os.remove(os.path.join(icon_dir, file))
             except Exception:
@@ -902,9 +933,7 @@ def get_qrcode_from_file(parent):
     options = QFileDialog.Options()
     options |= QFileDialog.DontUseNativeDialog
     filename, _ = QFileDialog.getOpenFileName(
-        parent, "讀取QRCode檔",
-        '../',
-        "圖形檔 (*.png *.jpg)", options=options
+        parent, "讀取QRCode檔", "../", "圖形檔 (*.png *.jpg)", options=options
     )
     if not filename:
         return
@@ -926,17 +955,17 @@ def send_to_com_port(com_port, regist_no):
     import serial
 
     com = serial.Serial()
-    com.port = f'COM{com_port}'
+    com.port = f"COM{com_port}"
     com.baudrate = 9600
     com.parity = serial.PARITY_NONE
     com.bytesize = serial.EIGHTBITS
     com.stopbits = serial.STOPBITS_ONE
 
-    com.timeout = 0.5       # non-block read 0.5s
+    com.timeout = 0.5  # non-block read 0.5s
     com.writeTimeout = 0.5  # timeout for write 0.5s
-    com.xonxoff = False     # disable software flow control
-    com.rtscts = False      # disable hardware (RTS/CTS) flow control
-    com.dsrdtr = False      # disable hardware (DSR/DTR) flow control
+    com.xonxoff = False  # disable software flow control
+    com.rtscts = False  # disable hardware (RTS/CTS) flow control
+    com.dsrdtr = False  # disable hardware (DSR/DTR) flow control
 
     try:
         com.open()
@@ -951,17 +980,17 @@ def send_to_com_port(com_port, regist_no):
 
     regist_no = number_utils.get_integer(regist_no)
     if number_utils.get_integer(regist_no) == 0:
-        regist_no_hex = [0x20, 0x20, 0x20, 0xd5]  # 關掉led燈
+        regist_no_hex = [0x20, 0x20, 0x20, 0xD5]  # 關掉led燈
         data_list = head + regist_no_hex + tail
     else:
-        regist_no_str = f'{regist_no: >3}'
+        regist_no_str = f"{regist_no: >3}"
         regist_no_str = regist_no_str[::-1]
         regist_no_hex = []
         for i in regist_no_str:
-            if i == ' ':
-                regist_no_hex.append(0x3f)
+            if i == " ":
+                regist_no_hex.append(0x3F)
             else:
-                regist_no_hex.append(0x30+int(i))
+                regist_no_hex.append(0x30 + int(i))
 
         checksum_list = get_checksum_list()
         data_list = head + regist_no_hex + [checksum_list[regist_no]] + tail
@@ -979,44 +1008,44 @@ def send_to_com_port(com_port, regist_no):
 def get_checksum_list():
     checksum_list = [None]
     for i in range(0, 9):  # 1-9 start: 0x24
-        checksum_list.append(0x24+i)
+        checksum_list.append(0x24 + i)
 
     for i in range(1, 10):  # 10-99 start: 0x15
         for j in range(0, 10):
-            checksum_list.append(0x15 + (j-1) + i)
+            checksum_list.append(0x15 + (j - 1) + i)
 
     for i in range(0, 10):  # 100-109 start: 0x06
-        checksum_list.append(0x06+i)
+        checksum_list.append(0x06 + i)
 
     for i in range(1, 37):  # 110-469 start: 0x07
         for j in range(0, 10):
-            checksum_list.append(0x07 + ((i-1) % 9) + j)
+            checksum_list.append(0x07 + ((i - 1) % 9) + j)
 
     for i in range(1, 4):  # 470-499 start: 0x10
         for j in range(0, 10):
-            checksum_list.append(0x10 + ((i-1) % 9) + j)
+            checksum_list.append(0x10 + ((i - 1) % 9) + j)
 
     for i in range(1, 28):  # 500-769 start: 0x0a
         for j in range(0, 10):
-            checksum_list.append(0x10 + ((i-1) % 9) + j)
+            checksum_list.append(0x10 + ((i - 1) % 9) + j)
 
     for i in range(1, 4):  # 770-799 start: 0x13
         for j in range(0, 10):
-            checksum_list.append(0x13 + ((i-1) % 9) + j)
+            checksum_list.append(0x13 + ((i - 1) % 9) + j)
 
     for i in range(1, 10):  # 800-889 start: 0x0d
         for j in range(0, 10):
-            checksum_list.append(0x0d + ((i-1) % 9) + j)
+            checksum_list.append(0x0D + ((i - 1) % 9) + j)
 
     for i in range(0, 10):  # 890-899 start: 0x16
-        checksum_list.append(0x16+i)
+        checksum_list.append(0x16 + i)
 
     for i in range(1, 10):  # 900-989 start: 0x0e
         for j in range(0, 10):
-            checksum_list.append(0x0e + ((i-1) % 9) + j)
+            checksum_list.append(0x0E + ((i - 1) % 9) + j)
 
     for i in range(0, 10):  # 990-999 start: 0x17
-        checksum_list.append(0x17+i)
+        checksum_list.append(0x17 + i)
 
     return checksum_list
 
@@ -1056,11 +1085,14 @@ def set_combo_box_treat_type(combobox_treat_type, start_date=None):
 
 
 def verify_confirm_code():
-    random_number = f'{str(random.randint(0000, 9999)):0>4}'
+    random_number = f"{str(random.randint(0000, 9999)):0>4}"
     input_dialog = dialog_utils.get_dialog(
-        '掛號刪除雙重確認',
-        f'請輸入刪除確認碼 {random_number}',
-        None, QInputDialog.TextInput, 320, 200
+        "掛號刪除雙重確認",
+        f"請輸入刪除確認碼 {random_number}",
+        None,
+        QInputDialog.TextInput,
+        320,
+        200,
     )
     ok = input_dialog.exec_()
     if not ok:
@@ -1070,9 +1102,9 @@ def verify_confirm_code():
     if confirm_code != random_number:
         show_message_box(
             QMessageBox.Critical,
-            '認證錯誤',
+            "認證錯誤",
             '<font size="5" color="red"><b>刪除認證碼輸入錯誤, 無法刪除資料.</b></font>',
-            '請重新執行刪除作業並輸入正確的確認碼.'
+            "請重新執行刪除作業並輸入正確的確認碼.",
         )
         return False
     else:
@@ -1080,38 +1112,41 @@ def verify_confirm_code():
 
 
 def get_blood_measure_data(parent, system_settings, patient_id):
-    blood_measure_path = system_settings.field('血壓計路徑')
-    filename = os.path.join(blood_measure_path, patient_id + '*.femet')
+    blood_measure_path = system_settings.field("血壓計路徑")
+    filename = os.path.join(blood_measure_path, patient_id + "*.femet")
 
     options = QFileDialog.Options()
     json_filename, _ = QFileDialog.getOpenFileName(
         parent,
-        "血壓計檔案", filename,
+        "血壓計檔案",
+        filename,
         f"femet檔案 ({patient_id}*.femet)",
-        options=options
+        options=options,
     )
     if not json_filename:
         return
 
-    json_file = open(json_filename, 'r')
+    json_file = open(json_filename, "r")
     json_data = json.load(json_file)
     json_file.close()
-    measure_time = json_data[0]['MeasureTime']
+    measure_time = json_data[0]["MeasureTime"]
 
     measure_data = []
-    for data in json_data[0]['data']:
+    for data in json_data[0]["data"]:
         measure_line = f"{data['Type']}: {data['Value']}"
         measure_data.append(measure_line)
 
-    measure_data = '\n'.join(measure_data)
+    measure_data = "\n".join(measure_data)
 
-    script = f'測量時間: {measure_time}\n{measure_data}\n'
+    script = f"測量時間: {measure_time}\n{measure_data}\n"
 
-    history_dir = os.path.join(blood_measure_path, 'history')
+    history_dir = os.path.join(blood_measure_path, "history")
     if not os.path.exists(history_dir):
         os.mkdir(history_dir)
 
-    shutil.move(json_filename, os.path.join(history_dir, os.path.basename(json_filename)))
+    shutil.move(
+        json_filename, os.path.join(history_dir, os.path.basename(json_filename))
+    )
 
     return script
 
@@ -1133,7 +1168,7 @@ def get_qrcode_b64png(data):
     img.save(buffer)
     png = buffer.getvalue()
 
-    b64png = base64.b64encode(png).decode('utf-8')
+    b64png = base64.b64encode(png).decode("utf-8")
 
     return b64png
 
@@ -1171,11 +1206,22 @@ def set_image(parent, png_filename, x, y, width=None, height=None, center=False)
     return label_image
 
 
-def set_label(parent, text, x, y, font_name, font_size, font_color, center=False, font_weight='normal'):
+def set_label(
+    parent,
+    text,
+    x,
+    y,
+    font_name,
+    font_size,
+    font_color,
+    center=False,
+    font_weight="normal",
+):
     label_text = QtWidgets.QLabel(parent)
     label_text.setText(text)
     label_text.setStyleSheet(
-        f'font: 75 {font_size}pt "{font_name}"; color: {font_color}; font-weight: {font_weight};')
+        f'font: 75 {font_size}pt "{font_name}"; color: {font_color}; font-weight: {font_weight};'
+    )
     label_text.adjustSize()
 
     if center:
@@ -1190,8 +1236,20 @@ def set_label(parent, text, x, y, font_name, font_size, font_color, center=False
 
 
 def set_button(
-        parent, text, text_color, x, y, font_name, font_color, font_size,
-        width, height, event, center=False, font_weight='normal'):
+    parent,
+    text,
+    text_color,
+    x,
+    y,
+    font_name,
+    font_color,
+    font_size,
+    width,
+    height,
+    event,
+    center=False,
+    font_weight="normal",
+):
     push_button = QtWidgets.QPushButton(parent)
     push_button.resize(width, height)
     push_button.setText(text)
@@ -1227,18 +1285,22 @@ def shadow_widget(parent, widget):
 
 
 def get_last_directory(program_name):
-    settings = QSettings('pymedical', program_name)
-    return settings.value("lastDirectory", QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation))
+    settings = QSettings("pymedical", program_name)
+    return settings.value(
+        "lastDirectory",
+        QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
+    )
 
 
 def set_last_directory(program_name, filename):
     directory = os.path.dirname(filename)
-    settings = QSettings('pymedical', program_name)
+    settings = QSettings("pymedical", program_name)
     settings.setValue("lastDirectory", directory)
 
 
 # 你已經有的工具：get_mariadb_dump()、dump_table()、delete_old_folders()
 # 這裡直接呼叫即可
+
 
 def backup_mariadb(parent, database, backup_path, db_dir=None, use_docker=False):
     """
@@ -1249,10 +1311,10 @@ def backup_mariadb(parent, database, backup_path, db_dir=None, use_docker=False)
     # ───────────────────────── 讀取 config ─────────────────────────
     cfg = configparser.ConfigParser()
     cfg.read(database.CONFIG_FILE)
-    db_name = cfg['db']['database']
-    host = cfg['db']['host']
-    user = cfg['db']['user']
-    pwd  = cfg['db']['password']
+    db_name = cfg["db"]["database"]
+    host = cfg["db"]["host"]
+    user = cfg["db"]["user"]
+    pwd = cfg["db"]["password"]
 
     # ───────────────────────── 找出資料目錄 ─────────────────────────
     if not use_docker:
@@ -1261,7 +1323,7 @@ def backup_mariadb(parent, database, backup_path, db_dir=None, use_docker=False)
             if not rows:
                 print("⚠️ 取不到 data_dir")
                 return
-            db_dir = os.path.join(rows[0]['Value'], db_name)
+            db_dir = os.path.join(rows[0]["Value"], db_name)
 
         if not os.path.isdir(db_dir):
             print(f"❌ 無法存取資料目錄: {db_dir}")
@@ -1274,11 +1336,15 @@ def backup_mariadb(parent, database, backup_path, db_dir=None, use_docker=False)
         WHERE TABLE_SCHEMA = '{db_name}'
     """
     rows = database.select_record(sql)
-    myisam_tables = [r['TABLE_NAME'] for r in rows if (r['ENGINE'] or '').upper() == 'MYISAM']
-    dump_tables  = [r['TABLE_NAME'] for r in rows if r['TABLE_NAME'] not in myisam_tables]
+    myisam_tables = [
+        r["TABLE_NAME"] for r in rows if (r["ENGINE"] or "").upper() == "MYISAM"
+    ]
+    dump_tables = [
+        r["TABLE_NAME"] for r in rows if r["TABLE_NAME"] not in myisam_tables
+    ]
 
     # ───────────────────────── 進度條 ─────────────────────────
-    steps = len(myisam_tables)*3 + len(dump_tables)      # MYD+MYI+frm = 3 檔，dump=1 步
+    steps = len(myisam_tables) * 3 + len(dump_tables)  # MYD+MYI+frm = 3 檔，dump=1 步
     progress = QProgressDialog("正在備份資料庫...", "取消", 0, steps, parent)
     progress.setWindowModality(True)
     progress.setWindowTitle("資料庫備份")
@@ -1294,30 +1360,32 @@ def backup_mariadb(parent, database, backup_path, db_dir=None, use_docker=False)
             raise KeyboardInterrupt
 
     # ───────────────────────── 備份 MyISAM 原始檔 ─────────────────────────
-    database.exec_sql('FLUSH TABLES WITH READ LOCK')
+    database.exec_sql("FLUSH TABLES WITH READ LOCK")
     for tbl in myisam_tables:
-        for ext in ('.MYD', '.MYI', '.frm'):
+        for ext in (".MYD", ".MYI", ".frm"):
             try:
                 if use_docker:
-                    table_name = f'{tbl}{ext}'
+                    table_name = f"{tbl}{ext}"
                     mariadb_dump_cmd = [
-                        'docker',
-                        'cp',
-                        f'mariadb-db-service:/var/lib/mysql/pymedical/{table_name}',
+                        "docker",
+                        "cp",
+                        f"mariadb-db-service:/var/lib/mysql/pymedical/{table_name}",
                         backup_path,
                     ]
                     args = [arg for arg in mariadb_dump_cmd if arg]  # 過濾空白參數
 
                     dump_file = os.path.join(backup_path, table_name)
-                    with open(dump_file, 'w') as f:
+                    with open(dump_file, "w") as f:
                         try:
                             run_command(args, out_file=f)
                             print(f"✅ 複製docker: {tbl}{ext}")
                         except subprocess.CalledProcessError as e:
                             print("❌ 備份失敗，指令如下：")
                             print(" ".join(args))
-                            print("🔴 stderr 錯誤訊息：", e.stderr.decode('utf-8'))
-                            raise RuntimeError(f"資料表 {table_name} 備份失敗，錯誤: {e}")
+                            print("🔴 stderr 錯誤訊息：", e.stderr.decode("utf-8"))
+                            raise RuntimeError(
+                                f"資料表 {table_name} 備份失敗，錯誤: {e}"
+                            )
                 else:
                     src = os.path.join(db_dir, f"{tbl}{ext}")
                     if os.path.exists(src):
@@ -1327,10 +1395,10 @@ def backup_mariadb(parent, database, backup_path, db_dir=None, use_docker=False)
                 print(f"❌ 複製 {tbl}{ext} 失敗: {e}")
             _update()
 
-    database.exec_sql('UNLOCK TABLES')
+    database.exec_sql("UNLOCK TABLES")
     # ───────────────────────── 備份 InnoDB / 其他引擎 ─────────────────────────
     if dump_tables:
-        version = "MariaDB"   # 若你已有偵測函式可自行替換
+        version = "MariaDB"  # 若你已有偵測函式可自行替換
         for tbl in dump_tables:
             try:
                 dump_table(database, version, backup_path, f"{tbl}.sql")
@@ -1353,7 +1421,7 @@ def run_command(command_args, out_file=None):
     - out_file: 可選的檔案物件。如果提供，stdout 將寫入此檔案。
                 如果為 None，則 stdout 將被捕獲到 PIPE (用於錯誤訊息)。
     """
-    is_windows = sys.platform == 'win32'
+    is_windows = sys.platform == "win32"
     startupinfo = None
 
     # 處理 Windows 隱藏視窗設定
@@ -1373,10 +1441,10 @@ def run_command(command_args, out_file=None):
     try:
         result = subprocess.run(
             command_args,
-            stdout=stdout_target, # 根據 out_file 決定 stdout 目標
+            stdout=stdout_target,  # 根據 out_file 決定 stdout 目標
             stderr=subprocess.PIPE,
             startupinfo=startupinfo,
-            check=True, # 確保命令返回非零碼時拋出 CalledProcessError
+            check=True,  # 確保命令返回非零碼時拋出 CalledProcessError
             text=True,  # 確保 stdout 和 stderr 的輸出是文本 (string)
             # ⚠️ 注意：由於 command_args 是列表，預設 shell=False，這在 Docker 環境下通常更安全。
         )
@@ -1384,12 +1452,16 @@ def run_command(command_args, out_file=None):
 
     except subprocess.CalledProcessError as e:
         # 當 check=True 拋出錯誤時，提供清晰的錯誤報告
-        error_msg = f"指令失敗: {' '.join(command_args)}\n🔴 錯誤訊息:\n{e.stderr.strip()}"
+        error_msg = (
+            f"指令失敗: {' '.join(command_args)}\n🔴 錯誤訊息:\n{e.stderr.strip()}"
+        )
         # 由於 stdout 已經被導向或捕獲，這裡只報告 stderr
         raise RuntimeError(error_msg)
 
     except FileNotFoundError:
-        raise RuntimeError(f"❌ 錯誤: 無法找到執行檔 ({command_args[0]})。請確認執行檔在系統 PATH 中。")
+        raise RuntimeError(
+            f"❌ 錯誤: 無法找到執行檔 ({command_args[0]})。請確認執行檔在系統 PATH 中。"
+        )
     except Exception as e:
         raise RuntimeError(f"執行命令時發生未預期錯誤: {e}")
 
@@ -1405,18 +1477,22 @@ def delete_old_folders(backup_path, days_to_keep=30):
     # 遍歷 `backup_path` 內的所有目錄
     for folder in Path(backup_path).iterdir():
         if folder.is_dir():  # 確保是資料夾
-            folder_mtime = datetime.datetime.fromtimestamp(folder.stat().st_mtime)  # 取得修改時間
+            folder_mtime = datetime.datetime.fromtimestamp(
+                folder.stat().st_mtime
+            )  # 取得修改時間
             if folder_mtime < cutoff_time:  # 超過 30 天
                 try:
                     shutil.rmtree(folder)
-                    print(f"✅ 已刪除過期備份資料夾: {folder}（最後修改: {folder_mtime.strftime('%Y-%m-%d %H:%M:%S')}）")
+                    print(
+                        f"✅ 已刪除過期備份資料夾: {folder}（最後修改: {folder_mtime.strftime('%Y-%m-%d %H:%M:%S')}）"
+                    )
                 except Exception as e:
                     print(f"❌ 刪除失敗 {folder}: {e}")
 
 
 def is_maintain_expired(clinic_name):
     expired_clinic = [
-        '中醫診所',
+        "中醫診所",
     ]
 
     if clinic_name in expired_clinic:
@@ -1430,13 +1506,17 @@ def insert_text(text_edit, text, input_code, insert_comma=True):
 
     if insert_comma:
         if len(text_edit.toPlainText()) > len(input_code) and not cursor.atStart():
-            text = ', ' + text
+            text = ", " + text
 
-    cursor.movePosition(QtGui.QTextCursor.Left, QtGui.QTextCursor.MoveAnchor, len(input_code))
+    cursor.movePosition(
+        QtGui.QTextCursor.Left, QtGui.QTextCursor.MoveAnchor, len(input_code)
+    )
     text_edit.setTextCursor(cursor)
     text_edit.insertPlainText(text)
 
-    cursor.movePosition(QtGui.QTextCursor.Right, QtGui.QTextCursor.KeepAnchor, len(input_code))
+    cursor.movePosition(
+        QtGui.QTextCursor.Right, QtGui.QTextCursor.KeepAnchor, len(input_code)
+    )
     cursor.removeSelectedText()
 
 
@@ -1448,7 +1528,7 @@ def delete_old_backup_folders(root_path, keep_days=30):
         folder_path = os.path.join(root_path, folder)
         if os.path.isdir(folder_path):
             try:
-                folder_date = datetime.datetime.strptime(folder, '%Y-%m-%d')
+                folder_date = datetime.datetime.strptime(folder, "%Y-%m-%d")
                 if folder_date < threshold:
                     shutil.rmtree(folder_path)
                     print(f"🗑 已刪除過期備份資料夾：{folder_path}")
@@ -1458,19 +1538,21 @@ def delete_old_backup_folders(root_path, keep_days=30):
 
 # 測試ip是否有通 2025-05-17
 def ping_ip(ip):
-    is_windows = platform.system().lower() == 'windows'
+    is_windows = platform.system().lower() == "windows"
 
     if is_windows:
-        command = f'ping -n 1 -w 500 {ip}'  # 等待最多 500ms
+        command = f"ping -n 1 -w 500 {ip}"  # 等待最多 500ms
     else:
-        command = f'ping -c 1 -W 1 {ip}'     # Linux 下，-W 1 是 1 秒 timeout
+        command = f"ping -c 1 -W 1 {ip}"  # Linux 下，-W 1 是 1 秒 timeout
 
     try:
-        result = subprocess.run(command,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                shell=True,
-                                timeout=3)
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+            timeout=3,
+        )
 
         return result.returncode == 0
 
