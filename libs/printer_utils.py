@@ -2760,7 +2760,12 @@ def get_prescript_html2(
     is_print_dosage=True,
 ):
     clinic_name = system_setting.field("院所名稱")
-    special_clinic = ["鵲杏中醫診所"]
+    special_clinic = [
+        "鵲杏中醫診所",
+        "青埔悅兒親子中醫診所",
+        "悅兒親子中醫診所",
+        "大安悅兒親子中醫診所",
+    ]
     print_location = system_setting.field("列印藥品存放位置")
     print_location_before_medicine = system_setting.field(
         "列印藥品存放位置在處方名稱前面"
