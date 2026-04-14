@@ -263,22 +263,28 @@ class MySQLDatabase(DatabaseInterface):
     #         cursor = None
     #         try:
     #             cursor = self.get_cursor(dictionary)
+    #             if cursor is None:
+    #                 # 如果拿不到游標，嘗試重連後繼續下一次迴圈
+    #                 self._reconnect()
+    #                 continue
+
     #             cursor.execute(sql)
-    #             return cursor.fetchall()
+    #             result = cursor.fetchall()
+    #             return result  # 成功拿到資料就回傳
+
     #         except Exception as e:
-    #             print(sql)
+    #             print(f"SQL: {sql}")
     #             print(f"⚠️ 執行 SQL 失敗（第 {attempt + 1} 次）：{e}")
     #             self._reconnect()
     #         finally:
+    #             # 這裡是你修正的核心：確保關閉時不會崩潰
     #             if cursor:
     #                 try:
-    #                     # 只有在連線還活著時才關閉 cursor
+    #                     # 檢查 self.cnx 是否還存在且連線中
     #                     if self.cnx and self.cnx.is_connected():
     #                         cursor.close()
-    #                 except ReferenceError:
-    #                     # 如果物件已經消失，就讓它安靜地走吧
-    #                     pass
-    #                 except Exception:
+    #                 except (ReferenceError, Exception):
+    #                     # 徹底無視關閉游標時的任何異常
     #                     pass
 
     #     return []
@@ -291,29 +297,34 @@ class MySQLDatabase(DatabaseInterface):
         for attempt in range(retry_count):
             cursor = None
             try:
-                cursor = self.get_cursor(dictionary)
+                # 這裡會用到你寫的 get_cursor，它內建重連與 buffered=True
+                cursor = self.get_cursor(dictionary=dictionary)
+
                 if cursor is None:
-                    # 如果拿不到游標，嘗試重連後繼續下一次迴圈
-                    self._reconnect()
                     continue
 
                 cursor.execute(sql)
                 result = cursor.fetchall()
-                return result  # 成功拿到資料就回傳
+                return result
 
             except Exception as e:
-                print(f"SQL: {sql}")
-                print(f"⚠️ 執行 SQL 失敗（第 {attempt + 1} 次）：{e}")
+                # 記錄一下，方便以後回頭看方醫師那邊的網路或資料庫穩不穩定
+                print(f"⚠️ SQL 執行失敗 (第 {attempt + 1} 次): {e}")
                 self._reconnect()
+
             finally:
-                # 這裡是你修正的核心：確保關閉時不會崩潰
-                if cursor:
+                # 這是防止 ReferenceError 的最後一道防線
+                if cursor is not None:
                     try:
-                        # 檢查 self.cnx 是否還存在且連線中
-                        if self.cnx and self.cnx.is_connected():
+                        # 只有在連線還在且有效時才手動關閉
+                        if (
+                            hasattr(self, "cnx")
+                            and self.cnx
+                            and self.cnx.is_connected()
+                        ):
                             cursor.close()
                     except (ReferenceError, Exception):
-                        # 徹底無視關閉游標時的任何異常
+                        # 32位元環境下，如果弱引用失效，直接放手讓 GC 處理，不讓程式崩潰
                         pass
 
         return []
