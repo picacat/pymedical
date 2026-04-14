@@ -1,5 +1,4 @@
 # Project exclude paths
-*.bat
 *.conf
 *.db
 *.db-journal
