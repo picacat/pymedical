@@ -992,15 +992,16 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
-        diag_code = row["DiagCode"]
-        if diag_code in [
-            "A01",
-            "A03",
-            "A05",
-            "A09",
-        ]:  # 有護理人員 2026-04-14  護理人員跟診獎勵
-            p21 = ET.SubElement(pdata, "p21")
-            p21.text = "CNP"
+        if self.apply_date >= "11504":
+            diag_code = row["DiagCode"]
+            if diag_code in [
+                "A01",
+                "A03",
+                "A05",
+                "A09",
+            ]:  # 有護理人員 2026-04-14  護理人員跟診獎勵
+                p21 = ET.SubElement(pdata, "p21")
+                p21.text = "CNP"
 
         if identifier not in [None, ""]:
             p26 = ET.SubElement(pdata, "p26")
