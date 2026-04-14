@@ -1,6 +1,4 @@
-
-
-'''
+"""
 古吉設備介接技術文件 V 1.0.2
 2019-04-09
 
@@ -79,37 +77,37 @@
         TNV500      收鈔機500元數量（需自行修改數量）
         TNV1000     收鈔機1000元數量（需自行修改數量）
         ND100count  找鈔機100元數量（需自行修改數量）
-'''
+"""
+
 import os
 import subprocess
 import time
+
 from lxml import etree as ET
 
-from libs import number_utils
-from libs import string_utils
-
+from libs import number_utils, string_utils
 
 COMMAND = {
-    '開始收鈔': '0001',
-    '停止收鈔': '00020000000000',
-    '清空錢箱': '00030000000000',
+    "開始收鈔": "0001",
+    "停止收鈔": "00020000000000",
+    "清空錢箱": "00030000000000",
 }
 
 RESULT = {
-    '000': '操作成功',
-    '002': '參數錯誤',
-    '003': '取消付款參數錯誤',
-    '004': '零錢不足',
-    '005': '找零失敗',
-    '006': '取消付款',
-    '007': '設定存量',
-    '008': '設定存量失敗',
-    '095': '清空失敗',
-    '096': '清空零錢箱中',
-    '097': '取消付款並開始退幣',
-    '098': '取消付款退幣成功',
-    '099': '開始找零',
-    '100': '收錢中',
+    "000": "操作成功",
+    "002": "參數錯誤",
+    "003": "取消付款參數錯誤",
+    "004": "零錢不足",
+    "005": "找零失敗",
+    "006": "取消付款",
+    "007": "設定存量",
+    "008": "設定存量失敗",
+    "095": "清空失敗",
+    "096": "清空零錢箱中",
+    "097": "取消付款並開始退幣",
+    "098": "取消付款退幣成功",
+    "099": "開始找零",
+    "100": "收錢中",
 }
 
 CURRENT_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
@@ -123,16 +121,30 @@ class CoinSys:
     def __del__(self):
         pass
 
+    # def set_current_path(self, path=None):
+    #     if path is None:
+    #         path = CURRENT_DIR
+
+    #     self.COIN_SYS_FILE = os.path.join(path, "coinsys", "coinsys.exe")
+    #     self.STATUS_FILE = os.path.join(path, "coinsys", "status.txt")
+    #     self.CONFIG_FILE = os.path.join(path, "coinsys", "config.xml")
+    #     self.IN_FILE = os.path.join(path, "coinsys", "in.txt")
+    #     self.OUT_FILE = os.path.join(path, "coinsys", "out.txt")
+    #     self.SET_FILE = os.path.join(path, "coinsys", "set.txt")
+
     def set_current_path(self, path=None):
         if path is None:
-            path = CURRENT_DIR
+            # 如果 CURRENT_DIR 是 D:\pymedical，
+            # 我們就把基礎路徑設為 D:\pymedical\coinsys
+            path = os.path.join(CURRENT_DIR, "coinsys")
 
-        self.COIN_SYS_FILE = os.path.join(path, 'coinsys', 'coinsys.exe')
-        self.STATUS_FILE = os.path.join(path, 'coinsys', 'status.txt')
-        self.CONFIG_FILE = os.path.join(path, 'coinsys', 'config.xml')
-        self.IN_FILE = os.path.join(path, 'coinsys', 'in.txt')
-        self.OUT_FILE = os.path.join(path, 'coinsys', 'out.txt')
-        self.SET_FILE = os.path.join(path, 'coinsys', 'set.txt')
+        # 這裡直接用 path 組合檔名，不要再加 "coinsys" 了
+        self.COIN_SYS_FILE = os.path.join(path, "coinsys.exe")
+        self.STATUS_FILE = os.path.join(path, "status.txt")
+        self.CONFIG_FILE = os.path.join(path, "config.xml")
+        self.IN_FILE = os.path.join(path, "in.txt")
+        self.OUT_FILE = os.path.join(path, "out.txt")
+        self.SET_FILE = os.path.join(path, "set.txt")
 
     def release_coin_sys(self):
         try:
@@ -158,42 +170,44 @@ class CoinSys:
         self.coin_sys_process = subprocess.Popen([self.COIN_SYS_FILE])
 
     def reset_coin_box(self):
-        with open(self.IN_FILE, 'w') as in_file:
-            in_file.write(COMMAND['清空錢箱'])
+        with open(self.IN_FILE, "w") as in_file:
+            in_file.write(COMMAND["清空錢箱"])
             in_file.flush()
 
     def start_payment(self, amount):
         self.clear_out_file()
 
-        with open(self.IN_FILE, 'w') as in_file:
-            amount_command = f'{COMMAND["開始收鈔"]}{number_utils.get_integer(amount):0>10}'
+        with open(self.IN_FILE, "w") as in_file:
+            amount_command = (
+                f"{COMMAND['開始收鈔']}{number_utils.get_integer(amount):0>10}"
+            )
             in_file.write(amount_command)
             in_file.flush()
 
     def set_coin_amount(self, **kwargs):
         try:
-            one = kwargs['one_dollar']
+            one = kwargs["one_dollar"]
         except Exception:
             one = 0
 
         try:
-            five = kwargs['five_dollar']
+            five = kwargs["five_dollar"]
         except Exception:
             five = 0
 
         try:
-            ten = kwargs['ten_dollar']
+            ten = kwargs["ten_dollar"]
         except Exception:
             ten = 0
 
         try:
-            fifty = kwargs['fifty_dollar']
+            fifty = kwargs["fifty_dollar"]
         except Exception:
             fifty = 0
 
-        setting_list = f'1|{one},5|{five},10|{ten},20|0,50|{fifty}'
+        setting_list = f"1|{one},5|{five},10|{ten},20|0,50|{fifty}"
 
-        with open(self.SET_FILE, 'w') as set_file:
+        with open(self.SET_FILE, "w") as set_file:
             set_file.write(setting_list)
             set_file.flush()
 
@@ -201,25 +215,28 @@ class CoinSys:
     def set_banknote(self, nd100, tnv100, tnv1000):
         tree = ET.parse(self.CONFIG_FILE)
         root = tree.getroot()
-        root.find('ND100count').text = string_utils.xstr(nd100)
-        root.find('TNV100').text = string_utils.xstr(tnv100)
+        root.find("ND100count").text = string_utils.xstr(nd100)
+        root.find("TNV100").text = string_utils.xstr(tnv100)
         # root.find('TNV500').text = string_utils.xstr(tnv500)
-        root.find('TNV1000').text = string_utils.xstr(tnv1000)
+        root.find("TNV1000").text = string_utils.xstr(tnv1000)
 
         tree.write(
-            self.CONFIG_FILE, pretty_print=True,
+            self.CONFIG_FILE,
+            pretty_print=True,
             xml_declaration=False,
             doctype='<?xml version="1.0" encoding="utf-8"?>',
-            encoding='utf-8')
+            encoding="utf-8",
+        )
 
     def get_coin_amount(self):
+        print(f"DEBUG: 正在嘗試讀取路徑 -> {os.path.abspath(self.CONFIG_FILE)}")
         tree = ET.parse(self.CONFIG_FILE)
         root = tree.getroot()
 
-        one = number_utils.get_integer(root.find('hopper1').text)
-        five = number_utils.get_integer(root.find('hopper5').text)
-        ten = number_utils.get_integer(root.find('hopper10').text)
-        fifty = number_utils.get_integer(root.find('hopper50').text)
+        one = number_utils.get_integer(root.find("hopper1").text)
+        five = number_utils.get_integer(root.find("hopper5").text)
+        ten = number_utils.get_integer(root.find("hopper10").text)
+        fifty = number_utils.get_integer(root.find("hopper50").text)
 
         return one, five, ten, fifty
 
@@ -227,20 +244,20 @@ class CoinSys:
         tree = ET.parse(self.CONFIG_FILE)
         root = tree.getroot()
 
-        nd100 = number_utils.get_integer(root.find('ND100count').text)
-        tnv100 = number_utils.get_integer(root.find('TNV100').text)
+        nd100 = number_utils.get_integer(root.find("ND100count").text)
+        tnv100 = number_utils.get_integer(root.find("TNV100").text)
         # tnv500 = number_utils.get_integer(root.find('TNV500').text)
-        tnv1000 = number_utils.get_integer(root.find('TNV1000').text)
+        tnv1000 = number_utils.get_integer(root.find("TNV1000").text)
 
         # return nd100, tnv100, tnv500, tnv1000
         return nd100, tnv100, tnv1000
 
     def get_payment(self):
         try:
-            with open(self.OUT_FILE, 'r') as out_file:
+            with open(self.OUT_FILE, "r") as out_file:
                 line = out_file.readline()
 
-            if line[:3] == '100':
+            if line[:3] == "100":
                 return number_utils.get_integer(line[3:])
         except Exception:
             return None
@@ -249,10 +266,10 @@ class CoinSys:
         payment_done = False
 
         try:
-            with open(self.OUT_FILE, 'r') as out_file:
+            with open(self.OUT_FILE, "r") as out_file:
                 line = out_file.readline()
 
-            if line[:3] == '000':
+            if line[:3] == "000":
                 payment_done = True
         except Exception:
             pass
@@ -260,21 +277,21 @@ class CoinSys:
         return payment_done
 
     def cancel_payment(self):
-        with open(self.IN_FILE, 'w') as in_file:
-            in_file.write(COMMAND['停止收鈔'])
+        with open(self.IN_FILE, "w") as in_file:
+            in_file.write(COMMAND["停止收鈔"])
             in_file.flush()
 
     def _get_slot_machine_status(self):
-        with open(self.STATUS_FILE, 'r') as status_file:
+        with open(self.STATUS_FILE, "r") as status_file:
             try:
                 line = status_file.readlines()[0]
-                fields = line.split(',')
-                hopper = fields[0].split('|')[1]
-                nv = fields[1].split('|')[1]
+                fields = line.split(",")
+                hopper = fields[0].split("|")[1]
+                nv = fields[1].split("|")[1]
                 # nd = fields[0].split('|')[1]
-                nd = fields[2].split('|')[1]
+                nd = fields[2].split("|")[1]
             except Exception:
-                return 'NO', 'NO', 'NO'
+                return "NO", "NO", "NO"
 
         return hopper, nv, nd
 
@@ -284,7 +301,7 @@ class CoinSys:
                 break
 
         hopper, nv, nd = self._get_slot_machine_status()
-        if hopper == 'YES' and nv == 'YES' and nd == 'YES':
+        if hopper == "YES" and nv == "YES" and nd == "YES":
             return True
 
         return False
@@ -299,4 +316,4 @@ class CoinSys:
             return False
 
         hopper, nv, nd = self._get_slot_machine_status()
-        return hopper == 'YES' and nv == 'YES' and nd == 'YES'
+        return hopper == "YES" and nv == "YES" and nd == "YES"

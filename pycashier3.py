@@ -53,7 +53,6 @@ class PyCashier(QtWidgets.QMainWindow):
         self.coinsys.startup_coin_sys()
 
         self.ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
-        self.coinsys = None
 
         self._set_ui()
         self._set_signal()
