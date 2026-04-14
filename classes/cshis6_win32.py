@@ -282,9 +282,24 @@ class CSHIS:
         data = {"pin": pin}
         service_path = "/api/hpc/v1/Verification/Hpc"
         response = self._get_requests_response(service_path, "POST", data)
-        error_code = response.json()["statusCode"]
+
+        # error_code = response.json()["statusCode"]
+        error_code = self.get_error_code(response)
+
         if show_message or error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "醫事人員卡密碼驗證")
+
+        return error_code
+
+    def get_error_code(self, response):
+        if response is None:
+            return -1
+
+        try:
+            res_data = response.json()
+            error_code = res_data.get("statusCode", -1)  # 使用 .get 防止 key 不存在
+        except Exception:
+            return -1
 
         return error_code
 
