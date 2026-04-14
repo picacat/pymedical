@@ -715,6 +715,7 @@ class SystemUpdate(QtWidgets.QDialog):
             # 在診所端建議把這個 print 拿掉，或寫入 log 檔，避免使用者看到錯誤訊息
             return None
 
+    # 取得本機ip
     def _get_ip_address(self, pc_name):
         local_ip = "127.0.0.1"
         try:
