@@ -598,36 +598,69 @@ class PyMedical(QtWidgets.QMainWindow):
         self.ui.label_line_qrcode.setMaximumHeight(icon_size)
         self.ui.label_line_qrcode.setScaledContents(True)
 
+    # def _display_bulletin(self):
+    #     if self.system_settings.field("不要顯示最新消息") == "Y":
+    #         self.ui.label_system_name.hide()
+    #         self.ui.textBrowser.hide()
+    #         return
+
+    #     import ssl
+    #     import urllib
+
+    #     context = ssl._create_unverified_context()
+    #     url = "https://raw.githubusercontent.com/picacat/medical-announcements/refs/heads/main/bulletin.html"
+    #     with urllib.request.urlopen(url, context=context, timeout=10) as response:
+    #         html = response.read().decode("utf-8")
+
+    #     shadow1 = QtWidgets.QGraphicsDropShadowEffect()
+    #     shadow1.setBlurRadius(40)
+    #     self.ui.textBrowser.setStyleSheet("background: transparent;")
+    #     self.ui.textBrowser.setFrameStyle(QtWidgets.QFrame.NoFrame)
+    #     self.ui.textBrowser.setGraphicsEffect(shadow1)
+    #     self.ui.textBrowser.setHtml(html)
+
     def _display_bulletin(self):
+        # 1. 檢查使用者設定
         if self.system_settings.field("不要顯示最新消息") == "Y":
             self.ui.label_system_name.hide()
             self.ui.textBrowser.hide()
             return
 
-        # import ssl
+        import ssl
+        import urllib.request
 
-        # context = ssl._create_unverified_context()
-        # url = "https://raw.githubusercontent.com/picacat/medical-announcements/refs/heads/main/bulletin.html"
-        # with urllib.request.urlopen(url, context=context, timeout=10) as response:
-        #     html = response.read().decode("utf-8")
+        # 預設內容 (備援用)
+        html = "<html><body><p>正在載入最新消息...</p></body></html>"
+        url = "https://raw.githubusercontent.com/picacat/medical-announcements/refs/heads/main/bulletin.html"
 
-        bulletin_path = os.path.join(self.base_path, "html", "bulletin.html")
-        html = ""
-        if os.path.exists(bulletin_path):
-            try:
+        try:
+            # 建立不檢查憑證的 context (對付舊系統 Win7 的關鍵)
+            context = ssl._create_unverified_context()
+
+            # 加入 timeout 確保網路不通時不會讓 HIS 啟動畫面卡死太久
+            with urllib.request.urlopen(url, context=context, timeout=5) as response:
+                html = response.read().decode("utf-8")
+        except Exception as e:
+            # --- 💡 關鍵備援邏輯 ---
+            # 如果網路抓不到最新的，再改讀本地的 bulletin.html 作為保險
+            print(f"公告抓取失敗: {e}")
+            bulletin_path = os.path.join(self.base_path, "html", "bulletin.html")
+            if os.path.exists(bulletin_path):
                 with open(bulletin_path, "r", encoding="utf-8") as f:
                     html = f.read()
-            except Exception as e:
-                html = f"<html><body>讀取公告失敗: {e}</body></html>"
-        else:
-            # 備援：如果檔案不存在，顯示提示
-            html = "<html><body>目前沒有新的公告。</body></html>"
+            else:
+                html = (
+                    "<html><body>目前無法連線至公告伺服器，請檢查網路。</body></html>"
+                )
 
+        # 設定 UI 效果
         shadow1 = QtWidgets.QGraphicsDropShadowEffect()
         shadow1.setBlurRadius(40)
         self.ui.textBrowser.setStyleSheet("background: transparent;")
         self.ui.textBrowser.setFrameStyle(QtWidgets.QFrame.NoFrame)
         self.ui.textBrowser.setGraphicsEffect(shadow1)
+
+        # 顯示最終內容
         self.ui.textBrowser.setHtml(html)
 
     def set_plugin(self):
