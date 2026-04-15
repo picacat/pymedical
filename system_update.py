@@ -580,7 +580,7 @@ class SystemUpdate(QtWidgets.QDialog):
             self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
 
         # 7. 最後才標記跳過更新 (檔案必須在 Git 追蹤內才能 mark)
-        self._run_git(["update-index", "--skip-worktree", "pymedical.win32.bat"])
+        # self._run_git(["update-index", "--skip-worktree", "pymedical.win32.bat"])
 
     # 檢查更新
     def _check_for_updates(self):
@@ -594,7 +594,7 @@ class SystemUpdate(QtWidgets.QDialog):
                 "--name-only",
                 "--",
                 ".",
-                ":(exclude)pymedical.win32.bat",
+                # ":(exclude)pymedical.win32.bat",
             ]
         )
         # 檢查檔案的不同
