@@ -249,29 +249,28 @@ class SystemUpdate(QtWidgets.QDialog):
         # 注意：clean -fd 會刪除所有不在 Git 追蹤名單內的檔案。
         # 如果診所有自己放一些暫存檔，這行要小心使用。
         # self._run_git(["clean", "-fd"])
-
-        # --- 🚀 智慧校正邏輯：只在內容不對時才強制拉取 ---
+        self.ui.label_status.setText("正在優化啟動參數...")
         bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
 
-        # 檢查檔案內容是否含有「舊的、會報錯」的內容
-        # 假設你的新版 .bat 改用了 pushd
-        need_fix = False
         if os.path.exists(bat_path):
             try:
-                with open(bat_path, "r", encoding="ansi") as f:
+                # 1. 讀取目前的內容 (注意 ANSI 編碼)
+                with open(bat_path, "r", encoding="cp950") as f:
                     content = f.read()
-                    # 如果裡面還在用 cd /d，或是內容完全不對，就標記要修正
-                    if "py -3 -32" in content:
-                        need_fix = True
-            except Exception:
-                need_fix = True  # 讀取失敗也當作需要修正
-        else:
-            need_fix = True  # 檔案不見了當然要補回來
 
-        if need_fix:
-            self.ui.label_status.setText("正在校正啟動腳本...")
-            # 只針對這個檔案進行強制覆蓋
-            self._run_git(["checkout", "FETCH_HEAD", "--", "pymedical.win32.bat"])
+                # 2. 如果發現舊的啟動指令，直接取代掉
+                # 無論是 'py -3 -32' 還是 'py -3'，通通改成 'pythonw'
+                if "py -3 -32" in content or "py -3" in content:
+                    new_content = content.replace("py -3 -32", "pythonw").replace(
+                        "py -3", "pythonw"
+                    )
+
+                    # 3. 寫回檔案
+                    with open(bat_path, "w", encoding="cp950") as f:
+                        f.write(new_content)
+                    print("🛡️ 已暴力修正 .bat 啟動參數為 pythonw")
+            except Exception as e:
+                print(f"修正 .bat 失敗: {e}")
 
         self._report_to_zoho_server()
 
