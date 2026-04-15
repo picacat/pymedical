@@ -1,5 +1,4 @@
 @echo off
-
 :: change current dir
 cd /d "%~dp0"
 
