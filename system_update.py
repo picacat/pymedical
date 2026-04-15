@@ -249,6 +249,30 @@ class SystemUpdate(QtWidgets.QDialog):
         # 注意：clean -fd 會刪除所有不在 Git 追蹤名單內的檔案。
         # 如果診所有自己放一些暫存檔，這行要小心使用。
         # self._run_git(["clean", "-fd"])
+
+        # --- 🚀 智慧校正邏輯：只在內容不對時才強制拉取 ---
+        bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
+
+        # 檢查檔案內容是否含有「舊的、會報錯」的內容
+        # 假設你的新版 .bat 改用了 pushd
+        need_fix = False
+        if os.path.exists(bat_path):
+            try:
+                with open(bat_path, "r", encoding="ansi") as f:
+                    content = f.read()
+                    # 如果裡面還在用 cd /d，或是內容完全不對，就標記要修正
+                    if "py -3 -32" in content:
+                        need_fix = True
+            except Exception:
+                need_fix = True  # 讀取失敗也當作需要修正
+        else:
+            need_fix = True  # 檔案不見了當然要補回來
+
+        if need_fix:
+            self.ui.label_status.setText("正在校正啟動腳本...")
+            # 只針對這個檔案進行強制覆蓋
+            self._run_git(["checkout", "FETCH_HEAD", "--", "pymedical.win32.bat"])
+
         self._report_to_zoho_server()
 
     def _update_dropbox_files(self):
