@@ -212,16 +212,16 @@ class SystemUpdate(QtWidgets.QDialog):
         # 導致按下按鈕時，雲端其實又有新 Commit 了
         self._run_git(["fetch", "origin", "main"])
 
-        bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
+        # bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
 
-        # --- 1. 物理備份：更新前先讀取 .bat 內容 ---
-        original_bat_content = None
-        if os.path.exists(bat_path):
-            try:
-                with open(bat_path, "rb") as f:
-                    original_bat_content = f.read()
-            except Exception:
-                pass
+        # # --- 1. 物理備份：更新前先讀取 .bat 內容 ---
+        # original_bat_content = None
+        # if os.path.exists(bat_path):
+        #     try:
+        #         with open(bat_path, "rb") as f:
+        #             original_bat_content = f.read()
+        #     except Exception:
+        #         pass
 
         self.ui.label_status.setText("正在執行強制更新...")
 
@@ -236,14 +236,14 @@ class SystemUpdate(QtWidgets.QDialog):
         self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
 
-        # --- 3. 物理還原：更新後把 .bat 寫回去 ---
-        if original_bat_content:
-            try:
-                with open(bat_path, "wb") as f:
-                    f.write(original_bat_content)
-                print("已成功保護診所專屬 .bat 設定")
-            except Exception:
-                pass
+        # # --- 3. 物理還原：更新後把 .bat 寫回去 ---
+        # if original_bat_content:
+        #     try:
+        #         with open(bat_path, "wb") as f:
+        #             f.write(original_bat_content)
+        #         print("已成功保護診所專屬 .bat 設定")
+        #     except Exception:
+        #         pass
 
         # --- 4. 清理 (選用) ---
         # 注意：clean -fd 會刪除所有不在 Git 追蹤名單內的檔案。
