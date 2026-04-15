@@ -207,21 +207,7 @@ class SystemUpdate(QtWidgets.QDialog):
                 except Exception:
                     pass  # 遇到系統鎖定檔案跳過即可
 
-        # --- 💡 優化點：確保檔案真的是最新被抓下來的 ---
-        # 雖然檢查階段跑過 fetch，但這裡再跑一次可以防止使用者「開著更新視窗太久」
-        # 導致按下按鈕時，雲端其實又有新 Commit 了
         self._run_git(["fetch", "origin", "main"])
-
-        # bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
-
-        # # --- 1. 物理備份：更新前先讀取 .bat 內容 ---
-        # original_bat_content = None
-        # if os.path.exists(bat_path):
-        #     try:
-        #         with open(bat_path, "rb") as f:
-        #             original_bat_content = f.read()
-        #     except Exception:
-        #         pass
 
         self.ui.label_status.setText("正在執行強制更新...")
 
@@ -235,42 +221,6 @@ class SystemUpdate(QtWidgets.QDialog):
         # (C) 修正分支指針 (確保 HEAD 乖乖待在 main 上)
         self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
-
-        # # --- 3. 物理還原：更新後把 .bat 寫回去 ---
-        # if original_bat_content:
-        #     try:
-        #         with open(bat_path, "wb") as f:
-        #             f.write(original_bat_content)
-        #         print("已成功保護診所專屬 .bat 設定")
-        #     except Exception:
-        #         pass
-
-        # --- 4. 清理 (選用) ---
-        # 注意：clean -fd 會刪除所有不在 Git 追蹤名單內的檔案。
-        # 如果診所有自己放一些暫存檔，這行要小心使用。
-        # self._run_git(["clean", "-fd"])
-        # self.ui.label_status.setText("正在優化啟動參數...")
-        # bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
-
-        # if os.path.exists(bat_path):
-        #     try:
-        #         # 1. 讀取目前的內容 (注意 ANSI 編碼)
-        #         with open(bat_path, "r", encoding="cp950") as f:
-        #             content = f.read()
-
-        #         # 2. 如果發現舊的啟動指令，直接取代掉
-        #         # 無論是 'py -3 -32' 還是 'py -3'，通通改成 'pythonw'
-        #         if "py -3 -32" in content or "py -3" in content:
-        #             new_content = content.replace("py -3 -32", "pythonw").replace(
-        #                 "py -3", "pythonw"
-        #             )
-
-        #             # 3. 寫回檔案
-        #             with open(bat_path, "w", encoding="cp950") as f:
-        #                 f.write(new_content)
-        #             print("🛡️ 已暴力修正 .bat 啟動參數為 pythonw")
-        #     except Exception as e:
-        #         print(f"修正 .bat 失敗: {e}")
 
         self._report_to_zoho_server()
 
