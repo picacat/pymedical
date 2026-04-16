@@ -768,6 +768,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         return rows[0]
 
+    # 檢查處方名稱是否相符的關鍵邏輯
     def _is_same_medicine(self, med_name, drug_name, supplier):
         # 1. 基本清理
         noise_pattern = r'[“"”]|濃縮(細粒|顆粒|散|粉|膠囊|膜衣錠|丸)|(去.*)'
