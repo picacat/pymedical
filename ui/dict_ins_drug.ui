@@ -387,6 +387,7 @@
    <addaction name="action_update_valid_date"/>
    <addaction name="action_update_prescript"/>
    <addaction name="action_assign_ins_code"/>
+   <addaction name="action_check_medicine_name"/>
    <addaction name="separator"/>
    <addaction name="action_close"/>
   </widget>
@@ -396,7 +397,7 @@
      <x>0</x>
      <y>0</y>
      <width>1162</width>
-     <height>28</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -469,6 +470,18 @@
    </property>
    <property name="toolTip">
     <string>指定藥廠藥品碼</string>
+   </property>
+  </action>
+  <action name="action_check_medicine_name">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/task-attention.png</normaloff>../icons/task-attention.png</iconset>
+   </property>
+   <property name="text">
+    <string>檢查藥品名稱是否相符</string>
+   </property>
+   <property name="toolTip">
+    <string>檢查藥品名稱是否相符</string>
    </property>
   </action>
  </widget>
