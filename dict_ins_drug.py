@@ -715,52 +715,6 @@ class DictInsDrug(QtWidgets.QMainWindow):
             "請自行檢視是否正確.",
         )
 
-    def _assign_ins_code(self):
-        target_factory = self._get_factory()  # 假設回傳 "科達"
-        if not target_factory:
-            return
-
-        # 1. 先建立「藥名 -> 藥項資料」的索引映射表 (僅限該藥廠)
-        # 這樣在後續比對時，速度會從 O(n) 變成 O(1)
-        drug_index = {}
-        for r in range(self.ui.tableWidget_drug.rowCount()):
-            drug_name = self.ui.tableWidget_drug.item(r, 2).text()  # 藥名
-            ins_code = self.ui.tableWidget_drug.item(r, 3).text()  # 健保碼
-            supplier = self.ui.tableWidget_drug.item(r, 4).text()  # 廠商
-
-            # 精確比對廠商名稱
-            if target_factory in supplier:
-                # 這裡可以使用我們之前討論的 clean_drug_name 邏輯
-                core_name = self.get_core_name(drug_name, supplier)
-                drug_index[core_name] = ins_code
-
-        # 2. 開始處理醫囑表格
-        row_count = self.ui.tableWidget_medicine.rowCount()
-        progress_dialog = QtWidgets.QProgressDialog(
-            "正在轉入指定的藥廠藥品碼中, 請稍後...", "取消", 0, row_count, self
-        )
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
-
-        for row_no in range(row_count):
-            med_name = self.ui.tableWidget_medicine.item(row_no, 2).text()
-
-            # 直接從索引中尋找，不要再跑迴圈
-            # 這裡就是解決「大棗」問題的關鍵點
-            if med_name in drug_index:
-                new_ins_code = drug_index[med_name]
-                # 執行填入動作，建議直接操作 item 而不是透過 _set_ins_drug 副作用
-                self.ui.tableWidget_medicine.item(row_no, 3).setText(new_ins_code)
-
-            progress_dialog.setValue(row_no)
-
-        system_utils.show_message_box(
-            QMessageBox.Information,
-            "轉入完成",
-            "<h3>指定藥廠的健保藥品碼轉入完成.</h3>",
-            "請自行檢視是否正確.",
-        )
-
     def _set_factory(self, factory):
         row_count = self.ui.tableWidget_drug.rowCount()
         for row_no in range(row_count):
