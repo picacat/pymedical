@@ -593,6 +593,10 @@ class DictInsDrug(QtWidgets.QMainWindow):
         progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
         progress_dialog.setValue(0)
 
+        valid_year = self.ui.spinBox_valid_year.value()
+        valid_month = self.ui.spinBox_valid_month.value()
+        start_date = f"{valid_year}-{valid_month:0>2}-01 00:00:00"
+
         for row_no in range(record_count):
             progress_dialog.setValue(row_no)
             if progress_dialog.wasCanceled():
@@ -630,23 +634,16 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 update_condition = f'InsCode = "{ins_code}"'
                 check_condition = f'InsCode != "{ins_code}"'
 
-            valid_year = self.ui.spinBox_valid_year.value()
-            valid_month = self.ui.spinBox_valid_month.value()
-            start_date = f"{valid_year}-{valid_month:0>2}-01"
-
             sql = f'''
                 UPDATE prescript
                 SET
                     {update_condition}
                 WHERE
-                    DATE(CaseDate) >= "{start_date}" AND
-                    ((MedicineKey = {medicine_key} AND MedicineName = "{medicine_name}") OR
-                     (MedicineType = "{medicine_type}" AND MedicineName = "{medicine_name}")) AND
+                    CaseDate >= "{start_date}" AND
+                    MedicineSet = 1 AND
+                    (MedicineKey = {medicine_key} AND MedicineName = "{medicine_name}") AND
                     {check_condition}
             '''
-            if row_no <= 10:
-                print(sql)
-
             self.database.exec_sql(sql)
 
         progress_dialog.setValue(record_count)
