@@ -1,12 +1,12 @@
 # download api 2020.02.10
 
 # -*- coding: UTF-8 -*-
-from PyQt5 import QtCore
-
-import urllib
 import ssl
-from threading import Thread
+import urllib
 from queue import Empty, Queue
+from threading import Thread
+
+from PyQt5 import QtCore
 
 from libs import dialog_utils
 
@@ -43,4 +43,3 @@ def download_dropbox_file(file_name, url, title, message, hint, timeout=10):
         msg_box.close()
         print("⚠️ 無法下載更新檔，可能沒有網路或下載逾時，將跳過更新。")
         return None
-

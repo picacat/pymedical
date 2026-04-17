@@ -1559,3 +1559,21 @@ def ping_ip(ip):
 
     except subprocess.TimeoutExpired:
         return False
+
+
+def download_file_from_github(url, local_filename):
+    try:
+        response = requests.get(url)
+        # 檢查請求是否成功 (200 OK)
+        response.raise_for_status()
+
+        # 以二進制寫入模式 (wb) 存檔
+        with open(local_filename, "wb") as f:
+            f.write(response.content)
+
+        print(f"下載成功！檔案已存為: {local_filename}")
+        return True
+
+    except Exception as e:
+        print(f"下載失敗，錯誤原因: {e}")
+        return False

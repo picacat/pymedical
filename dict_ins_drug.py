@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
 import datetime
+import os
 import re
 
 from pyexcel_ods3 import get_data
@@ -25,8 +25,8 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
-
         self.ui = None
+        self.base_path = os.path.dirname(os.path.abspath(__file__))
 
         self._set_ui()
         self._set_signal()
@@ -94,10 +94,10 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
     # 設定欄位寬度
     def _set_table_width(self):
-        width = [100, 50, 180, 100, 130, 50, 180]
+        width = [100, 50, 180, 100, 130, 50, 300]
         self.table_widget_medicine.set_table_heading_width(width)
 
-        width = [100, 100, 250, 100, 280, 130, 50]
+        width = [100, 100, 180, 110, 120, 130, 50]
         self.table_widget_drug.set_table_heading_width(width)
 
     # 設定信號
@@ -105,7 +105,6 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self.ui.action_sync_drug.triggered.connect(self._sync_drug)
         self.ui.action_update_drug.triggered.connect(self._update_ins_drug)
         self.ui.action_close.triggered.connect(self._close_ins_drug)
-        self.ui.action_check_medicine_name.triggered.connect(self._check_medicine_name)
         self.ui.action_update_valid_date.triggered.connect(self._update_valid_date)
         self.ui.action_update_prescript.triggered.connect(self._update_prescript)
         self.ui.action_assign_ins_code.triggered.connect(self._assign_ins_code)
@@ -131,12 +130,15 @@ class DictInsDrug(QtWidgets.QMainWindow):
             SELECT medicine.*, drug.ValidDate FROM medicine
                 LEFT JOIN drug ON medicine.InsCode = drug.InsCode
             WHERE
+                MedicineName IS NOT NULL AND
+                LENGTH(MedicineName) > 0 AND
                 medicine.MedicineType IN ({medicine_type})
                 {medicine_name_script}
             ORDER BY FIELD(medicine.MedicineType, {medicine_type}),
                      LENGTH(MedicineName), CAST(CONVERT(`MedicineName` using big5) AS BINARY)
         """
         self.table_widget_medicine.set_db_data(sql, self._set_medicine_data)
+        self._check_medicine_name()
 
     def _set_medicine_data(self, row_no, row):
         error_message = []
@@ -549,17 +551,298 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self._write_ins_drug(medicine_type, rows, progress_bar)
         self.ui.statusbar.removeWidget(progress_bar)
 
+    def _convert_valid_date(self, valid_date):
+        if len(valid_date) == 7:
+            year = valid_date[:3]
+            year = int(year) + 1911
+            month = valid_date[3:5]
+            day = valid_date[5:7]
+        else:
+            year = valid_date[:4]
+            month = valid_date[4:6]
+            day = valid_date[6:8]
+
+        valid_date = f"{year}-{month}-{day}"
+
+        return valid_date
+
+    def _update_drug_file1(self):
+        medicine_type = "單方"
+        url = f"https://raw.githubusercontent.com/picacat/medical-announcements/main/{medicine_type}.ods"
+        drug_file = os.path.join(self.base_path, f"{medicine_type}.ods")
+        if not system_utils.download_file_from_github(url, drug_file):
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "線上更新健保碼失敗",
+                '<font size="5" color="red"><b>無法下載最新版本的單方健保碼資料.</b></font>',
+                "請檢查是否可以連上網際網路",
+            )
+            return
+
+        try:
+            data_dict = get_data(drug_file)
+            # 取出字典裡所有的 values，並轉成 list 抓第一個 [0]
+            rows = list(data_dict.values())[0]
+        except Exception as e:
+            print(f"讀取分頁失敗: {e}")
+
+        progress_bar = QProgressBar()
+        progress_bar.setMaximum(len(rows))
+        progress_bar.setValue(0)
+        self.ui.statusbar.addWidget(progress_bar)
+        self._write_ins_drug_file1(medicine_type, rows, progress_bar)
+        self.ui.statusbar.removeWidget(progress_bar)
+
+    def _write_ins_drug_file1(self, medicine_type, rows, progress_bar):
+        ins_code_no = self._get_field_number(rows[0], "藥品代碼")
+        drug_name_no = self._get_field_number(rows[0], "藥品名稱")
+
+        drug_type_no = self._get_field_number(rows[0], "劑型")
+        supplier_no = self._get_field_number(rows[0], "製造廠名稱")
+        invalid_date_no = self._get_field_number(rows[0], "不再收載日")
+
+        sql = f'''
+            DELETE FROM drug
+            WHERE
+                MedicineType = "{medicine_type}" OR
+                MedicineType IS NULL
+        '''
+        self.database.exec_sql(sql)
+
+        for row_no, row in enumerate(rows):
+            if row is None:
+                continue
+
+            progress_bar.setValue(row_no + 1)
+            if row_no == 0:  # data heading 不轉檔
+                continue
+
+            if len(row) == 0:
+                continue
+
+            valid_date = "2099-12-31"
+            try:
+                # 先檢查 row 的長度是否足以包含 invalid_date_no
+                if invalid_date_no is not None and len(row) > invalid_date_no:
+                    invalid_date = string_utils.xstr(row[invalid_date_no]).strip()
+                else:
+                    invalid_date = ""  # 如果欄位不存在，視為空白
+
+                if invalid_date != "":
+                    valid_date = self._convert_valid_date(invalid_date)
+            except Exception:
+                pass
+
+            try:
+                ins_code = row[ins_code_no]
+                drug_name = row[drug_name_no]
+                drug_type = row[drug_type_no]
+                supplier = row[supplier_no]
+            except Exception:
+                continue
+
+            drug_name = self._clean_drug_name(drug_name)
+
+            field = [
+                "InsCode",
+                "DrugName",
+                "MedicineType",
+                "Unit",
+                "Supplier",
+                "ValidDate",
+            ]
+
+            data = [
+                ins_code.strip(),
+                drug_name.strip(),
+                medicine_type,
+                drug_type,
+                supplier[:5].strip(),
+                valid_date,
+            ]
+
+            self.database.insert_record("drug", field, data)
+
+    def _update_drug_file2(self):
+        medicine_type = "複方"
+        url = f"https://raw.githubusercontent.com/picacat/medical-announcements/main/{medicine_type}.ods"
+        drug_file = os.path.join(self.base_path, f"{medicine_type}.ods")
+        if not system_utils.download_file_from_github(url, drug_file):
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "線上更新健保碼失敗",
+                f'<font size="5" color="red"><b>無法下載最新版本的{medicine_type}健保碼資料.</b></font>',
+                "請檢查是否可以連上網際網路",
+            )
+            return
+
+        try:
+            data_dict = get_data(drug_file)
+            # 取出字典裡所有的 values，並轉成 list 抓第一個 [0]
+            rows = list(data_dict.values())[0]
+        except Exception as e:
+            print(f"讀取分頁失敗: {e}")
+
+        progress_bar = QProgressBar()
+        progress_bar.setMaximum(len(rows))
+        progress_bar.setValue(0)
+        self.ui.statusbar.addWidget(progress_bar)
+        self._write_ins_drug_file2(medicine_type, rows, progress_bar)
+        self.ui.statusbar.removeWidget(progress_bar)
+
+    def _write_ins_drug_file2(self, medicine_type, rows, progress_bar):
+        ins_code_no = self._get_field_number(rows[0], "藥品代碼")
+        drug_name_no = self._get_field_number(rows[0], "方名")
+
+        drug_type_no = self._get_field_number(rows[0], "劑型")
+        supplier_no = self._get_field_number(rows[0], "製造廠名稱")
+        invalid_date_no = self._get_field_number(rows[0], "不再收載日期")
+
+        sql = f'''
+            DELETE FROM drug
+            WHERE
+                MedicineType = "{medicine_type}" OR
+                MedicineType IS NULL
+        '''
+        self.database.exec_sql(sql)
+
+        for row_no, row in enumerate(rows):
+            if row is None:
+                continue
+
+            progress_bar.setValue(row_no + 1)
+            if row_no == 0:  # data heading 不轉檔
+                continue
+
+            if len(row) == 0:
+                continue
+
+            valid_date = "2099-12-31"
+            try:
+                # 先檢查 row 的長度是否足以包含 invalid_date_no
+                if invalid_date_no is not None and len(row) > invalid_date_no:
+                    invalid_date = string_utils.xstr(row[invalid_date_no]).strip()
+                else:
+                    invalid_date = ""  # 如果欄位不存在，視為空白
+
+                if invalid_date != "":
+                    valid_date = self._convert_valid_date(invalid_date)
+            except Exception:
+                pass
+
+            try:
+                ins_code = row[ins_code_no]
+                drug_name = row[drug_name_no]
+                drug_type = row[drug_type_no]
+                supplier = row[supplier_no]
+            except Exception:
+                continue
+
+            drug_name = self._clean_drug_name(drug_name)
+
+            field = [
+                "InsCode",
+                "DrugName",
+                "MedicineType",
+                "Unit",
+                "Supplier",
+                "ValidDate",
+            ]
+
+            data = [
+                ins_code.strip(),
+                drug_name.strip(),
+                medicine_type,
+                drug_type,
+                supplier[:5].strip(),
+                valid_date,
+            ]
+
+            self.database.insert_record("drug", field, data)
+
+    def _clean_drug_name(self, name):
+        if not name:
+            return ""
+
+        # 1. 移除換行與所有種類的引號/空白
+        name = name.replace("\n", "")
+        name = re.sub(r'[“"＂〝”〞"＂\'\s]', "", name)
+
+        # 2. 廠牌黑名單 (持續擴充)
+        brands = [
+            "順天堂",
+            "勸奉堂",
+            "莊松榮",
+            "富田",
+            "科達",
+            "勝昌",
+            "天一",
+            "天明",
+            "領先",
+            "東陽",
+            "國科",
+            "港香蘭",
+            "仙豐",
+            "信宏",
+            "萬國",
+            "晉安",
+            "順然",
+            "昕泰",
+            "三才堂",
+            "復旦",
+            "德山",
+            "明通",
+            "立康生物科技",
+            "生春",
+            "賀倍",
+            "領先奈米",
+        ]
+        brand_pattern = "|".join(brands)
+        name = re.sub(brand_pattern, "", name)
+
+        # 3. 處理括號 (如: (栝樓根)) -> 如果你想連括號都清掉，解開下面這行註解
+        # name = re.sub(r'\(.*?\)|（.*?）', '', name)
+
+        # 4. 強化劑型結尾過濾 (由長至短排列是關鍵)
+        # 增加了單獨的 "濃縮" 兩字，並處理可能出現的 "劑" 字
+        suffix_types = [
+            "濃縮細粒劑",
+            "濃縮顆粒劑",
+            "濃縮細粒",
+            "濃縮顆粒",
+            "濃縮散劑",
+            "濃縮膠囊劑",
+            "濃縮膠囊",
+            "濃縮錠劑",
+            "濃縮細粒",
+            "濃縮粒",
+            "濃縮散",
+            "濃縮錠",
+            "濃縮",
+            "散劑",
+            "細粒劑",
+            "顆粒劑",
+            "膠囊劑",
+            "細粒",
+            "顆粒",
+            "散",
+            "粉",
+            "錠",
+            "膠囊",
+        ]
+
+        # 建立正則表達式，確保只匹配結尾 ($)
+        suffix_pattern = f"({'|'.join(suffix_types)})$"
+        name = re.sub(suffix_pattern, "", name)
+
+        # 5. 最後再次清理前後可能殘留的標點
+        name = re.sub(r'^[“"＂〝]|["”＂〞]$', "", name).strip()
+
+        return name
+
     def _update_ins_drug(self):
-        self._update_drug(
-            "單方",
-            "drug1.ods",
-            "https://www.dropbox.com/scl/fi/xh5nmj1xdo01rk6eg4a1f/drug1.ods?rlkey=avtcu3o6f62h3fnarjoqumdl5&dl=1",
-        )
-        self._update_drug(
-            "複方",
-            "drug2.ods",
-            "https://www.dropbox.com/scl/fi/dl11wmvo0ae09p854x006/drug2.ods?rlkey=hv50kjm1bwqx93njf5d9dbrsr&dl=1",
-        )
+        self._update_drug_file1()
+        self._update_drug_file2()
 
         self._read_medicine()
 
@@ -698,7 +981,8 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         for row_no in range(row_count):
             self.ui.tableWidget_medicine.setCurrentCell(row_no, 0)
-            self._set_factory(factory)
+            medicine_name = self.ui.tableWidget_medicine.item(row_no, 2).text()
+            self._set_factory(factory, medicine_name)
 
             progress_dialog.setValue(row_no)
 
@@ -712,27 +996,19 @@ class DictInsDrug(QtWidgets.QMainWindow):
             "請自行檢視是否正確.",
         )
 
-    def _set_factory(self, factory):
+    def _set_factory(self, factory, medicine_name):
         row_count = self.ui.tableWidget_drug.rowCount()
         for row_no in range(row_count):
             self.ui.tableWidget_drug.setCurrentCell(row_no, 0)
+            current_drug = self.ui.tableWidget_drug.item(row_no, 2).text()
             current_factory = self.ui.tableWidget_drug.item(row_no, 4).text()
-            if factory in current_factory:
+            print(medicine_name, current_drug)
+            if factory in current_factory and medicine_name == current_drug:
                 self._set_ins_drug()
 
     def _check_medicine_name(self):
-        row_count = self.ui.tableWidget_medicine.rowCount()
-        progress_dialog = QtWidgets.QProgressDialog(
-            "正在檢查處方名稱是否相符, 請稍後...", "取消", 0, row_count, self
-        )
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
-
         self.ui.tableWidget_medicine.blockSignals(True)
-
         for row_no in range(self.ui.tableWidget_medicine.rowCount()):
-            progress_dialog.setValue(row_no)
-
             self.ui.tableWidget_medicine.setCurrentCell(row_no, 0)
             ins_code = self.ui.tableWidget_medicine.item(row_no, 3).text()
             medicine_name = self.ui.tableWidget_medicine.item(row_no, 2).text()
@@ -746,12 +1022,15 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 self.ui.tableWidget_medicine.setItem(
                     row_no,
                     6,
-                    QtWidgets.QTableWidgetItem(f"名稱不符:{drug_name}"),
+                    QtWidgets.QTableWidgetItem(f"藥名不符:{drug_name}"),
                 )
+                for col_no in range(self.ui.tableWidget_medicine.columnCount()):
+                    self.ui.tableWidget_medicine.item(row_no, col_no).setForeground(
+                        QtGui.QColor("red")
+                    )
 
-        progress_dialog.setValue(row_count)
+        self.ui.tableWidget_medicine.setCurrentCell(0, 0)
         self.ui.tableWidget_medicine.blockSignals(False)
-        self.ui.tableWidget_medicine.resizeColumnsToContents()
 
     def _get_drug_row(self, ins_code):
         sql = f'''
@@ -767,37 +1046,49 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
     # 檢查處方名稱是否相符的關鍵邏輯
     def _is_same_medicine(self, med_name, drug_name, supplier):
-        # 1. 基本清理
-        noise_pattern = r'[“"”]|濃縮(細粒|顆粒|散|粉|膠囊|膜衣錠|丸)|(去.*)'
+        # 1. 處理特殊引號與噪音
+        # 擴展 noise_pattern，包含全形引號 〝〞 與常見劑型
+        noise_pattern = r'[“"”〝〞]|濃縮(細粒|濃縮錠|顆粒|散|粉|膠囊|膜衣錠|丸)|(去.*)'
         clean_drug = re.sub(noise_pattern, "", drug_name)
 
-        # 2. 移除廠商名
-        supplier_short = supplier[:2]
-        clean_drug = clean_drug.replace(supplier_short, "").strip()
+        # 2. 移除廠商名（動態處理長度）
+        # 解決「港香蘭」等三字藥廠問題。優先匹配長字數，避免殘留。
+        # 建議 supplier 傳入時先建立一個對照表，或者動態判斷
+        suppliers_to_strip = [supplier, supplier[:2]]  # 先試完整名，再試前兩個字
+        for s in sorted(suppliers_to_strip, key=len, reverse=True):
+            if s and clean_drug.startswith(s):
+                clean_drug = clean_drug.replace(
+                    s, "", 1
+                )  # 只取代一次，避免誤刪藥名中間的字
+                break
+        clean_drug = clean_drug.strip()
 
-        # 3. 處理括號（如：複方丹參片）
-        # 有些藥名核心在括號內，例如：行氣活血...(複方丹參片)
-        extra_info = re.search(r"\((.*?)\)", clean_drug)
-        if extra_info:
-            if med_name in extra_info.group(1):
-                return True
+        # 3. 處理括號邏輯（優化）
+        # 針對：葛根芩連湯（葛根黃芩黃連湯）
+        # 邏輯：如果括號外已經匹配，就忽略括號；如果括號外不匹配，才看括號內。
+        main_part = re.sub(r"\(.*?\)", "", clean_drug).strip()  # 括號外的正名
+        extra_info_match = re.search(r"\((.*?)\)", clean_drug)
+        extra_info = extra_info_match.group(1) if extra_info_match else None
 
-        # 4. 關鍵判定邏輯：處理「大棗」問題
-        # 如果處方名稱完全等於清理後的藥名，那絕對沒問題
-        if med_name == clean_drug:
+        # --- 關鍵判定邏輯 ---
+
+        # A. 優先檢查括號外的正名 (解決: 葛根芩連湯（備註）)
+        if med_name == main_part:
             return True
 
-        # 如果處方名是藥名的一部分 (例如: "大棗" in "甘麥大棗湯")
-        if med_name in clean_drug:
-            # 檢查 clean_drug 是否為複方格式 (以湯/散/丸/飲結尾)
-            formula_suffixes = ("湯", "散", "丸", "飲", "丹", "膏", "方")
-            med_is_formula = med_name.endswith(formula_suffixes)
-            drug_is_formula = clean_drug.endswith(formula_suffixes)
+        # B. 檢查括號內的內容 (解決: 括號內才是別名/正名的情況)
+        if extra_info and med_name == extra_info:
+            return True
 
-            # 如果處方是單味藥(大棗)，藥庫是複方(大棗湯)，則判定不符
+        # C. 處理包含關係（處理大棗/複方邏輯）
+        target_to_check = main_part  # 以括號外的為主進行子字串檢查
+        if med_name in target_to_check:
+            formula_suffixes = ("湯", "散", "丸", "飲", "丹", "膏", "方", "片")
+            med_is_formula = med_name.endswith(formula_suffixes)
+            drug_is_formula = target_to_check.endswith(formula_suffixes)
+
             if not med_is_formula and drug_is_formula:
                 return False
-
-            return True  # 其他情況（如縮寫符合）可視為 True 或進入人工覆核
+            return True
 
         return False
