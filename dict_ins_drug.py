@@ -1018,8 +1018,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 continue
 
             drug_name = string_utils.xstr(drug_row["DrugName"])
-            supplier = string_utils.xstr(drug_row["Supplier"])
-            if not self._is_same_medicine(medicine_name, drug_name, supplier):
+            if not self._is_same_medicine(medicine_name, drug_name):
                 self.ui.tableWidget_medicine.setItem(
                     row_no,
                     6,
@@ -1045,51 +1044,29 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         return rows[0]
 
-    # 檢查處方名稱是否相符的關鍵邏輯
-    def _is_same_medicine(self, med_name, drug_name, supplier):
-        # 1. 處理特殊引號與噪音
-        # 擴展 noise_pattern，包含全形引號 〝〞 與常見劑型
-        noise_pattern = r'[“"”〝〞]|濃縮(細粒|濃縮錠|顆粒|散|粉|膠囊|膜衣錠|丸)|(去.*)'
-        clean_drug = re.sub(noise_pattern, "", drug_name)
+    def _is_same_medicine(self, medicine_name, drug_name):
+        def clean_name(name):
+            if not name:
+                return ""
 
-        # 2. 移除廠商名（動態處理長度）
-        # 解決「港香蘭」等三字藥廠問題。優先匹配長字數，避免殘留。
-        # 建議 supplier 傳入時先建立一個對照表，或者動態判斷
-        suppliers_to_strip = [supplier, supplier[:2]]  # 先試完整名，再試前兩個字
-        for s in sorted(suppliers_to_strip, key=len, reverse=True):
-            if s and clean_drug.startswith(s):
-                clean_drug = clean_drug.replace(
-                    s, "", 1
-                )  # 只取代一次，避免誤刪藥名中間的字
-                break
-        clean_drug = clean_drug.strip()
+            # 1. 先處理括號：移除 (川)、（碎）及其內部內容
+            name = re.sub(r"[\(\（].*?[\)\）]", "", name)
 
-        # 3. 處理括號邏輯（優化）
-        # 針對：葛根芩連湯（葛根黃芩黃連湯）
-        # 邏輯：如果括號外已經匹配，就忽略括號；如果括號外不匹配，才看括號內。
-        main_part = re.sub(r"\(.*?\)", "", clean_drug).strip()  # 括號外的正名
-        extra_info_match = re.search(r"\((.*?)\)", clean_drug)
-        extra_info = extra_info_match.group(1) if extra_info_match else None
+            # 2. 移除特定的干擾符號（如：- 、 # 、 * 、 〝 〞）
+            # 我們可以直接定義要移除的符號集，或是只保留中文
+            # 這裡建議：移除常見的標點符號與特殊符號
+            name = re.sub(r'[#\-\*\.\s“”"〝〞]', "", name)
 
-        # --- 關鍵判定邏輯 ---
+            # 3. 移除末尾的英數字組合（處理 F13, F-13, 001 等）
+            # 剛才的符號已經被移除，所以 F-13 會變成 F13，這裡再統一清除
+            name = re.sub(r"[A-Za-z0-9]+$", "", name)
 
-        # A. 優先檢查括號外的正名 (解決: 葛根芩連湯（備註）)
-        if med_name == main_part:
-            return True
+            # 4. 再次清除可能殘留的末尾贅字
+            name = re.sub(r"(片|切)$", "", name)
 
-        # B. 檢查括號內的內容 (解決: 括號內才是別名/正名的情況)
-        if extra_info and med_name == extra_info:
-            return True
+            return name.strip()
 
-        # C. 處理包含關係（處理大棗/複方邏輯）
-        target_to_check = main_part  # 以括號外的為主進行子字串檢查
-        if med_name in target_to_check:
-            formula_suffixes = ("湯", "散", "丸", "飲", "丹", "膏", "方", "片")
-            med_is_formula = med_name.endswith(formula_suffixes)
-            drug_is_formula = target_to_check.endswith(formula_suffixes)
+        c_med = clean_name(medicine_name)
+        c_drug = clean_name(drug_name)
 
-            if not med_is_formula and drug_is_formula:
-                return False
-            return True
-
-        return False
+        return c_med == c_drug
