@@ -48,6 +48,7 @@ class SystemUpdate(QtWidgets.QDialog):
             os.path.join(self.base_path, "PortableGit", "mingw32", "bin", "git.exe"),
         ]
 
+        self.git_exe = None
         for path in possible_paths:
             if os.path.exists(path):
                 self.git_exe = path
