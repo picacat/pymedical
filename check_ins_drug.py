@@ -240,48 +240,44 @@ class CheckInsDrug(QtWidgets.QMainWindow):
 
         medicine_name = string_utils.xstr(row["MedicineName"])
         drug_name = string_utils.xstr(drug_rows[0]["DrugName"])
-        supplier = string_utils.xstr(drug_rows[0]["Supplier"])
 
-        if not self._is_same_medicine(medicine_name, drug_name, supplier):
+        if not self._is_same_medicine(medicine_name, drug_name):
             error_message.append("健保藥名不一致")
 
         return error_message
 
-    def _is_same_medicine(self, med_name, drug_name, supplier):
-        # 1. 基本清理
-        noise_pattern = r'[“"”]|濃縮(細粒|顆粒|散|粉|膠囊|膜衣錠|丸)|(去.*)'
-        clean_drug = re.sub(noise_pattern, "", drug_name)
+    def _clean_medicine_name(self, name):
+        if not name:
+            return ""
 
-        # 2. 移除廠商名
-        supplier_short = supplier[:2]
-        clean_drug = clean_drug.replace(supplier_short, "").strip()
+        # 1. 移除括號及其內容 (解決: (二3.13), (四201) 等)
+        # 這裡使用 [\(\（].*?[\)\）] 涵蓋全半形
+        name = re.sub(r"[\(\（].*?[\)\）]", "", name)
 
-        # 3. 處理括號（如：複方丹參片）
-        # 有些藥名核心在括號內，例如：行氣活血...(複方丹參片)
-        extra_info = re.search(r"\((.*?)\)", clean_drug)
-        if extra_info:
-            if med_name in extra_info.group(1):
-                return True
+        # 2. 移除前綴雜訊 (解決: @小青龍湯, *無*抵當湯, 通絡-小活絡丹)
+        # 我們移除字串開頭的特殊符號、"無"字包圍符號、或是帶橫槓的前綴
+        name = re.sub(r"^[@*]+", "", name)  # 移除開頭的 @ 或 *
+        name = re.sub(r"^\*無\*", "", name)  # 移除特定的 *無*
+        name = re.sub(r"^[一-龥]{2}-", "", name)  # 移除開頭兩個字接橫槓的 (如: 通絡-)
 
-        # 4. 關鍵判定邏輯：處理「大棗」問題
-        # 如果處方名稱完全等於清理後的藥名，那絕對沒問題
-        if med_name == clean_drug:
+        # 3. 移除特定的單一英文字母後綴 (解決: 酸棗仁B)
+        # 如果藥名最後一個字是 A, B, C 等，通常是等級或規格，可以移除
+        name = re.sub(r"[A-Za-z]$", "", name)
+
+        # 4. 移除所有剩餘的特殊符號與空白
+        # 使用剛才修正過的「外單內雙」寫法
+        name = re.sub(r'[-#\*\.\s“”"〝〞@]', "", name)
+
+        return name.strip()
+
+    def _is_same_medicine(self, medicine_name, drug_name):
+        c_med = self._clean_medicine_name(medicine_name)
+        c_drug = self._clean_medicine_name(drug_name)
+
+        if c_med in ["葛根黃連黃芩湯"] and c_drug in ["葛根黃芩黃連湯"]:
             return True
 
-        # 如果處方名是藥名的一部分 (例如: "大棗" in "甘麥大棗湯")
-        if med_name in clean_drug:
-            # 檢查 clean_drug 是否為複方格式 (以湯/散/丸/飲結尾)
-            formula_suffixes = ("湯", "散", "丸", "飲", "丹", "膏", "方")
-            med_is_formula = med_name.endswith(formula_suffixes)
-            drug_is_formula = clean_drug.endswith(formula_suffixes)
-
-            # 如果處方是單味藥(大棗)，藥庫是複方(大棗湯)，則判定不符
-            if not med_is_formula and drug_is_formula:
-                return False
-
-            return True  # 其他情況（如縮寫符合）可視為 True 或進入人工覆核
-
-        return False
+        return c_med == c_drug
 
     def error_count(self):
         return self.errors

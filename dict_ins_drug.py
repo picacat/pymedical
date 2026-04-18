@@ -1045,29 +1045,35 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         return rows[0]
 
+    def _clean_medicine_name(self, name):
+        if not name:
+            return ""
+
+        # 1. 移除括號及其內容 (解決: (二3.13), (四201) 等)
+        # 這裡使用 [\(\（].*?[\)\）] 涵蓋全半形
+        name = re.sub(r"[\(\（].*?[\)\）]", "", name)
+
+        # 2. 移除前綴雜訊 (解決: @小青龍湯, *無*抵當湯, 通絡-小活絡丹)
+        # 我們移除字串開頭的特殊符號、"無"字包圍符號、或是帶橫槓的前綴
+        name = re.sub(r"^[@*]+", "", name)  # 移除開頭的 @ 或 *
+        name = re.sub(r"^\*無\*", "", name)  # 移除特定的 *無*
+        name = re.sub(r"^[一-龥]{2}-", "", name)  # 移除開頭兩個字接橫槓的 (如: 通絡-)
+
+        # 3. 移除特定的單一英文字母後綴 (解決: 酸棗仁B)
+        # 如果藥名最後一個字是 A, B, C 等，通常是等級或規格，可以移除
+        name = re.sub(r"[A-Za-z]$", "", name)
+
+        # 4. 移除所有剩餘的特殊符號與空白
+        # 使用剛才修正過的「外單內雙」寫法
+        name = re.sub(r'[-#\*\.\s“”"〝〞@]', "", name)
+
+        return name.strip()
+
     def _is_same_medicine(self, medicine_name, drug_name):
-        def clean_name(name):
-            if not name:
-                return ""
+        c_med = self._clean_medicine_name(medicine_name)
+        c_drug = self._clean_medicine_name(drug_name)
 
-            # 1. 先處理括號：移除 (川)、（碎）及其內部內容
-            name = re.sub(r"[\(\（].*?[\)\）]", "", name)
-
-            # 2. 移除特定的干擾符號（如：- 、 # 、 * 、 〝 〞）
-            # 我們可以直接定義要移除的符號集，或是只保留中文
-            # 這裡建議：移除常見的標點符號與特殊符號
-            name = re.sub(r'[#\-\*\.\s“”"〝〞]', "", name)
-
-            # 3. 移除末尾的英數字組合（處理 F13, F-13, 001 等）
-            # 剛才的符號已經被移除，所以 F-13 會變成 F13，這裡再統一清除
-            name = re.sub(r"[A-Za-z0-9]+$", "", name)
-
-            # 4. 再次清除可能殘留的末尾贅字
-            name = re.sub(r"(片|切)$", "", name)
-
-            return name.strip()
-
-        c_med = clean_name(medicine_name)
-        c_drug = drug_name
+        if c_med in ["葛根黃連黃芩湯"] and c_drug in ["葛根黃芩黃連湯"]:
+            return True
 
         return c_med == c_drug
