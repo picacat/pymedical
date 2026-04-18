@@ -996,7 +996,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
             "請自行檢視是否正確.",
         )
 
-    # 指定藥廠
+    # 指定藥廠.
     def _set_factory(self, factory, medicine_name):
         row_count = self.ui.tableWidget_drug.rowCount()
         for row_no in range(row_count):
