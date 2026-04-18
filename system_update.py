@@ -248,6 +248,8 @@ class SystemUpdate(QtWidgets.QDialog):
             "pymedical.conf",
             "qingtian.conf",
             "mingi.conf",
+            "nd.conf",
+            "nw.conf",
         ]
         vault = {}
         for f_name in protect_files:
@@ -273,15 +275,31 @@ class SystemUpdate(QtWidgets.QDialog):
         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
 
         # --- 🛡️ 核心新增：物理還原 (從保險箱寫回) ---
-        self.ui.label_status.setText("正在還原診所專屬設定...")
+        # --- 3. 智慧還原邏輯 ---
+        self.ui.label_status.setText("正在檢查並修復必要檔案...")
         for f_name, content in vault.items():
             p = os.path.join(self.base_path, f_name)
-            try:
-                with open(p, "wb") as f:
-                    f.write(content)
-                print(f"✅ 已成功保護並還原檔案: {f_name}")
-            except Exception as e:
-                print(f"還原 {f_name} 失敗: {e}")
+
+            # 策略 A：如果是 .conf 結尾的，無論如何都要還原 (因為診所設定唯一)
+            if f_name.endswith(".conf"):
+                try:
+                    with open(p, "wb") as f:
+                        f.write(content)
+                    print(f"🛡️ 強制還原設定檔: {f_name}")
+                except Exception:
+                    pass
+
+            # 策略 B：如果是 .bat，只有在「檔案不見了」的時候才還原
+            elif f_name == "pymedical.win32.bat":
+                if not os.path.exists(p):
+                    try:
+                        with open(p, "wb") as f:
+                            f.write(content)
+                        print(f"🛡️ 偵測到啟動檔遺失，已從備份還原: {f_name}")
+                    except Exception:
+                        pass
+                else:
+                    print("✅ 啟動檔已由 Git 同步完成，無需還原")
 
         # --- 🚀 額外加強：暴力修正 .bat 啟動參數 ---
         # 這是為了確保萬一保險箱還原回來的 .bat 還是舊的 py -3 指令，我們現場幫他改掉
