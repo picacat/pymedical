@@ -587,7 +587,7 @@ class SystemUpdate(QtWidgets.QDialog):
     # 安裝 portable git
     def _prepare_git_engine(self):
         # 如果 git.exe 已經在那裡了，直接通過
-        if os.path.exists(self.git_exe):
+        if self.git_exe is not None and os.path.exists(self.git_exe):
             return True
 
         # 如果沒有 git.exe，看看有沒有自解壓檔
