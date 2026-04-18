@@ -641,7 +641,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
             except Exception:
                 continue
 
-            drug_name = self._clean_drug_name(drug_name)
+            drug_name = self._clean_drug_name(drug_name, medicine_type="單方")
 
             field = [
                 "InsCode",
@@ -738,7 +738,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
             except Exception:
                 continue
 
-            drug_name = self._clean_drug_name(drug_name)
+            drug_name = self._clean_drug_name(drug_name, medicine_type="複方")
 
             field = [
                 "InsCode",
@@ -760,7 +760,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
             self.database.insert_record("drug", field, data)
 
-    def _clean_drug_name(self, name):
+    def _clean_drug_name(self, name, medicine_type=None):
         if not name:
             return ""
 
@@ -805,35 +805,36 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         # 4. 強化劑型結尾過濾 (由長至短排列是關鍵)
         # 增加了單獨的 "濃縮" 兩字，並處理可能出現的 "劑" 字
-        suffix_types = [
-            "濃縮細粒劑",
-            "濃縮顆粒劑",
-            "濃縮細粒",
-            "濃縮顆粒",
-            "濃縮散劑",
-            "濃縮膠囊劑",
-            "濃縮膠囊",
-            "濃縮錠劑",
-            "濃縮細粒",
-            "濃縮粒",
-            "濃縮散",
-            "濃縮錠",
-            "濃縮",
-            "散劑",
-            "細粒劑",
-            "顆粒劑",
-            "膠囊劑",
-            "細粒",
-            "顆粒",
-            "散",
-            "粉",
-            "錠",
-            "膠囊",
-        ]
+        if medicine_type == "單方":
+            suffix_types = [
+                "濃縮細粒劑",
+                "濃縮顆粒劑",
+                "濃縮細粒",
+                "濃縮顆粒",
+                "濃縮散劑",
+                "濃縮膠囊劑",
+                "濃縮膠囊",
+                "濃縮錠劑",
+                "濃縮細粒",
+                "濃縮粒",
+                "濃縮散",
+                "濃縮錠",
+                "濃縮",
+                "散劑",
+                "細粒劑",
+                "顆粒劑",
+                "膠囊劑",
+                "細粒",
+                "顆粒",
+                "散",
+                "粉",
+                "錠",
+                "膠囊",
+            ]
 
-        # 建立正則表達式，確保只匹配結尾 ($)
-        suffix_pattern = f"({'|'.join(suffix_types)})$"
-        name = re.sub(suffix_pattern, "", name)
+            # 建立正則表達式，確保只匹配結尾 ($)
+            suffix_pattern = f"({'|'.join(suffix_types)})$"
+            name = re.sub(suffix_pattern, "", name)
 
         # 5. 最後再次清理前後可能殘留的標點
         name = re.sub(r'^[“"＂〝]|["”＂〞]$', "", name).strip()
@@ -1067,6 +1068,6 @@ class DictInsDrug(QtWidgets.QMainWindow):
             return name.strip()
 
         c_med = clean_name(medicine_name)
-        c_drug = clean_name(drug_name)
+        c_drug = drug_name
 
         return c_med == c_drug
