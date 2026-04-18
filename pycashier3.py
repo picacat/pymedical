@@ -47,12 +47,19 @@ class PyCashier(QtWidgets.QMainWindow):
         )
         self.ui = None
 
-        self.coinsys = None
-        self.coinsys = class_utils.get_coin_sys(self.system_settings)
-        self.coinsys.clear_parameter_files()
-        self.coinsys.startup_coin_sys()
+        self.debug_mode = False
+        if self.debug_mode:
+            self.coinsys = None
+            self.ic_card = None
+        else:
+            self.coinsys = None
+            self.coinsys = class_utils.get_coin_sys(self.system_settings)
+            self.coinsys.clear_parameter_files()
+            self.coinsys.startup_coin_sys()
 
-        self.ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
+            self.ic_card = class_utils.get_cshis(
+                self, self.database, self.system_settings
+            )
 
         self._set_ui()
         self._set_signal()
@@ -134,6 +141,9 @@ class PyCashier(QtWidgets.QMainWindow):
 
     # 安全模組卡認證
     def setup_ic_card(self):
+        if self.ic_card is None:
+            return
+
         self.ic_card.close_com()
         self.ic_card.open_com()
 

@@ -1,10 +1,8 @@
 import sys
-from PyQt5 import QtWidgets, QtCore
 
-from libs import class_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import module_utils
+from PyQt5 import QtCore, QtWidgets
+
+from libs import class_utils, module_utils, system_utils, ui_utils
 
 HOME_WIDGET = 1
 
@@ -24,16 +22,16 @@ class PyCashier(QtWidgets.QMainWindow):
         if config_file is not None:
             self.config_file = config_file
             config_dict = self._parse_config_file(self.config_file)
-            self.host = config_dict['host']
+            self.host = config_dict["host"]
             self.database = class_utils.get_db(
                 host=self.host,
-                user=config_dict['user'],
-                database=config_dict['database'],
-                password=config_dict['password'],
-                charset=config_dict['charset'],
-                buffered=config_dict['buffered'],
+                user=config_dict["user"],
+                database=config_dict["database"],
+                password=config_dict["password"],
+                charset=config_dict["charset"],
+                buffered=config_dict["buffered"],
             )
-            self.server_ip = config_dict['host']
+            self.server_ip = config_dict["host"]
         else:
             self.database = class_utils.get_db()
             self.config_file = self.database.CONFIG_FILE
@@ -42,7 +40,9 @@ class PyCashier(QtWidgets.QMainWindow):
         if not self.database.connected():
             sys.exit(0)
 
-        self.system_settings = class_utils.get_system_settings(self.database, self.config_file)
+        self.system_settings = class_utils.get_system_settings(
+            self.database, self.config_file
+        )
         self.ui = None
 
         self.cpay = None
@@ -50,9 +50,9 @@ class PyCashier(QtWidgets.QMainWindow):
         if not self.cpay.connected:
             system_utils.show_message_box(
                 QMessageBox.Warning,
-                '錯誤',
+                "錯誤",
                 '<font size="5" color="red"><b>收鈔機無法啟動, 請檢查收鈔機是否備妥.</b></font>',
-                '請檢查收鈔機的狀態.'
+                "請檢查收鈔機的狀態.",
             )
             sys.exit(0)
 
@@ -90,7 +90,9 @@ class PyCashier(QtWidgets.QMainWindow):
         self._set_pycashier_completed()
 
     def _set_pycashier_home(self):
-        self.widget_home = module_utils.get_pycashier2_home(self, self.database, self.system_settings, self.ic_card)
+        self.widget_home = module_utils.get_pycashier2_home(
+            self, self.database, self.system_settings, self.ic_card
+        )
         self.ui.stackedWidget.addWidget(self.widget_home)
 
     def _set_pycashier_registration(self):
@@ -107,7 +109,10 @@ class PyCashier(QtWidgets.QMainWindow):
 
     def _set_pycashier_completed(self):
         self.widget_completed = module_utils.get_pycashier2_completed(
-            self, self.database, self.system_settings, self.ic_card,
+            self,
+            self.database,
+            self.system_settings,
+            self.ic_card,
         )
         self.ui.stackedWidget.addWidget(self.widget_completed)
 
@@ -153,5 +158,5 @@ def main():
 
 
 # 程式開始
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
