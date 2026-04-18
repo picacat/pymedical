@@ -186,43 +186,128 @@ class SystemUpdate(QtWidgets.QDialog):
         else:
             self.parent.close_all_tabs()
 
+    # def _update_github(self):
+    #     # --- 1. 全域物理防護：解除整個專案目錄的鎖定 ---
+    #     self.ui.label_status.setText("正在解除全系統檔案鎖定...")
+
+    #     # 定義需要排除的目錄，避免掃描到 .git 內部資料庫 (節省時間)
+    #     exclude_dirs = {".git", "PortableGit", "_temp"}
+
+    #     for root, dirs, files in os.walk(self.base_path):
+    #         # 過濾不需要解鎖的系統目錄
+    #         dirs[:] = [d for d in dirs if d not in exclude_dirs]
+
+    #         for f in files:
+    #             full_path = os.path.join(root, f)
+    #             try:
+    #                 # 核心動作：強制拔掉「唯讀」屬性，確保 Git 有最高寫入權
+    #                 current_mode = os.stat(full_path).st_mode
+    #                 if not (current_mode & stat.S_IWRITE):
+    #                     os.chmod(full_path, current_mode | stat.S_IWRITE)
+    #             except Exception:
+    #                 pass  # 遇到系統鎖定檔案跳過即可
+
+    #     self._run_git(["fetch", "origin", "main"])
+
+    #     self.ui.label_status.setText("正在執行強制更新...")
+
+    #     # --- 2. 執行核心更新組合拳 ---
+    #     # (A) 強制對齊指針與索引
+    #     self._run_git(["reset", "--hard", "FETCH_HEAD"])
+
+    #     # (B) 暴力覆蓋實體檔案 (解決你說的 ui/ 沒拷貝過去的問題)
+    #     self._run_git(["checkout", "-f", "FETCH_HEAD", "--", "."])
+
+    #     # (C) 修正分支指針 (確保 HEAD 乖乖待在 main 上)
+    #     self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
+    #     self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
+
+    #     self._report_to_zoho_server()
+
     def _update_github(self):
         # --- 1. 全域物理防護：解除整個專案目錄的鎖定 ---
-        self.ui.label_status.setText("正在解除全系統檔案鎖定...")
+        self.ui.label_status.setText("正在解除檔案鎖定並備份設定...")
 
-        # 定義需要排除的目錄，避免掃描到 .git 內部資料庫 (節省時間)
         exclude_dirs = {".git", "PortableGit", "_temp"}
 
         for root, dirs, files in os.walk(self.base_path):
-            # 過濾不需要解鎖的系統目錄
             dirs[:] = [d for d in dirs if d not in exclude_dirs]
-
             for f in files:
                 full_path = os.path.join(root, f)
                 try:
-                    # 核心動作：強制拔掉「唯讀」屬性，確保 Git 有最高寫入權
                     current_mode = os.stat(full_path).st_mode
                     if not (current_mode & stat.S_IWRITE):
                         os.chmod(full_path, current_mode | stat.S_IWRITE)
                 except Exception:
-                    pass  # 遇到系統鎖定檔案跳過即可
+                    pass
 
+        # --- 🛡️ 核心新增：物理保險箱 (備份重要設定) ---
+        # 這些檔案無論 Git 怎麼改，我們都要保住診所原本的內容
+        protect_files = [
+            "pymedical.win32.bat",
+            "pymedical.conf",
+            "qingtian.conf",
+            "mingi.conf",
+        ]
+        vault = {}
+        for f_name in protect_files:
+            p = os.path.join(self.base_path, f_name)
+            if os.path.exists(p):
+                try:
+                    with open(p, "rb") as f:
+                        vault[f_name] = f.read()
+                except Exception:
+                    pass
+
+        # --- 2. 執行 Git 更新 ---
+        self.ui.label_status.setText("正在從雲端同步資料...")
         self._run_git(["fetch", "origin", "main"])
+        self.ui.label_status.setText("正在執行強制更新組合拳...")
 
-        self.ui.label_status.setText("正在執行強制更新...")
-
-        # --- 2. 執行核心更新組合拳 ---
-        # (A) 強制對齊指針與索引
+        # (A) 強制對齊
         self._run_git(["reset", "--hard", "FETCH_HEAD"])
-
-        # (B) 暴力覆蓋實體檔案 (解決你說的 ui/ 沒拷貝過去的問題)
+        # (B) 暴力覆蓋
         self._run_git(["checkout", "-f", "FETCH_HEAD", "--", "."])
-
-        # (C) 修正分支指針 (確保 HEAD 乖乖待在 main 上)
+        # (C) 修正指針
         self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
 
+        # --- 🛡️ 核心新增：物理還原 (從保險箱寫回) ---
+        self.ui.label_status.setText("正在還原診所專屬設定...")
+        for f_name, content in vault.items():
+            p = os.path.join(self.base_path, f_name)
+            try:
+                with open(p, "wb") as f:
+                    f.write(content)
+                print(f"✅ 已成功保護並還原檔案: {f_name}")
+            except Exception as e:
+                print(f"還原 {f_name} 失敗: {e}")
+
+        # --- 🚀 額外加強：暴力修正 .bat 啟動參數 ---
+        # 這是為了確保萬一保險箱還原回來的 .bat 還是舊的 py -3 指令，我們現場幫他改掉
+        self._fix_bat_launch_parameters()
+
+        # 回報至後台
         self._report_to_zoho_server()
+
+    def _fix_bat_launch_parameters(self):
+        """專門暴力修正 .bat 檔案的內容"""
+        bat_path = os.path.join(self.base_path, "pymedical.win32.bat")
+        if os.path.exists(bat_path):
+            try:
+                # 使用 cp950 (Big5) 讀取繁體中文 Windows 的 .bat
+                with open(bat_path, "r", encoding="cp950", errors="ignore") as f:
+                    content = f.read()
+
+                if "py -3 -32" in content or "py -3" in content:
+                    new_content = content.replace("py -3 -32", "pythonw").replace(
+                        "py -3", "pythonw"
+                    )
+                    with open(bat_path, "w", encoding="cp950", errors="ignore") as f:
+                        f.write(new_content)
+                    print("🛡️ 已自動將啟動指令優化為 pythonw")
+            except Exception:
+                pass
 
     def _update_dropbox_files(self):
         row_count = self.ui.tableWidget_file_list.rowCount()
