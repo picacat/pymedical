@@ -274,7 +274,6 @@ class SystemUpdate(QtWidgets.QDialog):
         self._run_git(["update-ref", "refs/heads/main", "FETCH_HEAD"])
         self._run_git(["symbolic-ref", "HEAD", "refs/heads/main"])
 
-        # --- 🛡️ 核心新增：物理還原 (從保險箱寫回) ---
         # --- 3. 智慧還原邏輯 ---
         self.ui.label_status.setText("正在檢查並修復必要檔案...")
         for f_name, content in vault.items():
