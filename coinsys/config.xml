@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <config>
-  <ND100count>60</ND100count>
+  <ND100count>24</ND100count>
   <hopper1>0</hopper1>
-  <hopper5>0</hopper5>
-  <hopper10>50</hopper10>
+  <hopper5>10</hopper5>
+  <hopper10>93</hopper10>
   <hopper20>0</hopper20>
-  <hopper50>0</hopper50>
-  <TNV100>100</TNV100>
-  <TNV500>50</TNV500>
-  <TNV1000>10</TNV1000>
+  <hopper50>37</hopper50>
+  <TNV100>63</TNV100>
+  <TNV500>1</TNV500>
+  <TNV1000>2</TNV1000>
 </config>
