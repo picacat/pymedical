@@ -76,7 +76,22 @@ class CheckDatabase(QtWidgets.QDialog):
             self.progress += 1
             self.progress_dialog.setValue(self.progress)
 
+    def _check_patient_index(self):
+        index_name = "idx_select_optimization"
+        fields = (
+            "Name",
+            "ID",
+            "Telephone",
+            "Cellphone",
+        )
+        self.database.add_index_if_not_exists("patient", index_name, fields)
+
     def _check_patient(self):
+        try:
+            self._check_patient_index()
+        except Exception:
+            pass
+
         if self.call_from == "pymedical":
             process_list = [
                 self.database.check_field_exists(
@@ -143,7 +158,24 @@ class CheckDatabase(QtWidgets.QDialog):
 
         self._exec_process(process_list)
 
+    def _check_cases_index(self):
+        index_name = "idx_select_optimization"
+        fields = (
+            "Period",
+            "RegistType",
+            "InsType",
+            "TreatType",
+            "Doctor",
+            "DoctorDone",
+        )
+        self.database.add_index_if_not_exists("cases", index_name, fields)
+
     def _check_cases(self):
+        try:
+            self._check_cases_index()
+        except Exception:
+            pass
+
         if self.call_from == "pymedical":
             process_list = [
                 self.database.check_field_exists(
@@ -325,6 +357,11 @@ class CheckDatabase(QtWidgets.QDialog):
 
         self._exec_process(process_list)
 
+    def _check_prescript_index(self):
+        index_name = "idx_update_optimization"
+        fields = ("MedicineSet", "CaseDate", "MedicineKey")
+        self.database.add_index_if_not_exists("prescript", index_name, fields)
+
     def _check_prescript(self):
         try:
             self._check_prescript_index()
@@ -372,29 +409,17 @@ class CheckDatabase(QtWidgets.QDialog):
 
         self._exec_process(process_list)
 
-    def _check_prescript_index(self):
-        index_name = "idx_update_optimization"
-        # 為了方便取值，我們可以給 COUNT(*) 一個別名叫做 total
-        check_sql = f"""
-            SELECT COUNT(*) as total FROM information_schema.STATISTICS 
-            WHERE table_schema = DATABASE() 
-            AND table_name = 'prescript' 
-            AND index_name = '{index_name}'
-        """
-
-        res = self.database.select_record(check_sql)
-
-        # 針對 [{'total': 3}] 這種格式取值
-        # 先檢查 res 是否有抓到資料，再抓第一筆 dict 裡的 'total'
-        if res and res[0].get("total", 0) == 0:
-            print(f"優化索引 {index_name} 不存在，準備建立...")
-            create_sql = f"ALTER TABLE prescript ADD INDEX {index_name} (MedicineSet, CaseDate, MedicineKey)"
-            self.database.exec_sql(create_sql)
-        else:
-            # 索引已存在，res[0]['total'] 會大於 0
-            pass
+    def _check_medicine_index(self):
+        index_name = "idx_select_optimization"
+        fields = ("MedicineType", "InputCode", "InsCode", "MedicineName", "DrugName")
+        self.database.add_index_if_not_exists("medicine", index_name, fields)
 
     def _check_medicine(self):
+        try:
+            self._check_medicine_index()
+        except Exception:
+            pass
+
         if self.call_from == "pymedical":
             process_list = [
                 self.database.check_field_exists(
@@ -423,6 +448,9 @@ class CheckDatabase(QtWidgets.QDialog):
                     "add",
                     "DictGroupsLevel3",
                     "varchar(20) AFTER DictGRoupsLevel2",
+                ),
+                self.database.check_field_exists(
+                    "medicine", "add", "DrugName", "varchar(40) AFTER MedicineName"
                 ),
             ]
         else:

@@ -587,3 +587,34 @@ class MySQLDatabase(DatabaseInterface):
                         print(f"❌ 無法刪除 ID {process_id}: {e}")
         finally:
             cursor.close()
+
+    def add_index_if_not_exists(self, table_name, index_name, fields):
+        """
+        動態檢查並建立索引
+        :param table_name: 資料表名稱
+        :param index_name: 索引名稱
+        :param fields: 欄位串列, 例如 ['MedicineSet', 'CaseDate']
+        """
+        # 1. 檢查索引是否存在
+        check_sql = f"""
+            SELECT COUNT(*) as total FROM information_schema.STATISTICS 
+            WHERE table_schema = DATABASE() 
+            AND table_name = '{table_name}' 
+            AND index_name = '{index_name}'
+        """
+
+        res = self.select_record(check_sql)
+
+        # 2. 如果不存在則執行建立
+        if res and res[0].get("total", 0) == 0:
+            # 使用 join 處理欄位，避免 tuple 單一元素時出現的末尾逗號問題
+            field_str = ", ".join([f"`{f}`" for f in fields])
+            create_sql = (
+                f"ALTER TABLE `{table_name}` ADD INDEX `{index_name}` ({field_str})"
+            )
+
+            print(f"正在建立索引：{index_name} -> {table_name}({field_str})")
+            self.exec_sql(create_sql)
+        else:
+            # print(f"索引 {index_name} 已存在，跳過。")
+            pass

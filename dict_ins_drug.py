@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
 import os
-import re
 
 from pyexcel_ods3 import get_data
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -11,6 +10,7 @@ from libs import (
     class_utils,
     dropbox_utils,
     nhi_utils,
+    prescript_utils,
     string_utils,
     system_utils,
     ui_utils,
@@ -27,6 +27,16 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self.system_settings = args[1]
         self.ui = None
         self.base_path = os.path.dirname(os.path.abspath(__file__))
+        self.col_no = {
+            "medicine_key": 0,
+            "medicine_type": 1,
+            "medicine_name": 2,
+            "drug_name": 3,
+            "ins_code": 4,
+            "valid_date": 5,
+            "clear_ins_code": 6,
+            "error_message": 7,
+        }
 
         self._set_ui()
         self._set_signal()
@@ -94,7 +104,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
     # 設定欄位寬度
     def _set_table_width(self):
-        width = [100, 50, 180, 100, 130, 50, 300]
+        width = [100, 50, 160, 120, 100, 130, 50, 200]
         self.table_widget_medicine.set_table_heading_width(width)
 
         width = [100, 100, 180, 110, 120, 130, 50]
@@ -145,6 +155,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         medicine_key = string_utils.xstr(row["MedicineKey"])
         medicine_name = string_utils.xstr(row["MedicineName"])
+        drug_name = string_utils.xstr(row["DrugName"])
         ins_code = string_utils.xstr(row["InsCode"]).strip()
         valid_date = string_utils.xstr(row["ValidDate"])
         year = valid_date[:4]
@@ -171,7 +182,8 @@ class DictInsDrug(QtWidgets.QMainWindow):
         medicine_row = [
             medicine_key,
             string_utils.xstr(row["MedicineType"]),
-            string_utils.xstr(row["MedicineName"]),
+            medicine_name,
+            drug_name,
             ins_code,
             valid_date,
             None,
@@ -192,7 +204,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
             ui_utils.set_table_widget_field_icon(
                 self.ui.tableWidget_medicine,
                 row_no,
-                5,
+                self.col_no["clear_ins_code"],
                 gtk_apply,
                 "medicine_key",
                 medicine_key,
@@ -200,7 +212,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
             )
 
     def _clear_ins_code(self, show_warning=True):
-        medicine_name = self.table_widget_medicine.field_value(2)
+        medicine_name = self.table_widget_medicine.field_value(
+            self.col_no["medicine_name"]
+        )
         if show_warning:
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Warning)
@@ -219,7 +233,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
             if cancel:
                 return
 
-        medicine_key = self.table_widget_medicine.field_value(0)
+        medicine_key = self.table_widget_medicine.field_value(
+            self.col_no["medicine_key"]
+        )
         sql = f"""
             UPDATE medicine
             SET
@@ -231,11 +247,13 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         row_no = self.ui.tableWidget_medicine.currentRow()
 
-        for column in range(3, 5):
+        for column in range(self.col_no["ins_code"], self.col_no["clear_ins_code"]):
             self.ui.tableWidget_medicine.setItem(
                 row_no, column, QtWidgets.QTableWidgetItem("")
             )
-        self.ui.tableWidget_medicine.setCellWidget(row_no, 5, None)
+        self.ui.tableWidget_medicine.setCellWidget(
+            row_no, self.col_no["clear_ins_code"], None
+        )
 
     def _sync_drug(self):
         self._update_drug(
@@ -325,9 +343,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
     def _medicine_item_selection_changed(self):
         medicine_type = self.table_widget_medicine.field_value(1)
         medicine_name = string_utils.strip_string(
-            self.table_widget_medicine.field_value(2)
+            self.table_widget_medicine.field_value(self.col_no["medicine_name"])
         )
-        ins_code = self.table_widget_medicine.field_value(3)
+        ins_code = self.table_widget_medicine.field_value(self.col_no["ins_code"])
         self._read_drug(medicine_name, medicine_type)
 
         for row_no in range(self.ui.tableWidget_drug.rowCount()):
@@ -400,12 +418,14 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
     def _set_ins_drug(self):
         drug_code = self.table_widget_drug.field_value(1)
+        drug_name = self.table_widget_drug.field_value(2)
         valid_date = self.table_widget_drug.field_value(5)
         medicine_key = self.table_widget_medicine.field_value(0)
         sql = f'''
             UPDATE medicine
             SET
-                InsCode = "{drug_code}"
+                InsCode = "{drug_code}",
+                DrugName = "{drug_name}"
             WHERE
                 MedicineKey = {medicine_key}
         '''
@@ -413,12 +433,17 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         self.ui.tableWidget_medicine.setItem(
             self.ui.tableWidget_medicine.currentRow(),
-            3,
+            self.col_no["drug_name"],
+            QtWidgets.QTableWidgetItem(string_utils.xstr(drug_name)),
+        )
+        self.ui.tableWidget_medicine.setItem(
+            self.ui.tableWidget_medicine.currentRow(),
+            self.col_no["ins_code"],
             QtWidgets.QTableWidgetItem(string_utils.xstr(drug_code)),
         )
         self.ui.tableWidget_medicine.setItem(
             self.ui.tableWidget_medicine.currentRow(),
-            4,
+            self.col_no["valid_date"],
             QtWidgets.QTableWidgetItem(string_utils.xstr(valid_date)),
         )
 
@@ -426,7 +451,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
         ui_utils.set_table_widget_field_icon(
             self.ui.tableWidget_medicine,
             self.ui.tableWidget_medicine.currentRow(),
-            5,
+            self.col_no["clear_ins_code"],
             gtk_apply,
             "medicine_key",
             medicine_key,
@@ -460,7 +485,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
             return
 
         for row_no in range(self.ui.tableWidget_medicine.rowCount() - 1, -1, -1):
-            error_item = self.ui.tableWidget_medicine.item(row_no, 6)
+            error_item = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["error_message"]
+            )
             if error_item is None or error_item.text() == "":
                 self.ui.tableWidget_medicine.removeRow(row_no)
 
@@ -502,7 +529,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
             if progress_dialog.wasCanceled():
                 break
 
-            self.ui.tableWidget_medicine.setCurrentCell(row_no, 1)
+            self.ui.tableWidget_medicine.setCurrentCell(
+                row_no, self.col_no["medicine_name"]
+            )
             if self.ui.tableWidget_drug.rowCount() > 0:
                 self.ui.tableWidget_drug.setCurrentCell(0, 0)
                 self._set_ins_drug()
@@ -641,7 +670,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
             except Exception:
                 continue
 
-            drug_name = self._clean_drug_name(drug_name, medicine_type="單方")
+            drug_name = prescript_utils.clean_drug_name(drug_name, medicine_type="單方")
 
             field = [
                 "InsCode",
@@ -738,7 +767,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
             except Exception:
                 continue
 
-            drug_name = self._clean_drug_name(drug_name, medicine_type="複方")
+            drug_name = prescript_utils.clean_drug_name(drug_name, medicine_type="複方")
 
             field = [
                 "InsCode",
@@ -759,87 +788,6 @@ class DictInsDrug(QtWidgets.QMainWindow):
             ]
 
             self.database.insert_record("drug", field, data)
-
-    def _clean_drug_name(self, name, medicine_type=None):
-        if not name:
-            return ""
-
-        # 1. 移除換行與所有種類的引號/空白
-        name = name.replace("\n", "")
-        name = re.sub(r'[“"＂〝”〞"＂\'\s]', "", name)
-
-        # 2. 廠牌黑名單 (持續擴充)
-        brands = [
-            "順天堂",
-            "勸奉堂",
-            "莊松榮",
-            "富田",
-            "科達",
-            "勝昌",
-            "天一",
-            "天明",
-            "領先",
-            "東陽",
-            "國科",
-            "港香蘭",
-            "仙豐",
-            "信宏",
-            "萬國",
-            "晉安",
-            "順然",
-            "昕泰",
-            "三才堂",
-            "復旦",
-            "德山",
-            "明通",
-            "立康生物科技",
-            "生春",
-            "賀倍",
-            "領先奈米",
-        ]
-        brand_pattern = "|".join(brands)
-        name = re.sub(brand_pattern, "", name)
-
-        # 3. 處理括號 (如: (栝樓根)) -> 如果你想連括號都清掉，解開下面這行註解
-        # name = re.sub(r'\(.*?\)|（.*?）', '', name)
-
-        # 4. 強化劑型結尾過濾 (由長至短排列是關鍵)
-        # 增加了單獨的 "濃縮" 兩字，並處理可能出現的 "劑" 字
-        if medicine_type == "單方":
-            suffix_types = [
-                "濃縮細粒劑",
-                "濃縮顆粒劑",
-                "濃縮細粒",
-                "濃縮顆粒",
-                "濃縮散劑",
-                "濃縮膠囊劑",
-                "濃縮膠囊",
-                "濃縮錠劑",
-                "濃縮細粒",
-                "濃縮粒",
-                "濃縮散",
-                "濃縮錠",
-                "濃縮",
-                "散劑",
-                "細粒劑",
-                "顆粒劑",
-                "膠囊劑",
-                "細粒",
-                "顆粒",
-                "散",
-                "粉",
-                "錠",
-                "膠囊",
-            ]
-
-            # 建立正則表達式，確保只匹配結尾 ($)
-            suffix_pattern = f"({'|'.join(suffix_types)})$"
-            name = re.sub(suffix_pattern, "", name)
-
-        # 5. 最後再次清理前後可能殘留的標點
-        name = re.sub(r'^[“"＂〝]|["”＂〞]$', "", name).strip()
-
-        return name
 
     def _update_ins_drug(self):
         self._update_drug_file1()
@@ -886,26 +834,34 @@ class DictInsDrug(QtWidgets.QMainWindow):
             if progress_dialog.wasCanceled():
                 break
 
-            ins_code = self.ui.tableWidget_medicine.item(row_no, 3)
+            ins_code = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["ins_code"]
+            )
             if ins_code is not None:
                 ins_code = ins_code.text()
 
             if ins_code in [None, ""]:
                 ins_code = "NULL"
 
-            medicine_key = self.ui.tableWidget_medicine.item(row_no, 0)
+            medicine_key = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["medicine_key"]
+            )
             if medicine_key is not None:
                 medicine_key = medicine_key.text()
             else:
                 continue
 
-            medicine_type = self.ui.tableWidget_medicine.item(row_no, 1)
+            medicine_type = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["medicine_type"]
+            )
             if medicine_type is not None:
                 medicine_type = medicine_type.text()
             else:
                 continue
 
-            medicine_name = self.ui.tableWidget_medicine.item(row_no, 2)
+            medicine_name = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["medicine_name"]
+            )
             if medicine_name is not None:
                 medicine_name = medicine_name.text()
             else:
@@ -981,8 +937,12 @@ class DictInsDrug(QtWidgets.QMainWindow):
         progress_dialog.setValue(0)
 
         for row_no in range(row_count):
-            self.ui.tableWidget_medicine.setCurrentCell(row_no, 0)
-            medicine_name = self.ui.tableWidget_medicine.item(row_no, 2).text()
+            self.ui.tableWidget_medicine.setCurrentCell(
+                row_no, self.col_no["medicine_name"]
+            )
+            medicine_name = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["medicine_name"]
+            ).text()
             self._set_factory(factory, medicine_name)
 
             progress_dialog.setValue(row_no)
@@ -1004,7 +964,6 @@ class DictInsDrug(QtWidgets.QMainWindow):
             self.ui.tableWidget_drug.setCurrentCell(row_no, 0)
             current_drug = self.ui.tableWidget_drug.item(row_no, 2).text()
             current_factory = self.ui.tableWidget_drug.item(row_no, 4).text()
-            print(medicine_name, current_drug)
             if factory in current_factory and medicine_name == current_drug:
                 self._set_ins_drug()
 
@@ -1012,18 +971,41 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self.ui.tableWidget_medicine.blockSignals(True)
         for row_no in range(self.ui.tableWidget_medicine.rowCount()):
             self.ui.tableWidget_medicine.setCurrentCell(row_no, 0)
-            ins_code = self.ui.tableWidget_medicine.item(row_no, 3).text()
-            medicine_name = self.ui.tableWidget_medicine.item(row_no, 2).text()
+            ins_code = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["ins_code"]
+            ).text()
+            medicine_name = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["medicine_name"]
+            ).text()
+            try:
+                ins_drug_name = self.ui.tableWidget_medicine.item(
+                    row_no, self.col_no["drug_name"]
+                ).text()
+            except Exception:
+                ins_drug_name = None
+
+            if ins_drug_name not in [None, ""]:
+                medicine_name = ins_drug_name
+
             drug_row = self._get_drug_row(ins_code)
             if drug_row is None:
                 continue
 
             drug_name = string_utils.xstr(drug_row["DrugName"])
-            if not self._is_same_medicine(medicine_name, drug_name):
+            if not prescript_utils.is_same_medicine(medicine_name, drug_name):
+                message_item = self.ui.tableWidget_medicine.item(
+                    row_no, self.col_no["error_message"]
+                )
+                error_message = []
+                if message_item is not None:
+                    error_message.append(message_item.text())
+
+                error_message.append(f"藥名不符:{drug_name}")
+
                 self.ui.tableWidget_medicine.setItem(
                     row_no,
-                    6,
-                    QtWidgets.QTableWidgetItem(f"藥名不符:{drug_name}"),
+                    self.col_no["error_message"],
+                    QtWidgets.QTableWidgetItem(", ".join(error_message)),
                 )
                 for col_no in range(self.ui.tableWidget_medicine.columnCount()):
                     self.ui.tableWidget_medicine.item(row_no, col_no).setForeground(
@@ -1044,36 +1026,3 @@ class DictInsDrug(QtWidgets.QMainWindow):
             return None
 
         return rows[0]
-
-    def _clean_medicine_name(self, name):
-        if not name:
-            return ""
-
-        # 1. 移除括號及其內容 (解決: (二3.13), (四201) 等)
-        # 這裡使用 [\(\（].*?[\)\）] 涵蓋全半形
-        name = re.sub(r"[\(\（].*?[\)\）]", "", name)
-
-        # 2. 移除前綴雜訊 (解決: @小青龍湯, *無*抵當湯, 通絡-小活絡丹)
-        # 我們移除字串開頭的特殊符號、"無"字包圍符號、或是帶橫槓的前綴
-        name = re.sub(r"^[@*]+", "", name)  # 移除開頭的 @ 或 *
-        name = re.sub(r"^\*無\*", "", name)  # 移除特定的 *無*
-        name = re.sub(r"^[一-龥]{2}-", "", name)  # 移除開頭兩個字接橫槓的 (如: 通絡-)
-
-        # 3. 移除特定的單一英文字母後綴 (解決: 酸棗仁B)
-        # 如果藥名最後一個字是 A, B, C 等，通常是等級或規格，可以移除
-        name = re.sub(r"[A-Za-z]$", "", name)
-
-        # 4. 移除所有剩餘的特殊符號與空白
-        # 使用剛才修正過的「外單內雙」寫法
-        name = re.sub(r'[-#\*\.\s“”"〝〞@]', "", name)
-
-        return name.strip()
-
-    def _is_same_medicine(self, medicine_name, drug_name):
-        c_med = self._clean_medicine_name(medicine_name)
-        c_drug = self._clean_medicine_name(drug_name)
-
-        if c_med in ["葛根黃連黃芩湯"] and c_drug in ["葛根黃芩黃連湯"]:
-            return True
-
-        return c_med == c_drug

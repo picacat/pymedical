@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import datetime
-import re
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -126,9 +125,11 @@ class CheckInsDrug(QtWidgets.QMainWindow):
                 prescript.PrescriptKey, prescript.MedicineName, prescript.MedicineKey, prescript.MedicineType,
                 prescript.Dosage, prescript.InsCode,
                 cases.CaseKey, cases.CaseDate, cases.PatientKey, cases.Name,
-                cases.Doctor
+                cases.Doctor,
+                medicine.DrugName
             FROM prescript
                 LEFT JOIN cases ON cases.CaseKey = prescript.CaseKey
+                LEFT JOIN medicine ON medicine.MedicineKey = prescript.MedicineKey
             WHERE
                 (cases.CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}") AND
                 (cases.InsType = "健保") AND
@@ -239,45 +240,16 @@ class CheckInsDrug(QtWidgets.QMainWindow):
         error_message = []
 
         medicine_name = string_utils.xstr(row["MedicineName"])
+        ins_drug_name = string_utils.xstr(row["DrugName"]).strip()
+        if ins_drug_name not in [None, ""]:
+            medicine_name = ins_drug_name
+
         drug_name = string_utils.xstr(drug_rows[0]["DrugName"])
 
-        if not self._is_same_medicine(medicine_name, drug_name):
+        if not prescript_utils.is_same_medicine(medicine_name, drug_name):
             error_message.append("健保藥名不一致")
 
         return error_message
-
-    def _clean_medicine_name(self, name):
-        if not name:
-            return ""
-
-        # 1. 移除括號及其內容 (解決: (二3.13), (四201) 等)
-        # 這裡使用 [\(\（].*?[\)\）] 涵蓋全半形
-        name = re.sub(r"[\(\（].*?[\)\）]", "", name)
-
-        # 2. 移除前綴雜訊 (解決: @小青龍湯, *無*抵當湯, 通絡-小活絡丹)
-        # 我們移除字串開頭的特殊符號、"無"字包圍符號、或是帶橫槓的前綴
-        name = re.sub(r"^[@*]+", "", name)  # 移除開頭的 @ 或 *
-        name = re.sub(r"^\*無\*", "", name)  # 移除特定的 *無*
-        name = re.sub(r"^[一-龥]{2}-", "", name)  # 移除開頭兩個字接橫槓的 (如: 通絡-)
-
-        # 3. 移除特定的單一英文字母後綴 (解決: 酸棗仁B)
-        # 如果藥名最後一個字是 A, B, C 等，通常是等級或規格，可以移除
-        name = re.sub(r"[A-Za-z]$", "", name)
-
-        # 4. 移除所有剩餘的特殊符號與空白
-        # 使用剛才修正過的「外單內雙」寫法
-        name = re.sub(r'[-#\*\.\s“”"〝〞@]', "", name)
-
-        return name.strip()
-
-    def _is_same_medicine(self, medicine_name, drug_name):
-        c_med = self._clean_medicine_name(medicine_name)
-        c_drug = self._clean_medicine_name(drug_name)
-
-        if c_med in ["葛根黃連黃芩湯"] and c_drug in ["葛根黃芩黃連湯"]:
-            return True
-
-        return c_med == c_drug
 
     def error_count(self):
         return self.errors

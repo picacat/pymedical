@@ -1,6 +1,7 @@
 import csv
 import datetime
 import os
+import re
 
 from lxml import etree as ET
 from PyQt5 import QtCore, QtWidgets
@@ -1840,3 +1841,121 @@ def duplicate_ins_table_widget(database, src_table, dst_table, ratio=None):
 
     data = table_to_list(src_table, dst_table)
     list_to_table(dst_table, data)
+
+
+def clean_medicine_name(name):
+    if not name:
+        return ""
+
+    # 1. 移除括號及其內容 (解決: (二3.13), (四201) 等)
+    # 這裡使用 [\(\（].*?[\)\）] 涵蓋全半形
+    name = re.sub(r"[\(\（].*?[\)\）]", "", name)
+
+    # 2. 移除前綴雜訊 (解決: @小青龍湯, *無*抵當湯, 通絡-小活絡丹)
+    # 我們移除字串開頭的特殊符號、"無"字包圍符號、或是帶橫槓的前綴
+    name = re.sub(r"^[@*]+", "", name)  # 移除開頭的 @ 或 *
+    name = re.sub(r"^\*無\*", "", name)  # 移除特定的 *無*
+    name = re.sub(r"^[一-龥]{2}-", "", name)  # 移除開頭兩個字接橫槓的 (如: 通絡-)
+
+    # 3. 移除特定的單一英文字母後綴 (解決: 酸棗仁B)
+    # 如果藥名最後一個字是 A, B, C 等，通常是等級或規格，可以移除
+    name = re.sub(r"[A-Za-z]$", "", name)
+
+    # 4. 移除所有剩餘的特殊符號與空白
+    # 使用剛才修正過的「外單內雙」寫法
+    name = re.sub(r'[-#\*\.\s“”"〝〞@]', "", name)
+
+    return name.strip()
+
+
+def is_same_medicine(medicine_name, drug_name):
+    c_med = clean_medicine_name(medicine_name)
+    c_drug = clean_medicine_name(drug_name)
+
+    if c_med in ["葛根黃連黃芩湯"] and c_drug in ["葛根黃芩黃連湯"]:
+        return True
+
+    return c_med == c_drug
+
+
+# 健保碼轉入藥名清洗
+def clean_drug_name(name, medicine_type=None):
+    if not name:
+        return ""
+
+    # 1. 移除換行與所有種類的引號/空白
+    name = name.replace("\n", "")
+    name = re.sub(r'[“"＂〝”〞"＂\'\s]', "", name)
+
+    # 2. 廠牌黑名單 (持續擴充)
+    brands = [
+        "順天堂",
+        "勸奉堂",
+        "莊松榮",
+        "富田",
+        "科達",
+        "勝昌",
+        "天一",
+        "天明",
+        "領先",
+        "東陽",
+        "國科",
+        "港香蘭",
+        "仙豐",
+        "信宏",
+        "萬國",
+        "晉安",
+        "順然",
+        "昕泰",
+        "三才堂",
+        "復旦",
+        "德山",
+        "明通",
+        "立康生物科技",
+        "生春",
+        "賀倍",
+        "領先奈米",
+    ]
+    brand_pattern = "|".join(brands)
+    name = re.sub(brand_pattern, "", name)
+
+    # 3. 處理括號 (如: (栝樓根)) -> 如果你想連括號都清掉，解開下面這行註解
+    # name = re.sub(r'\(.*?\)|（.*?）', '', name)
+
+    # 4. 強化劑型結尾過濾 (由長至短排列是關鍵)
+    # 增加了單獨的 "濃縮" 兩字，並處理可能出現的 "劑" 字
+    if medicine_type == "單方":
+        suffix_types = [
+            "濃縮細粒劑",
+            "濃縮顆粒劑",
+            "濃縮細粒",
+            "濃縮顆粒",
+            "濃縮散劑",
+            "濃縮膠囊劑",
+            "濃縮膠囊",
+            "濃縮錠劑",
+            "濃縮細粒",
+            "濃縮粒",
+            "濃縮散",
+            "濃縮錠",
+            "濃縮",
+            "散劑",
+            "細粒劑",
+            "顆粒劑",
+            "膠囊劑",
+            "細粒",
+            "顆粒",
+            "散",
+            "粉",
+            "錠",
+            "膠囊",
+        ]
+
+        # 建立正則表達式，確保只匹配結尾 ($)
+        suffix_pattern = f"({'|'.join(suffix_types)})$"
+        name = re.sub(suffix_pattern, "", name)
+
+    # 5. 最後再次清理前後可能殘留的標點
+    name = re.sub(r'^[“"＂〝]|["”＂〞]$', "", name).strip()
+
+    return name
