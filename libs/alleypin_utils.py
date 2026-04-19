@@ -1,43 +1,45 @@
 # -*- coding: UTF-8 -*-
 # alleypin api for Line app
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QMessageBox
-
 import json
-import requests
 import time
 
-from libs import case_utils
-from libs import patient_utils
-from libs import string_utils
-from libs import number_utils
-from libs import date_utils
-from libs import registration_utils
-from libs import personnel_utils
+import requests
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
-ALLEYPIN_URL = 'https://openapi.alleypinapis.com'
+from libs import (
+    case_utils,
+    date_utils,
+    number_utils,
+    patient_utils,
+    personnel_utils,
+    registration_utils,
+    string_utils,
+)
+
+ALLEYPIN_URL = "https://openapi.alleypinapis.com"
 # ALLEYPIN_URL = 'https://openapi-stg.alleypinapis.com'
 
 
 def get_period(period):
     period_dict = {
-        '早班': 'morning',
-        '午班': 'afternoon',
-        '晚班': 'evening',
+        "早班": "morning",
+        "午班": "afternoon",
+        "晚班": "evening",
     }
     try:
         period = period_dict[period]
     except Exception:
-        period = 'free'
+        period = "free"
 
     return period
 
 
 def _post_data(url, command, auth=None):
     if auth is not None:
-        headers = {'Authorization': f'Bearer {auth}'}
+        headers = {"Authorization": f"Bearer {auth}"}
     else:
-        headers = {'Content-Type': 'application/json'}
+        headers = {"Content-Type": "application/json"}
 
     json_data = json.dumps(command)
 
@@ -52,9 +54,9 @@ def _post_data(url, command, auth=None):
 
 def _put_data(url, command, auth=None):
     if auth is not None:
-        headers = {'Authorization': f'Bearer {auth}'}
+        headers = {"Authorization": f"Bearer {auth}"}
     else:
-        headers = {'Content-Type': 'application/json'}
+        headers = {"Content-Type": "application/json"}
 
     json_data = json.dumps(command)
 
@@ -69,9 +71,9 @@ def _put_data(url, command, auth=None):
 
 def _delete_data(url, command, auth=None):
     if auth is not None:
-        headers = {'Authorization': f'Bearer {auth}'}
+        headers = {"Authorization": f"Bearer {auth}"}
     else:
-        headers = {'Content-Type': 'application/json'}
+        headers = {"Content-Type": "application/json"}
 
     if command is not None:
         json_data = json.dumps(command)
@@ -89,37 +91,37 @@ def _delete_data(url, command, auth=None):
 
 def _get_data(url, auth=None):
     if auth is not None:
-        headers = {'Authorization': f'Bearer {auth}'}
+        headers = {"Authorization": f"Bearer {auth}"}
     else:
-        headers = {'Content-Type': 'application/json'}
+        headers = {"Content-Type": "application/json"}
 
-    response = requests.get(url=url, headers=headers, data='')
+    response = requests.get(url=url, headers=headers, data="")
     result = json.loads(response.content)
 
     return result
 
 
 def get_auth(system_settings):
-    url = ALLEYPIN_URL + '/v1/auth/login'
-    appID = system_settings.field('appID')
-    secret = system_settings.field('secret')
-    clinic_id = system_settings.field('院所代號')
+    url = ALLEYPIN_URL + "/v1/auth/login"
+    appID = system_settings.field("appID")
+    secret = system_settings.field("secret")
+    clinic_id = system_settings.field("院所代號")
     command = {
         "appID": appID,
         "secret": secret,
         "serviceStoreID": clinic_id,
     }
     result = _post_data(url, command)
-    access_token = result['accessToken']
-    client_id = result['clientID']
-    refresh_ticket = result['refreshTicket']
+    access_token = result["accessToken"]
+    client_id = result["clientID"]
+    refresh_ticket = result["refreshTicket"]
 
     return access_token, client_id, refresh_ticket
 
 
 def add_webhook_endpoint(system_settings, auth):
-    url = ALLEYPIN_URL + '/v1/webhook'
-    webhook_url = system_settings.field('webhook')
+    url = ALLEYPIN_URL + "/v1/webhook"
+    webhook_url = system_settings.field("webhook")
     command = {
         "webhookEndpoint": webhook_url,
     }
@@ -129,18 +131,18 @@ def add_webhook_endpoint(system_settings, auth):
 
 
 def add_reservation_table(**kwargs):
-    auth = kwargs['auth']
-    date = kwargs['date']
-    doctor_id = kwargs['doctor_id']
-    doctor_name = kwargs['doctor_name']
-    room_id = kwargs['room_id']
-    room_name = kwargs['room_name']
-    subject_id = kwargs['subject_id']
-    subject_name = kwargs['subject_name']
-    period = get_period(kwargs['period'])
-    can_reservation = kwargs['can_reservation']
+    auth = kwargs["auth"]
+    date = kwargs["date"]
+    doctor_id = kwargs["doctor_id"]
+    doctor_name = kwargs["doctor_name"]
+    room_id = kwargs["room_id"]
+    room_name = kwargs["room_name"]
+    subject_id = kwargs["subject_id"]
+    subject_name = kwargs["subject_name"]
+    period = get_period(kwargs["period"])
+    can_reservation = kwargs["can_reservation"]
 
-    url = ALLEYPIN_URL + '/v1/schedules'
+    url = ALLEYPIN_URL + "/v1/schedules"
     command = {
         "date": date,
         "doctorID": doctor_id,
@@ -154,7 +156,7 @@ def add_reservation_table(**kwargs):
     }
     result = _post_data(url, command, auth)
     try:
-        id = result['id']
+        id = result["id"]
     except Exception:
         id = None
 
@@ -162,19 +164,19 @@ def add_reservation_table(**kwargs):
 
 
 def update_reservation_table(**kwargs):
-    auth = kwargs['auth']
-    date = kwargs['date']
-    doctor_id = kwargs['doctor_id']
-    doctor_name = kwargs['doctor_name']
-    room_id = kwargs['room_id']
-    room_name = kwargs['room_name']
-    subject_id = kwargs['subject_id']
-    subject_name = kwargs['subject_name']
-    period = get_period(kwargs['period'])
-    can_reservation = kwargs['can_reservation']
-    schedule_id = kwargs['schedule_id']
+    auth = kwargs["auth"]
+    date = kwargs["date"]
+    doctor_id = kwargs["doctor_id"]
+    doctor_name = kwargs["doctor_name"]
+    room_id = kwargs["room_id"]
+    room_name = kwargs["room_name"]
+    subject_id = kwargs["subject_id"]
+    subject_name = kwargs["subject_name"]
+    period = get_period(kwargs["period"])
+    can_reservation = kwargs["can_reservation"]
+    schedule_id = kwargs["schedule_id"]
 
-    url = ALLEYPIN_URL + f'/v1/schedules/{schedule_id}'
+    url = ALLEYPIN_URL + f"/v1/schedules/{schedule_id}"
     command = {
         "canReservation": can_reservation,
         "date": date,
@@ -190,15 +192,18 @@ def update_reservation_table(**kwargs):
 
 
 def get_reservation_table(**kwargs):
-    auth = kwargs['auth']
-    start_date = kwargs['start_date']
-    end_date = kwargs['end_date']
+    auth = kwargs["auth"]
+    start_date = kwargs["start_date"]
+    end_date = kwargs["end_date"]
 
-    url = ALLEYPIN_URL + f'/v1/schedules?page=1&size=1000&startTime={start_date}&endTime={end_date}'
+    url = (
+        ALLEYPIN_URL
+        + f"/v1/schedules?page=1&size=1000&startTime={start_date}&endTime={end_date}"
+    )
     result = _get_data(url, auth)
 
     try:
-        schedules = result['schedules']
+        schedules = result["schedules"]
     except Exception:
         schedules = None
 
@@ -207,44 +212,44 @@ def get_reservation_table(**kwargs):
 
 def get_nationality(nationality):
     nationality_dict = {
-        '本國': 'twID',
-        '外國': 'pdID',
-        '居留證': 'pdID',
-        '遊民': 'hisID',
+        "本國": "twID",
+        "外國": "pdID",
+        "居留證": "pdID",
+        "遊民": "hisID",
     }
     try:
         nationality = nationality_dict[nationality]
     except Exception:
-        nationality = 'hisID'
+        nationality = "hisID"
 
     return nationality
 
 
 def add_appointment(**kwargs):
-    auth = kwargs['auth']
-    patient_key = kwargs['patient_key']
-    reserve_key = kwargs['reserve_key']
-    schedule_id = kwargs['schedule_id']
+    auth = kwargs["auth"]
+    patient_key = kwargs["patient_key"]
+    reserve_key = kwargs["reserve_key"]
+    schedule_id = kwargs["schedule_id"]
 
-    birthday = kwargs['birthday']
+    birthday = kwargs["birthday"]
     try:
         birthday = time.mktime(birthday.timetuple())
     except Exception:
         birthday = 946656000  # 2000-01-01
 
-    gender = kwargs['gender']
-    patient_id = kwargs['patient_id']
-    nationality = get_nationality(kwargs['nationality'])
-    patient_name = kwargs['patient_name']
-    phone = kwargs['phone']
-    reserve_no = kwargs['reserve_no']
-    reserve_time = kwargs['reserve_time']
-    remark = kwargs['remark']
+    gender = kwargs["gender"]
+    patient_id = kwargs["patient_id"]
+    nationality = get_nationality(kwargs["nationality"])
+    patient_name = kwargs["patient_name"]
+    phone = kwargs["phone"]
+    reserve_no = kwargs["reserve_no"]
+    reserve_time = kwargs["reserve_time"]
+    remark = kwargs["remark"]
 
-    if phone in ['', None]:
-        phone = 'None'
+    if phone in ["", None]:
+        phone = "None"
 
-    url = ALLEYPIN_URL + '/v1/appointments'
+    url = ALLEYPIN_URL + "/v1/appointments"
     command = {
         "customerID": f"{patient_key}",
         "platformID": f"{reserve_key}",
@@ -262,7 +267,7 @@ def add_appointment(**kwargs):
 
     result = _post_data(url, command, auth)
     try:
-        id = result['id']
+        id = result["id"]
     except Exception:
         id = None
 
@@ -270,23 +275,23 @@ def add_appointment(**kwargs):
 
 
 def cancel_appointment(**kwargs):
-    auth = kwargs['auth']
-    id = kwargs['id']
+    auth = kwargs["auth"]
+    id = kwargs["id"]
 
-    url = ALLEYPIN_URL + f'/v1/appointments/{id}'
+    url = ALLEYPIN_URL + f"/v1/appointments/{id}"
     command = None
 
     _delete_data(url, command, auth)
 
 
 def change_appointment(**kwargs):
-    auth = kwargs['auth']
-    id = kwargs['id']
-    schedule_id = kwargs['schedule_id']
-    reserve_no = kwargs['reserve_no']
-    reserve_time = kwargs['reserve_time']
+    auth = kwargs["auth"]
+    id = kwargs["id"]
+    schedule_id = kwargs["schedule_id"]
+    reserve_no = kwargs["reserve_no"]
+    reserve_time = kwargs["reserve_time"]
 
-    url = ALLEYPIN_URL + f'/v1/appointments/{id}/changeSchedule'
+    url = ALLEYPIN_URL + f"/v1/appointments/{id}/changeSchedule"
     command = {
         "scheduleID": schedule_id,
         "seq": reserve_no,
@@ -296,10 +301,10 @@ def change_appointment(**kwargs):
 
 
 def checkin_appointment(**kwargs):
-    auth = kwargs['auth']
-    id = kwargs['id']
+    auth = kwargs["auth"]
+    id = kwargs["id"]
 
-    url = ALLEYPIN_URL + f'/v1/appointments/{id}/checkIn'
+    url = ALLEYPIN_URL + f"/v1/appointments/{id}/checkIn"
     command = None
     _post_data(url, command, auth)
 
@@ -334,31 +339,31 @@ def get_schedule_id(database, appointment_date, period, doctor):
 
     row = rows[0]
 
-    return row['ScheduleID']
+    return row["ScheduleID"]
 
 
 def cancel_outpatient_alleypin_appointments(database, system_settings, case_key):
-    id = case_utils.get_case_extend(database, case_key, 'ScheduleID')
-    if id in ['', None]:
+    id = case_utils.get_case_extend(database, case_key, "ScheduleID")
+    if id in ["", None]:
         return
 
     auth_token, _, _ = get_auth(system_settings)
     cancel_appointment(auth=auth_token, id=id)
-    case_utils.clear_case_extend(database, case_key, 'ScheduleID')
+    case_utils.clear_case_extend(database, case_key, "ScheduleID")
 
 
 def cancel_reservation_alleypin_appointments(database, system_settings, reserve_key):
-    sql = f'''
+    sql = f"""
         SELECT PatInitial FROM reserve
         WHERE
             ReserveKey = {reserve_key}
-    '''
+    """
     rows = database.select_record(sql)
     if len(rows) <= 0:
         return
 
     row = rows[0]
-    id = row['PatInitial']
+    id = row["PatInitial"]
     if id is None:
         return
 
@@ -367,25 +372,27 @@ def cancel_reservation_alleypin_appointments(database, system_settings, reserve_
 
 
 def update_progresses(database, system_settings, case_key):
-    sql = f'''
+    sql = f"""
         SELECT CaseDate, Period, Doctor FROM cases
         WHERE
             CaseKey = {case_key}
-    '''
+    """
     rows = database.select_record(sql)
     if len(rows) <= 0:
         return None
 
     row = rows[0]
 
-    period = string_utils.xstr(row['Period'])
-    doctor = string_utils.xstr(row['Doctor'])
-    schedule_id = get_schedule_id(database, row['CaseDate'], period, doctor)
+    period = string_utils.xstr(row["Period"])
+    doctor = string_utils.xstr(row["Doctor"])
+    schedule_id = get_schedule_id(database, row["CaseDate"], period, doctor)
     progress_id = _get_progress_id(database, schedule_id)
 
     auth_token, _, _ = get_auth(system_settings)
     if progress_id is None:
-        progress_id = _create_progresses(database, period, doctor, schedule_id, auth_token)
+        progress_id = _create_progresses(
+            database, period, doctor, schedule_id, auth_token
+        )
         _update_progress_id(database, schedule_id, progress_id)
     else:
         _update_progresses(database, period, doctor, progress_id, auth_token)
@@ -412,7 +419,7 @@ def _get_progress_id(database, schedule_id):
     if len(rows) <= 0:
         return None
     else:
-        return rows[0]['ProgressID']
+        return rows[0]["ProgressID"]
 
 
 def _get_wait_status(database, period, doctor):
@@ -431,9 +438,9 @@ def _get_wait_status(database, period, doctor):
 
     current_seq = None
     for row in rows:
-        in_progress = string_utils.xstr(row['InProgress'])
-        if in_progress == 'Y':
-            current_seq = number_utils.get_integer(row['RegistNo'])
+        in_progress = string_utils.xstr(row["InProgress"])
+        if in_progress == "Y":
+            current_seq = number_utils.get_integer(row["RegistNo"])
             break
 
     if current_seq is None:
@@ -448,14 +455,14 @@ def _get_wait_status(database, period, doctor):
         if len(rows) <= 0:
             current_seq = 1
         else:
-            current_seq = number_utils.get_integer(rows[0]['RegistNo'])
+            current_seq = number_utils.get_integer(rows[0]["RegistNo"])
 
     return wait_count, current_seq
 
 
 def _create_progresses(database, period, doctor, schedule_id, auth):
     wait_count, current_seq = _get_wait_status(database, period, doctor)
-    url = ALLEYPIN_URL + '/v1/progresses'
+    url = ALLEYPIN_URL + "/v1/progresses"
     command = {
         "scheduleID": schedule_id,
         "currentSeq": current_seq,
@@ -463,7 +470,7 @@ def _create_progresses(database, period, doctor, schedule_id, auth):
     }
     result = _post_data(url, command, auth)
     try:
-        id = result['id']
+        id = result["id"]
     except Exception:
         id = None
 
@@ -473,7 +480,7 @@ def _create_progresses(database, period, doctor, schedule_id, auth):
 def _update_progresses(database, period, doctor, progress_id, auth):
     wait_count, current_seq = _get_wait_status(database, period, doctor)
 
-    url = ALLEYPIN_URL + f'/v1/progresses/{progress_id}'
+    url = ALLEYPIN_URL + f"/v1/progresses/{progress_id}"
     command = {
         "currentSeq": current_seq,
         "waitingCount": wait_count,
@@ -482,41 +489,43 @@ def _update_progresses(database, period, doctor, progress_id, auth):
 
 
 def add_case_alleypin_appointments(database, system_settings, case_key):
-    sql = f'''
+    sql = f"""
         SELECT cases.*,
                 patient.ID, patient.Nationality, patient.Birthday, patient.Gender, patient.Cellphone FROM cases
             LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
         WHERE
             CaseKey = {case_key}
-    '''
+    """
     rows = database.select_record(sql)
     if len(rows) <= 0:
         return None
 
     row = rows[0]
 
-    patient_key = row['PatientKey']
-    schedule_id = get_schedule_id(database, row['CaseDate'], row['Period'], row['Doctor'])
-    patient_id = row['ID']
-    birthday = row['Birthday']
+    patient_key = row["PatientKey"]
+    schedule_id = get_schedule_id(
+        database, row["CaseDate"], row["Period"], row["Doctor"]
+    )
+    patient_id = row["ID"]
+    birthday = row["Birthday"]
 
     try:
-        gender = patient_utils.get_gender_code(string_utils.xstr(row['Gender']))
+        gender = patient_utils.get_gender_code(string_utils.xstr(row["Gender"]))
     except Exception:
-        if patient_id[1] == '1':
-            gender = 'M'
+        if patient_id[1] == "1":
+            gender = "M"
         else:
-            gender = 'F'
+            gender = "F"
 
     try:
-        nationality = row['Nationality']
+        nationality = row["Nationality"]
     except Exception:
-        nationality = '本國'
+        nationality = "本國"
 
-    patient_name = row['Name']
-    phone = row['Cellphone']
-    regist_no = row['RegistNo']
-    remark = row['Remark']
+    patient_name = row["Name"]
+    phone = row["Cellphone"]
+    regist_no = row["RegistNo"]
+    remark = row["Remark"]
 
     auth_token, _, _ = get_auth(system_settings)
     id = add_appointment(
@@ -539,18 +548,18 @@ def add_case_alleypin_appointments(database, system_settings, case_key):
 
 
 def add_reservation_alleypin_appointments(database, system_settings, reserve_key):
-    sql = f'''
+    sql = f"""
         SELECT Source FROM reserve
         WHERE
             ReserveKey = {reserve_key}
-    '''
+    """
     rows = database.select_record(sql)
     if len(rows) <= 0:
         return
 
     row = rows[0]
-    if row['Source'] in ['初診預約', '視訊初診預約']:
-        sql = f'''
+    if row["Source"] in ["初診預約", "視訊初診預約"]:
+        sql = f"""
             SELECT
                 reserve.*,
                 temp_patient.ID, temp_patient.Birthday, temp_patient.Cellphone
@@ -558,9 +567,9 @@ def add_reservation_alleypin_appointments(database, system_settings, reserve_key
                 LEFT JOIN temp_patient ON temp_patient.TempPatientKey = reserve.PatientKey
             WHERE
                 ReserveKey = {reserve_key}
-        '''
+        """
     else:
-        sql = f'''
+        sql = f"""
             SELECT
                 reserve.*,
                 patient.ID, patient.Birthday, patient.Nationality, patient.Gender, patient.Cellphone
@@ -568,39 +577,41 @@ def add_reservation_alleypin_appointments(database, system_settings, reserve_key
                 LEFT JOIN patient ON patient.PatientKey = reserve.PatientKey
             WHERE
                 ReserveKey = {reserve_key}
-        '''
+        """
 
     rows = database.select_record(sql)
     if len(rows) <= 0:
         return
 
     row = rows[0]
-    patient_key = row['PatientKey']
-    schedule_id = get_schedule_id(database, row['ReserveDate'], row['Period'], row['Doctor'])
-    patient_id = row['ID']
-    birthday = row['Birthday']
+    patient_key = row["PatientKey"]
+    schedule_id = get_schedule_id(
+        database, row["ReserveDate"], row["Period"], row["Doctor"]
+    )
+    patient_id = row["ID"]
+    birthday = row["Birthday"]
 
     try:
-        gender = patient_utils.get_gender_code(string_utils.xstr(row['Gender']))
+        gender = patient_utils.get_gender_code(string_utils.xstr(row["Gender"]))
     except Exception:
         try:
-            if patient_id[1] == '1':
-                gender = 'M'
+            if patient_id[1] == "1":
+                gender = "M"
             else:
-                gender = 'F'
+                gender = "F"
         except Exception:
-            gender = 'M'
+            gender = "M"
 
     try:
-        nationality = row['Nationality']
+        nationality = row["Nationality"]
     except Exception:
-        nationality = '本國'
+        nationality = "本國"
 
-    patient_name = row['Name']
-    phone = row['Cellphone']
-    reserve_no = row['ReserveNo']
-    remark = row['Remark']
-    reserve_time = row['ReserveDate'].strftime('%H:%M')
+    patient_name = row["Name"]
+    phone = row["Cellphone"]
+    reserve_no = row["ReserveNo"]
+    remark = row["Remark"]
+    reserve_time = row["ReserveDate"].strftime("%H:%M")
 
     auth_token, _, _ = get_auth(system_settings)
     id = add_appointment(
@@ -629,18 +640,18 @@ def add_reservation_alleypin_appointments(database, system_settings, reserve_key
 
 
 def change_reservation_alleypin_appointments(database, system_settings, reserve_key):
-    sql = f'''
+    sql = f"""
         SELECT Source FROM reserve
         WHERE
             ReserveKey = {reserve_key}
-    '''
+    """
     rows = database.select_record(sql)
     if len(rows) <= 0:
         return
 
     row = rows[0]
-    if row['Source'] in ['初診預約', '視訊初診預約']:
-        sql = f'''
+    if row["Source"] in ["初診預約", "視訊初診預約"]:
+        sql = f"""
             SELECT
                 reserve.*,
                 temp_patient.ID, temp_patient.Birthday, temp_patient.Cellphone
@@ -648,9 +659,9 @@ def change_reservation_alleypin_appointments(database, system_settings, reserve_
                 LEFT JOIN temp_patient ON temp_patient.TempPatientKey = reserve.PatientKey
             WHERE
                 ReserveKey = {reserve_key}
-        '''
+        """
     else:
-        sql = f'''
+        sql = f"""
             SELECT
                 reserve.*,
                 patient.ID, patient.Birthday, patient.Nationality, patient.Gender, patient.Cellphone
@@ -658,18 +669,20 @@ def change_reservation_alleypin_appointments(database, system_settings, reserve_
                 LEFT JOIN patient ON patient.PatientKey = reserve.PatientKey
             WHERE
                 ReserveKey = {reserve_key}
-        '''
+        """
 
     rows = database.select_record(sql)
     if len(rows) <= 0:
         return
 
     row = rows[0]
-    id = row['PatInitial']
-    schedule_id = get_schedule_id(database, row['ReserveDate'], row['Period'], row['Doctor'])
+    id = row["PatInitial"]
+    schedule_id = get_schedule_id(
+        database, row["ReserveDate"], row["Period"], row["Doctor"]
+    )
 
-    reserve_no = row['ReserveNo']
-    reserve_time = row['ReserveDate'].strftime('%H:%M')
+    reserve_no = row["ReserveNo"]
+    reserve_time = row["ReserveDate"].strftime("%H:%M")
 
     auth_token, _, _ = get_auth(system_settings)
     id = change_appointment(
@@ -686,24 +699,24 @@ def outpatient_checkin_alleypin_appointments(database, system_settings, case_key
     if id is None:
         return
 
-    case_utils.set_case_extend(database, case_key, 'ScheduleID', id)
+    case_utils.set_case_extend(database, case_key, "ScheduleID", id)
 
     auth_token, _, _ = get_auth(system_settings)
     checkin_appointment(auth=auth_token, id=id)
 
 
 def reservation_checkin_alleypin_appointments(database, system_settings, reserve_key):
-    sql = f'''
+    sql = f"""
         SELECT PatInitial FROM reserve
         WHERE
             ReserveKey = {reserve_key}
-    '''
+    """
     rows = database.select_record(sql)
     if len(rows) <= 0:
         return
 
     row = rows[0]
-    id = row['PatInitial']
+    id = row["PatInitial"]
     if id is None:
         return
 
@@ -711,7 +724,9 @@ def reservation_checkin_alleypin_appointments(database, system_settings, reserve
     checkin_appointment(auth=auth_token, id=id)
 
 
-def set_alleypin_reservation_table(parent, database, system_settings, year, month, doctor):
+def set_alleypin_reservation_table(
+    parent, database, system_settings, year, month, doctor
+):
     auth_token, _, _ = get_auth(system_settings)
 
     sql = f'''
@@ -724,36 +739,42 @@ def set_alleypin_reservation_table(parent, database, system_settings, year, mont
     rows = database.select_record(sql)
     row_count = len(rows)
     progress_dialog = QtWidgets.QProgressDialog(
-        '正在上傳班表檔中, 請稍後...', '取消', 0, row_count, parent,
+        "正在上傳班表檔中, 請稍後...",
+        "取消",
+        0,
+        row_count,
+        parent,
     )
     progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
     progress_dialog.setValue(0)
 
     for row_no, row in enumerate(rows):
-        day = row['Day']
-        if row['CanReservation'] == 'True':
+        day = row["Day"]
+        if row["CanReservation"] == "True":
             can_reservation = True
         else:
             can_reservation = False
 
-        schedule_key = row['DoctorMonthScheduleKey']
-        reservation_date = f'{year}-{month:0>2}-{day:0>2}'
+        schedule_key = row["DoctorMonthScheduleKey"]
+        reservation_date = f"{year}-{month:0>2}-{day:0>2}"
         weekday = date_utils.str_to_date(reservation_date).weekday()
-        period = row['Period']
+        period = row["Period"]
         room = registration_utils.get_room(database, period, doctor, weekday=weekday)
-        doctor_id = personnel_utils.get_person_field_value(database, doctor, 'PersonKey')
-        schedule_id = row['ScheduleID']
+        doctor_id = personnel_utils.get_person_field_value(
+            database, doctor, "PersonKey"
+        )
+        schedule_id = row["ScheduleID"]
 
-        if schedule_id in [None, 'None', '']:
+        if schedule_id in [None, "None", ""]:
             schedule_id = add_reservation_table(
                 auth=auth_token,
                 date=reservation_date,
                 doctor_id=doctor_id,
                 doctor_name=doctor,
                 room_id=room,
-                room_name=f'{room}診',
-                subject_id='60',
-                subject_name='中醫科',
+                room_name=f"{room}診",
+                subject_id="60",
+                subject_name="中醫科",
                 period=period,
                 can_reservation=can_reservation,
             )
@@ -772,9 +793,9 @@ def set_alleypin_reservation_table(parent, database, system_settings, year, mont
                 doctor_id=doctor_id,
                 doctor_name=doctor,
                 room_id=room,
-                room_name=f'{room}診',
-                subject_id='60',
-                subject_name='中醫科',
+                room_name=f"{room}診",
+                subject_id="60",
+                subject_name="中醫科",
                 period=period,
                 can_reservation=can_reservation,
                 schedule_id=schedule_id,
