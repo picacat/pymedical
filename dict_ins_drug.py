@@ -17,7 +17,7 @@ from libs import (
 )
 
 
-# 健保藥品 2019.03.13
+# 健保藥品 2026-04-19 改由github下載最新版本的健保藥品資料, 不再使用dropbox
 class DictInsDrug(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
