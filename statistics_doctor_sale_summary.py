@@ -283,6 +283,7 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
             #     continue
 
             medicine_type = string_utils.xstr(row["MedicineType"])
+            medicine_name = string_utils.xstr(row["MedicineName"])
             if in_medicine_type == "其他":
                 not_other = False
                 for med_type in self.other_medicine_type_list:
@@ -307,10 +308,12 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
             if debt > 0:
                 subtotal -= debt
 
-            if in_medicine_type == "水藥":
-                print(subtotal, row["MedicineName"])
-
-            total_amount += subtotal
+            if in_medicine_type == "水藥" and medicine_name in [
+                "代煎水藥"
+            ]:  # 代煎水藥不算業績
+                pass
+            else:
+                total_amount += subtotal
 
         repayment_total_amount = self._get_repayment(
             in_case_date, row["Doctor"], in_medicine_type
