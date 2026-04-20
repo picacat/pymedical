@@ -36,65 +36,45 @@
              <number>0</number>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <property name="spacing">
-               <number>15</number>
-              </property>
-              <property name="topMargin">
-               <number>3</number>
-              </property>
-              <property name="bottomMargin">
-               <number>3</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>銷售明細</string>
-                </property>
-                <property name="indent">
-                 <number>10</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QToolButton" name="toolButton_export_to_excel">
-                <property name="text">
-                 <string>匯出至Excel</string>
-                </property>
-                <property name="icon">
-                 <iconset>
-                  <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
-                </property>
-                <property name="toolButtonStyle">
-                 <enum>Qt::ToolButtonTextBesideIcon</enum>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-            <item>
              <layout class="QHBoxLayout" name="horizontalLayout_2">
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_2">
                 <item>
-                 <widget class="QLabel" name="label">
-                  <property name="text">
-                   <string>自費推拿明細</string>
+                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                  <property name="leftMargin">
+                   <number>20</number>
                   </property>
-                 </widget>
+                  <property name="topMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>20</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>6</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="label">
+                    <property name="text">
+                     <string>自費推拿明細</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QToolButton" name="toolButton_export_to_excel">
+                    <property name="text">
+                     <string>匯出至Excel</string>
+                    </property>
+                    <property name="icon">
+                     <iconset>
+                      <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+                    </property>
+                    <property name="toolButtonStyle">
+                     <enum>Qt::ToolButtonTextBesideIcon</enum>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                 <item>
                  <widget class="QTableWidget" name="tableWidget_massager_list">
@@ -164,11 +144,41 @@
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_4">
                 <item>
-                 <widget class="QLabel" name="label_3">
-                  <property name="text">
-                   <string>健保推拿明細</string>
+                 <layout class="QHBoxLayout" name="horizontalLayout_4">
+                  <property name="leftMargin">
+                   <number>20</number>
                   </property>
-                 </widget>
+                  <property name="topMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>20</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>8</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="label_3">
+                    <property name="text">
+                     <string>健保推拿明細</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QToolButton" name="toolButton_export_to_ins_excel">
+                    <property name="text">
+                     <string>匯出至Excel</string>
+                    </property>
+                    <property name="icon">
+                     <iconset>
+                      <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+                    </property>
+                    <property name="toolButtonStyle">
+                     <enum>Qt::ToolButtonTextBesideIcon</enum>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                 <item>
                  <widget class="QTableWidget" name="tableWidget_massager_ins_list">
