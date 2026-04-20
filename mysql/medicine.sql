@@ -24,6 +24,7 @@ CREATE TABLE `medicine` (
   `InputCode` varchar(5) DEFAULT NULL,
   `InsCode` varchar(12) DEFAULT NULL,
   `MedicineName` varchar(40) DEFAULT NULL,
+  `DrugName` varchar(40) DEFAULT NULL,
   `MedicineAlias` varchar(40) DEFAULT NULL,
   `Unit` varchar(10) DEFAULT NULL,
   `Dosage` decimal(10,2) DEFAULT NULL,
