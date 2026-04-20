@@ -17,7 +17,7 @@ from libs import (
 )
 
 
-# 健保藥品 2026.04.20
+# 健保藥品更新 2026.04.20
 class DictInsDrug(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
