@@ -304,10 +304,11 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
             subtotal = number_utils.get_integer(row["Amount"]) * days
             discount_fee = self._get_discount_fee(row["CaseKey"], row["MedicineSet"])
             subtotal -= discount_fee  # 2026-03-11 佳禾: 要扣掉折扣金額
-            print(subtotal)
-
             if debt > 0:
                 subtotal -= debt
+
+            if in_medicine_type == "水藥":
+                print(subtotal, row["MedicineName"])
 
             total_amount += subtotal
 
