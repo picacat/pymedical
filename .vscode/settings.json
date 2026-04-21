@@ -31,7 +31,7 @@
     "editor.fontFamily": "'Hack Nerd Font', 'Space Mono', 'Hack', 'Cascadia Code PL', 'Noto Sans Mono', 'monospace', 'Droid Sans Fallback'",
     "terminal.integrated.fontFamily": "'Hack Nerd Font', 'Hack', 'Cascadia Code PL', 'Noto Sans Mono', 'monospace'",
     "editor.letterSpacing": -0.8,
-    "editor.fontSize": 17,
+    "editor.fontSize": 14,
     "editor.fontLigatures": false,
     "auto-close-tag.enableAutoCloseTag": true,
     "python.analysis.completeFunctionParens": true,

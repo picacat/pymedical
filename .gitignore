@@ -12,6 +12,7 @@
 *.sqlite
 *.zip
 *診所*.json
+settings.json
 bq.conf
 mingi.conf
 pymedical.json
