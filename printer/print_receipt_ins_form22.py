@@ -1,11 +1,9 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
-from libs import printer_utils
-from libs import system_utils
-from libs import string_utils
+
+from libs import printer_utils, string_utils, system_utils
 
 
 # 健保收據格式6 A6: 105x148mm 天地精進
@@ -20,7 +18,9 @@ class PrintReceiptInsForm22:
         self.ui = None
         self.medicine_set = 1
 
-        self.printer = printer_utils.get_printer(self.system_settings, '健保醫療收據印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "健保醫療收據印表機"
+        )
 
         self.current_print = None
         self.additional = None
@@ -47,7 +47,7 @@ class PrintReceiptInsForm22:
     def _check_printing(self):
         printing = True
 
-        if self.additional == '健保另包':
+        if self.additional == "健保另包":
             if printer_utils.is_additional_prescript(self.database, self.case_key):
                 printing = True
             else:
@@ -78,7 +78,14 @@ class PrintReceiptInsForm22:
     def print_html(self, printing=None):
         self.current_print = self.print_html
         # self.printer.setPaperSize(QtCore.QSizeF(105, 148), QPrinter.Millimeter)
-        printer_utils.set_paper_size(self.printer, self.system_settings, 105, 148, QPrinter.Millimeter, '健保醫療收據')
+        printer_utils.set_paper_size(
+            self.printer,
+            self.system_settings,
+            105,
+            148,
+            QPrinter.Millimeter,
+            "健保醫療收據",
+        )
 
         document = printer_utils.get_document(self.printer, self.font)
         document.setDocumentMargin(10)
@@ -88,39 +95,47 @@ class PrintReceiptInsForm22:
             document.print(self.printer)
 
     def _html(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM cases
             WHERE
                 CaseKey = {self.case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
 
         if len(rows) <= 0:
             return
 
         row = rows[0]
-        ins_type = string_utils.xstr(row['InsType'])
+        ins_type = string_utils.xstr(row["InsType"])
         case_record = printer_utils.get_case_html_10(
-            self.database, self.case_key, '健保', medicine_set=1, tw_date=True
+            self.database, self.case_key, "健保", medicine_set=1, tw_date=True
         )
         disease_record = printer_utils.get_disease(self.database, self.case_key)
-        prescript_record = printer_utils.get_prescript_html7(
-            self.database, self.system_settings,
-            self.case_key, self.medicine_set, '費用收據', blocks=1, instruction=self.additional,
-            print_total_dosage='Y')
+        prescript_record = printer_utils.get_prescript_html22(
+            self.database,
+            self.system_settings,
+            self.case_key,
+            self.medicine_set,
+            "費用收據",
+            blocks=1,
+            instruction=self.additional,
+            print_total_dosage="Y",
+        )
         instruction = printer_utils.get_instruction_html4(
             self.database, self.system_settings, self.case_key, self.medicine_set
         )
         fee_html = printer_utils.get_ins_fees_html_22(self.database, self.case_key)
         additional_label = printer_utils.get_additional_label(self.additional)
 
-        clinic_name = self.system_settings.field('院所名稱')
-        clinic_id = self.system_settings.field('院所代號')
-        clinic_telephone = self.system_settings.field('院所電話')
-        clinic_address = self.system_settings.field('院所地址')
-        disease_name = printer_utils.get_disease_name(self.database, self.system_settings, self.case_key)
+        clinic_name = self.system_settings.field("院所名稱")
+        clinic_id = self.system_settings.field("院所代號")
+        clinic_telephone = self.system_settings.field("院所電話")
+        clinic_address = self.system_settings.field("院所地址")
+        disease_name = printer_utils.get_disease_name(
+            self.database, self.system_settings, self.case_key
+        )
 
-        html = f'''
+        html = f"""
             <html>
               <body>
                 <table width="100%" cellspacing="0">
@@ -148,10 +163,11 @@ class PrintReceiptInsForm22:
                 <table width="100%" style="border-collapse: collapse; border:1px #cccccc solid;" cellpadding="2" border="1">
                   <thead>
                     <tr>
-                      <th align="left" width="20%">位置</th>
+                      <th align="left" width="15%">位置</th>
                       <th align="left">處方名稱</th>
                       <th align="right" width="15%">劑量</th>
-                      <th align="right" width="15%">總量</th>
+                      <th align="right" width="12%">總量</th>
+                      <th align="left" width="15%">服法</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -170,6 +186,6 @@ class PrintReceiptInsForm22:
                 * 健保申報點數非一點一元給付
               </body>
             </html>
-        '''
+        """
 
         return html

@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QInputDialog, QMessageBox, QProgressBar, QPushButton
 
 from libs import (
     class_utils,
+    db_utils,
     dropbox_utils,
     nhi_utils,
     prescript_utils,
@@ -127,6 +128,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self.ui.radioButton_errors.clicked.connect(self._filter_medicine)
         self.ui.spinBox_valid_year.valueChanged.connect(self._valid_date_changed)
         self.ui.spinBox_valid_month.valueChanged.connect(self._valid_date_changed)
+        self.ui.action_export_drug_json.triggered.connect(self._export_dict_drug_json)
 
     def _read_medicine(self, medicine_name=None):
         medicine_name_script = ""
@@ -1026,3 +1028,32 @@ class DictInsDrug(QtWidgets.QMainWindow):
             return None
 
         return rows[0]
+
+    def _export_dict_drug_json(self):
+        options = QtWidgets.QFileDialog.Options()
+        json_file_name, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self.parent,
+            "匯出健保藥品JSON檔案",
+            "drug.json",
+            "json檔案 (*.json)",
+            options=options,
+        )
+        if not json_file_name:
+            return
+
+        sql = """
+            SELECT * FROM drug
+        """
+        rows = self.database.select_record(sql)
+
+        json_data = db_utils.mysql_to_json(rows)
+        text_file = open(json_file_name, "w", encoding="utf8")
+        text_file.write(str(json_data))
+        text_file.close()
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "JSON資料匯出完成",
+            f"<h3>{json_file_name}匯出完成.</h3>",
+            "JSON 檔案格式.",
+        )

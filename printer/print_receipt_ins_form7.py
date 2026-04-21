@@ -150,10 +150,11 @@ class PrintReceiptInsForm7:
                 <table cellspacing="0">
                   <thead>
                     <tr>
-                      <th align="left">位置</th>
+                      <th align="left" width="15%">位置</th>
                       <th align="left">處方名稱</th>
-                      <th align="right">劑量</th>
-                      <th align="right">總量</th>
+                      <th align="right" width="15%">劑量</th>
+                      <th align="right" width="12%">總量</th>
+                      <th align="left" width="15%" style="padding-left: 10px">指示</th>
                     </tr>
                   </thead>
                   <tbody>

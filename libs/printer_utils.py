@@ -3101,282 +3101,6 @@ def get_prescript_html2(
     return prescript
 
 
-def get_prescript_html7(
-    database,
-    system_setting,
-    case_key,
-    medicine_set,
-    print_type,
-    blocks,
-    max_length=None,
-    instruction=None,
-    print_total_dosage=None,
-):
-    if medicine_set is None:
-        prescript = """
-            <tr>
-              <td>無處方</td>
-            </tr>
-            <hr>
-        """
-        return prescript
-
-    pres_days = case_utils.get_pres_days(database, case_key, medicine_set)
-    packages = case_utils.get_packages(database, case_key, medicine_set)
-    if pres_days <= 0 and instruction == "健保另包":
-        return ""
-
-    sql = f"""
-        SELECT Treatment, TreatType FROM cases
-        WHERE
-            CaseKey = {case_key}
-    """
-    rows = database.select_record(sql)
-
-    treatment = rows[0]["Treatment"]
-    treat_type = rows[0]["TreatType"]
-
-    treat_condition = ""
-    if (
-        print_type == "費用收據"
-        and system_setting.field("列印穴道處置") == "N"
-        and medicine_set == 1
-    ):  # 健保才過濾
-        treat_condition = ' AND (prescript.MedicineType NOT IN ("穴道", "處置")) '
-
-    medicine_set_condition = f" AND (MedicineSet = {medicine_set}) "
-    medicine_type_condition = ""
-    if instruction == "健保檢驗":
-        treat_condition = ""
-        medicine_set_condition = " AND (MedicineSet > 1) "
-        medicine_type_condition = """ AND
-            (prescript.MedicineType = "檢驗") AND
-            (prescript.InsCode IS NOT NULL) AND
-            (LENGTH(prescript.InsCode) > 0)
-        """
-    elif instruction == "自費檢驗":
-        treat_condition = ""
-        medicine_set_condition = " AND (MedicineSet > 1) "
-        medicine_type_condition = """ AND
-            (prescript.MedicineType = "檢驗") AND
-            (prescript.InsCode IS NULL OR prescript.InsCode = "" OR LENGTH(prescript.InsCode) = 0)
-        """
-
-    instruction_condition = get_instruction_condition(
-        database, system_setting, case_key, medicine_set, instruction
-    )
-    order_script = "ORDER BY PrescriptNo, PrescriptKey"
-    # if system_setting.field("列印處方依照存放位置排序") == "Y":
-    #     order_script = """
-    #         ORDER BY
-    #             SUBSTRING(medicine.Location, 1, 1),
-    #             LENGTH(SUBSTRING(medicine.Location, 2)),
-    #             SUBSTRING(medicine.Location, 2)
-    #     """
-    if system_setting.field("列印處方依照存放位置排序") == "Y":
-        order_script = """
-            ORDER BY 
-                -- 1. 先排純字母部分 (例如 A, B, AA)
-                REGEXP_SUBSTR(medicine.Location, '^[A-Za-z]+'),
-                
-                -- 2. 排字母後的第一組數字 (例如 A3 中的 3, B5-10 中的 5)
-                -- 先抓出數字部分，轉為數值排序
-                CAST(REGEXP_SUBSTR(medicine.Location, '[0-9]+') AS UNSIGNED),
-                
-                -- 3. 排槓號後的第二組數字 (處理 A3-1, A3-10)
-                -- 如果沒有槓號，這層會是 0，不影響排序
-                CAST(SUBSTRING_INDEX(CONCAT(medicine.Location, '-0'), '-', -2) AS UNSIGNED)
-        """
-
-    sql = f"""
-        SELECT prescript.*, medicine.Location, medicine.MedicineAlias FROM prescript
-            LEFT JOIN medicine ON medicine.MedicineKey = prescript.MedicineKey
-        WHERE
-            CaseKey = {case_key} AND
-            (prescript.MedicineName IS NOT NULL AND LENGTH(prescript.MedicineName) > 0)
-            {medicine_set_condition}
-            {medicine_type_condition}
-            {treat_condition}
-            {instruction_condition}
-        {order_script}
-    """
-    rows = database.select_record(sql)
-
-    if (
-        medicine_set == 1
-        and treatment in nhi_utils.INS_TREAT
-        and instruction not in ["健保另包", "健保檢驗", "自費檢驗"]
-    ):
-        if treatment in nhi_utils.ACUPUNCTURE_TREAT:
-            medicine_type = "穴道"
-        else:
-            medicine_type = "處置"
-
-        rows.insert(
-            0,
-            {
-                "MedicineName": treatment,
-                "MedicineAlias": treatment,
-                "MedicineType": medicine_type,
-                "InsCode": "",
-                "Dosage": 1,
-                "Instruction": "",
-                "Unit": "次",
-                "Location": "",
-            },
-        )
-
-    if medicine_set == 1 and treat_type == "醫療諮詢":
-        medicine_type = "單方"
-        rows.insert(
-            0,
-            {
-                "MedicineName": treat_type,
-                "MedicineAlias": treat_type,
-                "MedicineType": medicine_type,
-                "InsCode": "",
-                "Dosage": 1,
-                "Instruction": "",
-                "Unit": "次",
-                "Location": "",
-            },
-        )
-
-    if len(rows) <= 0:
-        return ""
-
-    if pres_days is None or pres_days <= 0:
-        pres_days = 1
-
-    if print_total_dosage is None:
-        print_total_dosage = system_setting.field("處方箋列印總量")
-
-    print_alias = system_setting.field("列印處方別名")
-    if print_type == "處方箋":
-        print_alias = "N"
-
-    if print_total_dosage == "Y":
-        block_width = {
-            3: {
-                "location_width": 10,
-                "medicine_name_width": 19,
-                "dosage_width": 6,
-                "total_dosage_width": 5,
-                "separator_width": 1,
-            },
-            2: {
-                "location_width": 15,
-                "medicine_name_width": 30,
-                "dosage_width": 10,
-                "total_dosage_width": 9,
-                "separator_width": 1,
-            },
-            1: {
-                "location_width": 15,
-                "medicine_name_width": 40,
-                "dosage_width": 25,
-                "total_dosage_width": 20,
-                "separator_width": 4,
-            },
-        }
-    else:
-        block_width = {
-            3: {
-                "location_width": 10,
-                "medicine_name_width": 24,
-                "dosage_width": 8,
-                "total_dosage_width": 0,
-                "separator_width": 1,
-            },
-            2: {
-                "location_width": 10,
-                "medicine_name_width": 39,
-                "dosage_width": 10,
-                "total_dosage_width": 0,
-                "separator_width": 1,
-            },
-            1: {
-                "location_width": 15,
-                "medicine_name_width": 40,
-                "dosage_width": 25,
-                "total_dosage_width": 20,
-                "separator_width": 4,
-            },
-        }
-
-    if system_setting.field("處方列印方向") == "垂直列印":
-        rows = set_vertical_direction(rows)
-
-    prescript = ""
-    row_count = int((len(rows) - 1) / blocks) + 1
-    for row_no in range(1, row_count + 1):
-        separator = ""
-        prescript_line = ""
-        for i in range(blocks):
-            prescript_block = get_medicine_detail(
-                medicine_set,
-                rows,
-                (row_no - 1) * blocks + i,
-                pres_days,
-                packages,
-                print_alias,
-            )
-
-            medicine_name = string_utils.xstr(prescript_block[0])
-            unit = string_utils.xstr(prescript_block[3])
-            medicine_type = string_utils.xstr(prescript_block[7])
-
-            if instruction == "健保檢驗":
-                ins_code = string_utils.xstr(prescript_block[5])
-                medicine_name = f"{medicine_name} ({ins_code})"
-
-            if medicine_set == 1:
-                location = get_location(database, medicine_type, medicine_name, unit)
-                if location == "":
-                    location = string_utils.xstr(prescript_block[1])
-            else:
-                location = string_utils.xstr(prescript_block[1])
-
-            dosage = string_utils.xstr(prescript_block[2])
-            total_dosage = string_utils.xstr(prescript_block[4])
-            unit = string_utils.xstr(prescript_block[3])
-            location_width = block_width[blocks]["location_width"]
-            medicine_name_width = block_width[blocks]["medicine_name_width"]
-            dosage_width = block_width[blocks]["dosage_width"]
-            total_dosage_width = block_width[blocks]["total_dosage_width"]
-            separator_width = block_width[blocks]["separator_width"]
-
-            if medicine_name in ["優待", "健保檢驗", "自費檢驗"]:
-                total_dosage = ""
-
-            if instruction == "無劑量":
-                dosage = ""
-                unit = ""
-                total_dosage = ""
-
-            if print_total_dosage != "Y":
-                prescript_line += f'''
-                    <td align="left" width="{location_width}%">{location}</td>
-                    <td align="left" width="{medicine_name_width}%">{medicine_name}</td>
-                    <td align="right" width="{dosage_width}%">{dosage}{unit}</td>
-                '''
-            else:
-                prescript_line += f'''
-                    <td align="left" width="{location_width}%">{location}</td>
-                    <td align="left" width="{medicine_name_width}%">{medicine_name}</td>
-                    <td align="right" width="{dosage_width}%">{dosage}{unit}</td>
-                    <td align="right" width="{total_dosage_width}%">{total_dosage}</td>
-                '''
-
-        prescript += f"""
-            <tr>
-              {prescript_line}
-            </tr>
-        """
-
-    return prescript
-
-
 def set_vertical_direction(rows):
     row_count = len(rows)
     if row_count <= 2:
@@ -9998,3 +9722,551 @@ def get_prescript_html29(
         '''
 
     return html, len(prescript_line)
+
+
+# 雲濤
+def get_prescript_html7(
+    database,
+    system_setting,
+    case_key,
+    medicine_set,
+    print_type,
+    blocks,
+    max_length=None,
+    instruction=None,
+    print_total_dosage=None,
+):
+    if medicine_set is None:
+        prescript = """
+            <tr>
+              <td>無處方</td>
+            </tr>
+            <hr>
+        """
+        return prescript
+
+    pres_days = case_utils.get_pres_days(database, case_key, medicine_set)
+    packages = case_utils.get_packages(database, case_key, medicine_set)
+    if pres_days <= 0 and instruction == "健保另包":
+        return ""
+
+    sql = f"""
+        SELECT Treatment, TreatType FROM cases
+        WHERE
+            CaseKey = {case_key}
+    """
+    rows = database.select_record(sql)
+
+    treatment = rows[0]["Treatment"]
+    treat_type = rows[0]["TreatType"]
+
+    treat_condition = ""
+    if (
+        print_type == "費用收據"
+        and system_setting.field("列印穴道處置") == "N"
+        and medicine_set == 1
+    ):  # 健保才過濾
+        treat_condition = ' AND (prescript.MedicineType NOT IN ("穴道", "處置")) '
+
+    medicine_set_condition = f" AND (MedicineSet = {medicine_set}) "
+    medicine_type_condition = ""
+    if instruction == "健保檢驗":
+        treat_condition = ""
+        medicine_set_condition = " AND (MedicineSet > 1) "
+        medicine_type_condition = """ AND
+            (prescript.MedicineType = "檢驗") AND
+            (prescript.InsCode IS NOT NULL) AND
+            (LENGTH(prescript.InsCode) > 0)
+        """
+    elif instruction == "自費檢驗":
+        treat_condition = ""
+        medicine_set_condition = " AND (MedicineSet > 1) "
+        medicine_type_condition = """ AND
+            (prescript.MedicineType = "檢驗") AND
+            (prescript.InsCode IS NULL OR prescript.InsCode = "" OR LENGTH(prescript.InsCode) = 0)
+        """
+
+    instruction_condition = get_instruction_condition(
+        database, system_setting, case_key, medicine_set, instruction
+    )
+    order_script = "ORDER BY PrescriptKey"
+    if system_setting.field("列印處方依照存放位置排序") == "Y":
+        order_script = """
+            ORDER BY 
+                -- 1. 先排純字母部分 (例如 A, B, AA)
+                REGEXP_SUBSTR(medicine.Location, '^[A-Za-z]+'),
+                
+                -- 2. 排字母後的第一組數字 (例如 A3 中的 3, B5-10 中的 5)
+                -- 先抓出數字部分，轉為數值排序
+                CAST(REGEXP_SUBSTR(medicine.Location, '[0-9]+') AS UNSIGNED),
+                
+                -- 3. 排槓號後的第二組數字 (處理 A3-1, A3-10)
+                -- 如果沒有槓號，這層會是 0，不影響排序
+                CAST(SUBSTRING_INDEX(CONCAT(medicine.Location, '-0'), '-', -2) AS UNSIGNED)
+        """
+
+    sql = f"""
+        SELECT prescript.*, medicine.Location, medicine.MedicineAlias FROM prescript
+            LEFT JOIN medicine ON medicine.MedicineKey = prescript.MedicineKey
+        WHERE
+            CaseKey = {case_key} AND
+            (prescript.MedicineName IS NOT NULL AND LENGTH(prescript.MedicineName) > 0)
+            {medicine_set_condition}
+            {medicine_type_condition}
+            {treat_condition}
+            {instruction_condition}
+        {order_script}
+    """
+    rows = database.select_record(sql)
+
+    if (
+        medicine_set == 1
+        and treatment in nhi_utils.INS_TREAT
+        and instruction not in ["健保另包", "健保檢驗", "自費檢驗"]
+    ):
+        if treatment in nhi_utils.ACUPUNCTURE_TREAT:
+            medicine_type = "穴道"
+        else:
+            medicine_type = "處置"
+
+        rows.insert(
+            0,
+            {
+                "MedicineName": treatment,
+                "MedicineAlias": treatment,
+                "MedicineType": medicine_type,
+                "InsCode": "",
+                "Dosage": 1,
+                "Instruction": "",
+                "Unit": "次",
+                "Location": "",
+            },
+        )
+
+    if medicine_set == 1 and treat_type == "醫療諮詢":
+        medicine_type = "單方"
+        rows.insert(
+            0,
+            {
+                "MedicineName": treat_type,
+                "MedicineAlias": treat_type,
+                "MedicineType": medicine_type,
+                "InsCode": "",
+                "Dosage": 1,
+                "Instruction": "",
+                "Unit": "次",
+                "Location": "",
+            },
+        )
+
+    if len(rows) <= 0:
+        return ""
+
+    if pres_days is None or pres_days <= 0:
+        pres_days = 1
+
+    if print_total_dosage is None:
+        print_total_dosage = system_setting.field("處方箋列印總量")
+
+    print_alias = system_setting.field("列印處方別名")
+    if print_type == "處方箋":
+        print_alias = "N"
+
+    if print_total_dosage == "Y":
+        block_width = {
+            3: {
+                "location_width": 10,
+                "medicine_name_width": 19,
+                "dosage_width": 6,
+                "total_dosage_width": 5,
+                "separator_width": 1,
+            },
+            2: {
+                "location_width": 15,
+                "medicine_name_width": 30,
+                "dosage_width": 10,
+                "total_dosage_width": 9,
+                "separator_width": 1,
+            },
+            1: {
+                "location_width": 10,
+                "medicine_name_width": 40,
+                "dosage_width": 20,
+                "total_dosage_width": 20,
+                "instruction_width": 10,
+            },
+        }
+    else:
+        block_width = {
+            3: {
+                "location_width": 10,
+                "medicine_name_width": 24,
+                "dosage_width": 8,
+                "total_dosage_width": 0,
+                "separator_width": 1,
+            },
+            2: {
+                "location_width": 10,
+                "medicine_name_width": 39,
+                "dosage_width": 10,
+                "total_dosage_width": 0,
+                "separator_width": 1,
+            },
+            1: {
+                "location_width": 10,
+                "medicine_name_width": 40,
+                "dosage_width": 20,
+                "total_dosage_width": 20,
+                "instruction_width": 10,
+            },
+        }
+
+    prescript = ""
+    row_count = int((len(rows) - 1) / blocks) + 1
+    for row_no in range(1, row_count + 1):
+        separator = ""
+        prescript_line = ""
+        for i in range(blocks):
+            prescript_block = get_medicine_detail(
+                medicine_set,
+                rows,
+                (row_no - 1) * blocks + i,
+                pres_days,
+                packages,
+                print_alias,
+            )
+
+            medicine_name = string_utils.xstr(prescript_block[0])
+            unit = string_utils.xstr(prescript_block[3])
+            medicine_type = string_utils.xstr(prescript_block[7])
+
+            if instruction == "健保檢驗":
+                ins_code = string_utils.xstr(prescript_block[5])
+                medicine_name = f"{medicine_name} ({ins_code})"
+
+            if medicine_set == 1:
+                location = get_location(database, medicine_type, medicine_name, unit)
+                if location == "":
+                    location = string_utils.xstr(prescript_block[1])
+            else:
+                location = string_utils.xstr(prescript_block[1])
+
+            dosage = string_utils.xstr(prescript_block[2])
+            total_dosage = string_utils.xstr(prescript_block[4])
+            unit = string_utils.xstr(prescript_block[3])
+            instruction = string_utils.xstr(prescript_block[6])
+
+            location_width = block_width[blocks]["location_width"]
+            medicine_name_width = block_width[blocks]["medicine_name_width"]
+            dosage_width = block_width[blocks]["dosage_width"]
+            total_dosage_width = block_width[blocks]["total_dosage_width"]
+            instruction_width = block_width[blocks]["instruction_width"]
+
+            if medicine_name in ["優待", "健保檢驗", "自費檢驗"]:
+                total_dosage = ""
+
+            if instruction == "無劑量":
+                dosage = ""
+                unit = ""
+                total_dosage = ""
+
+            if print_total_dosage != "Y":
+                prescript_line += f'''
+                    <td align="left" width="{location_width}%">{location}</td>
+                    <td align="left" width="{medicine_name_width}%">{medicine_name}</td>
+                    <td align="right" width="{dosage_width}%">{dosage}{unit}</td>
+                    <td align="left" style="padding-left: 10px" width="{instruction_width}%">{instruction}</td>
+                '''
+            else:
+                prescript_line += f'''
+                    <td align="left" width="{location_width}%">{location}</td>
+                    <td align="left" width="{medicine_name_width}%">{medicine_name}</td>
+                    <td align="right" width="{dosage_width}%">{dosage}{unit}</td>
+                    <td align="right" width="{total_dosage_width}%">{total_dosage}</td>
+                    <td align="left" style="padding-left: 10px" width="{instruction_width}%">{instruction}</td>
+                '''
+
+        prescript += f"""
+            <tr>
+              {prescript_line}
+            </tr>
+        """
+
+    return prescript
+
+
+# 天地精進
+def get_prescript_html22(
+    database,
+    system_setting,
+    case_key,
+    medicine_set,
+    print_type,
+    blocks,
+    max_length=None,
+    instruction=None,
+    print_total_dosage=None,
+):
+    if medicine_set is None:
+        prescript = """
+            <tr>
+              <td>無處方</td>
+            </tr>
+            <hr>
+        """
+        return prescript
+
+    pres_days = case_utils.get_pres_days(database, case_key, medicine_set)
+    packages = case_utils.get_packages(database, case_key, medicine_set)
+    if pres_days <= 0 and instruction == "健保另包":
+        return ""
+
+    sql = f"""
+        SELECT Treatment, TreatType FROM cases
+        WHERE
+            CaseKey = {case_key}
+    """
+    rows = database.select_record(sql)
+
+    treatment = rows[0]["Treatment"]
+    treat_type = rows[0]["TreatType"]
+
+    treat_condition = ""
+    if (
+        print_type == "費用收據"
+        and system_setting.field("列印穴道處置") == "N"
+        and medicine_set == 1
+    ):  # 健保才過濾
+        treat_condition = ' AND (prescript.MedicineType NOT IN ("穴道", "處置")) '
+
+    medicine_set_condition = f" AND (MedicineSet = {medicine_set}) "
+    medicine_type_condition = ""
+    if instruction == "健保檢驗":
+        treat_condition = ""
+        medicine_set_condition = " AND (MedicineSet > 1) "
+        medicine_type_condition = """ AND
+            (prescript.MedicineType = "檢驗") AND
+            (prescript.InsCode IS NOT NULL) AND
+            (LENGTH(prescript.InsCode) > 0)
+        """
+    elif instruction == "自費檢驗":
+        treat_condition = ""
+        medicine_set_condition = " AND (MedicineSet > 1) "
+        medicine_type_condition = """ AND
+            (prescript.MedicineType = "檢驗") AND
+            (prescript.InsCode IS NULL OR prescript.InsCode = "" OR LENGTH(prescript.InsCode) = 0)
+        """
+
+    instruction_condition = get_instruction_condition(
+        database, system_setting, case_key, medicine_set, instruction
+    )
+    order_script = "ORDER BY PrescriptNo, PrescriptKey"
+    # if system_setting.field("列印處方依照存放位置排序") == "Y":
+    #     order_script = """
+    #         ORDER BY
+    #             SUBSTRING(medicine.Location, 1, 1),
+    #             LENGTH(SUBSTRING(medicine.Location, 2)),
+    #             SUBSTRING(medicine.Location, 2)
+    #     """
+    if system_setting.field("列印處方依照存放位置排序") == "Y":
+        order_script = """
+            ORDER BY 
+                -- 1. 先排純字母部分 (例如 A, B, AA)
+                REGEXP_SUBSTR(medicine.Location, '^[A-Za-z]+'),
+                
+                -- 2. 排字母後的第一組數字 (例如 A3 中的 3, B5-10 中的 5)
+                -- 先抓出數字部分，轉為數值排序
+                CAST(REGEXP_SUBSTR(medicine.Location, '[0-9]+') AS UNSIGNED),
+                
+                -- 3. 排槓號後的第二組數字 (處理 A3-1, A3-10)
+                -- 如果沒有槓號，這層會是 0，不影響排序
+                CAST(SUBSTRING_INDEX(CONCAT(medicine.Location, '-0'), '-', -2) AS UNSIGNED)
+        """
+
+    sql = f"""
+        SELECT prescript.*, medicine.Location, medicine.MedicineAlias FROM prescript
+            LEFT JOIN medicine ON medicine.MedicineKey = prescript.MedicineKey
+        WHERE
+            CaseKey = {case_key} AND
+            (prescript.MedicineName IS NOT NULL AND LENGTH(prescript.MedicineName) > 0)
+            {medicine_set_condition}
+            {medicine_type_condition}
+            {treat_condition}
+            {instruction_condition}
+        {order_script}
+    """
+    rows = database.select_record(sql)
+
+    if (
+        medicine_set == 1
+        and treatment in nhi_utils.INS_TREAT
+        and instruction not in ["健保另包", "健保檢驗", "自費檢驗"]
+    ):
+        if treatment in nhi_utils.ACUPUNCTURE_TREAT:
+            medicine_type = "穴道"
+        else:
+            medicine_type = "處置"
+
+        rows.insert(
+            0,
+            {
+                "MedicineName": treatment,
+                "MedicineAlias": treatment,
+                "MedicineType": medicine_type,
+                "InsCode": "",
+                "Dosage": 1,
+                "Instruction": "",
+                "Unit": "次",
+                "Location": "",
+            },
+        )
+
+    if medicine_set == 1 and treat_type == "醫療諮詢":
+        medicine_type = "單方"
+        rows.insert(
+            0,
+            {
+                "MedicineName": treat_type,
+                "MedicineAlias": treat_type,
+                "MedicineType": medicine_type,
+                "InsCode": "",
+                "Dosage": 1,
+                "Instruction": "",
+                "Unit": "次",
+                "Location": "",
+            },
+        )
+
+    if len(rows) <= 0:
+        return ""
+
+    if pres_days is None or pres_days <= 0:
+        pres_days = 1
+
+    if print_total_dosage is None:
+        print_total_dosage = system_setting.field("處方箋列印總量")
+
+    print_alias = system_setting.field("列印處方別名")
+    if print_type == "處方箋":
+        print_alias = "N"
+
+    if print_total_dosage == "Y":
+        block_width = {
+            3: {
+                "location_width": 10,
+                "medicine_name_width": 19,
+                "dosage_width": 6,
+                "total_dosage_width": 5,
+                "separator_width": 1,
+            },
+            2: {
+                "location_width": 15,
+                "medicine_name_width": 30,
+                "dosage_width": 10,
+                "total_dosage_width": 9,
+                "separator_width": 1,
+            },
+            1: {
+                "location_width": 15,
+                "medicine_name_width": 40,
+                "dosage_width": 25,
+                "total_dosage_width": 20,
+                "separator_width": 4,
+            },
+        }
+    else:
+        block_width = {
+            3: {
+                "location_width": 10,
+                "medicine_name_width": 24,
+                "dosage_width": 8,
+                "total_dosage_width": 0,
+                "separator_width": 1,
+            },
+            2: {
+                "location_width": 10,
+                "medicine_name_width": 39,
+                "dosage_width": 10,
+                "total_dosage_width": 0,
+                "separator_width": 1,
+            },
+            1: {
+                "location_width": 15,
+                "medicine_name_width": 40,
+                "dosage_width": 25,
+                "total_dosage_width": 20,
+                "separator_width": 4,
+            },
+        }
+
+    if system_setting.field("處方列印方向") == "垂直列印":
+        rows = set_vertical_direction(rows)
+
+    prescript = ""
+    row_count = int((len(rows) - 1) / blocks) + 1
+    for row_no in range(1, row_count + 1):
+        separator = ""
+        prescript_line = ""
+        for i in range(blocks):
+            prescript_block = get_medicine_detail(
+                medicine_set,
+                rows,
+                (row_no - 1) * blocks + i,
+                pres_days,
+                packages,
+                print_alias,
+            )
+
+            medicine_name = string_utils.xstr(prescript_block[0])
+            unit = string_utils.xstr(prescript_block[3])
+            medicine_type = string_utils.xstr(prescript_block[7])
+
+            if instruction == "健保檢驗":
+                ins_code = string_utils.xstr(prescript_block[5])
+                medicine_name = f"{medicine_name} ({ins_code})"
+
+            if medicine_set == 1:
+                location = get_location(database, medicine_type, medicine_name, unit)
+                if location == "":
+                    location = string_utils.xstr(prescript_block[1])
+            else:
+                location = string_utils.xstr(prescript_block[1])
+
+            dosage = string_utils.xstr(prescript_block[2])
+            total_dosage = string_utils.xstr(prescript_block[4])
+            unit = string_utils.xstr(prescript_block[3])
+            location_width = block_width[blocks]["location_width"]
+            medicine_name_width = block_width[blocks]["medicine_name_width"]
+            dosage_width = block_width[blocks]["dosage_width"]
+            total_dosage_width = block_width[blocks]["total_dosage_width"]
+            separator_width = block_width[blocks]["separator_width"]
+
+            if medicine_name in ["優待", "健保檢驗", "自費檢驗"]:
+                total_dosage = ""
+
+            if instruction == "無劑量":
+                dosage = ""
+                unit = ""
+                total_dosage = ""
+
+            if print_total_dosage != "Y":
+                prescript_line += f'''
+                    <td align="left" width="{location_width}%">{location}</td>
+                    <td align="left" width="{medicine_name_width}%">{medicine_name}</td>
+                    <td align="right" width="{dosage_width}%">{dosage}{unit}</td>
+                '''
+            else:
+                prescript_line += f'''
+                    <td align="left" width="{location_width}%">{location}</td>
+                    <td align="left" width="{medicine_name_width}%">{medicine_name}</td>
+                    <td align="right" width="{dosage_width}%">{dosage}{unit}</td>
+                    <td align="right" width="{total_dosage_width}%">{total_dosage}</td>
+                '''
+
+        prescript += f"""
+            <tr>
+              {prescript_line}
+            </tr>
+        """
+
+    return prescript

@@ -62,6 +62,8 @@ def set_default_data(database, table_name):
         set_dict_diagnostic_default_data(database)
     elif table_name == "medicine":
         set_dict_medicine_default_data(database)
+    elif table_name == "drug":
+        set_dict_drug_default_data(database)
     elif table_name == "refcompound":
         set_dict_compound_default_data(database)
 
@@ -87,6 +89,16 @@ def set_system_settings_default_data(database):
     _system_settings.post("晚班起始號", "1")
     _system_settings.post("現場掛號給號模式", "預約班表")
 
+    _system_settings.post("過去病歷一頁筆數", "30")
+    _system_settings.post("自動完成批價作業", "Y")
+    _system_settings.post("顯示看診計時器", "Y")
+    _system_settings.post("給藥包數", "3")
+    _system_settings.post("給藥天數", "7")
+    _system_settings.post("用藥指示", "飯後")
+    _system_settings.post("候診名單顯示診別", "醫師診別")
+    _system_settings.post("詞庫排序", "最後點擊時戳")
+    _system_settings.post("診察詞庫排序", "最後點擊時戳")
+
     _system_settings.post("預設門診類別", "健保")
     _system_settings.post("首次警告次數", "8")
     _system_settings.post("針傷警告次數", "20")
@@ -98,7 +110,7 @@ def set_system_settings_default_data(database):
     _system_settings.post("老人優待年齡", "65")
 
     _system_settings.post("外觀主題", "Fusion")
-    _system_settings.post("外觀顏色", "藍色")
+    _system_settings.post("外觀顏色", "灰色")
     _system_settings.post("顯示側邊欄", "Y")
 
 
@@ -351,6 +363,48 @@ def set_dict_medicine_default_data(database):
                 row["Description"],
             ]
             database.insert_record("medicine", field, data)
+            progress_dialog.setValue(row_no)
+
+        progress_dialog.setValue(row_count)
+        progress_dialog.deleteLater()
+
+
+def set_dict_drug_default_data(database):
+    import json
+
+    from PyQt5 import QtCore, QtWidgets
+
+    filename = "./mysql/default/drug.json"
+    field = [
+        "DrugKey",
+        "InsCode",
+        "DrugName",
+        "MedicineType",
+        "Unit",
+        "InsPrice",
+        "Supplier",
+        "ValidDate",
+    ]
+    with open(filename, encoding="utf8") as json_file:
+        rows = json.load(json_file)
+        row_count = len(rows)
+        progress_dialog = QtWidgets.QProgressDialog(
+            "正在產生健保藥品資料檔中, 請稍後...", "取消", 0, row_count, None
+        )
+        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
+        progress_dialog.setValue(0)
+        for row_no, row in enumerate(rows):
+            data = [
+                row["DrugKey"],
+                row["InsCode"],
+                row["DrugName"],
+                row["MedicineType"],
+                row["Unit"],
+                row["InsPrice"],
+                row["Supplier"],
+                row["ValidDate"],
+            ]
+            database.insert_record("drug", field, data)
             progress_dialog.setValue(row_no)
 
         progress_dialog.setValue(row_count)

@@ -397,6 +397,8 @@
     </property>
     <addaction name="action_update_drug"/>
     <addaction name="action_sync_drug"/>
+    <addaction name="separator"/>
+    <addaction name="action_export_drug_json"/>
    </widget>
    <addaction name="menu"/>
   </widget>
@@ -461,6 +463,18 @@
    </property>
    <property name="toolTip">
     <string>指定藥廠藥品碼</string>
+   </property>
+  </action>
+  <action name="action_export_drug_json">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出健保藥品json檔</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出健保藥品json檔</string>
    </property>
   </action>
  </widget>
