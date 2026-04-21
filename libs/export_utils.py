@@ -1,4 +1,6 @@
 import calendar
+import os
+import platform
 import subprocess
 
 from openpyxl import Workbook
@@ -135,9 +137,19 @@ def export_table_widget_to_excel(
     wb.save(excel_file_name)
 
     try:
-        subprocess.Popen([(excel_file_name)], shell=True)
+        # subprocess.Popen([(excel_file_name)], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
+
+
+def open_file(path):
+    if platform.system() == "Windows":
+        os.startfile(path)
+    elif platform.system() == "Darwin":  # macOS
+        subprocess.Popen(["open", path])
+    else:  # Linux
+        subprocess.Popen(["xdg-open", path])
 
 
 def export_tab_widget_to_excel(
@@ -207,7 +219,8 @@ def export_tab_widget_to_excel(
     wb.save(excel_file_name)
 
     try:
-        subprocess.Popen([(excel_file_name)], shell=True)
+        # subprocess.Popen([(excel_file_name)], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -279,7 +292,8 @@ def export_multiple_table_widgets_to_excel(
     wb.save(excel_file_name)
 
     try:
-        subprocess.Popen([(excel_file_name)], shell=True)
+        # subprocess.Popen([(excel_file_name)], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -711,7 +725,8 @@ def export_daily_medical_records_to_excel(
 
     workbook.save(excel_file_name)
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -750,7 +765,8 @@ def export_nursing_home_list_to_excel(
 
     workbook.save(excel_file_name)
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -1600,7 +1616,8 @@ def export_tour_daily_list_to_excel(
 
     workbook.save(excel_file_name)
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -2059,7 +2076,8 @@ def export_multiple_performance_to_excel(
 
     workbook.save(excel_file_name)
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -2614,7 +2632,8 @@ def export_medical_record_diagnosis_excel(
 
     wb.save(excel_file_name)
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -2782,7 +2801,8 @@ def export_certificate_payment_to_excel(**kwargs):
     workbook.save(excel_file_name)
 
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -2898,7 +2918,8 @@ def export_list_to_excel(
 
     wb.save(excel_file_name)
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -3050,7 +3071,8 @@ def export_infectious_list(system_settings, excel_file_name, tableWidget_infecti
     workbook.save(excel_file_name)
 
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -3186,7 +3208,8 @@ def export_income_list(system_settings, excel_file_name, tableWidget_income, col
     workbook.save(excel_file_name)
 
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 
@@ -3435,7 +3458,8 @@ def export_certificate_diagnosis(
     workbook.save(excel_file_name)
 
     try:
-        subprocess.Popen([excel_file_name], shell=True)
+        # subprocess.Popen([excel_file_name], shell=True)
+        open_file(excel_file_name)
     except Exception:
         pass
 

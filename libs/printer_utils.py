@@ -4720,6 +4720,8 @@ def get_instruction_html2(
         additional_label = f"<b>「{additional}」</b>"
 
     if pres_days > 0 or instruction not in ["", None]:
+        clinic_name = system_settings.field("院所名稱")
+
         _, total_dosage, _, single_day_dosage = case_utils.get_prescript_html_data(
             database, system_settings, case_key, medicine_set
         )
@@ -4738,11 +4740,18 @@ def get_instruction_html2(
 
             html += f"<br>醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}<br>"
         else:
-            html = f"""
-                藥日: {packages}包 * {pres_days}天 共{packages * pres_days}包 {instruction}服用
-                每{package_label}{single_day_dosage:.1f} 總量: {total_dosage:.1f} {additional_label}<br>
-                醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}<br>
-            """
+            if clinic_name in ["鵲杏中醫診所"]:
+                html = f"""
+                    藥日: {packages}包 * {pres_days}天 共{packages * pres_days}包 {instruction}服用
+                    每{package_label}{single_day_dosage:.1f} 總量: {total_dosage:.1f} {additional_label}<br>
+                    醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}<br>
+                """
+            else:
+                html = f"""
+                    藥日: {packages}包 * {pres_days}天 共{packages * pres_days}包 {instruction}服用
+                    總量: {total_dosage:.1f} {additional_label}<br>
+                    醫師: {doctor} 調劑者: {doctor} 調劑日: {case_date}<br>
+                """
     else:
         html = f"""
               主治醫師: {doctor}<br>
