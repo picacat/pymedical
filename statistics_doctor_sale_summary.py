@@ -315,9 +315,12 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
             else:
                 total_amount += subtotal
 
-        repayment_total_amount = self._get_repayment(
-            in_case_date, row["Doctor"], in_medicine_type
-        )
+        if rows:
+            repayment_total_amount = self._get_repayment(
+                in_case_date, row["Doctor"], in_medicine_type
+            )
+        else:
+            repayment_total_amount = 0
 
         return total_amount + repayment_total_amount
 
