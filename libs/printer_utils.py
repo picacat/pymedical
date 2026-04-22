@@ -1973,9 +1973,9 @@ def get_case_html_6(
     if ins_type == "健保":
         html = f"""
             <tr>
-              <td width="33%">姓名:{name}({gender})</td>
-              <td width="33%">生日:{birthday_str}</td>
-              <td width="34%">卡序:{card}({share_type})</td>
+              <td width="30%">姓名:{name}({gender})</td>
+              <td width="30%">生日:{birthday_str}</td>
+              <td width="40%">卡序:{card}({share_type})</td>
             </tr>
         """
     else:
@@ -1986,9 +1986,9 @@ def get_case_html_6(
 
         html = f"""
             <tr>
-              <td width="33%">姓名:{name}({gender})</td>
-              <td width="34%">生日:{birthday_str}</td>
-              <td width="33%">保險:{ins_type} {medicine_set}</td>
+              <td width="30%">姓名:{name}({gender})</td>
+              <td width="30%">生日:{birthday_str}</td>
+              <td width="40%">保險:{ins_type} {medicine_set}</td>
             </tr>
         """
 
