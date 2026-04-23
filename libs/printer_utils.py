@@ -1974,8 +1974,8 @@ def get_case_html_6(
         html = f"""
             <tr>
               <td width="30%">姓名:{name}({gender})</td>
-              <td width="30%">生日:{birthday_str}</td>
-              <td width="40%">卡序:{card}({share_type})</td>
+              <td width="34%">生日:{birthday_str}</td>
+              <td width="36%">卡序:{card}({share_type})</td>
             </tr>
         """
     else:
@@ -1987,16 +1987,16 @@ def get_case_html_6(
         html = f"""
             <tr>
               <td width="30%">姓名:{name}({gender})</td>
-              <td width="30%">生日:{birthday_str}</td>
-              <td width="40%">保險:{ins_type} {medicine_set}</td>
+              <td width="34%">生日:{birthday_str}</td>
+              <td width="36%">保險:{ins_type} {medicine_set}</td>
             </tr>
         """
 
     html += f"""
         <tr>
           <td width="30%">{patient_key_header}:{patient_key}</td>
-          <td width="30%">證號:{patient_id}</td>
-          <td width="40%">診日:{case_date}</td>
+          <td width="34%">證號:{patient_id}</td>
+          <td width="36%">診日:{case_date}</td>
         </tr>
     """
 
