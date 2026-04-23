@@ -30,7 +30,7 @@ class PrintReceiptSelfForm17:
         if sys.platform == "darwin":
             dash_count = 34
         else:
-            dash_count = 42
+            dash_count = 40
 
         self.dash_line = "-" * dash_count
 
