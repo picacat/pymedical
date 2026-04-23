@@ -40,7 +40,7 @@ def set_medicine_in_price(database, medicine_key, unit_quantity, unit_price):
 
 def add_medicine_quantity(database, medicine_key, stock_quantity):
     sql = f"""
-        SELECT Quantity FROM medicine
+        SELECT * FROM medicine
         WHERE
             MedicineKey = {medicine_key}
     """
