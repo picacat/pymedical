@@ -374,13 +374,31 @@ class DictInsDrug(QtWidgets.QMainWindow):
         else:
             medicine_type_condition = f' (MedicineType = "{medicine_type}") AND'
 
+        # 定義廠商排序的權重
+        supplier_order_logic = """
+            CASE 
+                WHEN Supplier LIKE "%科達%" THEN 1
+                WHEN Supplier LIKE "%莊松榮%" THEN 3
+                WHEN Supplier LIKE "%勝昌%" THEN 2
+                WHEN Supplier LIKE "%順天堂%" THEN 4
+                WHEN Supplier LIKE "%港香蘭%" THEN 5
+                WHEN Supplier LIKE "%萬國%" THEN 6
+                WHEN Supplier LIKE "%天明%" THEN 7
+                WHEN Supplier LIKE "%仙豐%" THEN 8
+                ELSE 9
+            END
+        """
         sql = f'''
             SELECT * FROM drug
             WHERE
                 {medicine_type_condition}
                 (DrugName LIKE "%{drug_name}%" OR InsCode = "{drug_name}")
                 {supplier_script}
-            ORDER BY ValidDate DESC, LENGTH(DrugName), CAST(CONVERT(`DrugName` using big5) AS BINARY)
+            ORDER BY
+                ValidDate DESC,
+                LENGTH(DrugName),
+                CAST(CONVERT(`DrugName` using big5) AS BINARY),
+                {supplier_order_logic}
         '''
         self.table_widget_drug.set_db_data(sql, self._set_drug_data)
         self.ui.tableWidget_medicine.setFocus(True)
@@ -503,19 +521,20 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self._read_medicine()
         self._filter_medicine()
 
-    def _update_valid_date(self):
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("更新有效期限")
-        msg_box.setText(
-            "<font size='4' color='blue'><b>確定更新過期藥品的有效期限?</b></font>"
-        )
-        msg_box.setInformativeText("注意！有效期限只會更新健保藥品第一欄的資料!")
-        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
-        msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
-        update_record = msg_box.exec_()
-        if not update_record:
-            return
+    def _update_valid_date(self, prompt: True):
+        if prompt:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle("更新有效期限")
+            msg_box.setText(
+                "<font size='4' color='blue'><b>確定更新過期藥品的有效期限?</b></font>"
+            )
+            msg_box.setInformativeText("注意！有效期限只會更新健保藥品第一欄的資料!")
+            msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+            msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+            update_record = msg_box.exec_()
+            if not update_record:
+                return
 
         record_count = self.ui.tableWidget_medicine.rowCount()
 
@@ -796,6 +815,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self._update_drug_file2()
 
         self._read_medicine()
+        self._auto_correct_errors()
 
         system_utils.show_message_box(
             QMessageBox.Information,
@@ -804,19 +824,44 @@ class DictInsDrug(QtWidgets.QMainWindow):
             "恭喜您! 現在已經是最新的健保藥品",
         )
 
-    def _update_prescript(self):
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("更新病歷處方資料")
-        msg_box.setText(
-            "<font size='4' color='blue'><b>確定更新病歷內的處方健保碼資料?</b></font>"
-        )
-        msg_box.setInformativeText("注意！沒有健保碼的藥品會將病歷處方的藥品碼請除!")
-        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
-        msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
-        update_record = msg_box.exec_()
-        if not update_record:
-            return
+    def _auto_correct_errors(self):
+        for row_no in range(self.ui.tableWidget_medicine.rowCount()):
+            item = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["error_message"]
+            )
+            if item is not None:
+                self.ui.radioButton_errors.click()
+                self._update_valid_date(prompt=False)
+                self._update_prescript(prompt=False)
+                break
+
+        error_count = 0
+        for row_no in range(self.ui.tableWidget_medicine.rowCount()):
+            item = self.ui.tableWidget_medicine.item(
+                row_no, self.col_no["error_message"]
+            )
+            if item is not None:
+                error_count += 1
+
+        if error_count == 0:
+            self.ui.radioButton_all.click()
+
+    def _update_prescript(self, prompt=True):
+        if prompt:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle("更新病歷處方資料")
+            msg_box.setText(
+                "<font size='4' color='blue'><b>確定更新病歷內的處方健保碼資料?</b></font>"
+            )
+            msg_box.setInformativeText(
+                "注意！沒有健保碼的藥品會將病歷處方的藥品碼請除!"
+            )
+            msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+            msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+            update_record = msg_box.exec_()
+            if not update_record:
+                return
 
         record_count = self.ui.tableWidget_medicine.rowCount()
 
@@ -891,13 +936,14 @@ class DictInsDrug(QtWidgets.QMainWindow):
         progress_dialog.setValue(record_count)
         progress_dialog.deleteLater()
 
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Information)
-        msg_box.setWindowTitle("病歷處方健保碼更新完成")
-        msg_box.setText("<font size='4'><b>所有的病歷處方均已完成更新.</b></font>")
-        msg_box.setInformativeText("請按確定鍵結束.")
-        msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
-        msg_box.exec_()
+        if prompt:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Information)
+            msg_box.setWindowTitle("病歷處方健保碼更新完成")
+            msg_box.setText("<font size='4'><b>所有的病歷處方均已完成更新.</b></font>")
+            msg_box.setInformativeText("請按確定鍵結束.")
+            msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+            msg_box.exec_()
 
     # 選擇藥廠名稱
     def _get_factory(self):
