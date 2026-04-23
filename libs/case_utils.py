@@ -699,13 +699,17 @@ def get_prescript_html_data(
         packages = 1
 
     for row in rows:
-        if string_utils.xstr(row["MedicineName"]) in [
+        medicine_name = string_utils.xstr(row["MedicineName"])
+        if medicine_name in [
             "",
             "優待",
             "自費藥費",
             "自費粉藥",
             "自費水藥",
         ]:
+            continue
+
+        if "代煎" in medicine_name:
             continue
 
         sequence += 1
