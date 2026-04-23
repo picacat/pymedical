@@ -1467,7 +1467,7 @@ def get_case_html_2_1(
     birthday_str = string_utils.xstr(birthday)
     html = f"""
         <tr>
-          <td{color} width="50%">就診日:{case_date}</td>
+          <td{color} width="55%">就診日:{case_date}</td>
           <td width="40%">{patient_key_header}:{patient_key}</td>
         </tr>
         <tr>
