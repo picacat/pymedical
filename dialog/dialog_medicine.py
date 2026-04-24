@@ -217,8 +217,8 @@ class DialogMedicine(QtWidgets.QDialog):
 
     def _set_dict_groups_data(self, rec_no, rec):
         dict_groups_rec = [
-            string_utils.xstr(rec["DictGroupsKey"]),
-            string_utils.xstr(rec["DictGroupsName"]).strip(),
+            string_utils.xstr(rec["DictGroupsKey"]).strip(),
+            string_utils.xstr(rec["DictGroupsName"]),
         ]
 
         for column in range(len(dict_groups_rec)):
@@ -284,7 +284,13 @@ class DialogMedicine(QtWidgets.QDialog):
         """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
-            self.ui.tableWidget_medicine.setRowCount(0)
+            if input_code is None:
+                self.lineEdit_input_code.setText(None)
+                self.ui.tableWidget_medicine.setRowCount(0)
+            else:
+                input_code = string_utils.str_to_phonetic(input_code[:-1])
+                self.lineEdit_input_code.setText(input_code)
+                self.lineEdit_input_code.setFocus()
 
             return
 
@@ -542,8 +548,9 @@ class DialogMedicine(QtWidgets.QDialog):
 
     def _input_code_backspace(self):
         input_code = self.ui.lineEdit_input_code.text().strip()
-        if input_code == "":
-            return
-
         input_code = input_code[: len(input_code) - 1]
         self.ui.lineEdit_input_code.setText(input_code)
+
+        if input_code == "":
+            dict_groups_type = self.table_widget_dict_groups.field_value(1)
+            self._read_medicine(dict_groups_type)
