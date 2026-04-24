@@ -1,14 +1,9 @@
-
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtCore, QtWidgets
 
-from libs import class_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import string_utils
-from libs import nhi_utils
+from libs import class_utils, nhi_utils, string_utils, system_utils, ui_utils
 
 
 # 主視窗
@@ -41,11 +36,12 @@ class DialogInsCare(QtWidgets.QDialog):
         self.setFixedSize(self.size())  # non resizable dialog
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('存檔')
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText('取消')
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("存檔")
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText("取消")
         self.ui.tableWidget_ins_care.setFocus()
         self.table_widget_ins_care = class_utils.get_table_widget(
-            self.ui.tableWidget_ins_care, self.database)
+            self.ui.tableWidget_ins_care, self.database
+        )
         self._set_table_width()
 
     def _set_table_width(self):
@@ -66,46 +62,67 @@ class DialogInsCare(QtWidgets.QDialog):
 
     def _read_data(self):
         if self.treat_type in nhi_utils.CANCER_CARE_TREAT:
-            sql = '''
+            sql = """
                 SELECT * FROM charge_settings
                 WHERE
                     InsCode IN ('P56006', 'P56007')
                 ORDER BY InsCode
-            '''
-        elif self.treat_type in ['小兒氣喘']:
-            sql = '''
+            """
+        elif self.treat_type in ["小兒氣喘"]:
+            sql = """
                 SELECT * FROM charge_settings
                 WHERE
                     InsCode IN ('C01', 'C02')
                 ORDER BY InsCode
-            '''
-        elif self.treat_type in ['小兒腦性麻痺']:
-            sql = '''
+            """
+        elif self.treat_type in ["小兒腦性麻痺"]:
+            sql = """
                 SELECT * FROM charge_settings
                 WHERE
                     InsCode IN ('C03', 'C04')
                 ORDER BY InsCode
-            '''
-        elif self.treat_type in ['慢性腎病照護']:
+            """
+        elif self.treat_type in ["慢性腎病照護"]:
             ins_code = [
-                'P64011', 'P64012', 'P64013', 'P64014', '09006C', '09015C', '09044C',
+                "P64001",
+                "P64002",
+                "P64003",
+                "P64004",
+                "P64005",
+                "P64006",
+                "P64007",
+                "P64008",
+                "P64009",
+                "P640010",
+                "P64011",
+                "P64012",
+                "P64013",
+                "P64014",
+                "09006C",
+                "09015C",
+                "09044C",
             ]
-            sql = f'''
+            sql = f"""
                 SELECT * FROM charge_settings
                 WHERE
                     InsCode IN {tuple(ins_code)}
                 ORDER BY InsCode
-            '''
-        elif self.treat_type in ['癌症中醫門診延長照護']:
+            """
+        elif self.treat_type in ["癌症中醫門診延長照護"]:
             ins_code = [
-                'P59011', 'P59051', 'P59052', 'P59061', 'P59062', 'P59063',
+                "P59011",
+                "P59051",
+                "P59052",
+                "P59061",
+                "P59062",
+                "P59063",
             ]
-            sql = f'''
+            sql = f"""
                 SELECT * FROM charge_settings
                 WHERE
                     InsCode IN {tuple(ins_code)}
                 ORDER BY InsCode
-            '''
+            """
         else:
             return
 
@@ -113,19 +130,17 @@ class DialogInsCare(QtWidgets.QDialog):
 
     def _set_table_data(self, row_no, row):
         ins_care_row = [
-            string_utils.xstr(row['InsCode']),
-            string_utils.xstr(row['ItemName']),
-            string_utils.xstr(row['Amount']),
+            string_utils.xstr(row["InsCode"]),
+            string_utils.xstr(row["ItemName"]),
+            string_utils.xstr(row["Amount"]),
         ]
 
         for column in range(len(ins_care_row)):
             self.ui.tableWidget_ins_care.setItem(
-                row_no, column,
-                QtWidgets.QTableWidgetItem(ins_care_row[column])
+                row_no, column, QtWidgets.QTableWidgetItem(ins_care_row[column])
             )
 
             if column in [2]:
-                self.ui.tableWidget_ins_care.item(
-                    row_no, column).setTextAlignment(
+                self.ui.tableWidget_ins_care.item(row_no, column).setTextAlignment(
                     QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
                 )
