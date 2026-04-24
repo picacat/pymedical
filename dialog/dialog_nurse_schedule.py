@@ -1,9 +1,8 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-from libs import system_utils
-from libs import ui_utils
+from libs import string_utils, system_utils, ui_utils
 
 
 # 輸入護理師跟診表
@@ -38,21 +37,21 @@ class DialogNurseSchedule(QtWidgets.QDialog):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_DIALOG_NURSE_SCHEDULE, self)
         system_utils.set_css(self, self.system_settings)
         self.setFixedSize(self.size())  # non resizable dialog
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('確定')
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText('取消')
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("確定")
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText("取消")
         self.ui.lineEdit_schedule_date.setText(self.schedule_date)
         self.ui.lineEdit_person.setText(self.person)
-        if self.schedule_type == '醫師':
-            self.ui.label_person.setText('主治醫師')
-            self.ui.label_person1.setText('早班護理師')
-            self.ui.label_person2.setText('午班護理師')
-            self.ui.label_person3.setText('晚班護理師')
+        if self.schedule_type == "醫師":
+            self.ui.label_person.setText("主治醫師")
+            self.ui.label_person1.setText("早班護理師")
+            self.ui.label_person2.setText("午班護理師")
+            self.ui.label_person3.setText("晚班護理師")
             self._set_combo_box_nurse()
         else:
-            self.ui.label_person.setText('值班護理師')
-            self.ui.label_person1.setText('早班醫師')
-            self.ui.label_person2.setText('午班醫師')
-            self.ui.label_person3.setText('晚班醫師')
+            self.ui.label_person.setText("值班護理師")
+            self.ui.label_person1.setText("早班醫師")
+            self.ui.label_person2.setText("午班醫師")
+            self.ui.label_person3.setText("晚班醫師")
             self._set_combo_box_doctor()
 
         self._set_combo_box()
@@ -66,13 +65,17 @@ class DialogNurseSchedule(QtWidgets.QDialog):
         self.ui.comboBox_person2.setCurrentText(self.person2)
         self.ui.comboBox_person3.setCurrentText(self.person3)
 
-        if self.schedule_type == '醫師':
+        if self.schedule_type == "醫師":
             pass
             # self._set_combo_box_person_enabled()
 
     def _set_combo_box_person_enabled(self):
-        nurse_fields = ['Nurse1', 'Nurse2', 'Nurse3']
-        person_lables = [self.ui.label_person1, self.ui.label_person2, self.ui.label_person3]
+        nurse_fields = ["Nurse1", "Nurse2", "Nurse3"]
+        person_lables = [
+            self.ui.label_person1,
+            self.ui.label_person2,
+            self.ui.label_person3,
+        ]
         combo_box_person_list = [
             self.ui.comboBox_person1,
             self.ui.comboBox_person2,
@@ -98,35 +101,62 @@ class DialogNurseSchedule(QtWidgets.QDialog):
             person_lables[i].setEnabled(enabled)
 
     def _set_combo_box_nurse(self):
-        script = '''
+        script = """
             SELECT * FROM person
             WHERE
                 Position IN ("護士", "護理師")
-        '''
+        """
         rows = self.database.select_record(script)
         nurse_list = []
         for row in rows:
-            nurse_list.append(row['Name'])
+            nurse_list.append(row["Name"])
 
         ui_utils.set_combo_box(self.ui.comboBox_person1, nurse_list, None)
         ui_utils.set_combo_box(self.ui.comboBox_person2, nurse_list, None)
         ui_utils.set_combo_box(self.ui.comboBox_person3, nurse_list, None)
 
     def _set_combo_box_doctor(self):
-        script = '''
+        # script = """
+        #     SELECT * FROM person
+        #     WHERE
+        #         Position IN ("醫師") AND
+        #         (ID IS NOT NULL AND LENGTH(ID) > 0)
+        # """
+        doctor_order_logic = """
+            CASE
+                WHEN Position = "醫師" THEN 1
+                WHEN Position = "支援醫師" THEN 2
+                ELSE 3
+            END
+        """
+        script = f"""
             SELECT * FROM person
             WHERE
-                Position = "醫師" AND
+                Position IN ("醫師", "支援醫師") AND
                 (ID IS NOT NULL AND LENGTH(ID) > 0)
-        '''
+            ORDER BY
+                {doctor_order_logic}
+        """
         rows = self.database.select_record(script)
         doctor_list = []
+        color_list = [None]
         for row in rows:
-            doctor_list.append(row['Name'])
+            name = string_utils.xstr(row["Name"])
+            position = string_utils.xstr(row["Position"])
+            doctor_list.append(name)
+
+            if position == "醫師":
+                color_list.append(QtGui.QBrush(QtCore.Qt.darkMagenta))
+            else:
+                color_list.append(QtGui.QBrush(QtCore.Qt.darkGreen))
 
         ui_utils.set_combo_box(self.ui.comboBox_person1, doctor_list, None)
         ui_utils.set_combo_box(self.ui.comboBox_person2, doctor_list, None)
         ui_utils.set_combo_box(self.ui.comboBox_person3, doctor_list, None)
+
+        ui_utils.set_combo_box_item_color(self.ui.comboBox_person1, color_list)
+        ui_utils.set_combo_box_item_color(self.ui.comboBox_person2, color_list)
+        ui_utils.set_combo_box_item_color(self.ui.comboBox_person3, color_list)
 
     def accepted_button_clicked(self):
         pass

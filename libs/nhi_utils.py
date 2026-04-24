@@ -2897,9 +2897,10 @@ def get_diag_code(
         else:
             diag_code = "A02"  # 診察費第一段無護理師
 
-    position = personnel_utils.get_person_field_value(database, doctor_name, "Position")
-    if position == "支援醫師":
-        diag_code = "A02"
+    # 2026-04-24 修改: 2026-04-01起，支援醫師可以申報A01
+    # position = personnel_utils.get_person_field_value(database, doctor_name, "Position")
+    # if position == "支援醫師":
+    #     diag_code = "A02"
 
     return diag_code
 
