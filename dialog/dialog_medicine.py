@@ -1,6 +1,7 @@
 # 處方詞庫-滑鼠輸入 2014.09.22
 # -*- coding: UTF-8 -*-
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QPoint, QSettings, QSize, Qt, QTimer
 from PyQt5.QtWidgets import QMessageBox
@@ -99,7 +100,7 @@ class DialogMedicine(QtWidgets.QDialog):
         else:
             self.ui.tableWidget_dict_groups.setCurrentCell(0, 1)
 
-        self.lineEdit_input_code.setFocus(True)
+        self.lineEdit_input_code.setFocus()
 
     def _set_medicine_groups(self):
         sql = """
@@ -217,7 +218,7 @@ class DialogMedicine(QtWidgets.QDialog):
     def _set_dict_groups_data(self, rec_no, rec):
         dict_groups_rec = [
             string_utils.xstr(rec["DictGroupsKey"]),
-            string_utils.xstr(rec["DictGroupsName"]),
+            string_utils.xstr(rec["DictGroupsName"]).strip(),
         ]
 
         for column in range(len(dict_groups_rec)):
@@ -229,8 +230,8 @@ class DialogMedicine(QtWidgets.QDialog):
         dict_groups_type = self.table_widget_dict_groups.field_value(1)
         self._read_medicine(dict_groups_type)
         # self.ui.tableWidget_dict_groups.setFocus(True)
-        self.lineEdit_input_code.setText("")
-        self.lineEdit_input_code.setFocus(True)
+        self.lineEdit_input_code.setText(None)
+        self.lineEdit_input_code.setFocus()
 
     def _read_medicine(self, dict_groups_type, input_code=None, is_phonetic=False):
         input_code_str = ""
@@ -264,7 +265,7 @@ class DialogMedicine(QtWidgets.QDialog):
         if self.dict_type == "健保藥品":
             unit_condition = ' AND (Unit != "錢")'
 
-        medicine_type_condition = f'(MedicineType = "{dict_groups_type}")'
+        medicine_type_condition = f'(MedicineType = "{dict_groups_type.strip()}")'
         # medicine_type_condition = '(MedicineType IN ("單方", "複方", "成方"))'
 
         if self.no_deactivate_medicine == "Y":
@@ -283,12 +284,7 @@ class DialogMedicine(QtWidgets.QDialog):
         """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
-            if input_code is None:
-                self.lineEdit_input_code.setText("")
-                self.ui.tableWidget_medicine.setRowCount(0)
-            else:
-                self.lineEdit_input_code.setText(input_code[:-1])
-                self.lineEdit_input_code.setFocus(True)
+            self.ui.tableWidget_medicine.setRowCount(0)
 
             return
 
@@ -367,23 +363,30 @@ class DialogMedicine(QtWidgets.QDialog):
                 )
 
     def phonetic_button_clicked(self):
-        input_code = str(self.ui.lineEdit_input_code.text()).strip()
-        input_code += self.sender().text()
+        input_code = string_utils.xstr(self.ui.lineEdit_input_code.text()).strip()
+        press_key = string_utils.xstr(self.sender().text()).strip()
+        input_code += press_key
+
+        # 暫時阻斷訊號，避免重複觸發 input_code_changed 造成邏輯混亂
+        self.ui.lineEdit_input_code.blockSignals(True)
         self.ui.lineEdit_input_code.setText(input_code)
+        self.ui.lineEdit_input_code.blockSignals(False)
+        # 手動觸發一次查詢
+        self.input_code_changed()
 
     def _show_all(self):
         dict_groups_type = self.table_widget_dict_groups.field_value(1)
         self._read_medicine(dict_groups_type)
 
         self.ui.lineEdit_input_code.setText(None)
-        self.ui.lineEdit_input_code.setFocus(True)
+        self.ui.lineEdit_input_code.setFocus()
 
     def input_code_changed(self):
         dict_groups_type = self.table_widget_dict_groups.field_value(1)
-        input_code = str(self.ui.lineEdit_input_code.text()).strip()
+        input_code = string_utils.xstr(self.ui.lineEdit_input_code.text()).strip()
         if input_code == "":
             # self._read_medicine(dict_groups_type)
-            self.ui.lineEdit_input_code.setFocus(True)
+            self.ui.lineEdit_input_code.setFocus()
             return
 
         if input_code[0] in string_utils.phonetic_list:
@@ -392,7 +395,7 @@ class DialogMedicine(QtWidgets.QDialog):
         else:
             self._read_medicine(dict_groups_type, input_code)
 
-        self.ui.lineEdit_input_code.setFocus(True)
+        self.ui.lineEdit_input_code.setFocus()
         self.ui.lineEdit_input_code.setCursorPosition(len(input_code))
 
     def _add_prescript(self):
