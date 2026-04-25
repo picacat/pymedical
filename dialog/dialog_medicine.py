@@ -16,7 +16,7 @@ from libs import (
 )
 
 
-# 處方詞庫-滑鼠輸入
+# 處方詞庫-滑鼠輸入 2026-04-25 更新
 class DialogMedicine(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
