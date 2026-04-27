@@ -921,7 +921,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 check_condition = "InsCode IS NOT NULL"
             else:
                 update_condition = f'InsCode = "{ins_code}"'
-                check_condition = f'InsCode != "{ins_code}"'
+                check_condition = f'(InsCode != "{ins_code}" OR InsCode IS NULL)'
 
             sql = f'''
                 UPDATE prescript
