@@ -3684,14 +3684,15 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         medicine_set = 11
         ins_care = self.parent.tab_list[medicine_set - 1]
         if ins_care is not None:
-            if treat_type == "助孕照護":
-                ins_care.set_aid_pregnant_treat(treatment, pres_days, course)
-            elif treat_type == "保胎照護":
-                ins_care.set_keep_baby_treat(treatment, pres_days, course)
-            elif treat_type in nhi_utils.CANCER_CARE_TREAT:
-                ins_care.set_cancer_treat(treatment)
-            elif treat_type == "慢性腎病照護":
-                ins_care.set_kidney_prescript(pres_days, treatment, self.course)
+            ins_care.refresh_prescript()
+            # if treat_type == "助孕照護":
+            #     ins_care.set_aid_pregnant_treat(treatment, pres_days, course)
+            # elif treat_type == "保胎照護":
+            #     ins_care.set_keep_baby_treat(treatment, pres_days, course)
+            # elif treat_type in nhi_utils.CANCER_CARE_TREAT:
+            #     ins_care.set_cancer_treat(treatment)
+            # elif treat_type == "慢性腎病照護":
+            #     ins_care.set_kidney_prescript(pres_days, treatment, self.course)
 
     def _check_vegetarian(self):
         if self.call_from in ["參考病歷"]:

@@ -1985,6 +1985,23 @@ class Registration(QtWidgets.QMainWindow):
             self.ui.comboBox_card.setCurrentText(card)
             self.ui.comboBox_course.setCurrentText(course)
 
+            if self.ui.comboBox_treat_type.currentText() == "慢性腎病照護":
+                if course is not None and number_utils.get_integer(course) >= 2:
+                    message = registration_utils.check_ckd_week(
+                        self.database,
+                        patient_key,
+                        card,
+                    )
+
+                if message is not None:
+                    system_utils.show_message_box(
+                        QMessageBox.Warning,
+                        "慢性腎病CKD警告",
+                        f'<font size="5" color="red"><b>{message}</b></font>',
+                        "將改為一般門診.",
+                    )
+                    self.ui.comboBox_treat_type.setCurrentText("內科")
+
             message = registration_utils.check_course_complete_in_days(
                 self.database, patient_key, card, course, 30
             )
@@ -2316,11 +2333,35 @@ class Registration(QtWidgets.QMainWindow):
         if message is not None:
             warning_message.append(message)
 
-        message = registration_utils.check_prescription_finished(  # 檢查上次健保給藥是否服藥完畢
-            self.database, self.system_settings, None, patient_key
-        )
-        if message is not None:
-            warning_message.append(message)
+        if self.ui.comboBox_treat_type.currentText() == "慢性腎病照護":
+            last_case_date, _, pres_days, remain = (
+                registration_utils.check_prescription_finished(  # 檢查上次健保給藥是否服藥完畢
+                    self.database,
+                    self.system_settings,
+                    None,
+                    patient_key,
+                    manual_message=True,
+                )
+            )
+            if last_case_date is not None:
+                system_utils.show_message_box(
+                    QMessageBox.Warning,
+                    "慢性腎病照護警告",
+                    f"""<b><font size="5" color="red">
+                        慢性腎病照護於{last_case_date}開立{pres_days}日藥，
+                        尚有{remain}日藥未結束，不可另開CKD門診
+                        </font></b>
+                    """,
+                    "即將改為一般門診",
+                )
+                self.ui.comboBox_treat_type.setCurrentText("內科")
+                return
+        else:
+            message = registration_utils.check_prescription_finished(  # 檢查上次健保給藥是否服藥完畢
+                self.database, self.system_settings, None, patient_key
+            )
+            if message is not None:
+                warning_message.append(message)
 
         warning_message = "<br>".join(warning_message)
 

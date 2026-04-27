@@ -1582,3 +1582,48 @@ def get_cancer_acupuncture_times(database, patient_key):
     rows = database.select_record(sql)
 
     return len(rows)
+
+
+# 慢性腎病P64010 一週最多只能看三次
+def check_ckd_week(database, patient_key, card):
+    MAX_CKD_WEEK = 3
+
+    now = datetime.datetime.now()
+
+    # weekday() 回傳 0(一) 到 6(日)
+    # 減去目前的 weekday 就可以回到本週一
+    monday = now - datetime.timedelta(days=now.weekday())
+
+    # 1. 取得本週一 00:00:00
+    monday = now - datetime.timedelta(days=now.weekday())
+    start_date = monday.strftime("%Y-%m-%d 00:00:00")
+
+    # 2. 結束時間直接設為今天的最後一秒，確保包含今天的紀錄
+    end_date = now.strftime("%Y-%m-%d 23:59:59")
+
+    sql = f'''
+        SELECT DATE(CaseDate) AS CaseDate, Card, Continuance FROM cases
+        WHERE
+            (PatientKey = {patient_key}) AND
+            (CaseDate BETWEEN "{start_date}" AND "{end_date}") AND
+            (InsType = "健保") AND
+            (TreatType = "慢性腎病照護") AND
+            (Continuance >= 1)
+    '''
+    rows = database.select_record(sql)
+    if len(rows) >= MAX_CKD_WEEK:
+        message_list = []
+        message_list = [
+            "⚠️ 慢性腎臟病照護針灸療程每週限申報 3 次，本週次數已達上限！",
+            "本週已看診日期如下：",
+        ]
+        for row in rows:
+            message_list.append(
+                f"{row['CaseDate']}---->{row['Card']}-{row['Continuance']}"
+            )
+
+        message_list.append("本件將改為一般門診處理。")
+
+        return "<br>".join(message_list)
+
+    return None

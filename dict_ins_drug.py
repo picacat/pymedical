@@ -117,7 +117,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self.ui.action_update_drug.triggered.connect(self._update_ins_drug)
         self.ui.action_close.triggered.connect(self._close_ins_drug)
         self.ui.action_update_valid_date.triggered.connect(self._update_valid_date)
-        self.ui.action_update_prescript.triggered.connect(self._update_prescript)
+        self.ui.action_update_prescript.triggered.connect(
+            lambda: self._update_prescript(prompt=True)
+        )
         self.ui.action_assign_ins_code.triggered.connect(self._assign_ins_code)
         self.ui.tableWidget_medicine.itemSelectionChanged.connect(
             self._medicine_item_selection_changed

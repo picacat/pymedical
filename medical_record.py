@@ -2721,7 +2721,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self.tab_list[10] = module_utils.get_ins_care_record(
             self, self.database, self.system_settings, self.case_key, medicine_set
         )
-        self.tab_list[10].refresh_prescript()
+        # self.tab_list[10].refresh_prescript()
         self.ui.tabWidget_prescript.addTab(self.tab_list[10], "加強照護")
         self.ui.tabWidget_prescript.tabBar().setTabButton(
             self.ui.tabWidget_prescript.indexOf(self.tab_list[10]),
