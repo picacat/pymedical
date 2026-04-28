@@ -130,14 +130,48 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
         rows = self._get_case_rows()
         for row in rows:
             case_key = row["CaseKey"]
-            total_fee = number_utils.get_integer(row["TotalFee"])
-            item_type = self._get_item_type(case_key)
-            row_no = self._get_row_no(item_type)
-            if row_no is None:
-                print(item_type)
-                continue
+            mdicine_sets = self._get_medicine_sets(case_key)
+            for medicine_set in mdicine_sets:
+                medicine_set = number_utils.get_integer(medicine_set["MedicineSet"])
+                amount = self._get_dosage_total_fee(case_key, medicine_set)
+                item_type = self._get_item_type(case_key, medicine_set)
+                row_no = self._get_row_no(item_type)
+                if row_no is None:
+                    print(item_type)
+                    continue
 
-            self._set_data(row_no, total_fee)
+                self._set_data(row_no, amount)
+
+    def _get_medicine_sets(self, case_key):
+        sql = f'''
+            SELECT
+                MedicineSet
+            FROM
+                prescript
+            WHERE
+                CaseKey = "{case_key}" AND
+                MedicineSet >= 2
+            GROUP BY MedicineSet
+        '''
+        rows = self.database.select_record(sql)
+
+        return rows
+
+    def _get_dosage_total_fee(self, case_key, medicine_set):
+        sql = f'''
+            SELECT
+                TotalFee
+            FROM
+                dosage
+            WHERE
+                CaseKey = "{case_key}" AND
+                MedicineSet = {medicine_set}
+        '''
+        rows = self.database.select_record(sql)
+        if rows:
+            return number_utils.get_integer(rows[0]["TotalFee"])
+
+        return 0
 
     def _set_data(self, row_no, total_fee):
         person_item = self.ui.tableWidget_case_amount.item(row_no, 1)
@@ -196,15 +230,15 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
 
         return rows
 
-    def _get_item_type(self, case_key):
+    def _get_item_type(self, case_key, medicine_set):
         sql = f'''
             SELECT
                 MedicineName, MedicineType
-            FROM 
+            FROM
                 prescript
             WHERE
                 CaseKey = "{case_key}" AND
-                MedicineSet >= 2
+                MedicineSet = {medicine_set}
         '''
         rows = self.database.select_record(sql)
 
@@ -218,8 +252,11 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
 
         if item_type is None:
             for row in rows:
-                if medicine_type in ["單方", "複方"]:
-                    item_type = "科中藥品"
+                if medicine_type in ["穴道"] or "針灸" in medicine_name:
+                    item_type = "針灸"
+                    break
+                elif "埋線" in medicine_type or "埋線" in medicine_name:
+                    item_type = "埋線減肥"
                     break
                 elif "丸" in medicine_type and "丸" in medicine_name:
                     item_type = "丸散"
@@ -230,21 +267,17 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
                 elif "OTC" in medicine_type:
                     item_type = "保健食品"
                     break
-                elif "埋線" in medicine_type or "埋線" in medicine_name:
-                    item_type = "埋線減肥"
-                    break
                 elif medicine_type in ["器材"]:
                     item_type = "護具"
                     break
                 elif medicine_type in ["外用"]:
                     item_type = "膏藥"
                     break
-                # elif medicine_type in ['穴道']:
-                elif "針灸" in medicine_name:
-                    item_type = "針灸"
-                    break
                 elif medicine_type in ["處置"]:
                     item_type = "推拿"
+                    break
+                elif medicine_type in ["單方", "複方"]:
+                    item_type = "科中藥品"
                     break
                 else:
                     item_type = "保健食品"
