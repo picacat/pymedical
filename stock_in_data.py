@@ -214,10 +214,12 @@ class StockInData(QtWidgets.QMainWindow):
 
         if medicine_type == "單方":
             unit_quantity = 100
+            unit_price = number_utils.get_float(unit_price) * unit_quantity
             product_unit = "罐"
         elif medicine_type == "複方":
             unit_quantity = 200
             product_unit = "罐"
+            unit_price = number_utils.get_float(unit_price) * unit_quantity
         else:
             unit_quantity = 1
             product_unit = row["Unit"]
@@ -507,16 +509,29 @@ class StockInData(QtWidgets.QMainWindow):
         return rows[0]
 
     def _save_stock_in_data(self):
-        if self.stock_in_key is not None:
-            stock_in_key = self.stock_in_key
-            self._update_record()
-        else:
-            stock_in_key = self._insert_record()
+        """
+        如果修改進貨單，會先扣掉原先的進貨量，再新增新的進貨量
+        """
+        # 1. 防止重複點擊
+        self.ui.pushButton_save.setEnabled(False)
 
-        if self.system_settings.field("調整庫存量") == "即時調整":
-            stock_utils.adjust_stock_quantity(
-                self.database, self.system_settings, stock_in_key
-            )
+        try:
+            if self.stock_in_key is not None:
+                stock_in_key = self.stock_in_key
+                self._update_record()  # 先扣掉原先的進貨量
+            else:
+                stock_in_key = self._insert_record()
+
+            if (
+                self.system_settings.field("調整庫存量") == "即時調整"
+            ):  # 新增資料會加入庫存，修改資料之前已經扣掉了，再加入也不會增加
+                stock_utils.adjust_stock_quantity(
+                    self.database, self.system_settings, stock_in_key
+                )
+        except Exception:
+            self.ui.pushButton_save.setEnabled(True)
+
+        self.ui.pushButton_save.setEnabled(True)
 
         self.parent.tab_stock_in_list.read_stock_in()
         self.close_tab()

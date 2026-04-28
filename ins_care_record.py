@@ -497,7 +497,6 @@ class InsCareRecord(QtWidgets.QMainWindow):
             "P64009",
             "P64010",
         ]
-        print(course, treat_code)
         self._remove_specific_treat_code(clear_ins_code)  # 歸零
         self._add_care_row(treat_code, self.ui.tableWidget_prescript.rowCount())
 
