@@ -1878,6 +1878,7 @@ class MedicalRecordList(QtWidgets.QMainWindow):
 
     # 匯出病歷資料 2019.10.14
     def _export_medical_record_to_excel(self):
+        print("xxx")
         options = QFileDialog.Options()
         start_date = self.dialog_setting["start_date"].toString("yyyy-MM-dd")
         end_date = self.dialog_setting["end_date"].toString("yyyy-MM-dd")
