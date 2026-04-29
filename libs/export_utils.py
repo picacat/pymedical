@@ -57,6 +57,7 @@ def export_table_widget_to_excel(
     column_width=None,
     calc_total=False,
     mark_col_no=None,
+    variant_col=None,
 ):
     if numeric_cell is None:
         numeric_cell = []
@@ -115,6 +116,16 @@ def export_table_widget_to_excel(
                 item_text = item_text.replace(",", "")
                 item_text = number_utils.get_float(item_text)
 
+            if (
+                variant_col is not None
+                and col_no == variant_col
+                and item_text in ["", None]
+            ):
+                item = in_table_widget.cellWidget(row_no, col_no)
+                item_text = item.text()
+                item_text = item_text.replace('<br><font size="2" color="red">', "")
+                item_text = item_text.replace("</font>", "")
+
             row.append(item_text)
 
         ws.append(row)
@@ -149,7 +160,8 @@ def open_file(path):
     elif platform.system() == "Darwin":  # macOS
         subprocess.Popen(["open", path])
     else:  # Linux
-        subprocess.Popen(["xdg-open", path])
+        pass
+        # subprocess.Popen(["xdg-open", path])
 
 
 def export_tab_widget_to_excel(
