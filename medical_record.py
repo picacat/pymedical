@@ -228,6 +228,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
     def _prompt_hint(self):
         self._prompt_injury()
         self._prompt_allergy()
+        self._prompt_ckd()
 
         try:
             self._prompt_birth_date()
@@ -289,6 +290,63 @@ class MedicalRecord(QtWidgets.QMainWindow):
                 </b></font>
             """,
             "請注意病患過敏的用藥",
+        )
+
+    def _prompt_ckd(self):
+        treat_type = self.tab_registration.ui.comboBox_treat_type.currentText()
+        if treat_type not in ["慢性腎病照護"]:
+            return
+
+        sql = f"""
+            SELECT PrescriptKey FROM prescript
+                LEFT JOIN cases ON cases.CaseKey = prescript.CaseKey
+            WHERE
+                InsCode BETWEEN "P64001" AND "P64010" AND
+                cases.PatientKey = {self.patient_key}
+        """
+        rows = self.database.select_record(sql)
+        if len(rows) < 2:  # 至少看過兩次ckd照護
+            return
+
+        sql = f"""
+            SELECT PrescriptKey FROM prescript
+                LEFT JOIN cases ON cases.CaseKey = prescript.CaseKey
+            WHERE
+                InsCode = "P64011" AND
+                cases.PatientKey = {self.patient_key}
+        """
+        rows = self.database.select_record(sql)
+        if len(rows) <= 0:  # 沒做過P64011
+            return
+
+        case_date = self.medical_record["CaseDate"].date()
+        sql = f"""
+            SELECT cases.CaseDate FROM prescript
+                LEFT JOIN cases on cases.CaseKey = prescript.CaseKey
+            WHERE
+                prescript.CaseKey != {self.case_key} AND
+                DATE(prescript.CaseDate) <= "{case_date.strftime("%Y-%m-%d")}" AND
+                cases.PatientKey = {self.patient_key} AND
+                InsCode = "P64012"
+            ORDER BY cases.CaseDate DESC LIMIT 1
+        """
+        rows = self.database.select_record(sql)
+        if len(rows) > 0:
+            last_case_date = rows[0]["CaseDate"].date()
+            delta = case_date - last_case_date
+            print(last_case_date.strftime("%Y-%m-%d"), delta.days)
+            if delta.days <= 180:  # 六個月內有申報過，本次不能申報
+                return
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "慢性腎病照護提醒",
+            """
+                <font size="5" color="blue"><b>
+                    注意! 此病人符合申報CKD治療功能性評估(P64012)資格<br>
+                </b></font>
+            """,
+            "僅提醒符合資格，是否申報請依當時情況評估",
         )
 
     def _set_symptom_large_font(self):

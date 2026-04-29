@@ -592,6 +592,12 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         if not self._check_ckd_duration():
             return False
 
+        if not self._check_ckd_days("P64011", 56):
+            return False
+
+        if not self._check_ckd_days("P64012", 180):
+            return False
+
         return True
 
     def _check_ckd_disease(self):
@@ -742,6 +748,58 @@ class MedicalRecordCheck(QtWidgets.QDialog):
                 break
 
         return current_ins_code
+
+    def _check_ckd_days(self, ins_code, max_days):
+        current_ckd_code = self._get_current_ckd_code()
+        if current_ckd_code is None or current_ckd_code not in [ins_code]:
+            return True
+
+        check_ok = True
+        case_key = self.medical_record["CaseKey"]
+        case_date = self.medical_record["CaseDate"].date()
+        patient_key = self.medical_record["PatientKey"]
+        error_message = None
+
+        sql = f"""
+            SELECT cases.CaseDate FROM prescript
+                LEFT JOIN cases on cases.CaseKey = prescript.CaseKey
+            WHERE
+                prescript.CaseKey != {case_key} AND
+                DATE(prescript.CaseDate) <= "{case_date.strftime("%Y-%m-%d")}" AND
+                cases.PatientKey = {patient_key} AND
+                InsCode = "{ins_code}"
+            ORDER BY cases.CaseDate DESC LIMIT 1
+        """
+        rows = self.database.select_record(sql)
+        if len(rows) <= 0:
+            return True
+
+        last_case_date = rows[0]["CaseDate"].date()
+        delta = case_date - last_case_date
+        if delta.days < max_days:
+            error_message = f"""
+            本日CKD門診({ins_code})距離上次CKD門診{last_case_date}({ins_code})只有{delta.days}天, 未滿{max_days}天
+            <br><br>
+            健保署規定: 申報CKD({ins_code})，限{max_days}天以上申報一次。
+            """
+
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "慢性腎病照護檢查錯誤",
+                f"""
+                    <font size="5" color="red">
+                      <b>
+                        慢性腎病照護檢查錯誤訊息:<br>
+                        <br>
+                        {error_message}
+                      </b>
+                    </font>
+                """,
+                "請更正上述的錯誤，以利健保申報.",
+            )
+            check_ok = False
+
+        return check_ok
 
     def _check_child_rhinitis(self):
         check_ok = True
