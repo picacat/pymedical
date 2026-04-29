@@ -709,9 +709,6 @@ def get_prescript_html_data(
         ]:
             continue
 
-        if "代煎" in medicine_name:
-            continue
-
         sequence += 1
 
         dosage = number_utils.get_float(row["Dosage"])
@@ -738,7 +735,10 @@ def get_prescript_html_data(
                 dosage_str = f"{dosage:.1f}"
                 total_dosage_str = f"{total_dosage:.1f}"
 
-            total_pres_dosage += total_dosage
+            if "代煎" in medicine_name:
+                pass
+            else:
+                total_pres_dosage += total_dosage
 
         unit = string_utils.xstr(row["Unit"])
         instruction = string_utils.xstr(row["Instruction"])
