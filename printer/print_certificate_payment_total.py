@@ -343,7 +343,8 @@ class PrintCertificatePaymentTotal:
             - treat_fee
             + (diag_share_fee + drug_share_fee)
         )
-        treat_fee += extra_fee
+        if extra_fee > 0:
+            treat_fee += extra_fee
 
         medicine_fee_field_name = self.system_settings.field(
             "醫療費用證明自費藥費欄位名稱"
