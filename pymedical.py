@@ -1,4 +1,4 @@
-"""主程式."""
+"""Pymedical主程式."""
 # -*- coding: utf-8 -*-
 
 import configparser
