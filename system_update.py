@@ -246,6 +246,7 @@ class SystemUpdate(QtWidgets.QDialog):
         # 這些檔案無論 Git 怎麼改，我們都要保住診所原本的內容
         protect_files = [
             "pymedical.win32.bat",
+            "pybulletin.win32.bat",
             "pymedical.conf",
             "qingtian.conf",
             "mingi.conf",
