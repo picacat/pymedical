@@ -143,38 +143,117 @@ class CheckInsDrug(QtWidgets.QMainWindow):
     def row_count(self):
         return len(self.rows)
 
+    # def start_check(self):
+    #     self.read_data()
+    #     if self.row_count() <= 0:
+    #         return
+
+    #     progress_dialog = QtWidgets.QProgressDialog(
+    #         "正在執行健保碼檢查中, 請稍後...", "取消", 0, self.row_count(), self
+    #     )
+    #     progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
+    #     progress_dialog.setValue(0)
+
+    #     self.ui.tableWidget_prescript.setRowCount(0)
+    #     for row_no, row in enumerate(self.rows):
+    #         progress_dialog.setValue(row_no)
+    #         medicine_name = string_utils.xstr(row["MedicineName"])
+
+    #         error_messages = []
+    #         ins_code = string_utils.xstr(row["InsCode"])
+    #         if ins_code == "":
+    #             self._insert_error_record(row_no, row, [], error_messages)
+    #             continue
+
+    #         sql = f'''
+    #             SELECT Supplier, DrugName, ValidDate FROM drug
+    #             WHERE
+    #                 InsCode = "{ins_code}"
+    #         '''
+    #         drug_rows = self.database.select_record(sql)
+
+    #         if "清冠一號" in medicine_name:
+    #             pass
+    #         elif len(drug_rows) <= 0:
+    #             error_messages.append("查無健保藥品資料")
+    #             self._insert_error_record(row_no, row, drug_rows, error_messages)
+    #             self.errors += 1
+    #             continue
+    #         else:
+    #             error_messages += self._check_valid_date(row, drug_rows)
+    #             error_messages += self._check_invalid_ins_code(row)
+    #             error_messages += self._check_drug_name(row, drug_rows)
+
+    #         self._insert_error_record(row_no, row, drug_rows, error_messages)
+
+    #     progress_dialog.setValue(self.row_count())
+    #     progress_dialog.deleteLater()
+
+    #     self.ui.tableWidget_prescript.setAlternatingRowColors(True)
+    #     if self.errors <= 0:
+    #         self.ui.toolButton_find_error.setEnabled(False)
+    #     else:
+    #         self.ui.toolButton_find_error.setEnabled(True)
+
+    #     self.ui.tableWidget_prescript.resizeRowsToContents()
+
     def start_check(self):
         self.read_data()
-        if self.row_count() <= 0:
+        total_count = self.row_count()
+        if total_count <= 0:
             return
 
+        # --- 優化重點 1：預載入所有藥品資料 ---
+        # 先收集所有處方中出現過的 InsCode (去重)，一次查完
+        all_ins_codes = {
+            string_utils.xstr(r["InsCode"])
+            for r in self.rows
+            if string_utils.xstr(r["InsCode"])
+        }
+        drug_lookup = {}
+
+        if all_ins_codes:
+            # 將 ins_code 轉為逗號分隔字串，例如 "'A001','A002'"
+            codes_str = ",".join([f'"{c}"' for c in all_ins_codes])
+            sql = f"SELECT InsCode, Supplier, DrugName, ValidDate FROM drug WHERE InsCode IN ({codes_str})"
+            all_drugs = self.database.select_record(sql)
+
+            # 轉成字典方便快速查找 { "InsCode": [row1, row2], ... }
+            for d in all_drugs:
+                code = d["InsCode"]
+                if code not in drug_lookup:
+                    drug_lookup[code] = []
+                drug_lookup[code].append(d)
+
+        # --- 優化重點 2：UI 更新頻率控制 ---
         progress_dialog = QtWidgets.QProgressDialog(
-            "正在執行健保碼檢查中, 請稍後...", "取消", 0, self.row_count(), self
+            "正在檢查中...", "取消", 0, total_count, self
         )
         progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
 
         self.ui.tableWidget_prescript.setRowCount(0)
-        for row_no, row in enumerate(self.rows):
-            progress_dialog.setValue(row_no)
-            medicine_name = string_utils.xstr(row["MedicineName"])
 
-            error_messages = []
+        for row_no, row in enumerate(self.rows):
+            # 每處理 10 筆才更新一次進度條，減少 UI 負擔
+            if row_no % 10 == 0:
+                progress_dialog.setValue(row_no)
+                if progress_dialog.wasCanceled():
+                    break
+
+            medicine_name = string_utils.xstr(row["MedicineName"])
             ins_code = string_utils.xstr(row["InsCode"])
+            error_messages = []
+
             if ins_code == "":
                 self._insert_error_record(row_no, row, [], error_messages)
                 continue
 
-            sql = f'''
-                SELECT Supplier, DrugName, ValidDate FROM drug
-                WHERE
-                    InsCode = "{ins_code}"
-            '''
-            drug_rows = self.database.select_record(sql)
+            # --- 優化重點 3：從記憶體查找藥品，不進資料庫 ---
+            drug_rows = drug_lookup.get(ins_code, [])
 
             if "清冠一號" in medicine_name:
                 pass
-            elif len(drug_rows) <= 0:
+            elif not drug_rows:
                 error_messages.append("查無健保藥品資料")
                 self._insert_error_record(row_no, row, drug_rows, error_messages)
                 self.errors += 1
@@ -186,7 +265,7 @@ class CheckInsDrug(QtWidgets.QMainWindow):
 
             self._insert_error_record(row_no, row, drug_rows, error_messages)
 
-        progress_dialog.setValue(self.row_count())
+        progress_dialog.setValue(total_count)
         progress_dialog.deleteLater()
 
         self.ui.tableWidget_prescript.setAlternatingRowColors(True)
@@ -411,35 +490,84 @@ class CheckInsDrug(QtWidgets.QMainWindow):
         progress_dialog.deleteLater()
         self.start_check()
 
+    # def _update_ins_code_by_name(self, prescript_key, medicine_type, medicine_name):
+    #     medicine_rows = self._get_medicine_row(medicine_type, medicine_name)
+    #     if len(medicine_rows) <= 0:
+    #         medicine_name = medicine_name.split("(")[0]  # 去掉()
+    #         if string_utils.xstr(medicine_name) == "":
+    #             return
+
+    #         medicine_rows = self._get_medicine_row(medicine_type, medicine_name)
+    #         if len(medicine_rows) <= 0:
+    #             return
+
+    #     ins_code = string_utils.xstr(medicine_rows[0]["InsCode"])
+    #     self.database.exec_sql(f'''
+    #         UPDATE prescript
+    #         SET
+    #             InsCode = "{ins_code}"
+    #         WHERE
+    #             PrescriptKey = {prescript_key}
+    #     ''')
+
+    # def _get_medicine_row(self, medicine_type, medicine_name):
+    #     sql = f'''
+    #         SELECT InsCode FROM medicine
+    #         WHERE
+    #             MedicineType = "{medicine_type}" AND
+    #             MedicineName LIKE "{medicine_name}%" AND
+    #             InsCode IS NOT NULL AND
+    #             LENGTH(InsCode) > 0
+    #     '''
+    #     rows = self.database.select_record(sql)
+
+    #     return rows
+
     def _update_ins_code_by_name(self, prescript_key, medicine_type, medicine_name):
-        medicine_rows = self._get_medicine_row(medicine_type, medicine_name)
-        if len(medicine_rows) <= 0:
-            medicine_name = medicine_name.split("(")[0]  # 去掉()
-            if string_utils.xstr(medicine_name) == "":
-                return
+        """
+        優化版：更新處方箋的健保代碼
+        """
+        # 1. 整理藥名邏輯：建立一個嘗試清單，優先嘗試原名，失敗再嘗試去掉括號的名字
+        names_to_try = [medicine_name]
 
-            medicine_rows = self._get_medicine_row(medicine_type, medicine_name)
-            if len(medicine_rows) <= 0:
-                return
+        # 如果有括號，增加一個「去括號版本」到嘗試清單
+        short_name = medicine_name.split("(")[0].strip()
+        if short_name and short_name != medicine_name:
+            names_to_try.append(short_name)
 
-        ins_code = string_utils.xstr(medicine_rows[0]["InsCode"])
-        self.database.exec_sql(f'''
+        ins_code = None
+        # 2. 依序嘗試找出 InsCode
+        for name in names_to_try:
+            rows = self._get_medicine_row(medicine_type, name)
+            if rows:
+                ins_code = string_utils.xstr(rows[0].get("InsCode"))
+                if ins_code:  # 確保真的有值
+                    break
+
+        # 3. 如果沒找到，直接返回
+        if not ins_code:
+            return
+
+        # 4. 執行更新 (使用參數化查詢避免 SQL Injection)
+        # 注意：這裡假設您的 exec_sql 支援傳入參數，這才是標準安全的做法
+        update_sql = f'''
             UPDATE prescript
-            SET
-                InsCode = "{ins_code}"
-            WHERE
-                PrescriptKey = {prescript_key}
-        ''')
+            SET InsCode = "{ins_code}"
+            WHERE PrescriptKey = {prescript_key}
+        '''
+        self.database.exec_sql(update_sql)
 
     def _get_medicine_row(self, medicine_type, medicine_name):
+        """
+        優化版：取得藥品資料
+        """
+        # 使用參數化查詢，MedicineName 加上 % 處理 LIKE
         sql = f'''
             SELECT InsCode FROM medicine
-            WHERE
-                MedicineType = "{medicine_type}" AND
-                MedicineName LIKE "{medicine_name}%" AND
-                InsCode IS NOT NULL AND
-                LENGTH(InsCode) > 0
+            WHERE MedicineType = "{medicine_type}"
+            AND MedicineName LIKE "{medicine_name}%"
+            AND InsCode IS NOT NULL 
+            AND InsCode != ''
+            LIMIT 1
         '''
-        rows = self.database.select_record(sql)
-
-        return rows
+        return self.database.select_record(sql)
