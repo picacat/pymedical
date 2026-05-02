@@ -267,11 +267,6 @@ class DialogInputMedicine(QtWidgets.QDialog):
         elif self.system_settings.field("詞庫排序") == "最後點擊時戳":
             order_type = "ORDER BY TimeStamp DESC"
 
-        if self.no_deactivate_medicine == "Y":
-            no_deactivate = " AND (Deactivate IS NULL OR LENGTH(Deactivate) = 0)"
-        else:
-            no_deactivate = ""
-
         sql = f'''
             SELECT * FROM medicine
             WHERE
@@ -280,10 +275,11 @@ class DialogInputMedicine(QtWidgets.QDialog):
                  MedicineCode = "{self.input_code}" OR
                  InsCode = "{self.input_code}")
             {medicine_type}
-            {no_deactivate}
             {order_type}
         '''
         self.table_widget_medicine.set_db_data(sql, self._set_medicine_data)
+        if self.no_deactivate_medicine == "Y":
+            prescript_utils.filter_deactivate_medicine(self.ui.tableWidget_medicine)
 
     def _set_medicine_type_button(self):
         MAX_COL = 7

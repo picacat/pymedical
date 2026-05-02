@@ -1959,3 +1959,25 @@ def clean_drug_name(name, medicine_type=None):
     name = re.sub(r'^[“"＂〝]|["”＂〞]$', "", name).strip()
 
     return name
+
+
+# 過濾停用藥品
+def filter_deactivate_medicine(table_widget_medicine):
+    # 1. 取得總列數，從最後一列的索引開始 (rowCount - 1)
+    row_count = table_widget_medicine.rowCount()
+
+    for row_no in range(row_count - 1, -1, -1):
+        deactivate_item = table_widget_medicine.item(row_no, 7)
+
+        # 確保該單元格不是空的
+        if deactivate_item is None:
+            continue
+
+        deactivate = deactivate_item.text().strip()  # 使用 strip() 去除多餘空白
+
+        # 邏輯判斷：如果是有效藥品（包含 "*" 或為空），則跳過不刪除
+        if "*" in deactivate or not deactivate:
+            continue
+
+        # 如果不符合上述條件（即為停用藥品），執行刪除
+        table_widget_medicine.removeRow(row_no)

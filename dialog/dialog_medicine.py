@@ -268,18 +268,12 @@ class DialogMedicine(QtWidgets.QDialog):
         medicine_type_condition = f'(MedicineType = "{dict_groups_type.strip()}")'
         # medicine_type_condition = '(MedicineType IN ("單方", "複方", "成方"))'
 
-        if self.no_deactivate_medicine == "Y":
-            no_deactivate = " AND (Deactivate IS NULL OR LENGTH(Deactivate) = 0)"
-        else:
-            no_deactivate = ""
-
         sql = f"""
             SELECT * FROM medicine
             WHERE
                 {medicine_type_condition}
                 {unit_condition}
                 {input_code_str}
-                {no_deactivate}
                 {order_type}
         """
         rows = self.database.select_record(sql)
@@ -295,6 +289,8 @@ class DialogMedicine(QtWidgets.QDialog):
             return
 
         self.table_widget_medicine.set_db_data(sql, self._set_medicine_data)
+        if self.no_deactivate_medicine == "Y":
+            prescript_utils.filter_deactivate_medicine(self.ui.tableWidget_medicine)
 
     def _set_medicine_data(self, row_no, row):
         safe_quantity = number_utils.get_integer(row["SafeQuantity"])
