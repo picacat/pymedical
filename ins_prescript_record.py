@@ -4350,12 +4350,10 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self.ui.toolButton_copy.setEnabled(enabled)
         self.ui.toolButton_copy_to_append.setEnabled(enabled)
 
-        self.force_edit()
+        if self.prescript_edit_mode == "Y":
+            self.force_edit()
 
     def force_edit(self):
-        if self.prescript_edit_mode != "Y":
-            return
-
         index = self.ui.tableWidget_prescript.currentIndex()
         # 確保 index 有效，且該儲存格是可編輯的
         if index.isValid():
