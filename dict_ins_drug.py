@@ -243,7 +243,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
         sql = f"""
             UPDATE medicine
             SET
-                InsCode = NULL
+                InsCode = NULL, DrugName = NULL
             WHERE
                 MedicineKey = {medicine_key}
         """
@@ -251,7 +251,11 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         row_no = self.ui.tableWidget_medicine.currentRow()
 
-        for column in range(self.col_no["ins_code"], self.col_no["clear_ins_code"]):
+        for column in range(
+            self.col_no["drug_name"],
+            self.col_no["ins_code"],
+            self.col_no["clear_ins_code"],
+        ):
             self.ui.tableWidget_medicine.setItem(
                 row_no, column, QtWidgets.QTableWidgetItem("")
             )

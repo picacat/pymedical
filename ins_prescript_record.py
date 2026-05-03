@@ -178,6 +178,8 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         else:
             self.ui.tableWidget_prescript.horizontalHeader().setSectionsClickable(False)
 
+        self.ui.tableWidget_prescript.keyboardSearch = lambda text: None
+
         # self.ui.radioButton_medicine.setStyleSheet("""
         #     QRadioButton::checked {
         #         color: red;
@@ -4347,6 +4349,17 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self.ui.toolButton_set_prescript_remark.setEnabled(enabled)
         self.ui.toolButton_copy.setEnabled(enabled)
         self.ui.toolButton_copy_to_append.setEnabled(enabled)
+
+        self.force_edit()
+
+    def force_edit(self):
+        if self.prescript_edit_mode != "Y":
+            return
+
+        index = self.ui.tableWidget_prescript.currentIndex()
+        # 確保 index 有效，且該儲存格是可編輯的
+        if index.isValid():
+            self.ui.tableWidget_prescript.edit(index)
 
     # 欄位資料暫存用: item.setData(QtCore.Qt.UserRole, item.text()) --> 在set_db_data
     def _prescript_item_changed(self, item):
