@@ -209,13 +209,20 @@ class InsAppealXML(QtWidgets.QMainWindow):
         )
         reject_case, reject_points = self._get_reject_total_points()
 
+        if self.apply_type_code == "1":
+            appeal_type = "4"  # 送核
+        elif self.apply_type_code == "2":
+            appeal_type = "5"  # 補報
+        else:
+            appeal_type = "4"
+
         tdata = ET.SubElement(root, "tdata")
         t1 = ET.SubElement(tdata, "t1")
         t1.text = self.clinic_id
         t2 = ET.SubElement(tdata, "t2")
         t2.text = self.apply_date
         t3 = ET.SubElement(tdata, "t3")
-        t3.text = "4"  # 申復送核
+        t3.text = appeal_type  # 4: 申復送核, 5: 申復補報
         t4 = ET.SubElement(tdata, "t4")
         t4.text = apply_upload_date
         t5 = ET.SubElement(tdata, "t5")

@@ -1,11 +1,9 @@
-
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
 from PyQt5 import QtWidgets
-from libs import ui_utils
-from libs import system_utils
-from libs import string_utils
+
+from libs import string_utils, system_utils, ui_utils
 
 
 # 輸入申復資料 2022.11.08
@@ -22,9 +20,9 @@ class DialogInsAppeal(QtWidgets.QDialog):
         self.ins_appeal_key = args[5]
 
         self.ui = None
-        self.clinic_id = self.system_settings.field('院所代號')
+        self.clinic_id = self.system_settings.field("院所代號")
         self.ins_apply_key = None
-        self.reject_code = '否'
+        self.reject_code = "否"
 
         self._set_ui()
         self._set_signal()
@@ -46,8 +44,8 @@ class DialogInsAppeal(QtWidgets.QDialog):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_DIALOG_INS_APPEAL, self)
         system_utils.set_css(self, self.system_settings)
 
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('存檔')
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText('取消')
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("存檔")
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText("取消")
 
     # 設定信號
     def _set_signal(self):
@@ -59,14 +57,16 @@ class DialogInsAppeal(QtWidgets.QDialog):
     def _set_data(self):
         case_type_list = self._get_case_type_list()
         ui_utils.set_combo_box(self.ui.comboBox_case_type, case_type_list, None)
-        ui_utils.set_combo_box(self.ui.comboBox_sample, ['統扣', '立意', '歸戶', '隨機', '全審'], '立意')
+        ui_utils.set_combo_box(
+            self.ui.comboBox_sample, ["統扣", "立意", "歸戶", "隨機", "全審"], "立意"
+        )
 
     def _get_case_type_list(self):
         sql = f'''
             SELECT CaseType FROM insapply
             WHERE
                 ApplyDate = "{self.apply_date}" AND
-                ApplyType = "1" AND
+                ApplyType = "{self.apply_type_code}" AND
                 ApplyPeriod = "全月" AND
                 ClinicID = "{self.clinic_id}"
             GROUP BY CaseType
@@ -75,20 +75,20 @@ class DialogInsAppeal(QtWidgets.QDialog):
 
         case_type_list = []
         for row in rows:
-            case_type_list.append(row['CaseType'])
+            case_type_list.append(row["CaseType"])
 
         return case_type_list
 
     def _case_type_changed(self):
         case_type = self.ui.comboBox_case_type.currentText()
-        if case_type in ['', None]:
+        if case_type in ["", None]:
             return
 
         sql = f'''
             SELECT MAX(Sequence) AS Max FROM insapply
             WHERE
                 ApplyDate = "{self.apply_date}" AND
-                ApplyType = "1" AND
+                ApplyType = "{self.apply_type_code}" AND
                 ApplyPeriod = "全月" AND
                 ClinicID = "{self.clinic_id}" AND
                 CaseType = "{case_type}"
@@ -98,11 +98,11 @@ class DialogInsAppeal(QtWidgets.QDialog):
             return
 
         self.ui.spinBox_sequence.setMinimum(1)
-        self.ui.spinBox_sequence.setMaximum(rows[0]['Max'])
+        self.ui.spinBox_sequence.setMaximum(rows[0]["Max"])
 
     def _sequence_changed(self):
         case_type = self.ui.comboBox_case_type.currentText()
-        if case_type in ['', None]:
+        if case_type in ["", None]:
             return
 
         sequence = self.ui.spinBox_sequence.value()
@@ -113,7 +113,7 @@ class DialogInsAppeal(QtWidgets.QDialog):
             SELECT InsApplyKey, Name FROM insapply
             WHERE
                 ApplyDate = "{self.apply_date}" AND
-                ApplyType = "1" AND
+                ApplyType = "{self.apply_type_code}" AND
                 ApplyPeriod = "全月" AND
                 ClinicID = "{self.clinic_id}" AND
                 CaseType = "{case_type}" AND
@@ -125,8 +125,8 @@ class DialogInsAppeal(QtWidgets.QDialog):
             return
 
         row = rows[0]
-        self.ui.lineEdit_name.setText(string_utils.xstr(row['Name']))
-        self.ins_apply_key = row['InsApplyKey']
+        self.ui.lineEdit_name.setText(string_utils.xstr(row["Name"]))
+        self.ins_apply_key = row["InsApplyKey"]
 
     def get_ins_apply_key(self):
         return self.ins_apply_key
@@ -149,44 +149,65 @@ class DialogInsAppeal(QtWidgets.QDialog):
         sequence = self.ui.spinBox_sequence.value()
         sample = self.ui.comboBox_sample.currentText()
         if self.ui.checkBox_reject_all.isChecked():
-            self.reject_code = '是'
+            self.reject_code = "是"
         else:
-            self.reject_code = '否'
+            self.reject_code = "否"
 
         point1 = self.ui.spinBox_point1.value()
         point2 = self.ui.spinBox_point2.value()
         point3 = self.ui.spinBox_point3.value()
 
         fields = [
-            'InsApplyKey', 'ClinicID', 'ApplyDate', 'ApplyPeriod', 'ApplyType',
-            'CaseType', 'Sequence', 'Sample', 'Reject', 'Point1', 'Point2', 'Point3',
+            "InsApplyKey",
+            "ClinicID",
+            "ApplyDate",
+            "ApplyPeriod",
+            "ApplyType",
+            "CaseType",
+            "Sequence",
+            "Sample",
+            "Reject",
+            "Point1",
+            "Point2",
+            "Point3",
         ]
         data = [
-            self.ins_apply_key, self.clinic_id, self.apply_date, self.apply_period, self.apply_type_code,
-            case_type, sequence, sample, self.reject_code, point1, point2, point3,
+            self.ins_apply_key,
+            self.clinic_id,
+            self.apply_date,
+            self.apply_period,
+            self.apply_type_code,
+            case_type,
+            sequence,
+            sample,
+            self.reject_code,
+            point1,
+            point2,
+            point3,
         ]
 
         if self.ins_appeal_key is not None:
             self.database.update_record(
-                'insappeal', fields, 'InsAppealKey', self.ins_appeal_key, data)
+                "insappeal", fields, "InsAppealKey", self.ins_appeal_key, data
+            )
         else:
-            self.ins_appeal_key = self.database.insert_record('insappeal', fields, data)
+            self.ins_appeal_key = self.database.insert_record("insappeal", fields, data)
 
     def _edit_ins_appeal(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM insappeal
             WHERE
                 InsAppealKey = {self.ins_appeal_key}
-        '''
+        """
         rows = self.database.select_record(sql)
 
         if len(rows) <= 0:
             return
 
         row = rows[0]
-        self.ui.comboBox_case_type.setCurrentText(string_utils.xstr(row['CaseType']))
-        self.ui.spinBox_sequence.setValue(row['Sequence'])
-        self.ui.comboBox_sample.setCurrentText(string_utils.xstr(row['Sample']))
-        self.ui.spinBox_point1.setValue(row['Point1'])
-        self.ui.spinBox_point2.setValue(row['Point2'])
-        self.ui.spinBox_point3.setValue(row['Point3'])
+        self.ui.comboBox_case_type.setCurrentText(string_utils.xstr(row["CaseType"]))
+        self.ui.spinBox_sequence.setValue(row["Sequence"])
+        self.ui.comboBox_sample.setCurrentText(string_utils.xstr(row["Sample"]))
+        self.ui.spinBox_point1.setValue(row["Point1"])
+        self.ui.spinBox_point2.setValue(row["Point2"])
+        self.ui.spinBox_point3.setValue(row["Point3"])

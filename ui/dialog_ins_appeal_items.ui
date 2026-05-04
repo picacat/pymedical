@@ -72,7 +72,7 @@
       <item row="6" column="0">
        <widget class="QLabel" name="label_order_seq_2">
         <property name="text">
-         <string>數量受理</string>
+         <string>＊數量受理</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -85,7 +85,7 @@
          <bool>false</bool>
         </property>
         <property name="placeholderText">
-         <string>無則免填，若核減代碼則必填</string>
+         <string>免填</string>
         </property>
        </widget>
       </item>
@@ -95,7 +95,7 @@
          <bool>false</bool>
         </property>
         <property name="placeholderText">
-         <string>依原申報醫令代碼填寫</string>
+         <string>醫令代碼 (必填: 診察費A02) </string>
         </property>
        </widget>
       </item>
@@ -105,7 +105,7 @@
          <bool>false</bool>
         </property>
         <property name="placeholderText">
-         <string>無則免填</string>
+         <string>免填</string>
         </property>
        </widget>
       </item>
@@ -113,7 +113,7 @@
        <widget class="QLabel" name="label_order_seq">
         <property name="text">
          <string>改支序號
-(＊核減代碼)</string>
+(核減代碼)</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -185,7 +185,7 @@
          <bool>false</bool>
         </property>
         <property name="placeholderText">
-         <string>無則免填</string>
+         <string>核減數量(必填: 1)</string>
         </property>
        </widget>
       </item>
@@ -205,7 +205,7 @@
          <bool>false</bool>
         </property>
         <property name="placeholderText">
-         <string>申復點數需&lt;=核減點數</string>
+         <string>申復點數需&lt;=核減點數 (必填: 診察費330)</string>
         </property>
        </widget>
       </item>
@@ -218,7 +218,7 @@
          <bool>false</bool>
         </property>
         <property name="placeholderText">
-         <string>依原申報醫令序號填寫</string>
+         <string>醫令序(必填:1)</string>
         </property>
        </widget>
       </item>
