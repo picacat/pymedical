@@ -93,6 +93,8 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
         self.ui.tableWidget_prescript.setDragEnabled(True)
         self.ui.tableWidget_prescript.setAcceptDrops(True)
+        system_utils.disable_mouse_wheel(self, QtWidgets.QComboBox)
+        system_utils.disable_mouse_wheel(self, QtWidgets.QSpinBox)
 
         if self.system_settings.field("處方劑量欄位可以排序") == "Y":
             self.ui.tableWidget_prescript.horizontalHeader().setSectionsClickable(True)

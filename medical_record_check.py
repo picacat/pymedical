@@ -637,9 +637,14 @@ class MedicalRecordCheck(QtWidgets.QDialog):
             if error:
                 error_message.append(error)
         elif current_ckd_code is not None and "P64001" <= current_ckd_code <= "P64008":
-            error = self._check_last_ckd_treat(current_ckd_code)
-            if error:
-                error_message.append(error)
+            if self.pres_days > 0 and self.course >= 2:
+                error_message.append(
+                    "慢性腎病ckd 療程2-6次不可開藥，若要開藥，請改為一般門診"
+                )
+            else:
+                error = self._check_last_ckd_treat(current_ckd_code)
+                if error:
+                    error_message.append(error)
         else:
             pass
 
@@ -675,7 +680,7 @@ class MedicalRecordCheck(QtWidgets.QDialog):
                 prescript.CaseKey != {case_key} AND
                 DATE(prescript.CaseDate) <= "{case_date.strftime("%Y-%m-%d")}" AND
                 cases.PatientKey = {patient_key} AND
-                InsCode BETWEEN "P64001" AND "P64004"
+                InsCode BETWEEN "P64001" AND "P64008"
             ORDER BY cases.CaseDate DESC LIMIT 1
         """
         rows = self.database.select_record(sql)
@@ -701,7 +706,7 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         error_message = None
 
         sql = f"""
-            SELECT cases.CaseDate FROM prescript
+            SELECT cases.CaseDate, cases.Card FROM prescript
                 LEFT JOIN cases on cases.CaseKey = prescript.CaseKey
             WHERE
                 prescript.CaseKey != {case_key} AND
@@ -714,9 +719,29 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         if len(rows) <= 0:
             return None
 
-        last_case_date = rows[0]["CaseDate"].date()
+        row = rows[0]
+        last_case_date = row["CaseDate"].date()
         delta = case_date - last_case_date
         if delta.days < 28:
+            last_card = string_utils.xstr(row["Card"])
+            sql = f"""
+                SELECT cases.CaseDate, cases.Continuance FROM prescript
+                    LEFT JOIN cases on cases.CaseKey = prescript.CaseKey
+                WHERE
+                    prescript.CaseKey != {case_key} AND
+                    DATE(prescript.CaseDate) <= "{case_date.strftime("%Y-%m-%d")}" AND
+                    cases.PatientKey = {patient_key} AND
+                    InsCode = "P64010" AND
+                    Card = "{last_card}"
+                ORDER BY cases.Continuance DESC LIMIT 1
+            """
+            rows = self.database.select_record(sql)
+            if len(rows) > 0:
+                row = rows[0]
+                last_course = number_utils.get_integer(row["Continuance"])
+                if last_course >= 6:  # 療程結束可以掛號
+                    return None
+
             error_message = f"""
             本日門診為含藥費CKD門診({ins_code}),，距離上次不含藥費CKD門診{last_case_date}(P64009)只有{delta.days}天, 未滿28天
             <br><br>
