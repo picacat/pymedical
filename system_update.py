@@ -243,7 +243,7 @@ class SystemUpdate(QtWidgets.QDialog):
                     pass
 
         # --- 🛡️ 核心新增：物理保險箱 (備份重要設定) ---
-        # 這些檔案無論 Git 怎麼改，我們都要保住診所原本的內容
+        # 這些檔案無論 Git 怎麼改，我們都要保住診所原本的內容，等更新完再還原回去
         protect_files = [
             "pymedical.win32.bat",
             "pybulletin.win32.bat",
