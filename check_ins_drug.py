@@ -332,9 +332,7 @@ class CheckInsDrug(QtWidgets.QMainWindow):
             prescript_medicine_name = medicine_name
 
         if not prescript_utils.is_same_medicine(prescript_medicine_name, drug_name):
-            error_message.append(
-                f"健保藥名不一致({prescript_medicine_name}, {drug_name})"
-            )
+            error_message.append("健保藥名不一致")
 
         return error_message
 
