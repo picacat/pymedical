@@ -20,7 +20,7 @@ from libs import (
 )
 
 
-# 輸入自費處方 2018.04.14
+# 輸入自費處方 2018.04.14.
 class SelfPrescriptRecord(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
@@ -2427,6 +2427,9 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                     continue
 
                 if "代煎" in medicine_name:
+                    continue
+
+                if "現抓水藥" in medicine_name:
                     continue
 
             medicine_type = self.ui.tableWidget_prescript.item(
