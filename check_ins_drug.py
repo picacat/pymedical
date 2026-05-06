@@ -316,7 +316,7 @@ class CheckInsDrug(QtWidgets.QMainWindow):
         return error_message
 
     def _check_drug_name(self, row, drug_rows):
-        """檢查藥名"""
+        """檢查藥名 v3"""
         error_message = []
 
         medicine_name = string_utils.xstr(row["MedicineName"]).strip()
