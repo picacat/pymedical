@@ -2429,9 +2429,6 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 if "代煎" in medicine_name:
                     continue
 
-                if "現抓水藥" in medicine_name:
-                    continue
-
             medicine_type = self.ui.tableWidget_prescript.item(
                 row_no, prescript_utils.SELF_PRESCRIPT_COL_NO["MedicineType"]
             )

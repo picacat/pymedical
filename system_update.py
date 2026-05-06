@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPushButton
 from libs import class_utils, string_utils, system_utils, ui_utils, update_utils
 
 
-# 醫療系統更新 2026-04-29 更新
+# 醫療系統更新 2026-04-29 更新.
 class SystemUpdate(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
