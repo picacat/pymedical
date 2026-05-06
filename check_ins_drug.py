@@ -318,14 +318,20 @@ class CheckInsDrug(QtWidgets.QMainWindow):
     def _check_drug_name(self, row, drug_rows):
         error_message = []
 
-        medicine_name = string_utils.xstr(row["MedicineName"])
+        medicine_name = string_utils.xstr(row["MedicineName"]).strip()
+        medicine_drug_name = string_utils.xstr(row["DrugName"]).strip()
         ins_drug_name = string_utils.xstr(row["DrugName"]).strip()
         if ins_drug_name not in [None, ""]:
             medicine_name = ins_drug_name
 
         drug_name = string_utils.xstr(drug_rows[0]["DrugName"])
 
-        if not prescript_utils.is_same_medicine(medicine_name, drug_name):
+        if medicine_drug_name not in [None, ""]:
+            prescript_medicine_name = medicine_drug_name
+        else:
+            prescript_medicine_name = medicine_name
+
+        if not prescript_utils.is_same_medicine(prescript_medicine_name, drug_name):
             error_message.append("健保藥名不一致")
 
         return error_message
