@@ -1,9 +1,17 @@
 # -*- coding: UTF-8 -*-
 
+
 from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
 
-from libs import case_utils, number_utils, printer_utils, string_utils, system_utils
+from libs import (
+    case_utils,
+    charge_utils,
+    number_utils,
+    printer_utils,
+    string_utils,
+    system_utils,
+)
 
 
 # 自費收據格式6 4.5 x 3 inches 友杏格式
@@ -233,7 +241,7 @@ class PrintReceiptSelfForm6:
                 pass
             else:
                 diag_fee = 0
-                drug_fee = self_total_fee
+                drug_fee = 0
                 herb_fee = 0
                 expensive_fee = 0
                 acupuncture_fee = 0
@@ -241,6 +249,27 @@ class PrintReceiptSelfForm6:
                 dislocate_fee = 0
                 material_fee = 0
                 exam_fee = 0
+
+                charge_field = charge_utils.get_fee_type(
+                    self.database, self.case_key, self.medicine_set
+                )
+                if charge_field == "diag_fee":
+                    diag_fee = self_total_fee
+                elif charge_field == "herb_fee":
+                    herb_fee = self_total_fee
+                elif charge_field == "expensive_fee":
+                    expensive_fee = self_total_fee
+                elif charge_field == "acupuncture_fee":
+                    acupuncture_fee = self_total_fee
+                elif charge_field == "massage_fee":
+                    massage_fee = self_total_fee
+                elif charge_field == "material_fee":
+                    material_fee = self_total_fee
+                elif charge_field == "exam_fee":
+                    exam_fee = self_total_fee
+                else:
+                    drug_fee = self_total_fee
+
                 receipt_fee = total_fee
 
         if self.medicine_set == 2:

@@ -3606,3 +3606,24 @@ def get_ratio(database):
     ratio = number_utils.get_float(rows[0]["Remark"])
 
     return ratio
+
+
+def get_fee_type(database, case_key, medicine_set):
+    sql = f"""
+        SELECT MedicineType FROM prescript
+        WHERE
+            CaseKey = {case_key} AND
+            MedicineSet = {medicine_set}
+        ORDER BY PrescriptKey
+        LIMIT 1
+    """
+    rows = database.select_record(sql)
+    if not rows:
+        return None
+
+    medicine_type = string_utils.xstr(rows[0]["MedicineType"]).strip()
+
+    field = get_medicine_type_charge_field(database, medicine_type)
+    charge_field = get_charge_field(field, medicine_type)
+
+    return charge_field
