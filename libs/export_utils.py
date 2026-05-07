@@ -123,9 +123,12 @@ def export_table_widget_to_excel(
                 and item_text in ["", None]
             ):
                 item = in_table_widget.cellWidget(row_no, col_no)
-                item_text = item.text()
-                item_text = item_text.replace('<br><font size="2" color="red">', "")
-                item_text = item_text.replace("</font>", "")
+                try:
+                    item_text = item.text()
+                    item_text = item_text.replace('<br><font size="2" color="red">', "")
+                    item_text = item_text.replace("</font>", "")
+                except Exception:
+                    item_text = ""
 
             row.append(item_text)
 
