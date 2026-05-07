@@ -56,8 +56,13 @@ def _request_api(method, url, command=None, auth=None):
             return response.json()
         return None
 
+    # 💡 優先攔截 HTTP 錯誤，把伺服器真正的報錯訊息印出來！
+    except requests.exceptions.HTTPError as e:
+        print(f"API HTTP Error ({method} {url}): {e}")
+        if e.response is not None:
+            print(f"🚨 伺服器詳細錯誤原因: {e.response.text}")  # 這行非常關鍵！
+        return None
     except requests.exceptions.RequestException as e:
-        # 這裡未來可以換成寫入 log 檔案，目前先印出錯誤方便除錯
         print(f"API Request Failed ({method} {url}): {e}")
         return None
 
@@ -257,7 +262,7 @@ def add_appointment(**kwargs):
     url = ALLEYPIN_URL + "/v1/appointments"
     command = {
         "customerID": f"{patient_key}",
-        "platformID": f"{reserve_key}",
+        "platformID": f"{reserve_key:0>10}{patient_key:0>10}",
         "scheduleID": schedule_id,
         "birthday": int(birthday),
         "gender": gender,
@@ -271,7 +276,6 @@ def add_appointment(**kwargs):
     }
 
     result = _request_api("POST", url, command=command, auth=auth)
-    print(command, result)
     if result is None:
         return None
 
