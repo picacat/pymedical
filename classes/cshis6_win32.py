@@ -643,7 +643,11 @@ class CSHIS:
         service_path = "/api/hc/v1/Logout"  # 先登出健保卡狀態
         response = self._get_requests_response(service_path, "DELETE", {})
 
-        return response.json()
+        try:
+            return response.json()
+        except Exception as e:
+            print(f"❌ 處理登出健保卡回應時發生異常: {e}")
+            return None
 
     def read_register_basic_data_by_vhc(self):
         system_utils.set_keyboard_layout("英文")
