@@ -271,6 +271,7 @@ def add_appointment(**kwargs):
     }
 
     result = _request_api("POST", url, command=command, auth=auth)
+    print(command, result)
     if result is None:
         return None
 
