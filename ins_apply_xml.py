@@ -1130,7 +1130,15 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         # 新特約院所新增虛擬碼 R005 2019.08.10
         if row["Card"] is not None and string_utils.xstr(row["Card"][:4]) == "G000":
-            self._set_virtual_order(dbody, row, case_row, pres_days, identifier)
+            self._set_virtual_order(dbody, row, case_row, "R005", pres_days, identifier)
+
+        if (
+            row["Card"] is not None
+            and string_utils.xstr(row["Card"][0]) == "W"  # 控制軟體6.0產生卡序 W***
+            and case_utils.get_case_extend(self.database, case_key, "健保卡種類")
+            == "虛擬健保卡"
+        ):
+            self._set_virtual_order(dbody, row, case_row, "W00V", 0, identifier)
 
         if string_utils.xstr(case_row["RegistType"]) in nhi_utils.TELECOM_TYPE:
             self._set_covid19(dbody, row, case_row, pres_days, identifier)
@@ -1166,13 +1174,12 @@ class InsApplyXML(QtWidgets.QMainWindow):
                 identifier,
             )
 
-    def _set_virtual_order(self, dbody, row, case_row, pres_days, identifier):
+    def _set_virtual_order(self, dbody, row, case_row, ins_code, pres_days, identifier):
         pdata = ET.SubElement(dbody, "pdata")
 
         self.sequence += 1
 
         order_type = "G"  # 藥品代號為 R001~R007 專案支付參考數值填G
-        ins_code = "R005"
         total_dosage = 0
         unit_price = 0
         amount = 0
@@ -1199,11 +1206,15 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p14 = ET.SubElement(pdata, "p14")
         p14.text = f"{start_date}0000"
 
-        end_date = date_utils.west_date_to_nhi_date(
-            case_row["CaseDate"].date() + datetime.timedelta(days=pres_days - 1)
-        )
-        p15 = ET.SubElement(pdata, "p15")
-        p15.text = f"{end_date}0000"
+        if pres_days > 0:
+            end_date = date_utils.west_date_to_nhi_date(
+                case_row["CaseDate"].date() + datetime.timedelta(days=pres_days - 1)
+            )
+            p15 = ET.SubElement(pdata, "p15")
+            p15.text = f"{end_date}0000"
+        else:
+            p15 = ET.SubElement(pdata, "p15")
+            p15.text = f"{start_date}0000"
 
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(case_row["DoctorID"])
@@ -1684,6 +1695,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
             dbody, row, rows[0], "2", identifier
         )  # order_type = 2 診療明細, 4 = 不另計價
 
+        # 2026-05-09 增加虛擬健保卡虛擬醫令 (申報指標獎勵金)
         for case_row in rows:
             case_key = case_row["CaseKey"]
             identifier = case_utils.get_identifier(
