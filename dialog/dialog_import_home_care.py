@@ -447,17 +447,17 @@ class DialogImportHomeCare(QtWidgets.QDialog):
         try:
             disease_code1 = json_dict["icd"][0]["i10_code_p"]
         except Exception:
-            disease_code1 = None
+            disease_code1 = ""
 
         try:
             disease_code2 = (json_dict["icd"][0]["i10_code_s1"],)
         except Exception:
-            disease_code2 = None
+            disease_code2 = ""
 
         try:
             disease_code3 = (json_dict["icd"][0]["i10_code_s2"],)
         except Exception:
-            disease_code3 = None
+            disease_code3 = ""
 
         row = {
             "patient_key": patient_key,
