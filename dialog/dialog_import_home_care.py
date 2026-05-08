@@ -444,6 +444,21 @@ class DialogImportHomeCare(QtWidgets.QDialog):
             card = self._get_current_card(patient_key)
 
         treatment, treatment_signature = self._get_treatment(json_dict)
+        try:
+            disease_code1 = json_dict["icd"][0]["i10_code_p"]
+        except Exception:
+            disease_code1 = None
+
+        try:
+            disease_code2 = (json_dict["icd"][0]["i10_code_s1"],)
+        except Exception:
+            disease_code2 = None
+
+        try:
+            disease_code3 = (json_dict["icd"][0]["i10_code_s2"],)
+        except Exception:
+            disease_code3 = None
+
         row = {
             "patient_key": patient_key,
             "case_date": date_utils.nhi_datetime_to_west_datetime(json_dict["A17"]),
@@ -456,9 +471,9 @@ class DialogImportHomeCare(QtWidgets.QDialog):
             "security_signature": json_dict["A22"],
             "identification": json_dict["enc"],
             "symptom": self._get_symptom(json_dict),
-            "disease_code1": json_dict["icd"][0]["i10_code_p"],
-            "disease_code2": json_dict["icd"][0]["i10_code_s1"],
-            "disease_code3": json_dict["icd"][0]["i10_code_s2"],
+            "disease_code1": disease_code1,
+            "disease_code2": disease_code2,
+            "disease_code3": disease_code3,
             "treatment": treatment,
             "treatment_signature": treatment_signature,
             "prescript": self._get_prescript(json_dict),
