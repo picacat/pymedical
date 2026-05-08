@@ -440,7 +440,7 @@ class DialogImportHomeCare(QtWidgets.QDialog):
             sam_id = None
 
         card = json_dict["A18"]
-        if card == "NA":
+        if card.strip() == "NA":
             card = self._get_current_card(patient_key)
 
         treatment, treatment_signature = self._get_treatment(json_dict)
@@ -450,12 +450,12 @@ class DialogImportHomeCare(QtWidgets.QDialog):
             disease_code1 = ""
 
         try:
-            disease_code2 = (json_dict["icd"][0]["i10_code_s1"],)
+            disease_code2 = json_dict["icd"][0]["i10_code_s1"]
         except Exception:
             disease_code2 = ""
 
         try:
-            disease_code3 = (json_dict["icd"][0]["i10_code_s2"],)
+            disease_code3 = json_dict["icd"][0]["i10_code_s2"]
         except Exception:
             disease_code3 = ""
 
