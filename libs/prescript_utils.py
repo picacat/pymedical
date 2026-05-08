@@ -1979,5 +1979,8 @@ def filter_deactivate_medicine(table_widget_medicine):
         if "*" in deactivate or not deactivate:
             continue
 
+        if deactivate in ["庫存量不足"]:  # 庫存量不足不代表停用，必須顯示
+            continue
+
         # 如果不符合上述條件（即為停用藥品），執行刪除
         table_widget_medicine.removeRow(row_no)
