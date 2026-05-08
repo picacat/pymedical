@@ -1,22 +1,24 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
-from PyQt5.QtPrintSupport import QPrinter
 import datetime
-import os
 import json
+import os
 
-from libs import printer_utils
-from libs import system_utils
-from libs import string_utils
-from libs import nhi_utils
-from libs import case_utils
-from libs import number_utils
-from libs import charge_utils
-from libs import date_utils
-from libs import personnel_utils
-from libs import prescript_utils
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+from PyQt5.QtPrintSupport import QPrinter
+
+from libs import (
+    case_utils,
+    charge_utils,
+    date_utils,
+    nhi_utils,
+    number_utils,
+    personnel_utils,
+    prescript_utils,
+    printer_utils,
+    string_utils,
+    system_utils,
+)
 
 
 # 掛號收據格式1 80mm * 80mm 熱感紙
@@ -34,16 +36,18 @@ class PrintInsApplyOrder:
         self.ui = None
 
         self.start_date = date_utils.get_start_date_by_year_month(
-            str(self.apply_year), str(self.apply_month))  # 雙月檢查
+            str(self.apply_year), str(self.apply_month)
+        )  # 雙月檢查
         self.end_date = date_utils.get_end_date_by_year_month(
-            self.apply_year, self.apply_month)
-        self.printer = printer_utils.get_printer(self.system_settings, '報表印表機')
-        self.ins_apply_path = nhi_utils.get_dir(self.system_settings, '申報路徑')
+            self.apply_year, self.apply_month
+        )
+        self.printer = printer_utils.get_printer(self.system_settings, "報表印表機")
+        self.ins_apply_path = nhi_utils.get_dir(self.system_settings, "申報路徑")
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
 
         try:
-            with open('2023_ICD_MAP.json', 'r', encoding='utf-8') as f:
+            with open("2023_ICD_MAP.json", "r", encoding="utf-8") as f:
                 self.dict_icd_map = json.load(f)
         except Exception:
             self.dict_icd_map = None
@@ -75,16 +79,18 @@ class PrintInsApplyOrder:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
     def save_to_pdf(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM insapply
             WHERE
                 InsApplyKey = {self.ins_apply_key}
-        '''
+        """
         rows = self.database.select_record(sql)
 
         if len(rows) <= 0:
@@ -92,27 +98,31 @@ class PrintInsApplyOrder:
 
         row = rows[0]
         # 14: 中醫 A:病歷本文 案件類別 流水號6碼
-        export_dir = f'{self.ins_apply_path}/emr{row["ApplyDate"]}'
+        export_dir = f"{self.ins_apply_path}/emr{row['ApplyDate']}"
         if not os.path.exists(export_dir):
             os.mkdir(export_dir)
 
-        pdf_file_name = f'{export_dir}/ins_order_{row["CaseType"]}{row["Sequence"]:0>6}.pdf'
+        pdf_file_name = (
+            f"{export_dir}/ins_order_{row['CaseType']}{row['Sequence']:0>6}.pdf"
+        )
         self.printer.setOutputFormat(QPrinter.PdfFormat)
         self.printer.setOutputFileName(pdf_file_name)
         self.print_html(True)
 
     def save_to_pdf_by_dialog(self):
-        export_dir = f'{self.ins_apply_path}/pdf'
+        export_dir = f"{self.ins_apply_path}/pdf"
         if not os.path.exists(export_dir):
             os.mkdir(export_dir)
 
-        pdf_file_name = f'{export_dir}/健保醫令pdf_{self.ins_apply_key}.pdf'
+        pdf_file_name = f"{export_dir}/健保醫令pdf_{self.ins_apply_key}.pdf"
 
         options = QtWidgets.QFileDialog.Options()
         file_name, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self.parent, "匯出醫令pdf",
+            self.parent,
+            "匯出醫令pdf",
             pdf_file_name,
-            "所有檔案 (*);;pdf檔 (*.pdf)", options=options
+            "所有檔案 (*);;pdf檔 (*.pdf)",
+            options=options,
         )
         if not file_name:
             return
@@ -122,9 +132,9 @@ class PrintInsApplyOrder:
         self.print_html(True)
         system_utils.show_message_box(
             QtWidgets.QMessageBox.Information,
-            '匯出完成',
+            "匯出完成",
             '<font size="5" color="red"><b>醫令明細pdf檔案已匯出完成</b></font>',
-            '',
+            "",
         )
 
     def print_painter(self):
@@ -134,8 +144,8 @@ class PrintInsApplyOrder:
         painter = QtGui.QPainter()
         painter.setFont(self.font)
         painter.begin(self.printer)
-        painter.drawText(0, 10, 'print test line1 中文測試')
-        painter.drawText(0, 30, 'print test line2 中文測試')
+        painter.drawText(0, 10, "print test line1 中文測試")
+        painter.drawText(0, 30, "print test line2 中文測試")
         painter.end()
 
     def print_html(self, printing):
@@ -151,11 +161,11 @@ class PrintInsApplyOrder:
             document.print(self.printer)
 
     def _get_html(self, ins_apply_key):
-        sql = f'''
+        sql = f"""
             SELECT * FROM insapply
             WHERE
                 InsApplyKey = {ins_apply_key}
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             return None
@@ -165,7 +175,7 @@ class PrintInsApplyOrder:
         prescript_record = self._get_prescript_record(row)
         fees_record = self._get_fees_record(row)
 
-        html = f'''
+        html = f"""
             <html>
                 <body>
                     <center><h3 style="text-align: center">特 約 醫 事 服 務 機 構 門 診 醫 療 服 務 點 數 及 醫 令 清 單</h3></center>
@@ -191,93 +201,101 @@ class PrintInsApplyOrder:
                     </table>
                 </body>
             </html>
-        '''
+        """
 
         return html
 
     # 醫令病歷資料
     def _get_case_record(self, row):
-        if self.apply_type == '申報':
-            apply_type = '送核'
+        if self.apply_type == "申報":
+            apply_type = "送核"
         else:
             apply_type = self.apply_type
 
         try:
-            year = row['StopDate'].year - 1911
-            month = row['StopDate'].month
-            day = row['StopDate'].day
-            stop_date = f'{year:0>3}年{month:0>2}月{day:0>2}日'
+            year = row["StopDate"].year - 1911
+            month = row["StopDate"].month
+            day = row["StopDate"].day
+            stop_date = f"{year:0>3}年{month:0>2}月{day:0>2}日"
         except Exception:
-            stop_date = ''
+            stop_date = ""
 
-        birthday = row['Birthday']
+        birthday = row["Birthday"]
         if birthday is not None:
-            birthday = string_utils.xstr(f'{birthday.year-1911:0>3}年{birthday.month:0>2}月{birthday.day:0>2}日')
+            birthday = string_utils.xstr(
+                f"{birthday.year - 1911:0>3}年{birthday.month:0>2}月{birthday.day:0>2}日"
+            )
         else:
-            birthday = ''
+            birthday = ""
 
-        sequence = string_utils.xstr(row['Sequence'])
-        clinic_id = self.system_settings.field('院所代號')
-        clinic_name = self.system_settings.field('院所名稱')
+        sequence = string_utils.xstr(row["Sequence"])
+        clinic_id = self.system_settings.field("院所代號")
+        clinic_name = self.system_settings.field("院所名稱")
 
-        if row['StopDate'] not in ['', None]:
-            ins_apply_date = row['StopDate']
+        if row["StopDate"] not in ["", None]:
+            ins_apply_date = row["StopDate"]
         else:
-            ins_apply_date = row['CaseDate']
+            ins_apply_date = row["CaseDate"]
 
-        apply_date = f'{ins_apply_date.year-1911:0>3}年{ins_apply_date.month:0>2}月'
+        apply_date = f"{ins_apply_date.year - 1911:0>3}年{ins_apply_date.month:0>2}月"
 
-        case_type = string_utils.xstr(row['CaseType'])
-        special_code1 = string_utils.xstr(row['SpecialCode1'])
-        special_code2 = string_utils.xstr(row['SpecialCode2'])
-        special_code3 = string_utils.xstr(row['SpecialCode3'])
-        special_code4 = string_utils.xstr(row['SpecialCode4'])
-        name = string_utils.xstr(row['Name'])
+        case_type = string_utils.xstr(row["CaseType"])
+        special_code1 = string_utils.xstr(row["SpecialCode1"])
+        special_code2 = string_utils.xstr(row["SpecialCode2"])
+        special_code3 = string_utils.xstr(row["SpecialCode3"])
+        special_code4 = string_utils.xstr(row["SpecialCode4"])
+        name = string_utils.xstr(row["Name"])
         case_date = string_utils.xstr(
-            f'{row["CaseDate"].year-1911:0>3}年{row["CaseDate"].month:0>2}月{row["CaseDate"].day:0>2}日'
+            f"{row['CaseDate'].year - 1911:0>3}年{row['CaseDate'].month:0>2}月{row['CaseDate'].day:0>2}日"
         )
         clinic_class = nhi_utils.INS_CLASS
-        pres_days = string_utils.xstr(row['PresDays'])
-        id = string_utils.xstr(row['ID'])
-        card = string_utils.xstr(row['Card'])
-        injury = string_utils.xstr(row['Injury'])
-        share_code = string_utils.xstr(row['ShareCode'])
+        pres_days = string_utils.xstr(row["PresDays"])
+        id = string_utils.xstr(row["ID"])
+        card = string_utils.xstr(row["Card"])
+        injury = string_utils.xstr(row["Injury"])
+        share_code = string_utils.xstr(row["ShareCode"])
 
         disease_list = [
-            string_utils.xstr(row['DiseaseCode1']),
-            string_utils.xstr(row['DiseaseCode2']),
-            string_utils.xstr(row['DiseaseCode3']),
-            string_utils.xstr(row['DiseaseCode4']),
-            string_utils.xstr(row['DiseaseCode5'])
+            string_utils.xstr(row["DiseaseCode1"]),
+            string_utils.xstr(row["DiseaseCode2"]),
+            string_utils.xstr(row["DiseaseCode3"]),
+            string_utils.xstr(row["DiseaseCode4"]),
+            string_utils.xstr(row["DiseaseCode5"]),
         ]
         for i, disease_code in enumerate(disease_list):
-            if disease_code == '':
+            if disease_code == "":
                 continue
 
-            if self.apply_year <= 2024 and self.dict_icd_map is not None:  # 2023年版ICD預檢 更新
+            if (
+                self.apply_year <= 2024 and self.dict_icd_map is not None
+            ):  # 2023年版ICD預檢 更新
                 try:
-                    disease_code = self.dict_icd_map[disease_code]  # 申報月份2025年以前只能申報2014年版本ICD-10
+                    disease_code = self.dict_icd_map[
+                        disease_code
+                    ]  # 申報月份2025年以前只能申報2014年版本ICD-10
                 except Exception:
                     pass
 
             disease_list[i] = disease_code
 
         disease_code1 = disease_list[0]
-        disease_code2 = disease_list[1] 
+        disease_code2 = disease_list[1]
         disease_code3 = disease_list[2]
         disease_code4 = disease_list[3]
         disease_code5 = disease_list[4]
 
-        disease_name = case_utils.get_disease_name(self.database, row['DiseaseCode1'])
+        disease_name = case_utils.get_disease_name(self.database, row["DiseaseCode1"])
 
-        pres_type = nhi_utils.PHARMACY_TYPE_DICT[row['PresType']]
+        pres_type = nhi_utils.PHARMACY_TYPE_DICT[row["PresType"]]
 
-        if special_code1 in ['JA', 'JB']:
-            correction_area_code = nhi_utils.get_correction_area_code(self.system_settings)
+        if special_code1 in ["JA", "JB"]:
+            correction_area_code = nhi_utils.get_correction_area_code(
+                self.system_settings
+            )
         else:
-            correction_area_code = ''
+            correction_area_code = ""
 
-        html = f'''
+        html = f"""
             <table align=center cellpadding="0" cellspacing="0" width="100%"
              style="border-width: 1px; font-color: black; border-style: solid;">
                 <tbody>
@@ -393,34 +411,34 @@ class PrintInsApplyOrder:
                     </tr>
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
     # 醫令點數資料
     def _get_fees_record(self, row):
-        pharmacy_code = nhi_utils.extract_pharmacy_code(row['PharmacyCode'])
+        pharmacy_code = nhi_utils.extract_pharmacy_code(row["PharmacyCode"])
 
-        case_rows = self._get_case_row(row['CaseKey1'])
+        case_rows = self._get_case_row(row["CaseKey1"])
         if len(case_rows) > 0:
             case_row = case_rows[0]
-            if string_utils.xstr(case_row['TreatType']) == '癌症中醫門診延長照護':
-                pharmacy_code = 'P59031'
+            if string_utils.xstr(case_row["TreatType"]) == "癌症中醫門診延長照護":
+                pharmacy_code = "P59031"
 
-        drug_fee = string_utils.xstr(row['DrugFee'])
-        treat_fee = string_utils.xstr(row['TreatFee'])
-        doctor_id = string_utils.xstr(row['DoctorID'])
-        doctor_name = string_utils.xstr(row['DoctorName'])
-        pharmacist_id = string_utils.xstr(row['PharmacistID'])
-        diag_code = string_utils.xstr(row['DiagCode'])
-        diag_fee = string_utils.xstr(row['DiagFee'])
-        pharmacy_fee = string_utils.xstr(row['PharmacyFee'])
-        agent_fee = string_utils.xstr(row['AgentFee'])
-        ins_total_fee = string_utils.xstr(row['InsTotalFee'])
-        share_fee = string_utils.xstr(row['ShareFee'])
-        ins_apply_fee = string_utils.xstr(row['InsApplyFee'])
+        drug_fee = string_utils.xstr(row["DrugFee"])
+        treat_fee = string_utils.xstr(row["TreatFee"])
+        doctor_id = string_utils.xstr(row["DoctorID"])
+        doctor_name = string_utils.xstr(row["DoctorName"])
+        pharmacist_id = string_utils.xstr(row["PharmacistID"])
+        diag_code = string_utils.xstr(row["DiagCode"])
+        diag_fee = string_utils.xstr(row["DiagFee"])
+        pharmacy_fee = string_utils.xstr(row["PharmacyFee"])
+        agent_fee = string_utils.xstr(row["AgentFee"])
+        ins_total_fee = string_utils.xstr(row["InsTotalFee"])
+        share_fee = string_utils.xstr(row["ShareFee"])
+        ins_apply_fee = string_utils.xstr(row["InsApplyFee"])
 
-        html = f'''
+        html = f"""
             <table align=center cellpadding="0" cellspacing="0" width="100%"
              style="border-width: 1px; border-style: solid;">
                 <tbody>
@@ -474,7 +492,7 @@ class PrintInsApplyOrder:
                     </tr>
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
@@ -482,7 +500,7 @@ class PrintInsApplyOrder:
     def _get_prescript_record(self, row):
         prescript_rows = self._get_order_rows(row)
 
-        html = f'''
+        html = f"""
             <table align=center cellpadding="0" cellspacing="0" width="100%"
              style="font-size: 12px; border-width: 1px; border-style: solid;">
                 <thead>
@@ -514,29 +532,29 @@ class PrintInsApplyOrder:
                     {prescript_rows}
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
     def _get_order_rows(self, row):
         self.sequence = 0
-        case_type = string_utils.xstr(row['CaseType'])
+        case_type = string_utils.xstr(row["CaseType"])
 
-        if case_type == '30':  # 腦血管疾病, 小兒氣喘, 小兒腦麻
+        if case_type == "30":  # 腦血管疾病, 小兒氣喘, 小兒腦麻
             html = self._set_auxiliary_case(row)
             return html
-        elif case_type == 'C5':  # 法定傳染病隔離通報
+        elif case_type == "C5":  # 法定傳染病隔離通報
             html = self._set_infectious(row)
             return html
 
-        html = ''
+        html = ""
 
         max_course = nhi_utils.MAX_COURSE
-        if case_type == '31':
+        if case_type == "31":
             max_course = nhi_utils.MAX_HOME_CARE
 
-        for course in range(1, max_course+1):
-            case_key = number_utils.get_integer(row[f'CaseKey{course}'])
+        for course in range(1, max_course + 1):
+            case_key = number_utils.get_integer(row[f"CaseKey{course}"])
             if case_key <= 0:
                 continue
 
@@ -546,71 +564,85 @@ class PrintInsApplyOrder:
 
             case_row = rows[0]
 
-            if case_type == '31' or \
-               (case_type == '25' and string_utils.xstr(case_row['TreatType']) in nhi_utils.HOME_CARE):
+            if case_type == "31" or (
+                case_type == "25"
+                and string_utils.xstr(case_row["TreatType"]) in nhi_utils.HOME_CARE
+            ):
                 html += self._set_home_care_treat(row, case_row)
 
-            if course == 1 or case_row['TreatType'] in nhi_utils.HOME_CARE:  # 設定診察費
+            if (
+                course == 1 or case_row["TreatType"] in nhi_utils.HOME_CARE
+            ):  # 設定診察費
                 html += self._set_diagnosis(row)
-                if string_utils.xstr(row['Visit']) == '初診照護':
+                if string_utils.xstr(row["Visit"]) == "初診照護":
                     html += self._set_first_visit(row)
 
-                if case_utils.get_case_extend(self.database, case_key, '整合醫療照護') == 'Y':
+                if (
+                    case_utils.get_case_extend(self.database, case_key, "整合醫療照護")
+                    == "Y"
+                ):
                     html += self._set_integrate_care(row)
 
-            if string_utils.xstr(case_row['TreatType']) in nhi_utils.CARE_TREAT:
+            if string_utils.xstr(case_row["TreatType"]) in nhi_utils.CARE_TREAT:
                 html += self._set_special_care(row, case_row)
 
-            treat_code = string_utils.xstr(row[f'TreatCode{course}'])
-            if treat_code != '':
+            treat_code = string_utils.xstr(row[f"TreatCode{course}"])
+            if treat_code != "":
                 html += self._set_treatment(row, case_row, course, treat_code)
                 if treat_code in nhi_utils.COMPLICATED_TREAT_CODE:
                     auxiliary_list = prescript_utils.get_auxiliary_list(
-                        self.database, case_row['CaseKey'], '輔助治療:')
+                        self.database, case_row["CaseKey"], "輔助治療:"
+                    )
                     for auxiliary_code in auxiliary_list:
                         html += self._set_auxiliary(row, case_row, auxiliary_code)
 
             prescript_rows = self._get_prescript_rows(case_key)
             if len(prescript_rows) > 0:
-                html += self._set_prescript(row, case_row, prescript_rows, case_key, course)
+                html += self._set_prescript(
+                    row, case_row, prescript_rows, case_key, course
+                )
 
         return html
 
     def _set_home_care_treat(self, row, case_row):
-        ins_code = nhi_utils.get_home_care_ins_code(self.database, string_utils.xstr(case_row['RegistType']))
+        ins_code = nhi_utils.get_home_care_ins_code(
+            self.database, string_utils.xstr(case_row["RegistType"])
+        )
 
         amount = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(self.database, ins_code, case_date=case_row['CaseDate'])
+            charge_utils.get_ins_fee_from_ins_code(
+                self.database, ins_code, case_date=case_row["CaseDate"]
+            )
         )
         unit_price = amount
 
         if unit_price <= 0:
             return
 
-        start_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
         percent = amount / unit_price * 100
         order_name = charge_utils.get_item_name_from_ins_code(self.database, ins_code)
 
         self.sequence += 1
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '',
-            'pres_type': '',
-            'order_type': '2',
-            'pres_days': '',
-            'ins_code': ins_code,
-            'order_name': order_name,
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': string_utils.xstr(row['DoctorID']),
-            'dosage': '1',
-            'percent': f'{percent:05.2f}',
-            'usage': '',
-            'total_dosage': '1',
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "",
+            "pres_type": "",
+            "order_type": "2",
+            "pres_days": "",
+            "ins_code": ins_code,
+            "order_name": order_name,
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": string_utils.xstr(row["DoctorID"]),
+            "dosage": "1",
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": "1",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
@@ -618,14 +650,19 @@ class PrintInsApplyOrder:
         return html
 
     def _set_auxiliary_case(self, row):
-        if string_utils.xstr(row['TreatCode1']) in ['C01', 'C02', 'C03', 'C04']:  # 小兒氣喘, 小兒腦性麻痺
-            sql = f'''
+        if string_utils.xstr(row["TreatCode1"]) in [
+            "C01",
+            "C02",
+            "C03",
+            "C04",
+        ]:  # 小兒氣喘, 小兒腦性麻痺
+            sql = f"""
                 SELECT * FROM cases
                 WHERE
                     CaseKey = {row["CaseKey1"]}
-            '''
+            """
         else:
-            patient_key = row['PatientKey']
+            patient_key = row["PatientKey"]
             sql = f'''
                 SELECT * FROM cases
                 WHERE
@@ -639,12 +676,16 @@ class PrintInsApplyOrder:
             '''
 
         rows = self.database.select_record(sql)
-        html = self._get_auxiliary_case(row, rows[0], '2', row['StopDate'])  # 2=診療明細
+        html = self._get_auxiliary_case(
+            row, rows[0], "2", row["StopDate"]
+        )  # 2=診療明細
         for case_row in rows:
-            case_key = case_row['CaseKey']
+            case_key = case_row["CaseKey"]
 
-            html += self._get_auxiliary_case(row, case_row, '4', case_row['CaseDate'])  # 不另計價
-            treat_code = nhi_utils.get_treat_code(self.database, case_row['CaseKey'])
+            html += self._get_auxiliary_case(
+                row, case_row, "4", case_row["CaseDate"]
+            )  # 不另計價
+            treat_code = nhi_utils.get_treat_code(self.database, case_row["CaseKey"])
             html += self._set_treatment(row, case_row, None, treat_code)
             prescript_rows = self._get_prescript_rows(case_key)
             if len(prescript_rows) > 0:
@@ -653,46 +694,50 @@ class PrintInsApplyOrder:
         return html
 
     def _get_auxiliary_case(self, row, case_row, order_type, stop_date):
-        treat_code = string_utils.xstr(row['TreatCode1'])
-        percent = number_utils.get_integer(row['Percent1'])
-        if order_type == '2':
-            amount = number_utils.get_integer(row['TreatFee1'])
+        treat_code = string_utils.xstr(row["TreatCode1"])
+        percent = number_utils.get_integer(row["Percent1"])
+        if order_type == "2":
+            amount = number_utils.get_integer(row["TreatFee1"])
         else:
             amount = 0
 
         unit_price = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(self.database, treat_code, case_date=case_row['CaseDate'])
+            charge_utils.get_ins_fee_from_ins_code(
+                self.database, treat_code, case_date=case_row["CaseDate"]
+            )
         )
 
-        case_key = case_row['CaseKey']
+        case_key = case_row["CaseKey"]
         pres_days = case_utils.get_pres_days(self.database, case_key)
         if pres_days > 0:
-            pres_type = '0'
+            pres_type = "0"
         else:
-            pres_type = '2'
+            pres_type = "2"
 
         self.sequence += 1
-        start_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
         end_date = date_utils.west_date_to_nhi_date(stop_date)
 
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '2',
-            'pres_type': '0',
-            'order_type': order_type,
-            'pres_days': pres_type,
-            'ins_code': treat_code,
-            'order_name': charge_utils.get_item_name_from_ins_code(self.database, treat_code),
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': string_utils.xstr(row['DoctorID']),
-            'dosage': '1',
-            'percent': f'{percent:05.2f}',
-            'usage': '',
-            'total_dosage': '1',
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "2",
+            "pres_type": "0",
+            "order_type": order_type,
+            "pres_days": pres_type,
+            "ins_code": treat_code,
+            "order_name": charge_utils.get_item_name_from_ins_code(
+                self.database, treat_code
+            ),
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": string_utils.xstr(row["DoctorID"]),
+            "dosage": "1",
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": "1",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
@@ -700,53 +745,55 @@ class PrintInsApplyOrder:
         return html
 
     def _set_diagnosis(self, row):
-        case_type = string_utils.xstr(row['CaseType'])
-        diag_code = string_utils.xstr(row['DiagCode'])
+        case_type = string_utils.xstr(row["CaseType"])
+        diag_code = string_utils.xstr(row["DiagCode"])
 
         unit_price = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(self.database, diag_code, case_date=row['CaseDate'])
+            charge_utils.get_ins_fee_from_ins_code(
+                self.database, diag_code, case_date=row["CaseDate"]
+            )
         )
         if unit_price <= 0:
-            return ''
+            return ""
 
-        amount = number_utils.get_integer(row['DiagFee'])
-        if case_type == '31':  # 居家醫療 列出單次金額, 非合併後的金額
+        amount = number_utils.get_integer(row["DiagFee"])
+        if case_type == "31":  # 居家醫療 列出單次金額, 非合併後的金額
             amount = unit_price
 
-        start_date = date_utils.west_date_to_nhi_date(row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
 
-        if string_utils.xstr(row['ShareCode']) == '007':
+        if string_utils.xstr(row["ShareCode"]) == "007":
             percent = 100
             unit_price = amount
         else:
             percent = amount / unit_price * 100
 
-        ins_code = string_utils.xstr(row['DiagCode'])
+        ins_code = string_utils.xstr(row["DiagCode"])
 
         order_name = charge_utils.get_item_name_from_ins_code(self.database, ins_code)
-        order_name = order_name.replace('<', '&lt;')  # 去掉html的 < >
-        order_name = order_name.replace('<', '&gt;')
+        order_name = order_name.replace("<", "&lt;")  # 去掉html的 < >
+        order_name = order_name.replace("<", "&gt;")
 
         self.sequence += 1
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '',
-            'pres_type': '',
-            'order_type': '0',
-            'pres_days': '',
-            'ins_code': ins_code,
-            'order_name': order_name,
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': string_utils.xstr(row['DoctorID']),
-            'dosage': '1',
-            'percent': f'{percent:05.2f}',
-            'usage': '',
-            'total_dosage': '1',
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "",
+            "pres_type": "",
+            "order_type": "0",
+            "pres_days": "",
+            "ins_code": ins_code,
+            "order_name": order_name,
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": string_utils.xstr(row["DoctorID"]),
+            "dosage": "1",
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": "1",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
@@ -755,40 +802,42 @@ class PrintInsApplyOrder:
 
     # 初診照護
     def _set_first_visit(self, row):
-        ins_code = 'A90'
+        ins_code = "A90"
 
         amount = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(self.database, ins_code, case_date=row['CaseDate'])
+            charge_utils.get_ins_fee_from_ins_code(
+                self.database, ins_code, case_date=row["CaseDate"]
+            )
         )
         unit_price = amount
 
         if unit_price <= 0:
             return
 
-        start_date = date_utils.west_date_to_nhi_date(row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
         percent = amount / unit_price * 100
         order_name = charge_utils.get_item_name_from_ins_code(self.database, ins_code)
 
         self.sequence += 1
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '',
-            'pres_type': '',
-            'order_type': '2',
-            'pres_days': '',
-            'ins_code': ins_code,
-            'order_name': order_name,
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': string_utils.xstr(row['DoctorID']),
-            'dosage': '1',
-            'percent': f'{percent:05.2f}',
-            'usage': '',
-            'total_dosage': '1',
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "",
+            "pres_type": "",
+            "order_type": "2",
+            "pres_days": "",
+            "ins_code": ins_code,
+            "order_name": order_name,
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": string_utils.xstr(row["DoctorID"]),
+            "dosage": "1",
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": "1",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
@@ -797,40 +846,42 @@ class PrintInsApplyOrder:
 
     # 整合醫療照護
     def _set_integrate_care(self, row):
-        ins_code = 'A91'
+        ins_code = "A91"
 
         amount = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(self.database, ins_code, case_date=row['CaseDate'])
+            charge_utils.get_ins_fee_from_ins_code(
+                self.database, ins_code, case_date=row["CaseDate"]
+            )
         )
         unit_price = amount
 
         if unit_price <= 0:
             return
 
-        start_date = date_utils.west_date_to_nhi_date(row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
         percent = amount / unit_price * 100
         order_name = charge_utils.get_item_name_from_ins_code(self.database, ins_code)
 
         self.sequence += 1
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '',
-            'pres_type': '',
-            'order_type': '2',
-            'pres_days': '',
-            'ins_code': ins_code,
-            'order_name': order_name,
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': string_utils.xstr(row['DoctorID']),
-            'dosage': '1',
-            'percent': f'{percent:05.2f}',
-            'usage': '',
-            'total_dosage': '1',
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "",
+            "pres_type": "",
+            "order_type": "2",
+            "pres_days": "",
+            "ins_code": ins_code,
+            "order_name": order_name,
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": string_utils.xstr(row["DoctorID"]),
+            "dosage": "1",
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": "1",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
@@ -839,46 +890,46 @@ class PrintInsApplyOrder:
 
     # 加強照護
     def _set_special_care(self, row, case_row):
-        case_key = case_row['CaseKey']
-        sql = f'''
+        case_key = case_row["CaseKey"]
+        sql = f"""
             SELECT * FROM prescript
             WHERE
                 CaseKey = {case_key} AND
                 MedicineSet = 11 AND
                 MedicineType = "照護"
             ORDER BY PrescriptKey
-        '''
+        """
         rows = self.database.select_record(sql)
 
-        start_date = date_utils.west_date_to_nhi_date(row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
 
-        html = ''
+        html = ""
         for care_row in rows:
             self.sequence += 1
-            amount = number_utils.get_integer(care_row['Price'])
+            amount = number_utils.get_integer(care_row["Price"])
             percent = 100
             unit_price = number_utils.get_integer(amount / percent * 100)
-            ins_code = string_utils.xstr(care_row['InsCode'])
+            ins_code = string_utils.xstr(care_row["InsCode"])
 
             order_row = {
-                'sequence': string_utils.xstr(self.sequence),
-                'clinic_class': string_utils.xstr(row['Class']),
-                'course_type': '',
-                'pres_type': '0',
-                'order_type': '2',
-                'pres_days': '',
-                'ins_code': ins_code,
-                'order_name': string_utils.xstr(care_row['MedicineName']),
-                'start_date': f'{start_date}0000',
-                'stop_date': f'{end_date}0000',
-                'doctor_id': string_utils.xstr(row['DoctorID']),
-                'dosage': '1',
-                'percent': f'{percent:05.2f}',
-                'usage': '',
-                'total_dosage': '1',
-                'unit_price': string_utils.xstr(unit_price),
-                'amount': string_utils.xstr(amount)
+                "sequence": string_utils.xstr(self.sequence),
+                "clinic_class": string_utils.xstr(row["Class"]),
+                "course_type": "",
+                "pres_type": "0",
+                "order_type": "2",
+                "pres_days": "",
+                "ins_code": ins_code,
+                "order_name": string_utils.xstr(care_row["MedicineName"]),
+                "start_date": f"{start_date}0000",
+                "stop_date": f"{end_date}0000",
+                "doctor_id": string_utils.xstr(row["DoctorID"]),
+                "dosage": "1",
+                "percent": f"{percent:05.2f}",
+                "usage": "",
+                "total_dosage": "1",
+                "unit_price": string_utils.xstr(unit_price),
+                "amount": string_utils.xstr(amount),
             }
 
             html += self._get_html_order_row(order_row)
@@ -887,52 +938,57 @@ class PrintInsApplyOrder:
 
     def _set_treatment(self, row, case_row, course, treat_code):
         try:
-            amount = number_utils.get_integer(row[f'TreatFee{course}'])
-            percent = number_utils.get_integer(row[f'Percent{course}'])
-            treat_code = string_utils.xstr(row[f'TreatCode{course}'])
+            amount = number_utils.get_integer(row[f"TreatFee{course}"])
+            percent = number_utils.get_integer(row[f"Percent{course}"])
+            treat_code = string_utils.xstr(row[f"TreatCode{course}"])
             unit_price = number_utils.get_integer(
-                charge_utils.get_ins_fee_from_ins_code(self.database, treat_code, case_date=case_row['CaseDate'])
+                charge_utils.get_ins_fee_from_ins_code(
+                    self.database, treat_code, case_date=case_row["CaseDate"]
+                )
             )
-            if string_utils.xstr(case_row['TreatType']) == '慢性腎病照護':
+            if string_utils.xstr(case_row["TreatType"]) == "慢性腎病照護":
                 amount = 0
         except KeyError:
             amount = 0
             unit_price = 0
             percent = 100
 
-        order_type = '2'
+        order_type = "2"
         if amount <= 0:
-            order_type = '4'
+            order_type = "4"
 
-        start_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
 
         self.sequence += 1
 
         if treat_code in nhi_utils.COMPLICATED_TREAT_CODE:
-            treat_position = prescript_utils.get_treat_position(self.database, case_row['CaseKey'], '治療部位:')
+            treat_position = prescript_utils.get_treat_position(
+                self.database, case_row["CaseKey"], "治療部位:"
+            )
         else:
-            treat_position = '1'
+            treat_position = "1"
 
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '2',
-            'pres_type': '0',
-            'order_type': order_type, 'pres_days': '',
-            'ins_code': treat_code,
-            'order_name': nhi_utils.TREAT_NAME_DICT[treat_code],
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': personnel_utils.get_person_field_value(
-                 self.database, string_utils.xstr(case_row['Doctor']), 'ID'
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "2",
+            "pres_type": "0",
+            "order_type": order_type,
+            "pres_days": "",
+            "ins_code": treat_code,
+            "order_name": nhi_utils.TREAT_NAME_DICT[treat_code],
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": personnel_utils.get_person_field_value(
+                self.database, string_utils.xstr(case_row["Doctor"]), "ID"
             ),
-            'dosage': treat_position,
-            'percent': f'{percent:05.2f}',
-            'usage': '',
-            'total_dosage': '1',
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "dosage": treat_position,
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": "1",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
@@ -940,35 +996,35 @@ class PrintInsApplyOrder:
         return html
 
     def _set_auxiliary(self, row, case_row, auxiliary):
-        order_type = '4'
+        order_type = "4"
         amount = 0
         unit_price = 0
         percent = 100
-        start_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
 
         self.sequence += 1
 
-
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '2',
-            'pres_type': '0',
-            'order_type': order_type, 'pres_days': '',
-            'ins_code': auxiliary,
-            'order_name': nhi_utils.get_auxiliary_name_by_code(auxiliary),
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': personnel_utils.get_person_field_value(
-                 self.database, string_utils.xstr(case_row['Doctor']), 'ID'
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "2",
+            "pres_type": "0",
+            "order_type": order_type,
+            "pres_days": "",
+            "ins_code": auxiliary,
+            "order_name": nhi_utils.get_auxiliary_name_by_code(auxiliary),
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": personnel_utils.get_person_field_value(
+                self.database, string_utils.xstr(case_row["Doctor"]), "ID"
             ),
-            'dosage': '1.00',
-            'percent': f'{percent:05.2f}',
-            'usage': '',
-            'total_dosage': '1',
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "dosage": "1.00",
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": "1",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
@@ -976,7 +1032,7 @@ class PrintInsApplyOrder:
         return html
 
     def _set_prescript(self, row, case_row, prescript_rows, case_key, course=None):
-        html = ''
+        html = ""
 
         pres_days = case_utils.get_pres_days(self.database, case_key)
         packages = case_utils.get_packages(self.database, case_key)
@@ -984,13 +1040,13 @@ class PrintInsApplyOrder:
         if pres_days <= 0:
             return html
 
-        if number_utils.get_integer(row['DrugFee']) > 0:
-            order_type = '1'  # 1=用藥明細
+        if number_utils.get_integer(row["DrugFee"]) > 0:
+            order_type = "1"  # 1=用藥明細
         else:
-            order_type = '4'  # 4=不另計價
+            order_type = "4"  # 4=不另計價
 
         html += self._set_A21(row, case_row, order_type, pres_days)
-        if number_utils.get_integer(row['PharmacyFee']) > 0:
+        if number_utils.get_integer(row["PharmacyFee"]) > 0:
             html += self._set_pharmacy(row, case_row, pres_days, course)
 
         for prescript_row in prescript_rows:
@@ -1001,45 +1057,49 @@ class PrintInsApplyOrder:
         return html
 
     def _set_A21(self, row, case_row, order_type, pres_days):
-        ins_code = 'A21'
-        if string_utils.xstr(case_row['TreatType']) == '癌症中醫門診延長照護':
-            ins_code = 'P59021'
+        ins_code = "A21"
+        if string_utils.xstr(case_row["TreatType"]) == "癌症中醫門診延長照護":
+            ins_code = "P59021"
 
         percent = 100
         unit_price = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(self.database, ins_code, case_date=case_row['CaseDate'])
+            charge_utils.get_ins_fee_from_ins_code(
+                self.database, ins_code, case_date=case_row["CaseDate"]
+            )
         )
         amount = unit_price * pres_days
-        if order_type == '4':  # 不另計價
+        if order_type == "4":  # 不另計價
             unit_price = 0
             amount = unit_price
 
-        start_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
         end_date = date_utils.west_date_to_nhi_date(
-            case_row['CaseDate'].date() + datetime.timedelta(days=pres_days - 1)
+            case_row["CaseDate"].date() + datetime.timedelta(days=pres_days - 1)
         )
 
         self.sequence += 1
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '',
-            'pres_type': '0',
-            'order_type': order_type,
-            'pres_days': pres_days,
-            'ins_code': ins_code,
-            'order_name': charge_utils.get_item_name_from_ins_code(self.database, ins_code),
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': personnel_utils.get_person_field_value(
-                self.database, string_utils.xstr(case_row['Doctor']), 'ID'
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "",
+            "pres_type": "0",
+            "order_type": order_type,
+            "pres_days": pres_days,
+            "ins_code": ins_code,
+            "order_name": charge_utils.get_item_name_from_ins_code(
+                self.database, ins_code
             ),
-            'dosage': pres_days,
-            'percent': f'{percent:05.2f}',
-            'usage': 'PO',
-            'total_dosage': pres_days,
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": personnel_utils.get_person_field_value(
+                self.database, string_utils.xstr(case_row["Doctor"]), "ID"
+            ),
+            "dosage": pres_days,
+            "percent": f"{percent:05.2f}",
+            "usage": "PO",
+            "total_dosage": pres_days,
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
@@ -1047,112 +1107,128 @@ class PrintInsApplyOrder:
         return html
 
     def _set_pharmacy(self, row, case_row, pres_days, course):
-        html = ''
+        html = ""
         if pres_days <= 0:
             return html
 
-        if string_utils.xstr(case_row['PharmacyType']) != '申報':
+        if string_utils.xstr(case_row["PharmacyType"]) != "申報":
             return html
 
         course = number_utils.get_integer(course)
-        pharmacy_byte = string_utils.xstr(row['PharmacyCode'])[course-1]
-        if pharmacy_byte not in ['1', '2']:
+        pharmacy_byte = string_utils.xstr(row["PharmacyCode"])[course - 1]
+        if pharmacy_byte not in ["1", "2"]:
             return html
 
-        _, pharmacist = nhi_utils.pharmacist_schedule_on_duty(self.database, case_row['CaseKey'])
+        _, pharmacist = nhi_utils.pharmacist_schedule_on_duty(
+            self.database, case_row["CaseKey"]
+        )
         if pharmacist is not None:
-            pharmacy_code = 'A31'
+            pharmacy_code = "A31"
         else:
-            pharmacy_code = 'A32'
+            pharmacy_code = "A32"
 
-        if string_utils.xstr(case_row['TreatType']) == '癌症中醫門診延長照護':
-            pharmacy_code = 'P59031'
+        if string_utils.xstr(case_row["TreatType"]) == "癌症中醫門診延長照護":
+            pharmacy_code = "P59031"
 
         unit_price = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(self.database, pharmacy_code, case_date=case_row['CaseDate'])
+            charge_utils.get_ins_fee_from_ins_code(
+                self.database, pharmacy_code, case_date=case_row["CaseDate"]
+            )
         )
-        amount = charge_utils.get_extra_pharmacy_fee(string_utils.xstr(case_row['RegistType']), unit_price)
+        amount = charge_utils.get_extra_pharmacy_fee(
+            string_utils.xstr(case_row["RegistType"]), unit_price
+        )
         percent = round(amount / unit_price * 100, -1)
 
-        start_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
 
         executor = pharmacist
         if executor is None:
-            executor = string_utils.xstr(case_row['Doctor'])
+            executor = string_utils.xstr(case_row["Doctor"])
 
         self.sequence += 1
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '',
-            'pres_type': '0',
-            'order_type': '9',
-            'pres_days': pres_days,
-            'ins_code': pharmacy_code,
-            'order_name': charge_utils.get_item_name_from_ins_code(self.database, pharmacy_code),
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': personnel_utils.get_person_field_value(self.database, executor, 'ID'),
-            'dosage': '1',
-            'percent': f'{percent:05.2f}',
-            'usage': '',
-            'total_dosage': '1',
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "",
+            "pres_type": "0",
+            "order_type": "9",
+            "pres_days": pres_days,
+            "ins_code": pharmacy_code,
+            "order_name": charge_utils.get_item_name_from_ins_code(
+                self.database, pharmacy_code
+            ),
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": personnel_utils.get_person_field_value(
+                self.database, executor, "ID"
+            ),
+            "dosage": "1",
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": "1",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
 
         return html
 
-    def _set_medicine(self, row, case_row, prescript_row, pres_days, packages, instruction):
+    def _set_medicine(
+        self, row, case_row, prescript_row, pres_days, packages, instruction
+    ):
         unit_price = 0
         amount = unit_price
-        ins_code = string_utils.xstr(prescript_row['InsCode'])
+        ins_code = string_utils.xstr(prescript_row["InsCode"])
 
         # order_name = case_utils.get_drug_name(self.database, ins_code)
-        order_name = string_utils.remove_square_square_brackets(prescript_row['MedicineName'])
-
-        if order_name == '':
-            order_name = case_utils.get_medicine_name(self.database, 'InsCode', ins_code)
-
-        start_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(
-            case_row['CaseDate'].date() + datetime.timedelta(days=pres_days-1)
+        order_name = string_utils.remove_square_square_brackets(
+            prescript_row["MedicineName"]
         )
-        dosage = prescript_row['Dosage']  # 2020-05-01 改為日劑量
-        dosage_mode = prescript_row['DosageMode']  # 劑量模式
-        if dosage_mode == '次劑量':
+
+        if order_name == "":
+            order_name = case_utils.get_medicine_name(
+                self.database, "InsCode", ins_code
+            )
+
+        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(
+            case_row["CaseDate"].date() + datetime.timedelta(days=pres_days - 1)
+        )
+        dosage = prescript_row["Dosage"]  # 2020-05-01 改為日劑量
+        dosage_mode = prescript_row["DosageMode"]  # 劑量模式
+        if dosage_mode == "次劑量":
             dosage *= packages
 
         try:  # 沒有劑量的藥品跳過
             total_dosage = dosage * pres_days
         except Exception:
-            return ''
+            return ""
 
         packages_code = nhi_utils.FREQUENCY[packages]
         instruction_code = nhi_utils.get_usage(instruction)
 
         self.sequence += 1
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '',
-            'pres_type': '0',
-            'order_type': '4',
-            'pres_days': pres_days,
-            'ins_code': ins_code,
-            'order_name': order_name,
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': '',
-            'dosage': f'{dosage:7.2f}',
-            'percent': f'{packages_code}{instruction_code}',
-            'usage': 'PO',
-            'total_dosage': f'{total_dosage:7.1f}',
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "",
+            "pres_type": "0",
+            "order_type": "4",
+            "pres_days": pres_days,
+            "ins_code": ins_code,
+            "order_name": order_name,
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": "",
+            "dosage": f"{dosage:7.2f}",
+            "percent": f"{packages_code}{instruction_code}",
+            "usage": "PO",
+            "total_dosage": f"{total_dosage:7.1f}",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
@@ -1188,30 +1264,30 @@ class PrintInsApplyOrder:
     # 取得醫令列
     @staticmethod
     def _get_html_order_row(row):
-        sequence = row['sequence']
-        clinic_class = row['clinic_class']
-        course_type = row['course_type']
-        pres_type = row['pres_type']
-        order_type = row['order_type']
-        pres_days = row['pres_days']
-        ins_code = row['ins_code']
-        order_name = row['order_name']
-        start_date = row['start_date']
-        stop_date = row['stop_date']
-        doctor_id = row['doctor_id']
-        dosage = row['dosage']
-        percent = row['percent']
-        usage = row['usage']
-        total_dosage = row['total_dosage']
-        unit_price = row['unit_price']
-        amount = row['amount']
+        sequence = row["sequence"]
+        clinic_class = row["clinic_class"]
+        course_type = row["course_type"]
+        pres_type = row["pres_type"]
+        order_type = row["order_type"]
+        pres_days = row["pres_days"]
+        ins_code = row["ins_code"]
+        order_name = row["order_name"]
+        start_date = row["start_date"]
+        stop_date = row["stop_date"]
+        doctor_id = row["doctor_id"]
+        dosage = row["dosage"]
+        percent = row["percent"]
+        usage = row["usage"]
+        total_dosage = row["total_dosage"]
+        unit_price = row["unit_price"]
+        amount = row["amount"]
 
         if ins_code in nhi_utils.COMPLICATED_TREAT_CODE:
-            dosage_align = 'left'
+            dosage_align = "left"
         else:
-            dosage_align = 'right'
+            dosage_align = "right"
 
-        html = f'''
+        html = f"""
             <tr>
                 <td width="3%" style="text-align: center; vertical-align: middle">{sequence}</td>
                 <td width="3%" style="text-align: center; vertical-align: middle">{clinic_class}</td>
@@ -1235,73 +1311,83 @@ class PrintInsApplyOrder:
                 <td width="5%" style="text-align: right; vertical-align: middle">{amount}</td>
                 <td></td>
             </tr>
-        '''
+        """
 
         return html
 
     def _set_infectious(self, row):
         course = 1
-        case_key = row[f'CaseKey{course}']
+        case_key = row[f"CaseKey{course}"]
         case_rows = self._get_case_row(case_key)
         if len(case_rows) <= 0:
             return None
 
         case_row = case_rows[0]
-        total_dosage = case_utils.get_pres_days(self.database, case_row['CaseKey'])
+        total_dosage = case_utils.get_pres_days(self.database, case_row["CaseKey"])
 
-        remote_diag_fee = charge_utils.get_ins_fee_from_ins_code(self.database, 'E5204C', case_date=row['CaseDate'])  # 遠距診療費
+        remote_diag_fee = charge_utils.get_ins_fee_from_ins_code(
+            self.database, "E5204C", case_date=row["CaseDate"]
+        )  # 遠距診療費
 
-        if row['DiagFee'] > 0:
+        if row["DiagFee"] > 0:
             html = self._set_diagnosis(row)
             return html
 
-        if row['InsApplyFee'] == remote_diag_fee:
-            html = self._set_infectious_treatment(row, case_row, 'E5204C', 1)  # 遠距診療費
+        if row["InsApplyFee"] == remote_diag_fee:
+            html = self._set_infectious_treatment(
+                row, case_row, "E5204C", 1
+            )  # 遠距診療費
             return html
 
-        html = ''
+        html = ""
         infectious_drug = prescript_utils.get_infectious_drug(self.database, case_key)
-        if infectious_drug in ['台灣清冠一號及科學中藥', '台灣清冠一號']:
-            html += self._set_infectious_treatment(row, case_row, 'E5012C', total_dosage)  # 台灣清冠一號補助費
-        if infectious_drug in ['台灣清冠一號及科學中藥', '科學中藥']:
+        if infectious_drug in ["台灣清冠一號及科學中藥", "台灣清冠一號"]:
+            html += self._set_infectious_treatment(
+                row, case_row, "E5012C", total_dosage
+            )  # 台灣清冠一號補助費
+        if infectious_drug in ["台灣清冠一號及科學中藥", "科學中藥"]:
             prescript_rows = self._get_prescript_rows(case_key)
             if len(prescript_rows) > 0:
-                html += self._set_prescript(row, case_row, prescript_rows, case_key, course)
+                html += self._set_prescript(
+                    row, case_row, prescript_rows, case_key, course
+                )
 
         return html
 
     # 法定傳染病通報隔離案件
     def _set_infectious_treatment(self, row, case_row, ins_code, total_dosage):
-        order_type = '2'
-        unit_price = charge_utils.get_ins_fee_from_ins_code(self.database, ins_code, case_date=case_row['CaseDate'])
+        order_type = "2"
+        unit_price = charge_utils.get_ins_fee_from_ins_code(
+            self.database, ins_code, case_date=case_row["CaseDate"]
+        )
         amount = unit_price * total_dosage
         percent = 100
         order_name = charge_utils.get_item_name_from_ins_code(self.database, ins_code)
 
-        start_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
-        end_date = date_utils.west_date_to_nhi_date(case_row['CaseDate'])
+        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
+        end_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
 
         self.sequence += 1
         order_row = {
-            'sequence': string_utils.xstr(self.sequence),
-            'clinic_class': string_utils.xstr(row['Class']),
-            'course_type': '',
-            'pres_type': '0',
-            'order_type': order_type,
-            'pres_days': '',
-            'ins_code': ins_code,
-            'order_name': order_name,
-            'start_date': f'{start_date}0000',
-            'stop_date': f'{end_date}0000',
-            'doctor_id': personnel_utils.get_person_field_value(
-                 self.database, string_utils.xstr(case_row['Doctor']), 'ID'
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "",
+            "pres_type": "0",
+            "order_type": order_type,
+            "pres_days": "",
+            "ins_code": ins_code,
+            "order_name": order_name,
+            "start_date": f"{start_date}0000",
+            "stop_date": f"{end_date}0000",
+            "doctor_id": personnel_utils.get_person_field_value(
+                self.database, string_utils.xstr(case_row["Doctor"]), "ID"
             ),
-            'dosage': total_dosage,
-            'percent': f'{percent:05.2f}',
-            'usage': '',
-            'total_dosage': total_dosage,
-            'unit_price': string_utils.xstr(unit_price),
-            'amount': string_utils.xstr(amount)
+            "dosage": total_dosage,
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": total_dosage,
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
         }
 
         html = self._get_html_order_row(order_row)
