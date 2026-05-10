@@ -270,6 +270,10 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
             if in_case_date != case_date:
                 continue
 
+            debt = number_utils.get_integer(row["Debt"])
+            if debt > 0:  # 欠款不計入業績
+                continue
+
             # medicine_key = string_utils.xstr(row['MedicineKey'])
             # commission = self._get_commission(medicine_key)
             # if commission == '0':
@@ -277,7 +281,6 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
 
             massage_referrer = string_utils.xstr(row["MassageReferrer"])
             nursing_assistant = string_utils.xstr(row["NursingAssistant"])
-            debt = number_utils.get_integer(row["Debt"])
 
             # if massage_referrer != '' or nursing_assistant != '':  # 有推薦者不算醫師的業績 2026-02-02 void
             #     continue
@@ -305,15 +308,22 @@ class StatisticsDoctorSaleSummary(QtWidgets.QMainWindow):
             subtotal = number_utils.get_integer(row["Amount"]) * days
             discount_fee = self._get_discount_fee(row["CaseKey"], row["MedicineSet"])
             subtotal -= discount_fee  # 2026-03-11 佳禾: 要扣掉折扣金額
-            if debt > 0:
-                subtotal -= debt
 
-            if in_medicine_type == "水藥" and medicine_name in [
-                "代煎水藥"
-            ]:  # 代煎水藥不算業績
+            if "代煎" in medicine_name:  # 代煎水藥不算業績
+                pass
+            elif "現抓水藥" in medicine_name:  # 現抓水藥不算業績
                 pass
             else:
                 total_amount += subtotal
+
+            # if case_date == "2026-02-05":
+            #     print(
+            #         in_medicine_type,
+            #         medicine_type,
+            #         medicine_name,
+            #         subtotal,
+            #         total_amount,
+            #     )
 
         if rows:
             repayment_total_amount = self._get_repayment(
