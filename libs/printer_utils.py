@@ -7564,8 +7564,8 @@ def get_prescript_html23(
             },
         }
 
-    if system_setting.field("處方列印方向") == "垂直列印":
-        rows = set_vertical_direction(rows)
+    # if system_setting.field("處方列印方向") == "垂直列印":
+    #     rows = set_vertical_direction(rows)
 
     prescript = ""
     row_count = int((len(rows) - 1) / blocks) + 1
