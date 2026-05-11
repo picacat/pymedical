@@ -1916,6 +1916,7 @@ class Registration(QtWidgets.QMainWindow):
     # 準備掛號
     def _prepare_registration_data(self, row, ic_card=None):
         patient_key = row[0]["PatientKey"]
+        message = None
 
         if self.system_settings.field("欠款未還不能掛號") == "Y":
             message = registration_utils.check_debt(
