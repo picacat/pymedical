@@ -168,6 +168,7 @@ class CheckErrors(QtWidgets.QMainWindow):
             error_messages += self._check_highly_complicated_massage_duration(row)
             error_messages += self._check_invalid_gender_disease(row)
             error_messages += self._check_duplicate_treat(row)
+            error_messages += self._check_integrate_care(row)
 
             if len(error_messages) > 0:
                 self._insert_error_record(row, error_messages)
@@ -1714,6 +1715,23 @@ class CheckErrors(QtWidgets.QMainWindow):
         rows = self.database.select_record(sql)
         if len(rows) >= 2:
             error_messages.append("治療結束時間重複")
+
+        return error_messages
+
+    def _check_integrate_care(self, row):
+        error_messages = []
+
+        if (
+            case_utils.get_case_extend(self.database, row["CaseKey"], "整合醫療照護")
+            != "Y"
+        ):
+            return error_messages
+
+        treat_type = string_utils.xstr(row["TreatType"])
+        if treat_type in nhi_utils.IMPROVE_CARE_TREAT + nhi_utils.AUXILIARY_CARE_TREAT:
+            error_messages.append("加強照護專案不得申報整合醫療照護")
+        elif treat_type in nhi_utils.HOME_CARE:
+            error_messages.append("居家醫療不得申報整合醫療照護")
 
         return error_messages
 
