@@ -1106,7 +1106,7 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
             excel_file_name,
             self.ui.tableWidget_doctor_care,
             None,
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
         )
 
         system_utils.show_message_box(
@@ -1446,7 +1446,7 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
                 case_utils.get_case_extend(self.database, case_key, "整合醫療照護")
                 == "Y"
             ):
-                self._set_doctor_care_count(row_no, 12)
+                self._set_doctor_care_count(row_no, 18)
 
         self.ui._calculate_table_widget_total(self.ui.tableWidget_doctor_care)
 
