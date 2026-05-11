@@ -2998,6 +2998,9 @@ def get_prescript_html2(
             )
 
             medicine_name = string_utils.xstr(prescript_block[0])
+            if medicine_name == "自費水藥":
+                medicine_name += f" (${prescript_block[9]}元/帖)"
+
             if print_location == "Y":
                 location = string_utils.xstr(prescript_block[1])
 
@@ -4118,8 +4121,10 @@ def get_medicine_detail(
 
         unit = string_utils.xstr(rows[row_no]["Unit"])
         location = string_utils.xstr(rows[row_no]["Location"])
+        price = number_utils.get_integer(rows[row_no]["Price"])
     except (IndexError, TypeError):
-        medicine_name, dosage_mode, ins_code, medicine_type, unit, location = (
+        medicine_name, dosage_mode, ins_code, medicine_type, unit, location, price = (
+            "",
             "",
             "",
             "",
@@ -4169,6 +4174,7 @@ def get_medicine_detail(
         instruction,
         medicine_type,
         dosage_mode,
+        price,
     )
 
 
