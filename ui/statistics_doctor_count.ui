@@ -572,12 +572,22 @@
                 </column>
                 <column>
                  <property name="text">
+                  <string>門診中傷</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>門診高傷</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
                   <string>針傷合併</string>
                  </property>
                 </column>
                 <column>
                  <property name="text">
-                  <string>居家訪視</string>
+                  <string>居家內科</string>
                  </property>
                 </column>
                 <column>
@@ -593,6 +603,26 @@
                 <column>
                  <property name="text">
                   <string>居家高針</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>居家傷科</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>居家中傷</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>居家高傷</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>居家合併</string>
                  </property>
                 </column>
                 <column>
@@ -623,7 +653,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>29</height>
+     <height>33</height>
     </rect>
    </property>
   </widget>
