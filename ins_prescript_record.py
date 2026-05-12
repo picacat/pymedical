@@ -11,6 +11,7 @@ from libs import (
     class_utils,
     db_utils,
     dialog_utils,
+    medicine_utils,
     nhi_utils,
     number_utils,
     patient_utils,
@@ -2009,12 +2010,13 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         except Exception:
             return
 
-        dialog = dialog_utils.get_dialog_medicine_library(
-            self, self.database, self.system_settings, medicine_name, medicine_type
-        )
-        dialog.exec_()
-        dialog.close_all()
-        dialog.deleteLater()
+        medicine_utils.open_medicine_library(medicine_type, medicine_name)
+        # dialog = dialog_utils.get_dialog_medicine_library(
+        #     self, self.database, self.system_settings, medicine_name, medicine_type
+        # )
+        # dialog.exec_()
+        # dialog.close_all()
+        # dialog.deleteLater()
 
     def _show_treat_description(self):
         medicine_key_item = self.ui.tableWidget_treat.item(

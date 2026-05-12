@@ -636,7 +636,7 @@ class MedicalRecordCheck(QtWidgets.QDialog):
             error = self._check_last_ckd_drug()
             if error:
                 error_message.append(error)
-        elif current_ckd_code is not None and "P64001" <= current_ckd_code <= "P64008":
+        elif current_ckd_code is not None and "P64005" <= current_ckd_code <= "P64008":
             if self.pres_days > 0 and self.course >= 2:
                 error_message.append(
                     "慢性腎病ckd 療程2-6次不可開藥，若要開藥，請改為一般門診"
@@ -680,7 +680,7 @@ class MedicalRecordCheck(QtWidgets.QDialog):
                 prescript.CaseKey != {case_key} AND
                 DATE(prescript.CaseDate) <= "{case_date.strftime("%Y-%m-%d")}" AND
                 cases.PatientKey = {patient_key} AND
-                InsCode BETWEEN "P64001" AND "P64008"
+                InsCode BETWEEN "P64001" AND "P64004"
             ORDER BY cases.CaseDate DESC LIMIT 1
         """
         rows = self.database.select_record(sql)
