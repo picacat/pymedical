@@ -2694,6 +2694,8 @@ def get_prescript_html(
             )
 
             medicine_name = string_utils.xstr(prescript_block[0])
+            if medicine_name == "自費水藥":
+                medicine_name += f" (${prescript_block[9]}元/帖)"
 
             if instruction == "健保檢驗":
                 ins_code = string_utils.xstr(prescript_block[5])
