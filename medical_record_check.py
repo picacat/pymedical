@@ -639,7 +639,7 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         elif current_ckd_code is not None and "P64005" <= current_ckd_code <= "P64008":
             if self.pres_days > 0 and self.course >= 2:
                 error_message.append(
-                    "慢性腎病ckd 療程2-6次不可開藥，若要開藥，請改為一般門診"
+                    "慢性腎病ckd 療程2-6次為純針灸療程不可開藥，若要開藥，請掛號修正取得新卡序，不要續上次療程。"
                 )
             else:
                 error = self._check_last_ckd_treat(current_ckd_code)
