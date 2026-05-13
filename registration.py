@@ -2141,19 +2141,27 @@ class Registration(QtWidgets.QMainWindow):
             return default_card, None
 
         today = datetime.date.today()
-        last_treat_date = (today - datetime.timedelta(days=30 - 1)).strftime(
-            "%Y-%m-%d 00:00:00"
-        )
+        if (
+            self.ui.comboBox_treat_type.currentText() in nhi_utils.KIDNEY_CARE_TREAT
+        ):  # 慢性腎病 28天內
+            last_treat_date = (today - datetime.timedelta(days=28 - 1)).strftime(
+                "%Y-%m-%d 00:00:00"
+            )
+        else:  # 其他 30天內
+            last_treat_date = (today - datetime.timedelta(days=30 - 1)).strftime(
+                "%Y-%m-%d 00:00:00"
+            )
 
         if (
-            self.ui.comboBox_treat_type.currentText() in nhi_utils.PREGNANT_CARE_TREAT
-        ):  # 2024.12.13 助孕照護，保胎照護，上次有開藥，不要續療程
+            self.ui.comboBox_treat_type.currentText()
+            in nhi_utils.PREGNANT_CARE_TREAT + nhi_utils.KIDNEY_CARE_TREAT
+        ):  # 2024.12.13 助孕照護，保胎照護，慢性腎病照護，上次有開藥，不要續療程
             sql = f'''
                 SELECT cases.CaseKey FROM cases
                     LEFT JOIN dosage ON dosage.CaseKey = cases.CaseKey
                 WHERE
                     (CaseDate >= "{last_treat_date}") AND
-                    (TreatType IN {tuple(nhi_utils.PREGNANT_CARE_TREAT)}) AND
+                    (TreatType IN {tuple(nhi_utils.PREGNANT_CARE_TREAT + nhi_utils.KIDNEY_CARE_TREAT)}) AND
                     (PatientKey = {patient_key}) AND
                     (InsType = "健保") AND
                     (dosage.Days > 0)
@@ -2161,6 +2169,26 @@ class Registration(QtWidgets.QMainWindow):
             '''
             rows = self.database.select_record(sql)
             if len(rows) > 0:
+                return default_card, None
+
+        if self.ui.comboBox_treat_type.currentText() in nhi_utils.KIDNEY_CARE_TREAT:
+            sql = f'''
+                SELECT cases.CaseKey, Continuance FROM cases
+                    LEFT JOIN dosage ON dosage.CaseKey = cases.CaseKey
+                WHERE
+                    (CaseDate >= "{last_treat_date}") AND
+                    (TreatType IN ("{nhi_utils.KIDNEY_CARE_TREAT[0]}")) AND
+                    (PatientKey = {patient_key}) AND
+                    (InsType = "健保")
+                ORDER BY CaseDate DESC LIMIT 1
+            '''
+            rows = self.database.select_record(sql)
+            if len(rows) <= 0:
+                return default_card, None
+
+            row = rows[0]
+            course = number_utils.get_integer(row["Continuance"])
+            if course >= 2:
                 return default_card, None
 
         if self.system_settings.field("療程中斷不續療程") == "Y":
@@ -2205,9 +2233,9 @@ class Registration(QtWidgets.QMainWindow):
             self.ui.comboBox_treat_type.setCurrentText(treat_type)
             return default_card, None
 
-        if treat_type in nhi_utils.PREGNANT_CARE_TREAT + [
-            "慢性腎病照護"
-        ]:  # 助孕照護，保胎照護、慢性腎病照護要續療程
+        if (
+            treat_type in nhi_utils.PREGNANT_CARE_TREAT + nhi_utils.KIDNEY_CARE_TREAT
+        ):  # 助孕照護，保胎照護，慢性腎病照護除外
             pass
         elif treat_type in nhi_utils.IMPROVE_CARE_TREAT:  # 加強照護除外
             self.ui.comboBox_treat_type.setCurrentText(treat_type)
@@ -2738,10 +2766,13 @@ class Registration(QtWidgets.QMainWindow):
             massager = None
             remark = None
 
-            if self.system_settings.field("掛號新療程自動帶出上次就醫類別") == "Y":
-                last_treat_type = registration_utils.get_last_treat_type(
-                    self.database, patient_key
-                )
+            last_treat_type = registration_utils.get_last_treat_type(
+                self.database, patient_key
+            )
+            if (
+                self.system_settings.field("掛號新療程自動帶出上次就醫類別") == "Y"
+                or last_treat_type in nhi_utils.IMPROVE_CARE_TREAT
+            ):
                 if treat_type == "內科":
                     treat_type = last_treat_type
 

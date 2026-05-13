@@ -1004,8 +1004,12 @@ CANCER_CARE_TREAT = [
     "子宮體癌照護",
     "甲狀腺癌照護",
 ]
-MISC_CARE_TREAT = ["癌症中醫門診延長照護", "慢性腎病照護", "兒童鼻炎"]
-IMPROVE_CARE_TREAT = PREGNANT_CARE_TREAT + CANCER_CARE_TREAT + MISC_CARE_TREAT
+KIDNEY_CARE_TREAT = ["慢性腎病照護"]
+MISC_CARE_TREAT = ["癌症中醫門診延長照護", "兒童鼻炎"]
+IMPROVE_CARE_TREAT = (
+    PREGNANT_CARE_TREAT + CANCER_CARE_TREAT + MISC_CARE_TREAT + KIDNEY_CARE_TREAT
+)
+
 
 # 案件分類: 31
 HOME_CARE = ["居家醫療"]

@@ -142,6 +142,8 @@ class InsCareRecord(QtWidgets.QMainWindow):
                 None,
                 self.medicine_set,
                 self.ui.tableWidget_prescript,
+                None,
+                None,
             )
             dialog.exec_()
             dialog.deleteLater()
@@ -600,7 +602,7 @@ class InsCareRecord(QtWidgets.QMainWindow):
         elif treat_type == "保胎照護":
             self.set_keep_baby_treat(treatment, pres_days, course)
         elif treat_type == "慢性腎病照護":
-            self.set_kidney_prescript(pres_days, treatment, self.course)
+            self.set_kidney_prescript(pres_days, treatment, course)
         elif treat_type == "兒童鼻炎":
             self._remove_specific_treat_code(["P58005"])  # 歸零
             self._add_care_row("P58005", 0)  # 預設為兒童鼻炎
