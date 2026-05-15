@@ -474,9 +474,21 @@ class StatisticsInsDiscountRegistFee(QtWidgets.QMainWindow):
                     discount_fee,
                 ]
                 row = [str(field).replace("\\", "").replace(",", "") for field in row]
+                clean_row = []
+                for field in row:
+                    s = str(field)
+                    s = s.replace("\\", "")  # 刪除反斜線
+                    s = s.replace(",", "")  # 刪除逗號
+                    s = s.replace("\n", " ")  # 換行符號換成空格
+                    s = s.replace("\r", " ")  # 換行符號換成空格
+                    clean_row.append(s)
 
                 try:
-                    writer.writerow(row)
+                    writer.writerow(clean_row)
+                except csv.Error as e:
+                    # 如果走到這步還錯，打印出到底是哪一列資料有問題，方便 debug
+                    print(f"這列資料有問題: {clean_row}")
+                    raise e
                 except UnicodeEncodeError:
                     try:
                         xname = list(name)
