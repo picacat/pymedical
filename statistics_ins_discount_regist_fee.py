@@ -405,6 +405,7 @@ class StatisticsInsDiscountRegistFee(QtWidgets.QMainWindow):
 
                 try:
                     name = self.ui.tableWidget_medical_record.item(row_no, 12).text()
+                    name = name.replace(",", "")
                 except Exception:
                     name = ""
 
@@ -425,6 +426,7 @@ class StatisticsInsDiscountRegistFee(QtWidgets.QMainWindow):
 
                 try:
                     address = self.ui.tableWidget_medical_record.item(row_no, 17).text()
+                    address = address.replace(",", "")
                 except Exception:
                     address = ""
 
@@ -432,6 +434,7 @@ class StatisticsInsDiscountRegistFee(QtWidgets.QMainWindow):
                     telephone = self.ui.tableWidget_medical_record.item(
                         row_no, 15
                     ).text()
+                    telephone = telephone.replace(",", "")
                 except Exception:
                     telephone = ""
 
@@ -447,6 +450,7 @@ class StatisticsInsDiscountRegistFee(QtWidgets.QMainWindow):
                     discount_type = self.ui.tableWidget_medical_record.item(
                         row_no, 3
                     ).text()
+                    discount_type = discount_type.replace(",", "")
                 except Exception:
                     discount_type = ""
 
