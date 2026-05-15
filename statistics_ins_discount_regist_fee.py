@@ -473,6 +473,7 @@ class StatisticsInsDiscountRegistFee(QtWidgets.QMainWindow):
                     discount_type,
                     discount_fee,
                 ]
+                row = [str(field).replace("\\", "").replace(",", "") for field in row]
 
                 try:
                     writer.writerow(row)
