@@ -481,6 +481,7 @@ class StatisticsInsDiscountRegistFee(QtWidgets.QMainWindow):
                     s = s.replace(",", "")  # 刪除逗號
                     s = s.replace("\n", " ")  # 換行符號換成空格
                     s = s.replace("\r", " ")  # 換行符號換成空格
+                    s = s.replace("\x00", " ")  # 字串終結
                     clean_row.append(s)
 
                 try:
