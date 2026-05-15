@@ -3045,7 +3045,7 @@
               <x>0</x>
               <y>0</y>
               <width>1301</width>
-              <height>816</height>
+              <height>847</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_66">
@@ -3464,7 +3464,84 @@
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_34">
+                <item row="1" column="1">
+                 <widget class="QCheckBox" name="checkBox_show_purchase_case">
+                  <property name="text">
+                   <string>掛號已就診名單顯示自購藥病歷</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QCheckBox" name="checkBox_day14">
+                  <property name="text">
+                   <string>掛號時, 檢查療程14日內未完成</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QCheckBox" name="checkBox_show_massage_fee">
+                  <property name="text">
+                   <string>掛號候診及已就診名單顯示民俗調理費</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QCheckBox" name="checkBox_no_regist_no_duplicate">
+                  <property name="text">
+                   <string>掛號診號不可重複</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="0">
+                 <widget class="QCheckBox" name="checkBox_regist_visit_count">
+                  <property name="text">
+                   <string>掛號作業顯示初診統計</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="0">
+                 <widget class="QCheckBox" name="checkBox_past_history_show_symptom">
+                  <property name="text">
+                   <string>掛號過去病歷視窗顯示主訴</string>
+                  </property>
+                 </widget>
+                </item>
                 <item row="9" column="0">
+                 <widget class="QCheckBox" name="checkBox_auto_last_treat_type">
+                  <property name="text">
+                   <string>掛號新療程自動帶出上次就醫類別</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QCheckBox" name="checkBox_debt_stop_regist">
+                  <property name="text">
+                   <string>欠款未還，不能繼續掛號</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QCheckBox" name="checkBox_register_current_doctor">
+                  <property name="text">
+                   <string>掛號選擇醫師欄位只顯示班表當診的醫師</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QCheckBox" name="checkBox_interrupt_course">
+                  <property name="text">
+                   <string>療程被內科中斷後，下次掛號不要續療程</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="0">
+                 <widget class="QCheckBox" name="checkBox_past_history_show_massage">
+                  <property name="text">
+                   <string>掛號過去病歷視窗顯示民俗調理記錄</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="0">
                  <widget class="QGroupBox" name="groupBox_66">
                   <property name="title">
                    <string>自動產生自訂病歷號碼</string>
@@ -3490,13 +3567,6 @@
                   </layout>
                  </widget>
                 </item>
-                <item row="2" column="1">
-                 <widget class="QCheckBox" name="checkBox_show_massage_fee">
-                  <property name="text">
-                   <string>掛號候診及已就診名單顯示民俗調理費</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="3" column="1">
                  <widget class="QCheckBox" name="checkBox_no_change_doctor">
                   <property name="text">
@@ -3504,73 +3574,10 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0">
-                 <widget class="QCheckBox" name="checkBox_interrupt_course">
+                <item row="4" column="1">
+                 <widget class="QCheckBox" name="checkBox_set_room_zero">
                   <property name="text">
-                   <string>療程被內科中斷後，下次掛號不要續療程</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QCheckBox" name="checkBox_show_purchase_case">
-                  <property name="text">
-                   <string>掛號已就診名單顯示自購藥病歷</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QCheckBox" name="checkBox_day14">
-                  <property name="text">
-                   <string>掛號時, 檢查療程14日內未完成</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="5" column="0">
-                 <widget class="QCheckBox" name="checkBox_past_history_show_symptom">
-                  <property name="text">
-                   <string>掛號過去病歷視窗顯示主訴</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="0">
-                 <widget class="QCheckBox" name="checkBox_regist_visit_count">
-                  <property name="text">
-                   <string>掛號作業顯示初診統計</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QCheckBox" name="checkBox_debt_stop_regist">
-                  <property name="text">
-                   <string>欠款未還，不能繼續掛號</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QCheckBox" name="checkBox_register_current_doctor">
-                  <property name="text">
-                   <string>掛號選擇醫師欄位只顯示班表當診的醫師</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="8" column="0">
-                 <widget class="QCheckBox" name="checkBox_auto_last_treat_type">
-                  <property name="text">
-                   <string>掛號新療程自動帶出上次就醫類別</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QCheckBox" name="checkBox_no_regist_no_duplicate">
-                  <property name="text">
-                   <string>掛號診號不可重複</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="0">
-                 <widget class="QCheckBox" name="checkBox_past_history_show_massage">
-                  <property name="text">
-                   <string>掛號過去病歷視窗顯示民俗調理記錄</string>
+                   <string>掛號醫師更改若不在醫師班表內，診別及診號均設定為0</string>
                   </property>
                  </widget>
                 </item>

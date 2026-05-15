@@ -1164,7 +1164,11 @@ class Registration(QtWidgets.QMainWindow):
             self.ui.comboBox_card_abnormal, nhi_utils.ABNORMAL_CARD_WITH_HINT, None
         )
         ui_utils.set_combo_box(self.ui.comboBox_period, nhi_utils.PERIOD)
-        ui_utils.set_combo_box(self.ui.comboBox_room, nhi_utils.ROOM)
+        if self.system_settings.field("掛號醫師不在醫師班表") == "Y":
+            ui_utils.set_combo_box(self.ui.comboBox_room, ["0"] + nhi_utils.ROOM)
+        else:
+            ui_utils.set_combo_box(self.ui.comboBox_room, nhi_utils.ROOM)
+
         ui_utils.set_combo_box(self.ui.comboBox_gender, nhi_utils.GENDER, None)
         # ui_utils.set_combo_box(
         #     self.ui.comboBox_doctor,
@@ -1557,7 +1561,9 @@ class Registration(QtWidgets.QMainWindow):
         elif sender_name == "comboBox_massager":
             self._set_traditional_health_care_fee()
         elif sender_name == "comboBox_doctor":
+            reg_no = self.ui.spinBox_reg_no.value()
             doctor = self.ui.comboBox_doctor.currentText()
+
             if doctor == "":
                 return
 
@@ -1569,6 +1575,15 @@ class Registration(QtWidgets.QMainWindow):
             self.ui.comboBox_room.disconnect()
             self.ui.comboBox_room.setCurrentText(room)
             self.ui.comboBox_room.currentIndexChanged.connect(self._selection_changed)
+
+            if self.system_settings.field("掛號醫師不在醫師班表") == "Y":
+                scheduled_doctor = registration_utils.get_schedule_doctor(
+                    self.database, room, period
+                )
+                if scheduled_doctor != doctor:
+                    self.ui.comboBox_room.setCurrentText("0")
+                    self.ui.spinBox_reg_no.setValue(0)
+                    return
 
             if (
                 "掛號存檔" in self.ui.action_save.text()

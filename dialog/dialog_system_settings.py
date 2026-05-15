@@ -944,6 +944,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._set_check_box(
             self.ui.checkBox_no_change_doctor, "掛號診別更改不要連動醫師姓名"
         )
+        self._set_check_box(self.ui.checkBox_set_room_zero, "掛號醫師不在醫師班表")
 
     # 看診設定
     def _read_doctor_settings(self):
@@ -2113,6 +2114,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._save_check_box(
             self.ui.checkBox_no_change_doctor, "掛號診別更改不要連動醫師姓名"
         )
+        self._save_check_box(self.ui.checkBox_set_room_zero, "掛號醫師不在醫師班表")
 
         self._save_bulletin()
         self._save_notice()
