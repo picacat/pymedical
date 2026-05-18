@@ -928,6 +928,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
                     in nhi_utils.MISC_CARE_TREAT
                     + nhi_utils.PREGNANT_CARE_TREAT
                     + nhi_utils.CANCER_CARE_TREAT
+                    + nhi_utils.KIDNEY_CARE_TREAT
                 ):
                     total_dosage = 0
                     amount = 0
