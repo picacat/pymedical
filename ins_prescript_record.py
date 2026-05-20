@@ -4484,9 +4484,9 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
 
         col_no = prescript_utils.INS_PRESCRIPT_COL_NO["Dosage"]
         self.ui.tableWidget_prescript.setCurrentCell(current_row, col_no)
-        self.ui.tableWidget_prescript.setItem(
-            current_row, col_no, QtWidgets.QTableWidgetItem("")
-        )
+        # self.ui.tableWidget_prescript.setItem(
+        #     current_row, col_no, QtWidgets.QTableWidgetItem("")
+        # )
         self._set_dosage_format(current_row, col_no)
 
         system_utils.show_message_box(
@@ -4530,9 +4530,9 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
 
         col_no = prescript_utils.INS_PRESCRIPT_COL_NO["Dosage"]
         self.ui.tableWidget_prescript.setCurrentCell(current_row, col_no)
-        self.ui.tableWidget_prescript.setItem(
-            current_row, col_no, QtWidgets.QTableWidgetItem("")
-        )
+        # self.ui.tableWidget_prescript.setItem(
+        #     current_row, col_no, QtWidgets.QTableWidgetItem("")
+        # )
         self._set_dosage_format(current_row, col_no)
 
         system_utils.show_message_box(
