@@ -4354,12 +4354,29 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self.ui.toolButton_copy_to_append.setEnabled(enabled)
 
         if self.prescript_edit_mode == "Y":
-            self.force_edit()
+            QtCore.QTimer.singleShot(50, self.force_edit)
 
     def force_edit(self):
         index = self.ui.tableWidget_prescript.currentIndex()
-        # 確保 index 有效，且該儲存格是可編輯的
         if index.isValid():
+            # 檢查該位置有沒有 item
+            item = self.ui.tableWidget_prescript.item(index.row(), index.column())
+            if not item:
+                # 如果是空的，手動補一個 item 進去，並賦予可編輯權限
+                item = QtWidgets.QTableWidgetItem("")
+                # 順便把選取與啟用權限一起補上，避免因為新建 Item 導致編輯失敗
+                item.setFlags(
+                    QtCore.Qt.ItemIsEnabled
+                    | QtCore.Qt.ItemIsSelectable
+                    | QtCore.Qt.ItemIsEditable
+                )
+                self.ui.tableWidget_prescript.setItem(index.row(), index.column(), item)
+            else:
+                # 確保舊有的 item 也有被打開編輯權限
+                item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+
+            # 讓表格先獲得焦點，再啟動編輯
+            self.ui.tableWidget_prescript.setFocus()
             self.ui.tableWidget_prescript.edit(index)
 
     # 欄位資料暫存用: item.setData(QtCore.Qt.UserRole, item.text()) --> 在set_db_data
