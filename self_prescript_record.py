@@ -2330,39 +2330,89 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         self.ui.tableWidget_prescript.blockSignals(False)
         self.parent.calculate_self_fees()
 
+    # def _calculate_total_price(self, row_no, col_no, item):
+    #     dosage = self.ui.tableWidget_prescript.item(
+    #         row_no, prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]
+    #     )
+    #     sale_price = self.ui.tableWidget_prescript.item(
+    #         row_no, prescript_utils.SELF_PRESCRIPT_COL_NO["Price"]
+    #     )
+
+    #     if col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]:
+    #         dosage = item
+    #     elif col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Price"]:
+    #         sale_price = item
+
+    #     if dosage is None:
+    #         dosage = 0
+    #     else:
+    #         dosage = dosage.text()
+
+    #     if sale_price is None:
+    #         sale_price = 0
+    #     else:
+    #         sale_price = sale_price.text()
+
+    #     try:
+    #         sale_price = number_utils.get_float(sale_price)
+    #     except ValueError:
+    #         sale_price = 0
+    #     try:
+    #         dosage = number_utils.get_float(dosage)
+    #     except ValueError:
+    #         dosage = 0
+
+    #     subtotal = dosage * sale_price
+    #     self.ui.tableWidget_prescript.setItem(
+    #         row_no,
+    #         prescript_utils.SELF_PRESCRIPT_COL_NO["Amount"],
+    #         QtWidgets.QTableWidgetItem(
+    #             string_utils.get_formatted_str("單價", subtotal)
+    #         ),
+    #     )
+
     def _calculate_total_price(self, row_no, col_no, item):
-        dosage = self.ui.tableWidget_prescript.item(
+        # 1. 先安全地取得表格中目前的「文字」
+        dosage_item = self.ui.tableWidget_prescript.item(
             row_no, prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]
         )
-        sale_price = self.ui.tableWidget_prescript.item(
+        sale_price_item = self.ui.tableWidget_prescript.item(
             row_no, prescript_utils.SELF_PRESCRIPT_COL_NO["Price"]
         )
 
-        if col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]:
-            dosage = item
-        elif col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Price"]:
-            sale_price = item
+        dosage_str = dosage_item.text() if dosage_item is not None else "0"
+        sale_price_str = sale_price_item.text() if sale_price_item is not None else "0"
 
-        if dosage is None:
-            dosage = 0
-        else:
-            dosage = dosage.text()
+        # 2. 如果當前修改的就是其中一個欄位，直接用傳進來的 item 文字覆蓋它
+        # 這樣能保證拿到最新、最即時的數值
+        if (
+            col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]
+            and item is not None
+        ):
+            dosage_str = item.text()
+        elif (
+            col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Price"]
+            and item is not None
+        ):
+            sale_price_str = item.text()
 
-        if sale_price is None:
-            sale_price = 0
-        else:
-            sale_price = sale_price.text()
+        # 3. 轉成數字（利用你原本的工具類別）
+        try:
+            dosage = number_utils.get_float(dosage_str)
+        except (ValueError, TypeError):
+            dosage = 0.0
 
         try:
-            sale_price = number_utils.get_float(sale_price)
-        except ValueError:
-            sale_price = 0
-        try:
-            dosage = number_utils.get_float(dosage)
-        except ValueError:
-            dosage = 0
+            sale_price = number_utils.get_float(sale_price_str)
+        except (ValueError, TypeError):
+            sale_price = 0.0
 
+        # 4. 計算並寫回表格
         subtotal = dosage * sale_price
+
+        # 預防無窮迴圈：更新金額前，可以先暫時阻斷訊號，免得重覆觸發 itemChanged
+        self.ui.tableWidget_prescript.blockSignals(True)
+
         self.ui.tableWidget_prescript.setItem(
             row_no,
             prescript_utils.SELF_PRESCRIPT_COL_NO["Amount"],
@@ -2370,6 +2420,8 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 string_utils.get_formatted_str("單價", subtotal)
             ),
         )
+
+        self.ui.tableWidget_prescript.blockSignals(False)
 
     # 調整欄位對齊
     def _adjust_prescript_column(self, row_no):
