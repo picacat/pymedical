@@ -2016,6 +2016,9 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         current_text = item.text().strip()
         old_value = item.data(QtCore.Qt.UserRole)
 
+        if current_text == old_value:
+            return
+
         # 這裡以藥名、劑量、單價為例
         target_cols = [
             prescript_utils.SELF_PRESCRIPT_COL_NO["MedicineName"],
@@ -2370,7 +2373,6 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
     #             string_utils.get_formatted_str("單價", subtotal)
     #         ),
     #     )
-
     def _calculate_total_price(self, row_no, col_no, item):
         # 1. 先安全地取得表格中目前的「文字」
         dosage_item = self.ui.tableWidget_prescript.item(
@@ -2380,23 +2382,24 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
             row_no, prescript_utils.SELF_PRESCRIPT_COL_NO["Price"]
         )
 
-        dosage_str = dosage_item.text() if dosage_item is not None else "0"
-        sale_price_str = sale_price_item.text() if sale_price_item is not None else "0"
+        # 加上 try-except 或用 python 的內建機制，確保 C++ 物件萬一真的不見時不會崩潰
+        try:
+            dosage_str = dosage_item.text() if dosage_item is not None else "0"
+        except RuntimeError:
+            # 萬一 dosage_item 在底層已經被 delete，就給它預設值
+            dosage_str = "0"
 
-        # 2. 如果當前修改的就是其中一個欄位，直接用傳進來的 item 文字覆蓋它
-        # 這樣能保證拿到最新、最即時的數值
-        if (
-            col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]
-            and item is not None
-        ):
-            dosage_str = item.text()
-        elif (
-            col_no == prescript_utils.SELF_PRESCRIPT_COL_NO["Price"]
-            and item is not None
-        ):
-            sale_price_str = item.text()
+        try:
+            sale_price_str = (
+                sale_price_item.text() if sale_price_item is not None else "0"
+            )
+        except RuntimeError:
+            sale_price_str = "0"
 
-        # 3. 轉成數字（利用你原本的工具類別）
+        # 2. 【已移除】原本在這裡用 item.text() 覆蓋的邏輯拿掉
+        # 因為上面 dosage_item / sale_price_item 拿到的就是最新畫面的數值了。
+
+        # 3. 轉成數字
         try:
             dosage = number_utils.get_float(dosage_str)
         except (ValueError, TypeError):
@@ -2410,9 +2413,9 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         # 4. 計算並寫回表格
         subtotal = dosage * sale_price
 
-        # 預防無窮迴圈：更新金額前，可以先暫時阻斷訊號，免得重覆觸發 itemChanged
         self.ui.tableWidget_prescript.blockSignals(True)
 
+        # 建立新的 Item 寫入金額
         self.ui.tableWidget_prescript.setItem(
             row_no,
             prescript_utils.SELF_PRESCRIPT_COL_NO["Amount"],
