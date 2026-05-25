@@ -1,3 +1,6 @@
+import re
+from datetime import datetime
+
 from PyQt5.QtWidgets import QMessageBox, QPushButton
 
 try:
@@ -240,7 +243,7 @@ class CvtGP:
             self._convert_diag(row, medical_record_row)
             self._convert_type(row, medical_record_row)
             case_key = self._insert_medical_record(medical_record_row)
-            self._convert_prescript(case_key, medical_record_row["CaseDate"], row)
+            self._convert_prescript(case_key, medical_record_row, row)
             self._convert_dosage(case_key, medical_record_row["CaseDate"], row)
             self._convert_treat_type(case_key)
             self._convert_fees(case_key, row)
@@ -374,6 +377,7 @@ class CvtGP:
         medical_record_row["Remark"] = self._get_field_value(diag_row["DIAG_MEMO"])
         medical_record_row["Distincts"] = self._get_field_value(diag_row["JUDGE"])
         medical_record_row["Cure"] = self._get_field_value(diag_row["LUNZHI"])
+        medical_record_row["Treatment"] = None
 
         treat_type = self._get_field_value(diag_row["DISE_NAME22"])
         if treat_type is not None:
@@ -386,8 +390,6 @@ class CvtGP:
                 medical_record_row["Treatment"] = "高度複雜性針灸"
             elif treat_type in ["E01", "E02"]:
                 medical_record_row["Treatment"] = "一般傷科"
-            else:
-                medical_record_row["Treatment"] = None
 
     def _insert_medical_record(self, row):
         fields = [
@@ -490,7 +492,44 @@ class CvtGP:
 
         return medicine_type
 
-    def _convert_prescript(self, case_key, case_date, dm_row):
+    def parse_treatment_time(self, text):
+        # 使用正規表示式尋找格式如 "治療時間:10:01～10:22" 或 "治療時間:10:01-10:22"
+        # 支援波浪號（～）或連字號（-）
+        pattern = r"治療時間:(\d{2}:\d{2})[～|-](\d{2}:\d{2})"
+
+        match = re.search(pattern, text)
+
+        if not match:
+            return None  # 如果找不到符合的格式，回傳 None
+
+        # 提取開始與結束時間字串
+        start_str = match.group(1)
+        end_str = match.group(2)
+
+        # 計算時間差（分鐘數）
+        time_format = "%H:%M"
+        start_time = datetime.strptime(start_str, time_format)
+        end_time = datetime.strptime(end_str, time_format)
+
+        # 處理跨午夜的情況（例如 23:50 ～ 00:10）
+        if end_time < start_time:
+            # 如果結束時間小於開始時間，代表跨天了，加上一天的秒數
+            duration_seconds = (end_time - start_time).total_seconds() + 86400
+        else:
+            duration_seconds = (end_time - start_time).total_seconds()
+
+        duration_minutes = int(duration_seconds / 60)
+
+        # 組合裝進 list 中
+        result = [
+            f"治療開始:{start_str}",
+            f"治療結束:{end_str}",
+            f"治療時間:{duration_minutes}分鐘",
+        ]
+
+        return result
+
+    def _convert_prescript(self, case_key, medical_record_row, dm_row):
         diag_id = self._get_field_value(dm_row["DIAG_ID"])
         if diag_id is None:
             return
@@ -502,6 +541,29 @@ class CvtGP:
             ORDER BY DDY_ID
         """
         rows = self._exec_sql(sql)
+
+        case_date = medical_record_row["CaseDate"]
+        treatment = medical_record_row["Treatment"]
+        if treatment in [
+            "中度複雜性針灸",
+            "高度複雜性針灸",
+            "中度複雜性傷科",
+            "高度複雜性傷科",
+        ]:
+            treatment_time = self.parse_treatment_time(medical_record_row["Symptom"])
+            if treatment_time is not None:
+                for treat in treatment_time:
+                    rows.append(
+                        {
+                            "INS_SELF_FLAG": 1,
+                            "DRUG_TYPE": "9",
+                            "DRUG_ID": None,
+                            "DRUG_STD_CODE": None,
+                            "DRUG_NAME": treat,
+                            "UNIT_NAME": None,
+                            "QUANT_HURTNO": None,
+                        }
+                    )
 
         fields = [
             "CaseKey",
@@ -524,9 +586,13 @@ class CvtGP:
                 dosage = None
 
             medicine_name = self._get_field_value(row["DRUG_NAME"])
+            if medicine_name == "[輔助治療]紅外線治療":
+                medicine_name = "輔助治療:熱療 (含紅外線治療)"
+
             medicine_type = self._get_medicine_type(
                 self._get_field_value(row["DRUG_TYPE"])
             )
+
             if medicine_name is not None and "針灸" in medicine_name:
                 medicine_type = "穴道"
             elif medicine_name is not None and "傷科" in medicine_name:
@@ -557,6 +623,9 @@ class CvtGP:
             self.database.insert_record("prescript", fields, data)
 
     def _get_medicine_key(self, drug_id):
+        if drug_id is None:
+            return None, None
+
         sql = f'''
             SELECT MedicineKey, SalePrice FROM medicine
             WHERE
