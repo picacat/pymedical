@@ -412,6 +412,8 @@
     <addaction name="action_export_certificate_list_excel"/>
     <addaction name="action_export_certificate_list_by_month_to_excel"/>
     <addaction name="action_export_certificate_list_by_year_to_excel"/>
+    <addaction name="separator"/>
+    <addaction name="action_change_doctor"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
@@ -718,6 +720,18 @@
    </property>
    <property name="toolTip">
     <string>印自費藥品明細</string>
+   </property>
+  </action>
+  <action name="action_change_doctor">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/resource-group.png</normaloff>../icons/resource-group.png</iconset>
+   </property>
+   <property name="text">
+    <string>更改主治醫師</string>
+   </property>
+   <property name="toolTip">
+    <string>更改主治醫師</string>
    </property>
   </action>
  </widget>
