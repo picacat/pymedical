@@ -64,6 +64,86 @@ def get_designate_room_start_no(system_settings, period, room, doctor):
 
 
 # 取得今日最後的診號
+# def get_last_reg_no(
+#     database, system_settings, start_date, end_date, period, room, doctor
+# ):
+#     max_regist_no = system_settings.field("診號累加器最大號")
+#     reg_no_mode = system_settings.field("現場掛號給號模式")
+
+#     if (
+#         max_regist_no not in ["", None]
+#         and max_regist_no.isdigit()
+#         and int(max_regist_no) > 0
+#     ):
+#         max_regist_no_condition = f" And RegistNo <= {max_regist_no}"
+#     else:
+#         max_regist_no_condition = ""
+
+#     sql = f'''
+#         SELECT RegistNo, RegistType FROM cases
+#         WHERE
+#             CaseDate BETWEEN "{start_date}" AND "{end_date}" AND
+#             RegistNo > 0 AND
+#             Position1 IS NULL
+#             {max_regist_no_condition}
+#     '''
+#     # 健保民俗調理不能算診號
+
+#     if system_settings.field("分診") == "Y":
+#         sql += f" AND Room = {room}"
+
+#     if system_settings.field("分班") == "Y":
+#         sql += f' AND Period = "{period}"'
+
+#     rows = database.select_record(sql)
+
+#     last_reg_no_rows = []
+#     reg_no_rows = []  # 使用者可能會把預約報到病人的預約診號手動改成現場的診號
+#     for row in rows:
+#         reg_no_rows.append(row["RegistNo"])
+
+#         # 一定要讀現場號，否則預約報到後，現場號會變成預約號之後, 早成中間許多現場號空號
+#         if (
+#             reg_no_mode in ["單號", "雙號", "預約班表", "連續號"]
+#             and row["RegistType"] != "預約門診"
+#         ):
+#             last_reg_no_rows.append(row["RegistNo"])
+
+#     if len(last_reg_no_rows) > 0:
+#         last_reg_no = last_reg_no_rows[-1]
+#     else:
+#         if system_settings.field("分班") == "Y":
+#             if system_settings.field("分診") == "Y":
+#                 reg_no = get_designate_room_start_no(
+#                     system_settings, period, room, doctor
+#                 )
+#                 if reg_no is None:
+#                     reg_no = system_settings.field(f"{period}起始號")
+#             else:
+#                 reg_no = system_settings.field(f"{period}起始號")
+#         else:
+#             reg_no = system_settings.field("早班起始號")
+
+#         try:
+#             last_reg_no = int(reg_no) - 1
+#         except TypeError:
+#             msg_box = QMessageBox()
+#             msg_box.setIcon(QMessageBox.Critical)
+#             msg_box.setWindowTitle("讀取診號起始號資料失敗")
+#             msg_box.setText("無法取得班別起始號資料, 無法產生診號.")
+#             msg_box.setInformativeText(
+#                 "請檢查[系統設定]->[診號控制]->[給號方式]的早午晚班起始號設定."
+#             )
+#             msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+#             msg_box.exec_()
+#             return 0
+
+#     if last_reg_no is None:
+#         last_reg_no = 0
+
+
+#     return reg_no_rows, number_utils.get_integer(last_reg_no)
+# 取得今日最後的診號
 def get_last_reg_no(
     database, system_settings, start_date, end_date, period, room, doctor
 ):
@@ -72,13 +152,14 @@ def get_last_reg_no(
 
     if (
         max_regist_no not in ["", None]
-        and max_regist_no.isdigit()
+        and str(max_regist_no).isdigit()
         and int(max_regist_no) > 0
     ):
         max_regist_no_condition = f" And RegistNo <= {max_regist_no}"
     else:
         max_regist_no_condition = ""
 
+    # 【修正 1】SQL 加上 ORDER BY RegistNo ASC，確保 [-1] 拿到的真的是最大/最後的號碼
     sql = f'''
         SELECT RegistNo, RegistType FROM cases
         WHERE
@@ -87,7 +168,6 @@ def get_last_reg_no(
             Position1 IS NULL
             {max_regist_no_condition}
     '''
-    # 健保民俗調理不能算診號
 
     if system_settings.field("分診") == "Y":
         sql += f" AND Room = {room}"
@@ -95,14 +175,17 @@ def get_last_reg_no(
     if system_settings.field("分班") == "Y":
         sql += f' AND Period = "{period}"'
 
+    sql += " ORDER BY RegistNo ASC"
+
     rows = database.select_record(sql)
 
     last_reg_no_rows = []
-    reg_no_rows = []  # 使用者可能會把預約報到病人的預約診號手動改成現場的診號
+    reg_no_rows = []
+
     for row in rows:
         reg_no_rows.append(row["RegistNo"])
 
-        # 一定要讀現場號，否則預約報到後，現場號會變成預約號之後, 早成中間許多現場號空號
+        # 【請根據實務調整】如果預約報到改成現場號後 RegistType 會變更，則此處邏輯正確
         if (
             reg_no_mode in ["單號", "雙號", "預約班表", "連續號"]
             and row["RegistType"] != "預約門診"
@@ -126,7 +209,8 @@ def get_last_reg_no(
 
         try:
             last_reg_no = int(reg_no) - 1
-        except TypeError:
+        # 【修正 3】同時捕捉 TypeError 與 ValueError，避免轉換失敗時閃退
+        except (TypeError, ValueError):
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
             msg_box.setWindowTitle("讀取診號起始號資料失敗")
@@ -136,7 +220,8 @@ def get_last_reg_no(
             )
             msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
             msg_box.exec_()
-            return 0
+            # 【修正 4】保持回傳結構一致，避免外部解構失敗 (Unpacking Error)
+            return [], 0
 
     if last_reg_no is None:
         last_reg_no = 0
