@@ -309,6 +309,8 @@ class CheckInsDrug(QtWidgets.QMainWindow):
             error_message.append("港香蘭無效藥品, 請重新輸入其他藥廠藥品")
         elif ins_code in nhi_utils.INVALID_WKP_INS_CODE_LIST:
             error_message.append("萬國信宏無效藥品, 請重新輸入其他藥廠藥品")
+        elif ins_code in nhi_utils.INVALID_FUDAN_INS_CODE_LIST:
+            error_message.append("復旦無效藥品, 請重新輸入其他藥廠藥品")
 
         if len(error_message) > 0:
             self.errors += 1
