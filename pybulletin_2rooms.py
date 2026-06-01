@@ -276,25 +276,64 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
 
         self.audio_timer.stop()
 
+    # # 廣播叫號
+    # def _broadcast_voice(self, json_data):
+    #     voice_dict = json.loads(json_data)
+    #     sentence = voice_dict["sentence"]
+
+    #     regist_no = number_utils.get_integer(voice_dict["regist_no"])
+    #     room = number_utils.get_integer(voice_dict["room"])
+
+    #     self.waiting_number[room] = regist_no
+
+    #     self._set_lower_audio()
+    #     QtWidgets.qApp.processEvents()
+    #     self._show_doctors()
+    #     self._show_sequence(room)
+
+    #     # self.ring_bell()
+    #     self.start_blinking()
+
+    #     system_utils.speak(sentence, threading=True)
+
     # 廣播叫號
     def _broadcast_voice(self, json_data):
-        voice_dict = json.loads(json_data)
-        sentence = voice_dict["sentence"]
+        # 增加防呆：檢查是否為空值
+        if not json_data:
+            print("收到空的 json_data，跳過處理")
+            return
 
-        regist_no = number_utils.get_integer(voice_dict["regist_no"])
-        room = number_utils.get_integer(voice_dict["room"])
+        try:
+            voice_dict = json.loads(json_data)
+        except json.JSONDecodeError as e:
+            print(f"JSON 解析失敗！錯誤訊息: {e}")
+            print(
+                f"實際收到的資料內容為: {repr(json_data)}"
+            )  # repr 可以看出是不是空字串或夾雜怪字元
+            return  # 結束此函式，不往下執行
 
-        self.waiting_number[room] = regist_no
+        sentence = voice_dict.get(
+            "sentence", ""
+        )  # 使用 .get() 比較安全，防止 key 不存在
 
-        self._set_lower_audio()
-        QtWidgets.qApp.processEvents()
-        self._show_doctors()
-        self._show_sequence(room)
+        # 確保 key 存在才讀取，避免 KeyError
+        if "regist_no" in voice_dict and "room" in voice_dict:
+            regist_no = number_utils.get_integer(voice_dict["regist_no"])
+            room = number_utils.get_integer(voice_dict["room"])
 
-        # self.ring_bell()
-        self.start_blinking()
+            self.waiting_number[room] = regist_no
 
-        system_utils.speak(sentence, threading=True)
+            self._set_lower_audio()
+            QtWidgets.qApp.processEvents()
+            self._show_doctors()
+            self._show_sequence(room)
+
+            # self.ring_bell()
+            self.start_blinking()
+
+            system_utils.speak(sentence, threading=True)
+        else:
+            print("JSON 格式正確，但缺少必要的欄位 (regist_no 或 room)")
 
     def ring_bell(self):
         """播放音效（使用子執行緒）"""
