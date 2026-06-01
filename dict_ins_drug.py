@@ -182,6 +182,8 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 error_message.append("港香蘭無效健保碼")
             elif ins_code in nhi_utils.INVALID_WKP_INS_CODE_LIST:
                 error_message.append("萬國信宏無效健保碼")
+            elif ins_code in nhi_utils.INVALID_FUDAN_INS_CODE_LIST:
+                error_message.append("復旦無效健保碼")
 
         medicine_row = [
             medicine_key,
