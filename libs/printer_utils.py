@@ -7354,7 +7354,7 @@ def get_case_html_10(
 
     html += f"""
         <tr>
-          <td>保險:{ins_type} {medicine_set} {share_type}</td>
+          <td>保險:{ins_type} {medicine_set} {share_type} {patient_key:0>6}</td>
           <td>診日:{case_date}</td>
         </tr>
     """
