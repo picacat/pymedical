@@ -2503,6 +2503,7 @@ def get_prescript_html(
     instruction=None,
     print_total_dosage=None,
     print_treat_item=True,
+    print_direction=True,
 ):
     prescript = """
         <tr>
@@ -2560,6 +2561,23 @@ def get_prescript_html(
     instruction_condition = get_instruction_condition(
         database, system_setting, case_key, medicine_set, instruction
     )
+
+    order_script = "ORDER BY PrescriptNo, PrescriptKey"
+    if system_setting.field("列印處方依照存放位置排序") == "Y":
+        order_script = """
+            ORDER BY 
+                -- 1. 先排純字母部分 (例如 A, B, AA)
+                REGEXP_SUBSTR(medicine.Location, '^[A-Za-z]+'),
+                
+                -- 2. 排字母後的第一組數字 (例如 A3 中的 3, B5-10 中的 5)
+                -- 先抓出數字部分，轉為數值排序
+                CAST(REGEXP_SUBSTR(medicine.Location, '[0-9]+') AS UNSIGNED),
+                
+                -- 3. 排槓號後的第二組數字 (處理 A3-1, A3-10)
+                -- 如果沒有槓號，這層會是 0，不影響排序
+                CAST(SUBSTRING_INDEX(CONCAT(medicine.Location, '-0'), '-', -2) AS UNSIGNED)
+        """
+
     sql = f"""
         SELECT prescript.*, medicine.Location, medicine.MedicineAlias FROM prescript
             LEFT JOIN medicine ON medicine.MedicineKey = prescript.MedicineKey
@@ -2570,7 +2588,7 @@ def get_prescript_html(
             {medicine_type_condition}
             {treat_condition}
             {instruction_condition}
-        ORDER BY PrescriptNo, PrescriptKey
+        {order_script}
     """
     rows = database.select_record(sql)
 
@@ -2675,7 +2693,7 @@ def get_prescript_html(
             },
         }
 
-    if system_setting.field("處方列印方向") == "垂直列印":
+    if print_direction and system_setting.field("處方列印方向") == "垂直列印":
         rows = set_vertical_direction(rows)
 
     prescript = ""
