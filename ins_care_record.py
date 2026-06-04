@@ -554,18 +554,35 @@ class InsCareRecord(QtWidgets.QMainWindow):
             string_utils.xstr(row["Amount"]),
         ]
 
-        for col_no, item in enumerate(prescript_row):
-            self.ui.tableWidget_prescript.setItem(
-                row_no, col_no, QtWidgets.QTableWidgetItem(item)
+        # for col_no, item in enumerate(prescript_row):
+        #     self.ui.tableWidget_prescript.setItem(
+        #         row_no, col_no, QtWidgets.QTableWidgetItem(item)
+        #     )
+        #     if col_no in [9, 10, 12]:
+        #         self.ui.tableWidget_prescript.item(row_no, col_no).setTextAlignment(
+        #             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
+        #         )
+        #     elif col_no in [11]:
+        #         self.ui.tableWidget_prescript.item(row_no, col_no).setTextAlignment(
+        #             QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
+        #         )
+        for col_no, item_val in enumerate(prescript_row):
+            # 1. 建立物件（轉換為字串並處理 None）
+            table_item = QtWidgets.QTableWidgetItem(
+                str(item_val) if item_val is not None else ""
             )
+
+            # 2. 直接設定對齊（不用等 setItem 後再抓取，直接設定這個物件）
+            # 使用 .value 或 int() 解決你剛遇到的 Pylance 警告
             if col_no in [9, 10, 12]:
-                self.ui.tableWidget_prescript.item(row_no, col_no).setTextAlignment(
-                    QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                )
-            elif col_no in [11]:
-                self.ui.tableWidget_prescript.item(row_no, col_no).setTextAlignment(
-                    QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
-                )
+                alignment = QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
+                table_item.setTextAlignment(int(alignment))
+            elif col_no == 11:
+                alignment = QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
+                table_item.setTextAlignment(int(alignment))
+
+            # 3. 最後才把設定好的物件塞進表格
+            self.ui.tableWidget_prescript.setItem(row_no, col_no, table_item)
 
     # 開啟加強照護支付標準表
     def _open_ins_care_dialog(self):

@@ -1484,11 +1484,16 @@ def delete_old_folders(backup_path, days_to_keep=30):
             if folder_mtime < cutoff_time:  # 超過 30 天
                 try:
                     shutil.rmtree(folder)
+                    # 把 print 移進來，如果 print 失敗，會被下方的 except 捕捉，不會讓程式崩潰
                     print(
                         f"✅ 已刪除過期備份資料夾: {folder}（最後修改: {folder_mtime.strftime('%Y-%m-%d %H:%M:%S')}）"
                     )
                 except Exception as e:
-                    print(f"❌ 刪除失敗 {folder}: {e}")
+                    # 這裡也要防禦一下，萬一連這個 print 也因為管道斷開而失敗
+                    try:
+                        print(f"❌ 刪除失敗或輸出失敗 {folder}: {e}")
+                    except OSError:
+                        pass  # 管道真的斷了就直接放手，反正程式都要關了
 
 
 def is_maintain_expired(clinic_name):

@@ -158,7 +158,11 @@ class SystemUpdate(QtWidgets.QDialog):
 
     # 開始更新
     def accepted_button_clicked(self):
-        if os.path.exists(self.git_exe) and self.ui.radioButton_auto_update.isChecked():
+        if (
+            self.git_exe
+            and os.path.exists(self.git_exe)
+            and self.ui.radioButton_auto_update.isChecked()
+        ):
             self._update_github()
         else:
             self._update_dropbox_files()
