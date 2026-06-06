@@ -9,7 +9,7 @@ from PyQt5.QtPrintSupport import QPrinter
 from libs import case_utils, printer_utils, system_utils
 
 
-# 自費處方箋格式9 熱感80mm
+# 自費處方箋格式9 熱感80mm 林胤谷
 # 2025.06.02
 class PrintPrescriptionSelfForm9:
     # 初始化
