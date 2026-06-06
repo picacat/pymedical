@@ -152,7 +152,7 @@ class PrintPrescriptionSelfForm9:
                 <td align="right">[{time}]</td>
               </tr>
               <tr>
-                <td align="left">領藥號: {drug_no:0<3}</td>
+                <td align="left">領藥號: {drug_no:0>3}</td>
               </tr>
             </table>
             {fees_record}
