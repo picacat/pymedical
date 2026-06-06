@@ -344,9 +344,11 @@ class PatientData(QtWidgets.QMainWindow):
         if patient_id == "":
             return
 
-        self.ui.comboBox_nationality.setCurrentText(
-            patient_utils.get_nationality(patient_id[1])
-        )
+        try:
+            nationality = patient_utils.get_nationality(patient_id[1])
+            self.ui.comboBox_nationality.setCurrentText(nationality)
+        except Exception:
+            pass
 
     def _read_patient(self):
         sql = f"""
