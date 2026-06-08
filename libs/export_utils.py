@@ -3167,6 +3167,7 @@ def export_income_list(system_settings, excel_file_name, tableWidget_income, col
     sheet.column_dimensions["W"].width = 12
     sheet.column_dimensions["X"].width = 12
 
+    cell_no = 0
     for row_no in range(tableWidget_income.rowCount()):
         case_key_item = tableWidget_income.item(row_no, columns["case_key"])
         if case_key_item is None:
