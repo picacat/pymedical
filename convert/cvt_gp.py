@@ -918,7 +918,7 @@ class CvtGP:
             medicine_alias = None
             unit = self._get_field_value(row["unit_name"])
             dosage = None
-            location = None
+            location = self._get_field_value(row["Store_Code"])
 
             sale_price = number_utils.get_float(row["Diag_Price"])
             sale_price = round(sale_price, 2)
