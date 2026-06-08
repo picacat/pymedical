@@ -113,8 +113,8 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        self.ui.action_sync_drug.triggered.connect(self._sync_drug)
-        self.ui.action_update_drug.triggered.connect(self._update_ins_drug)
+        self.ui.action_sync_drug.triggered.connect(self._manual_sync_drug)
+        self.ui.action_update_drug.triggered.connect(self._live_update_ins_drug)
         self.ui.action_close.triggered.connect(self._close_ins_drug)
         self.ui.action_update_valid_date.triggered.connect(self._update_valid_date)
         self.ui.action_update_prescript.triggered.connect(
@@ -265,17 +265,13 @@ class DictInsDrug(QtWidgets.QMainWindow):
             row_no, self.col_no["clear_ins_code"], None
         )
 
-    def _sync_drug(self):
-        self._update_drug(
-            "單方",
-            "./drug1.ods",
-        )
-        self._update_drug(
-            "複方",
-            "./drug2.ods",
-        )
+    # 手動更新健保碼
+    def _manual_sync_drug(self):
+        self._update_drug_file1("單方.ods")
+        self._update_drug_file2("複方.ods")
 
         self._read_medicine()
+        self._auto_correct_errors()
 
         system_utils.show_message_box(
             QMessageBox.Information,
@@ -624,18 +620,20 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         return valid_date
 
-    def _update_drug_file1(self):
+    def _update_drug_file1(self, drug_file=None):
         medicine_type = "單方"
-        url = f"https://raw.githubusercontent.com/picacat/medical-announcements/main/{medicine_type}.ods"
-        drug_file = os.path.join(self.base_path, f"{medicine_type}.ods")
-        if not system_utils.download_file_from_github(url, drug_file):
-            system_utils.show_message_box(
-                QMessageBox.Critical,
-                "線上更新健保碼失敗",
-                '<font size="5" color="red"><b>無法下載最新版本的單方健保碼資料.</b></font>',
-                "請檢查是否可以連上網際網路",
-            )
-            return
+
+        if drug_file is None:
+            url = f"https://raw.githubusercontent.com/picacat/medical-announcements/main/{medicine_type}.ods"
+            drug_file = os.path.join(self.base_path, f"{medicine_type}.ods")
+            if not system_utils.download_file_from_github(url, drug_file):
+                system_utils.show_message_box(
+                    QMessageBox.Critical,
+                    "線上更新健保碼失敗",
+                    '<font size="5" color="red"><b>無法下載最新版本的單方健保碼資料.</b></font>',
+                    "請檢查是否可以連上網際網路",
+                )
+                return
 
         try:
             data_dict = get_data(drug_file)
@@ -721,18 +719,20 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
             self.database.insert_record("drug", field, data)
 
-    def _update_drug_file2(self):
+    def _update_drug_file2(self, drug_file=None):
         medicine_type = "複方"
-        url = f"https://raw.githubusercontent.com/picacat/medical-announcements/main/{medicine_type}.ods"
-        drug_file = os.path.join(self.base_path, f"{medicine_type}.ods")
-        if not system_utils.download_file_from_github(url, drug_file):
-            system_utils.show_message_box(
-                QMessageBox.Critical,
-                "線上更新健保碼失敗",
-                f'<font size="5" color="red"><b>無法下載最新版本的{medicine_type}健保碼資料.</b></font>',
-                "請檢查是否可以連上網際網路",
-            )
-            return
+
+        if drug_file is None:
+            url = f"https://raw.githubusercontent.com/picacat/medical-announcements/main/{medicine_type}.ods"
+            drug_file = os.path.join(self.base_path, f"{medicine_type}.ods")
+            if not system_utils.download_file_from_github(url, drug_file):
+                system_utils.show_message_box(
+                    QMessageBox.Critical,
+                    "線上更新健保碼失敗",
+                    f'<font size="5" color="red"><b>無法下載最新版本的{medicine_type}健保碼資料.</b></font>',
+                    "請檢查是否可以連上網際網路",
+                )
+                return
 
         try:
             data_dict = get_data(drug_file)
@@ -818,7 +818,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
             self.database.insert_record("drug", field, data)
 
-    def _update_ins_drug(self):
+    def _live_update_ins_drug(self):
         self._update_drug_file1()
         self._update_drug_file2()
 
