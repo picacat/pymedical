@@ -5108,6 +5108,9 @@ class Registration(QtWidgets.QMainWindow):
 
         self.ui.comboBox_room.setCurrentText(string_utils.xstr(room))
         if late:
+            if remark not in [None, ""]:
+                late_remark += ", " + remark
+
             self.ui.comboBox_remark.setCurrentText(late_remark)
 
         reg_type = self.ui.comboBox_reg_type.currentText()
