@@ -590,6 +590,14 @@ class PrintInsApplyOrder:
             if treat_code != "":
                 html += self._set_treatment(row, case_row, course, treat_code)
                 if treat_code in nhi_utils.COMPLICATED_TREAT_CODE:
+                    treat_position_list = prescript_utils.get_treat_position(
+                        self.database, case_row["CaseKey"], "治療部位:"
+                    )
+                    for treat_position_code in treat_position_list:
+                        html += self._set_treat_position(
+                            row, case_row, treat_position_code
+                        )
+
                     auxiliary_list = prescript_utils.get_auxiliary_list(
                         self.database, case_row["CaseKey"], "輔助治療:"
                     )
@@ -936,6 +944,43 @@ class PrintInsApplyOrder:
 
         return html
 
+    def _get_treat_datetime(self, case_key, case_row):
+        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
+        end_date = start_date
+
+        try:
+            start_time = prescript_utils.get_treat_time(
+                self.database, case_key, "治療開始:"
+            )
+            end_time = prescript_utils.get_treat_time(
+                self.database, case_key, "治療結束:"
+            )
+        except Exception:
+            start_time = "0000"
+            end_time = "0000"
+
+        if end_time < start_time:
+            end_date = date_utils.west_date_to_nhi_date(
+                case_row["CaseDate"].date() + datetime.timedelta(days=1)
+            )
+
+        start_datetime = f"{start_date}{start_time}"
+        end_datetime = f"{end_date}{end_time}"
+
+        return start_datetime, end_datetime, start_date, end_date, start_time, end_time
+
+    def _calc_duration(self, start_time, end_time):
+        # 轉成總分鐘數
+        start, end = int(start_time), int(end_time)
+        t_start = (start // 100) * 60 + (start % 100)
+        t_end = (end // 100) * 60 + (end % 100)
+
+        # 處理跨子夜情況（例如 23:50 到 00:10，如果是當天內則免）
+        if t_end < t_start:
+            t_end += 24 * 60
+
+        return t_end - t_start
+
     def _set_treatment(self, row, case_row, course, treat_code):
         try:
             amount = number_utils.get_integer(row[f"TreatFee{course}"])
@@ -957,15 +1002,20 @@ class PrintInsApplyOrder:
         if amount <= 0:
             order_type = "4"
 
-        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
-        end_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
-
         self.sequence += 1
+
+        order_name = nhi_utils.TREAT_NAME_DICT[treat_code]
+        start_date, end_date, _, _, start_time, end_time = self._get_treat_datetime(
+            case_row["CaseKey"], case_row
+        )
 
         if treat_code in nhi_utils.COMPLICATED_TREAT_CODE:
             treat_position = prescript_utils.get_treat_position(
                 self.database, case_row["CaseKey"], "治療部位:"
             )
+            duration_minutes = self._calc_duration(start_time, end_time)
+            treat_time = f"治療時間:  {start_time[:2]}:{start_time[2:]} ~ {end_time[:2]}:{end_time[2:]} 共{duration_minutes}分鐘"
+            order_name = f"{order_name}<br>{treat_time}"
         else:
             treat_position = "1"
 
@@ -977,13 +1027,13 @@ class PrintInsApplyOrder:
             "order_type": order_type,
             "pres_days": "",
             "ins_code": treat_code,
-            "order_name": nhi_utils.TREAT_NAME_DICT[treat_code],
-            "start_date": f"{start_date}0000",
-            "stop_date": f"{end_date}0000",
+            "order_name": order_name,
+            "start_date": start_date,
+            "stop_date": end_date,
             "doctor_id": personnel_utils.get_person_field_value(
                 self.database, string_utils.xstr(case_row["Doctor"]), "ID"
             ),
-            "dosage": treat_position,
+            "dosage": "".join(treat_position),
             "percent": f"{percent:05.2f}",
             "usage": "",
             "total_dosage": "1",
@@ -995,14 +1045,50 @@ class PrintInsApplyOrder:
 
         return html
 
+    def _set_treat_position(self, row, case_row, treat_position):
+        order_type = "4"
+        amount = 0
+        unit_price = 0
+        percent = 100
+        start_date, end_date, _, _, _, _ = self._get_treat_datetime(
+            case_row["CaseKey"], case_row
+        )
+        self.sequence += 1
+
+        order_row = {
+            "sequence": string_utils.xstr(self.sequence),
+            "clinic_class": string_utils.xstr(row["Class"]),
+            "course_type": "2",
+            "pres_type": "0",
+            "order_type": order_type,
+            "pres_days": "",
+            "ins_code": treat_position,
+            "order_name": f"治療部位:  {nhi_utils.get_treat_position_name_by_code(treat_position)}",
+            "start_date": start_date,
+            "stop_date": end_date,
+            "doctor_id": personnel_utils.get_person_field_value(
+                self.database, string_utils.xstr(case_row["Doctor"]), "ID"
+            ),
+            "dosage": treat_position,
+            "percent": f"{percent:05.2f}",
+            "usage": "",
+            "total_dosage": "1",
+            "unit_price": string_utils.xstr(unit_price),
+            "amount": string_utils.xstr(amount),
+        }
+
+        html = self._get_html_order_row(order_row, treat_data=True)
+
+        return html
+
     def _set_auxiliary(self, row, case_row, auxiliary):
         order_type = "4"
         amount = 0
         unit_price = 0
         percent = 100
-        start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
-        end_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
-
+        start_date, end_date, _, _, _, _ = self._get_treat_datetime(
+            case_row["CaseKey"], case_row
+        )
         self.sequence += 1
 
         order_row = {
@@ -1013,13 +1099,13 @@ class PrintInsApplyOrder:
             "order_type": order_type,
             "pres_days": "",
             "ins_code": auxiliary,
-            "order_name": nhi_utils.get_auxiliary_name_by_code(auxiliary),
-            "start_date": f"{start_date}0000",
-            "stop_date": f"{end_date}0000",
+            "order_name": f"輔助治療: {nhi_utils.get_auxiliary_name_by_code(auxiliary)}",
+            "start_date": start_date,
+            "stop_date": end_date,
             "doctor_id": personnel_utils.get_person_field_value(
                 self.database, string_utils.xstr(case_row["Doctor"]), "ID"
             ),
-            "dosage": "1.00",
+            "dosage": auxiliary,
             "percent": f"{percent:05.2f}",
             "usage": "",
             "total_dosage": "1",
@@ -1027,7 +1113,7 @@ class PrintInsApplyOrder:
             "amount": string_utils.xstr(amount),
         }
 
-        html = self._get_html_order_row(order_row)
+        html = self._get_html_order_row(order_row, treat_data=True)
 
         return html
 
@@ -1263,7 +1349,7 @@ class PrintInsApplyOrder:
 
     # 取得醫令列
     @staticmethod
-    def _get_html_order_row(row):
+    def _get_html_order_row(row, treat_data=False):
         sequence = row["sequence"]
         clinic_class = row["clinic_class"]
         course_type = row["course_type"]
@@ -1283,6 +1369,8 @@ class PrintInsApplyOrder:
         amount = row["amount"]
 
         if ins_code in nhi_utils.COMPLICATED_TREAT_CODE:
+            dosage_align = "left"
+        elif treat_data:
             dosage_align = "left"
         else:
             dosage_align = "right"

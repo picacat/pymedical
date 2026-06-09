@@ -4546,6 +4546,14 @@ def is_thyroid_cancer(icd_code):
     return any(icd_code.startswith(code) for code in cancer_list)
 
 
+def get_treat_position_name_by_code(code):
+    for name, value in POSITION_DICT.items():
+        if value == code:
+            return name
+
+    return None  # 找不到時回傳 None 或自訂訊息
+
+
 def get_auxiliary_name_by_code(code):
     for name, value in AUXILIARY_TREAT_DICT.items():
         if value == code:

@@ -981,7 +981,7 @@ def get_treat_time(database, case_key, field_value):
 
 
 def get_treat_position(database, case_key, field_value):
-    treat_position_code = ""
+    treat_position_list = []
 
     sql = f'''
         SELECT MedicineName FROM prescript
@@ -1001,11 +1001,11 @@ def get_treat_position(database, case_key, field_value):
             continue
 
         try:
-            treat_position_code += nhi_utils.POSITION_DICT[treat_position]
+            treat_position_list.append(nhi_utils.POSITION_DICT[treat_position])
         except Exception:
             pass
 
-    return treat_position_code
+    return treat_position_list
 
 
 def get_auxiliary_list(database, case_key, field_value):
