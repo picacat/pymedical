@@ -1462,7 +1462,7 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 self.ui.comboBox_valuation.setCurrentText("正常計價")
                 self.append_null_medicine()
 
-                self.ui.spinBox_discount_rate.setValue(0)
+                self.ui.spinBox_discount_rate.setValue(100)
                 self.ui.lineEdit_discount_fee.setText("")
 
         self.parent.calculate_self_fees()
