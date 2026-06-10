@@ -1,4 +1,4 @@
-# 開立醫療費用證明書 2026.06.10
+# 病歷查詢 2026.06.10
 # -*- coding: UTF-8 -*-
 
 import datetime
@@ -37,6 +37,8 @@ class DialogCertificatePayment(QtWidgets.QDialog):
 
         if self.auto_create_list is not None:
             self._auto_create_certificate_payment()
+
+        self.clinic_name = self.system_settings.field("院所名稱")
 
     # 解構
     def __del__(self):
@@ -271,17 +273,21 @@ class DialogCertificatePayment(QtWidgets.QDialog):
         ui_utils.set_combo_box(self.ui.comboBox_doctor, doctor_list)
 
     def _set_table_data(self, row_no, row):
+        ins_type = string_utils.xstr(row["InsType"])
+        treat_type = string_utils.xstr(row["TreatType"])
+        total_fee = number_utils.get_integer(row["TotalFee"])
+
         medical_record = [
             string_utils.xstr(row["CaseKey"]),
             None,
             string_utils.xstr(row["CaseDate"].date()),
-            string_utils.xstr(row["InsType"]),
-            string_utils.xstr(row["TreatType"]),
+            ins_type,
+            treat_type,
             string_utils.xstr(number_utils.get_integer(row["RegistFee"])),
             string_utils.xstr(number_utils.get_integer(row["SDiagShareFee"])),
             string_utils.xstr(number_utils.get_integer(row["SDrugShareFee"])),
             string_utils.xstr(number_utils.get_integer(row["InsApplyFee"])),
-            string_utils.xstr(number_utils.get_integer(row["TotalFee"])),
+            string_utils.xstr(total_fee),
             string_utils.xstr(row["Doctor"]),
         ]
 
@@ -300,6 +306,15 @@ class DialogCertificatePayment(QtWidgets.QDialog):
 
         check_box = QtWidgets.QCheckBox(self.ui.tableWidget_medical_record)
         check_box.setChecked(True)
+
+        if (
+            self.clinic_name == "耀康中醫診所"
+            and ins_type == "自費"
+            and treat_type == "民俗調理"
+            and total_fee > 50
+        ):
+            check_box.setChecked(False)
+
         self.ui.tableWidget_medical_record.setCellWidget(row_no, 1, check_box)
 
     def _save_files(self):
@@ -392,6 +407,7 @@ class DialogCertificatePayment(QtWidgets.QDialog):
                         CertificateItemsKey = {certificate_items_key}
                 """)
 
+    # 民俗調理放在自費材料費(其他費用)欄位 2026-06-10 耀康
     def _is_merge_case(self, row, certificate_key):
         case_date = row["CaseDate"].date()
         sql = f'''
@@ -408,8 +424,8 @@ class DialogCertificatePayment(QtWidgets.QDialog):
         certificate_items_row = rows[0]
         s_massage_fee = number_utils.get_integer(row["SMassageFee"])
         certificate_items_key = certificate_items_row["CertificateItemsKey"]
-        cert_massage_fee = (
-            number_utils.get_integer(certificate_items_row["SMassageFee"])
+        cert_material_fee = (
+            number_utils.get_integer(certificate_items_row["SMaterialFee"])
             + s_massage_fee
         )
         self_total_fee = (
@@ -426,7 +442,7 @@ class DialogCertificatePayment(QtWidgets.QDialog):
         sql = f"""
             UPDATE certificate_items
             SET
-                SMassageFee = {cert_massage_fee},
+                SMaterialFee = {cert_material_fee},
                 SelfTotalFee = {self_total_fee},
                 TotalFee = {total_fee},
                 ReceiptFee = {receipt_fee}
