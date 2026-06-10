@@ -133,6 +133,16 @@ class PrintPrescriptionSelfForm9:
         drug_no = case_utils.get_case_field_value(
             self.database, self.case_key, "DrugNo"
         )
+
+        if self.medicine_set is not None and self.medicine_set >= 2:
+            medicine_set = self.medicine_set - 1
+            total_medicine_set = printer_utils.get_total_medicine_set(
+                self.database, self.case_key
+            )
+            medicine_set_line = f"{medicine_set}/{total_medicine_set}"
+        else:
+            medicine_set_line = ""
+
         prescript_html = f"""
             <table style="border-collapse: collapse; border:1px #cccccc solid;" cellpadding="2" border="1">
               <thead>
@@ -153,6 +163,7 @@ class PrintPrescriptionSelfForm9:
               </tr>
               <tr>
                 <td align="left">領藥號: {drug_no:0>3}</td>
+                <td align="right">{medicine_set_line}</td>
               </tr>
             </table>
             {fees_record}
