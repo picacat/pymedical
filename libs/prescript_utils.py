@@ -1008,6 +1008,34 @@ def get_treat_position(database, case_key, field_value):
     return treat_position_list
 
 
+def get_treat_position_code(database, case_key, field_value):
+    treat_position_code = ""
+
+    sql = f'''
+        SELECT MedicineName FROM prescript
+        WHERE
+            CaseKey = {case_key} AND
+            MedicineSet = 1 AND
+            MedicineName LIKE "{field_value}%"
+        ORDER BY PrescriptKey
+    '''
+    rows = database.select_record(sql)
+
+    for row in rows:
+        treat_position = string_utils.xstr(row["MedicineName"])
+        try:
+            treat_position = treat_position.split(field_value)[1].strip()
+        except Exception:
+            continue
+
+        try:
+            treat_position_code += nhi_utils.POSITION_DICT[treat_position]
+        except Exception:
+            pass
+
+    return treat_position_code
+
+
 def get_auxiliary_list(database, case_key, field_value):
     auxiliary_list = []
 

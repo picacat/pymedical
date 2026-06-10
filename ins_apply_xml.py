@@ -947,7 +947,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p4.text = treat_code
 
         if treat_code in nhi_utils.COMPLICATED_TREAT_CODE:
-            treat_position = prescript_utils.get_treat_position(
+            treat_position = prescript_utils.get_treat_position_code(
                 self.database, case_key, "治療部位:"
             )
             if treat_position != "":
