@@ -29,20 +29,6 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QToolButton" name="toolButton_change_sequence">
-          <property name="text">
-           <string>改流水號</string>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>../icons/gtk-revert-to-saved-ltr.svg</normaloff>../icons/gtk-revert-to-saved-ltr.svg</iconset>
-          </property>
-          <property name="toolButtonStyle">
-           <enum>Qt::ToolButtonTextBesideIcon</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QToolButton" name="toolButton_jump">
           <property name="text">
            <string>查流水號</string>
@@ -222,6 +208,20 @@
           </property>
           <property name="shortcut">
            <string>F11</string>
+          </property>
+          <property name="toolButtonStyle">
+           <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_change_sequence">
+          <property name="text">
+           <string>改流水號</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../icons/gtk-revert-to-saved-ltr.svg</normaloff>../icons/gtk-revert-to-saved-ltr.svg</iconset>
           </property>
           <property name="toolButtonStyle">
            <enum>Qt::ToolButtonTextBesideIcon</enum>
