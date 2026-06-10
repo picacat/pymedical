@@ -947,12 +947,12 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p4.text = treat_code
 
         if treat_code in nhi_utils.COMPLICATED_TREAT_CODE:
-            treat_position = prescript_utils.get_treat_position_code(
+            treat_position_code = prescript_utils.get_treat_position_code(
                 self.database, case_key, "治療部位:"
             )
-            if treat_position != "":
+            if treat_position_code != "":
                 p6 = ET.SubElement(pdata, "p6")
-                p6.text = treat_position[:18]  # p6 最多18bytes
+                p6.text = treat_position_code[:18]  # p6 最多18bytes
 
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"
