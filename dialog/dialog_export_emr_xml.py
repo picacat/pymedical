@@ -304,6 +304,9 @@ class DialogExportEMRXml(QtWidgets.QDialog):
         name = string_utils.xstr(row["Name"])
         name = string_utils.remove_illegal_characters(name.strip())
 
+        if doctor_name == "*":
+            doctor_name = "＊"
+
         doctor_part = f"{cert_card_no}-{doctor_id}-{doctor_name}"
         patient_part = f"{patient_key}-{case_date}-{regist_no}-{name}"
 
