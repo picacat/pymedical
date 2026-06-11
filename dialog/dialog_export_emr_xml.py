@@ -412,7 +412,7 @@ class DialogExportEMRXml(QtWidgets.QDialog):
         chart_no.text = patient_key
 
         patient_name = ET.SubElement(patient_info, "PatientName")
-        patient_name.text = string_utils.xstr(row["Name"])
+        patient_name.text = string_utils.xstr(row["Name"]).strip()
 
         patient_birthday = row["Birthday"]
         birthday = ET.SubElement(patient_info, "Birthday")
