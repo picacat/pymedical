@@ -114,8 +114,7 @@
              <item>
               <widget class="QLabel" name="label">
                <property name="text">
-                <string>特約門診設定 (不開放網路預約掛號，只開放院內預約掛號)
-使用者管理醫師備註設定「不開放預約」，醫師姓名不會出現在網路預約班表上</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;特約門診設定 ，雙擊班表可以設定醫師姓名 (&lt;span style=&quot; font-weight:600; color:#ff0000;&quot;&gt;不開放網路預約掛號，只開放院內預約掛號&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
               </widget>
              </item>
