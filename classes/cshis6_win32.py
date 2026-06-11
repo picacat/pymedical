@@ -716,6 +716,9 @@ class CSHIS:
             service_path, "POST", data, local_url=False
         )
 
+        if response is None:
+            return None, None
+
         available_date = response.json()["cardValidity"]
         available_date = date_utils.nhi_date_to_west_date(
             response.json()["cardValidity"]

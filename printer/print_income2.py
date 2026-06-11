@@ -1,16 +1,19 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtPrintSupport import QPrinter
+import datetime
 
-from libs import printer_utils
-from libs import system_utils
-from libs import number_utils
-from libs import case_utils
-from libs import string_utils
-from libs import nhi_utils
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+from PyQt5.QtPrintSupport import QPrinter
+from PyQt5.QtWidgets import QFileDialog
+
+from libs import (
+    case_utils,
+    nhi_utils,
+    number_utils,
+    printer_utils,
+    string_utils,
+    system_utils,
+)
 
 
 # 列印結帳日報表
@@ -28,26 +31,37 @@ class PrintIncome2:
 
         self.ui = None
 
-        self.income_date = self.tab_income_cash_flow.label_income_date.text()
+        if self.tab_income_cash_flow is not None:
+            try:
+                self.income_date = self.tab_income_cash_flow.label_income_date.text()
+            except AttributeError:
+                # 如果頁籤存在，但裡面沒有 label_income_date 欄位
+                self.income_date = datetime.now().strftime("%Y-%m-%d")
+        else:
+            # 狀況 A：如果允許在沒有該頁籤的情況下預覽，就自動帶入今天日期
+            self.income_date = datetime.now().strftime("%Y-%m-%d")
+
         self.income_period = self.tab_income_cash_flow.period
         self.income_doctor = self.tab_income_cash_flow.doctor
         self.income_room = self.tab_income_cash_flow.room
         self.income_cashier = self.tab_income_cash_flow.cashier
-        self.income_calculate_by_cashier = self.tab_income_cash_flow.calculate_by_cashier
+        self.income_calculate_by_cashier = (
+            self.tab_income_cash_flow.calculate_by_cashier
+        )
         self.income_source = self.tab_income_cash_flow.income_source
         self.income_regist_type = self.tab_income_cash_flow.regist_type
 
         self.tableWidget_income_list = self.tab_income_list.tableWidget_income
         self.tableWidget_total = self.tab_income_list.tableWidget_total
 
-        self.printer = printer_utils.get_printer(self.system_settings, '報表印表機')
+        self.printer = printer_utils.get_printer(self.system_settings, "報表印表機")
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
 
-        if self.system_settings.field('列印報表雙色印刷') == 'Y':
+        if self.system_settings.field("列印報表雙色印刷") == "Y":
             self.html_bg_color = ' bgcolor="LightGray"'
         else:
-            self.html_bg_color = ''
+            self.html_bg_color = ""
 
         self._set_ui()
         self._set_signal()
@@ -75,7 +89,9 @@ class PrintIncome2:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
@@ -84,8 +100,9 @@ class PrintIncome2:
         pdf_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            f'{self.income_date}-{self.income_period}-門診現金收入報表.pdf',
-            "pdf檔案 (*.pdf);;Text Files (*.txt)", options=options
+            f"{self.income_date}-{self.income_period}-門診現金收入報表.pdf",
+            "pdf檔案 (*.pdf);;Text Files (*.txt)",
+            options=options,
         )
         if not pdf_file_name:
             return
@@ -98,9 +115,9 @@ class PrintIncome2:
         self.current_print = self.print_html
 
         self.printer.setOrientation(QPrinter.Portrait)
-        if self.orientation == 'portrait':
+        if self.orientation == "portrait":
             self.printer.setOrientation(QPrinter.Portrait)
-        elif self.orientation == 'landscape':
+        elif self.orientation == "landscape":
             self.printer.setOrientation(QPrinter.Landscape)
 
         self.printer.setPaperSize(printer_utils.get_paper_size(self.system_settings))
@@ -121,45 +138,45 @@ class PrintIncome2:
                 deposit.Fee > 0
         '''
 
-        if self.income_period != '全部':
-            if self.income_period == '早午班':
+        if self.income_period != "全部":
+            if self.income_period == "早午班":
                 sql += ' AND cases.Period IN("早班", "午班") '
-            elif self.income_period == '午晚班':
+            elif self.income_period == "午晚班":
                 sql += ' AND cases.Period IN("午班", "晚班") '
             else:
                 sql += f' AND cases.Period = "{self.income_period}"'
 
-        if self.income_doctor != '全部':
+        if self.income_doctor != "全部":
             sql += f' AND cases.Doctor = "{self.income_doctor}"'
-        if self.income_room != '全部':
-            sql += f' AND Room = {self.income_room}'
-        if self.income_cashier != '全部':
+        if self.income_room != "全部":
+            sql += f" AND Room = {self.income_room}"
+        if self.income_cashier != "全部":
             if self.income_calculate_by_cashier:
                 sql += f' AND cases.Cashier = "{self.income_cashier}"'
             else:
                 sql += f' AND cases.Register = "{self.income_cashier}"'
 
         else:
-            if self.income_source == '櫃台':
+            if self.income_source == "櫃台":
                 sql += ' AND Register != "掛號機"'
-            elif self.income_source == '掛號機':
+            elif self.income_source == "掛號機":
                 sql += ' AND Register = "掛號機"'
 
-        if self.income_regist_type != '全部':
+        if self.income_regist_type != "全部":
             sql += case_utils.get_regist_type_sql(self.income_regist_type)
 
         period_list = string_utils.xstr(nhi_utils.PERIOD)[1:-1]
-        sql += f' GROUP BY cases.CaseKey ORDER BY cases.CaseDate, FIELD(cases.Period, {period_list})'
+        sql += f" GROUP BY cases.CaseKey ORDER BY cases.CaseDate, FIELD(cases.Period, {period_list})"
 
         deposit_rows = self.database.select_record(sql)
         if len(deposit_rows) <= 0:
-            return ''
+            return ""
 
-        deposit_rows_html = ''
+        deposit_rows_html = ""
         i = 0
         for row in deposit_rows:
             i += 1
-            deposit_rows_html += f'''
+            deposit_rows_html += f"""
                 <tr>
                     <td align="center">{i}</td>
                     <td align="center">{row["CaseDate"].date()}</td>
@@ -169,9 +186,9 @@ class PrintIncome2:
                     <td align="right" style="padding-right: 10px">{row["Fee"]}</td>
                     <td align="center">{string_utils.xstr(row["Register"])}</td>
                 </tr>
-            '''
+            """
 
-        html = f'''
+        html = f"""
             <h2 align=center> 欠卡明細</h2>
             <table align=center cellpadding="1" cellspacing="0" width="100%"
                 style="font-size: 15px; border-collapse: collapse; border-width: 1px; border-style: solid; border-color: black">
@@ -188,7 +205,7 @@ class PrintIncome2:
                     {deposit_rows_html}
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
@@ -205,40 +222,40 @@ class PrintIncome2:
                 Fee > 0
         '''
 
-        if self.income_period != '全部':
-            if self.income_period == '早午班':
+        if self.income_period != "全部":
+            if self.income_period == "早午班":
                 sql += ' AND cases.Period IN("早班", "午班") '
-            elif self.income_period == '午晚班':
+            elif self.income_period == "午晚班":
                 sql += ' AND cases.Period IN("午班", "晚班") '
             else:
                 sql += f' AND cases.Period = "{self.income_period}"'
 
-        if self.income_doctor != '全部':
+        if self.income_doctor != "全部":
             sql += f' AND cases.Doctor = "{self.income_doctor}"'
 
-        if self.income_cashier != '全部':
+        if self.income_cashier != "全部":
             sql += f' AND Refunder = "{self.income_cashier}"'
         else:
-            if self.income_source == '櫃台':
+            if self.income_source == "櫃台":
                 sql += ' AND Refunder != "掛號機"'
-            elif self.income_source == '掛號機':
+            elif self.income_source == "掛號機":
                 sql += ' AND Refunder = "掛號機"'
 
-        if self.income_regist_type != '全部':
+        if self.income_regist_type != "全部":
             sql += case_utils.get_regist_type_sql(self.income_regist_type)
 
         period_list = string_utils.xstr(nhi_utils.PERIOD)[1:-1]
-        sql += f' ORDER BY DepositDate, FIELD(deposit.Period, {period_list})'
+        sql += f" ORDER BY DepositDate, FIELD(deposit.Period, {period_list})"
 
         refund_rows = self.database.select_record(sql)
         if len(refund_rows) <= 0:
-            return ''
+            return ""
 
-        refund_rows_html = ''
+        refund_rows_html = ""
         i = 0
         for row in refund_rows:
             i += 1
-            refund_rows_html += f'''
+            refund_rows_html += f"""
                 <tr>
                     <td align="center" >{i}</td>
                     <td align="center" >{row["CaseDate"].date()}</td>
@@ -249,9 +266,9 @@ class PrintIncome2:
                     <td align="right" style="padding-right: 10px">{-row["Fee"]}</td>
                     <td align="center">{string_utils.xstr(row["Refunder"])}</td>
                 </tr>
-            '''
+            """
 
-        html = f'''
+        html = f"""
             <h2 align=center> 還卡明細</h2>
             <table align=center cellpadding="1" cellspacing="0" width="100%"
                 style="font-size: 15px; border-collapse: collapse; border-width: 1px; border-style: solid; border-color: black">
@@ -269,7 +286,7 @@ class PrintIncome2:
                     {refund_rows_html}
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
@@ -284,40 +301,40 @@ class PrintIncome2:
                 Fee > 0
         '''
 
-        if self.income_period != '全部':
-            if self.income_period == '早午班':
+        if self.income_period != "全部":
+            if self.income_period == "早午班":
                 sql += ' AND debt.Period IN("早班", "午班") '
-            elif self.income_period == '午晚班':
+            elif self.income_period == "午晚班":
                 sql += ' AND debt.Period IN("午班", "晚班") '
             else:
                 sql += f' AND debt.Period = "{self.income_period}"'
 
-        if self.income_doctor != '全部':
+        if self.income_doctor != "全部":
             sql += f' AND cases.Doctor = "{self.income_doctor}"'
 
-        if self.income_cashier != '全部':
+        if self.income_cashier != "全部":
             sql += f' AND cases.Register = "{self.income_cashier}"'
         else:
-            if self.income_source == '櫃台':
+            if self.income_source == "櫃台":
                 sql += ' AND cases.Register != "掛號機"'
-            elif self.income_source == '掛號機':
+            elif self.income_source == "掛號機":
                 sql += ' AND cases.Register = "掛號機"'
 
-        if self.income_regist_type != '全部':
+        if self.income_regist_type != "全部":
             sql += case_utils.get_regist_type_sql(self.income_regist_type)
 
         period_list = string_utils.xstr(nhi_utils.PERIOD)[1:-1]
-        sql += f' ORDER BY debt.CaseDate, FIELD(debt.Period, {period_list})'
+        sql += f" ORDER BY debt.CaseDate, FIELD(debt.Period, {period_list})"
 
         debt_row = self.database.select_record(sql)
         if len(debt_row) <= 0:
-            return ''
+            return ""
 
-        debt_rows_html = ''
+        debt_rows_html = ""
         i = 0
         for row in debt_row:
             i += 1
-            debt_rows_html += f'''
+            debt_rows_html += f"""
                 <tr>
                     <td align="center" >{i}</td>
                     <td align="center" >{row["CaseDate"].date()}</td>
@@ -329,9 +346,9 @@ class PrintIncome2:
                     <td align="center">{string_utils.xstr(row["Doctor"])}</td>
                     <td align="center">{string_utils.xstr(row["Register"])}</td>
                 </tr>
-            '''
+            """
 
-        html = f'''
+        html = f"""
             <h2 align=center>欠款明細</h2>
             <table align=center cellpadding="1" cellspacing="0" width="100%"
                 style="font-size: 15px; border-collapse: collapse; border-width: 1px; border-style: solid; border-color: black">
@@ -350,7 +367,7 @@ class PrintIncome2:
                     {debt_rows_html}
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
@@ -365,40 +382,40 @@ class PrintIncome2:
                 TotalReturn > 0
         '''
 
-        if self.income_period != '全部':
-            if self.income_period == '早午班':
+        if self.income_period != "全部":
+            if self.income_period == "早午班":
                 sql += ' AND debt.Period IN("早班", "午班") '
-            elif self.income_period == '午晚班':
+            elif self.income_period == "午晚班":
                 sql += ' AND debt.Period IN("午班", "晚班") '
             else:
                 sql += f' AND debt.Period = "{self.income_period}"'
 
-        if self.income_doctor != '全部':
+        if self.income_doctor != "全部":
             sql += f' AND cases.Doctor = "{self.income_doctor}"'
 
-        if self.income_cashier != '全部':
+        if self.income_cashier != "全部":
             sql += f' AND cases.Register = "{self.income_cashier}"'
         else:
-            if self.income_source == '櫃台':
+            if self.income_source == "櫃台":
                 sql += ' AND cases.Register != "掛號機"'
-            elif self.income_source == '掛號機':
+            elif self.income_source == "掛號機":
                 sql += ' AND cases.Register = "掛號機"'
 
-        if self.income_regist_type != '全部':
+        if self.income_regist_type != "全部":
             sql += case_utils.get_regist_type_sql(self.income_regist_type)
 
         period_list = string_utils.xstr(nhi_utils.PERIOD)[1:-1]
-        sql += f' ORDER BY debt.CaseDate, FIELD(debt.Period, {period_list})'
+        sql += f" ORDER BY debt.CaseDate, FIELD(debt.Period, {period_list})"
 
         debt_row = self.database.select_record(sql)
         if len(debt_row) <= 0:
-            return ''
+            return ""
 
-        debt_rows_html = ''
+        debt_rows_html = ""
         i = 0
         for row in debt_row:
             i += 1
-            debt_rows_html += f'''
+            debt_rows_html += f"""
                 <tr>
                     <td align="center" >{i}</td>
                     <td align="center" >{row["CaseDate"].date()}</td>
@@ -410,9 +427,9 @@ class PrintIncome2:
                     <td align="right" style="padding-right: 10px">{row["Fee1"]}</td>
                     <td align="center">{row["Register"]}</td>
                 </tr>
-            '''
+            """
 
-        html = f'''
+        html = f"""
             <h2 align=center>還款明細</h2>
             <table align=center cellpadding="1" cellspacing="0" width="100%"
                 style="font-size: 15px; border-collapse: collapse; border-width: 1px; border-style: solid; border-color: black">
@@ -431,17 +448,17 @@ class PrintIncome2:
                     {debt_rows_html}
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
     def _get_html(self):
-        clinic_name = self.system_settings.field('院所名稱')
+        clinic_name = self.system_settings.field("院所名稱")
 
         table_income = self._get_table_income_portrait_html()
-        if self.orientation == 'portrait':
+        if self.orientation == "portrait":
             table_income = self._get_table_income_portrait_html()
-        elif self.orientation == 'landscape':
+        elif self.orientation == "landscape":
             table_income = self._get_table_income_landscape_html()
 
         deposit_list = self._get_deposit_list_html()
@@ -451,7 +468,7 @@ class PrintIncome2:
 
         table_total = self._get_table_total_html()
 
-        html = f'''
+        html = f"""
             <html>
                 <body>
                     <br>
@@ -466,71 +483,112 @@ class PrintIncome2:
                     {table_total}
                 </body>
             </html>
-        '''
+        """
 
         return html
 
     def _get_income_rows(self):
-        income_rows = ''
+        income_rows = ""
 
         for row_no in range(self.tableWidget_income_list.rowCount()):
-            case_key = self.tableWidget_income_list.item(row_no, self.columns['case_key']).text()
-            patient_key = self.tableWidget_income_list.item(row_no, self.columns['patient_key']).text()
-            name = self.tableWidget_income_list.item(row_no, self.columns['name']).text()
-            ins_type = self.tableWidget_income_list.item(row_no, self.columns['ins_type']).text()
-            share_type = self.tableWidget_income_list.item(row_no, self.columns['share_type']).text()
-            discount_type = self.tableWidget_income_list.item(row_no, self.columns['discount_type']).text()
-            card = self.tableWidget_income_list.item(row_no, self.columns['card']).text()
-            regist_fee = self.tableWidget_income_list.item(row_no, self.columns['regist_fee']).text()
-            diag_share_fee = self.tableWidget_income_list.item(row_no, self.columns['diag_share_fee']).text()
-            drug_share_fee = self.tableWidget_income_list.item(row_no, self.columns['drug_share_fee']).text()
-            deposit_fee = self.tableWidget_income_list.item(row_no, self.columns['deposit_fee']).text()
-            refund = self.tableWidget_income_list.item(row_no, self.columns['refund_fee']).text()
-            repayment = self.tableWidget_income_list.item(row_no, self.columns['repayment']).text()
-            total_fee = self.tableWidget_income_list.item(row_no, self.columns['self_total_fee']).text()
-            debt = self.tableWidget_income_list.item(row_no, self.columns['debt']).text()
-            regist_debt = self.tableWidget_income_list.item(row_no, self.columns['regist_debt']).text()
-            receipt_fee = self.tableWidget_income_list.item(row_no, self.columns['receipt_fee']).text()
+            case_key = self.tableWidget_income_list.item(
+                row_no, self.columns["case_key"]
+            ).text()
+            patient_key = self.tableWidget_income_list.item(
+                row_no, self.columns["patient_key"]
+            ).text()
+            name = self.tableWidget_income_list.item(
+                row_no, self.columns["name"]
+            ).text()
+            ins_type = self.tableWidget_income_list.item(
+                row_no, self.columns["ins_type"]
+            ).text()
+            share_type = self.tableWidget_income_list.item(
+                row_no, self.columns["share_type"]
+            ).text()
+            discount_type = self.tableWidget_income_list.item(
+                row_no, self.columns["discount_type"]
+            ).text()
+            card = self.tableWidget_income_list.item(
+                row_no, self.columns["card"]
+            ).text()
+            regist_fee = self.tableWidget_income_list.item(
+                row_no, self.columns["regist_fee"]
+            ).text()
+            diag_share_fee = self.tableWidget_income_list.item(
+                row_no, self.columns["diag_share_fee"]
+            ).text()
+            drug_share_fee = self.tableWidget_income_list.item(
+                row_no, self.columns["drug_share_fee"]
+            ).text()
+            deposit_fee = self.tableWidget_income_list.item(
+                row_no, self.columns["deposit_fee"]
+            ).text()
+            refund = self.tableWidget_income_list.item(
+                row_no, self.columns["refund_fee"]
+            ).text()
+            repayment = self.tableWidget_income_list.item(
+                row_no, self.columns["repayment"]
+            ).text()
+            total_fee = self.tableWidget_income_list.item(
+                row_no, self.columns["self_total_fee"]
+            ).text()
+            debt = self.tableWidget_income_list.item(
+                row_no, self.columns["debt"]
+            ).text()
+            regist_debt = self.tableWidget_income_list.item(
+                row_no, self.columns["regist_debt"]
+            ).text()
+            receipt_fee = self.tableWidget_income_list.item(
+                row_no, self.columns["receipt_fee"]
+            ).text()
             sequence = row_no + 1
 
-            if self.tableWidget_income_list.item(row_no, 4).text() == '合計':
-                sequence = ''
+            if self.tableWidget_income_list.item(row_no, 4).text() == "合計":
+                sequence = ""
 
-            pres_days = self.tableWidget_income_list.item(row_no, self.columns['pres_days'])
+            pres_days = self.tableWidget_income_list.item(
+                row_no, self.columns["pres_days"]
+            )
             if pres_days is not None:
                 pres_days = pres_days.text()
             else:
-                pres_days = '0'
+                pres_days = "0"
 
-            registrar = self.tableWidget_income_list.item(row_no, self.columns['registrar'])
+            registrar = self.tableWidget_income_list.item(
+                row_no, self.columns["registrar"]
+            )
             if registrar is not None:
                 registrar = registrar.text()
             else:
-                registrar = ''
+                registrar = ""
 
             # doctor = self.tableWidget_income_list.item(row_no, self.columns['cashier'])
             # if doctor is not None:
             #     doctor = doctor.text()
             # else:
             #     doctor = ''
-            doctor = case_utils.get_case_field_value(self.database, case_key, 'Doctor')
+            doctor = case_utils.get_case_field_value(self.database, case_key, "Doctor")
             if doctor is None:
-                doctor = ''
+                doctor = ""
             else:
                 doctor = string_utils.xstr(doctor)
 
-            bg_color = ''
-            if self.system_settings.field('列印報表雙色印刷') == 'Y' and row_no % 2 > 0:
+            bg_color = ""
+            if self.system_settings.field("列印報表雙色印刷") == "Y" and row_no % 2 > 0:
                 bg_color = ' bgcolor="#E3E3E3"'
 
-            if self.orientation == 'portrait':
+            if self.orientation == "portrait":
                 share_type = share_type[:2]
                 discount_type = discount_type[:2]
             else:
                 share_type = share_type[:4]
                 discount_type = discount_type[:4]
 
-            income_rows += f'''
+            if name == "合計":
+                sequence = ""
+
+            income_rows += f"""
                 <tr{bg_color}>
                     <td align=right>{sequence}</td>
                     <td align=left>{name}</td>
@@ -551,12 +609,12 @@ class PrintIncome2:
                     <td align=right>{receipt_fee}</td>
                     <td align=left>{doctor}</td>
                 </tr>
-            '''
+            """
         return income_rows
 
     def _get_table_income_portrait_html(self):
         income_rows = self._get_income_rows()
-        html = f'''
+        html = f"""
             <table align=center cellpadding="1" cellspacing="0" width="100%"
                 style="font-size: 15px; border-collapse: collapse; ">
                 <thead>
@@ -585,13 +643,13 @@ class PrintIncome2:
                     {income_rows}
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
     def _get_table_income_landscape_html(self):
         income_rows = self._get_income_rows()
-        html = f'''
+        html = f"""
             <table align=center cellpadding="1" cellspacing="0" width="100%"
                 style="font-size: 12px; border-collapse: collapse; border-width: 1px; border-style: solid; border-color: black">
                 <thead>
@@ -627,31 +685,43 @@ class PrintIncome2:
                     {income_rows}
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
     def _get_table_total_html(self):
-        ins_regist_fee = number_utils.get_integer(self.tableWidget_total.item(1, 1).text())
-        diag_share_fee = number_utils.get_integer(self.tableWidget_total.item(1, 2).text())
-        drug_share_fee = number_utils.get_integer(self.tableWidget_total.item(1, 3).text())
+        ins_regist_fee = number_utils.get_integer(
+            self.tableWidget_total.item(1, 1).text()
+        )
+        diag_share_fee = number_utils.get_integer(
+            self.tableWidget_total.item(1, 2).text()
+        )
+        drug_share_fee = number_utils.get_integer(
+            self.tableWidget_total.item(1, 3).text()
+        )
         deposit_fee = number_utils.get_integer(self.tableWidget_total.item(1, 4).text())
         refund = number_utils.get_integer(self.tableWidget_total.item(1, 5).text())
         regist_debt = number_utils.get_integer(self.tableWidget_total.item(1, 6).text())
         ins_total = number_utils.get_integer(self.tableWidget_total.item(1, 7).text())
 
-        self_regist_fee = number_utils.get_integer(self.tableWidget_total.item(3, 1).text())
-        self_total_fee = number_utils.get_integer(self.tableWidget_total.item(3, 2).text())
+        self_regist_fee = number_utils.get_integer(
+            self.tableWidget_total.item(3, 1).text()
+        )
+        self_total_fee = number_utils.get_integer(
+            self.tableWidget_total.item(3, 2).text()
+        )
         total_fee = number_utils.get_integer(self.tableWidget_total.item(3, 3).text())
         debt = number_utils.get_integer(self.tableWidget_total.item(3, 4).text())
-        receipt_total = number_utils.get_integer(self.tableWidget_total.item(3, 5).text())
+        receipt_total = number_utils.get_integer(
+            self.tableWidget_total.item(3, 5).text()
+        )
         repayment = number_utils.get_integer(self.tableWidget_total.item(3, 6).text())
         self_total = number_utils.get_integer(self.tableWidget_total.item(3, 7).text())
 
         massage_fee = number_utils.get_integer(self.tableWidget_total.item(1, 8).text())
         cash_total = number_utils.get_integer(self.tableWidget_total.item(1, 9).text())
 
-        html = f'''
+        html = f"""
             <h2 align=center> 門診現金收入總表</h2>
             <table align=center cellpadding="1" cellspacing="0" width="100%"
                 style="font-size: 15px; border-collapse: collapse; border-width: 1px; border-style: solid; border-color: black">
@@ -700,6 +770,6 @@ class PrintIncome2:
                     </tr>
                 </tbody>
             </table>
-        '''
+        """
 
         return html

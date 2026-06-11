@@ -31,14 +31,13 @@ class DialogCertificatePayment(QtWidgets.QDialog):
         self.system_settings = args[1]
         self.auto_create_list = args[2]
         self.ui = None
+        self.clinic_name = self.system_settings.field("院所名稱")
 
         self._set_ui()
         self._set_signal()
 
         if self.auto_create_list is not None:
             self._auto_create_certificate_payment()
-
-        self.clinic_name = self.system_settings.field("院所名稱")
 
     # 解構
     def __del__(self):

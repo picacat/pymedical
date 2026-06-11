@@ -382,6 +382,9 @@ def add_treat(prescript_tab, table_widget_medicine, row=None):
 
 # 輸入藥品
 def add_medicine(prescript_tab, table_widget_medicine, row=None, dosage=None):
+    if prescript_tab is None:
+        return False
+
     if row is None:
         row = get_medicine_row(table_widget_medicine)
 
