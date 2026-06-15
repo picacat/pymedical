@@ -423,10 +423,16 @@ class DialogCertificatePayment(QtWidgets.QDialog):
         certificate_items_row = rows[0]
         s_massage_fee = number_utils.get_integer(row["SMassageFee"])
         certificate_items_key = certificate_items_row["CertificateItemsKey"]
+
+        cert_massage_fee = (
+            number_utils.get_integer(certificate_items_row["SMassageFee"])
+            + s_massage_fee
+        )
         cert_material_fee = (
             number_utils.get_integer(certificate_items_row["SMaterialFee"])
             + s_massage_fee
         )
+
         self_total_fee = (
             number_utils.get_integer(certificate_items_row["SelfTotalFee"])
             + s_massage_fee
@@ -438,16 +444,29 @@ class DialogCertificatePayment(QtWidgets.QDialog):
             number_utils.get_integer(certificate_items_row["ReceiptFee"])
             + s_massage_fee
         )
-        sql = f"""
-            UPDATE certificate_items
-            SET
-                SMaterialFee = {cert_material_fee},
-                SelfTotalFee = {self_total_fee},
-                TotalFee = {total_fee},
-                ReceiptFee = {receipt_fee}
-            WHERE
-                CertificateItemsKey = {certificate_items_key}
-        """
+
+        if self.clinic_name == "耀康中醫診所":  # 民俗調理費放在其他費用
+            sql = f"""
+                UPDATE certificate_items
+                SET
+                    SMaterialFee = {cert_material_fee},
+                    SelfTotalFee = {self_total_fee},
+                    TotalFee = {total_fee},
+                    ReceiptFee = {receipt_fee}
+                WHERE
+                    CertificateItemsKey = {certificate_items_key}
+            """
+        else:  # 其他診所放在處置費
+            sql = f"""
+                UPDATE certificate_items
+                SET
+                    SMassageFee = {cert_massage_fee},
+                    SelfTotalFee = {self_total_fee},
+                    TotalFee = {total_fee},
+                    ReceiptFee = {receipt_fee}
+                WHERE
+                    CertificateItemsKey = {certificate_items_key}
+            """
         self.database.exec_sql(sql)
 
         return True
