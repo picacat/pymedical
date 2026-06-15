@@ -888,7 +888,7 @@ class CvtGP:
         fields = [
             "MedicineType",
             "MedicineMode",
-            "MedicineCode",
+            # "MedicineCode",
             "InputCode",
             "InsCode",
             "MedicineName",
@@ -905,16 +905,22 @@ class CvtGP:
         for row in rows:
             self.progress_bar.setValue(self.progress_bar.value() + 1)
 
-            use_flag = self._get_field_value(row["Use_Flag"])
-            if string_utils.xstr(use_flag) == "不用":
-                continue
+            # use_flag = self._get_field_value(row["Use_Flag"])
+            # if string_utils.xstr(use_flag) == "不用":
+            #     continue
 
             medicine_type = self._get_medicine_type(row["Drug_Type"])
-            medicine_code = self._get_field_value(row["Self_Code"])
+            # medicine_code = self._get_field_value(row["Self_Code"])
             medicine_mode = self._get_field_value(row["Drug_Id"])
             input_code = self._get_field_value(row["ZY_Code"])
+            if input_code is not None:
+                input_code = input_code[:5]
+
             ins_code = self._get_field_value(row["Standard_Code"])
             medicine_name = self._get_field_value(row["Drug_Name"])
+            if medicine_name is not None:
+                medicine_name = medicine_name[:40]
+
             medicine_alias = None
             unit = self._get_field_value(row["unit_name"])
             dosage = None
@@ -930,10 +936,10 @@ class CvtGP:
             data = [
                 medicine_type,
                 medicine_mode,
-                medicine_code,
-                input_code[:5],
+                # medicine_code,
+                input_code,
                 ins_code,
-                medicine_name[:40],
+                medicine_name,
                 medicine_alias,
                 unit,
                 dosage,
