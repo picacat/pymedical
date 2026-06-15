@@ -339,7 +339,7 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                     self.database, self.system_settings, row["InsApplyKey"], diag_code
                 )
 
-    # 未滿四歲加成20% 2022-03-01 實施 (之前為未滿3歲 ShareCode = '901')
+    # 未滿四歲加成20% 2022-03-01 實施 (之前為未滿3歲 ShareCode = '902')
     def _adjust_child_diag_fee(self):
         sql = f'''
             SELECT *
