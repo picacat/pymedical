@@ -198,31 +198,60 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
             diag_days = nhi_utils.MAX_DIAG_DAYS
         return diag_days
 
+    # def _get_total_count(self, in_doctor_name):
+    #     total_count = 0
+    #     sql = f'''
+    #         SELECT
+    #             CaseKey1, CaseKey2, CaseKey3, CaseKey4, CaseKey5,
+    #             CaseKey6, CaseKey7, CaseKey8, CaseKey9, CaseKey10,
+    #             CaseKey11, CaseKey12, CaseKey13, CaseKey14, CaseKey15
+    #         FROM insapply
+    #         WHERE
+    #             ApplyDate = "{self.apply_date}" AND
+    #             ApplyType = "{self.apply_type_code}" AND
+    #             ApplyPeriod = "{self.period}" AND
+    #             ClinicID = "{self.clinic_id}" AND
+    #             {self.exclude_script}
+    #     '''
+    #     rows = self.database.select_record(sql)
+    #     for row in rows:
+    #         for i in range(1, 16):
+    #             case_key = number_utils.get_integer(row[f"CaseKey{i}"])
+    #             if case_key <= 0:
+    #                 continue
+    #             doctor_name = self._get_doctor_name(case_key)
+    #             if doctor_name == in_doctor_name:
+    #                 total_count += 1
+    #     return total_count
+
     def _get_total_count(self, in_doctor_name):
-        total_count = 0
+        select_parts = []
+        for i in range(1, 16):
+            select_parts.append(f'''
+                SELECT i.CaseKey{i} as ck
+                FROM insapply i
+                WHERE
+                    i.CaseKey{i} > 0 AND
+                    i.ApplyDate = "{self.apply_date}" AND
+                    i.ApplyType = "{self.apply_type_code}" AND
+                    i.ApplyPeriod = "{self.period}" AND
+                    i.ClinicID = "{self.clinic_id}" AND
+                    {self.exclude_script}
+            ''')
+
+        union_subquery = " UNION ALL ".join(select_parts)
         sql = f'''
-            SELECT
-                CaseKey1, CaseKey2, CaseKey3, CaseKey4, CaseKey5,
-                CaseKey6, CaseKey7, CaseKey8, CaseKey9, CaseKey10,
-                CaseKey11, CaseKey12, CaseKey13, CaseKey14, CaseKey15
-            FROM insapply
-            WHERE
-                ApplyDate = "{self.apply_date}" AND
-                ApplyType = "{self.apply_type_code}" AND
-                ApplyPeriod = "{self.period}" AND
-                ClinicID = "{self.clinic_id}" AND
-                {self.exclude_script}
+            SELECT COUNT(*) as cnt
+            FROM (
+                {union_subquery}
+            ) AS all_case_keys
+            JOIN cases c ON c.CaseKey = all_case_keys.ck
+            WHERE REPLACE(c.Doctor, ',', '') = "{in_doctor_name}"
         '''
         rows = self.database.select_record(sql)
-        for row in rows:
-            for i in range(1, 16):
-                case_key = number_utils.get_integer(row[f"CaseKey{i}"])
-                if case_key <= 0:
-                    continue
-                doctor_name = self._get_doctor_name(case_key)
-                if doctor_name == in_doctor_name:
-                    total_count += 1
-        return total_count
+        if len(rows) > 0:
+            return number_utils.get_integer(rows[0]["cnt"])
+        return 0
 
     def _get_infectious_count(self, in_doctor_name):
         infectious_count = 0
@@ -660,7 +689,7 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
             ins_calculated_row["treat_section3"] = 0
 
             treat_count = ins_calculated_row["treat_count"]
-            if treat_count < section1_balance:
+            if treat_count <= section1_balance:
                 ins_calculated_row["treat_section1"] = treat_count
                 treat_count = 0
             else:
@@ -672,7 +701,7 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
             if treat_count <= 0:
                 continue
 
-            if treat_count < section2_balance:
+            if treat_count <= section2_balance:
                 ins_calculated_row["treat_section2"] = treat_count
                 treat_count = 0
             else:
@@ -697,7 +726,10 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
             diag_days = min(ins_calculated_row["diag_days"], nhi_utils.MAX_DIAG_DAYS)
             treat_drug = ins_calculated_row["treat_drug"]
 
-            treat_section1_limit = diag_days * nhi_utils.TREAT_SECTION1 - treat_drug
+            # treat_section1_limit = diag_days * nhi_utils.TREAT_SECTION1 - treat_drug
+            treat_section1_limit = max(
+                0, diag_days * nhi_utils.TREAT_SECTION1 - treat_drug
+            )
             treat_section2_limit = diag_days * (
                 nhi_utils.TREAT_SECTION2 - nhi_utils.TREAT_SECTION1
             )
