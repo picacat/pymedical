@@ -2620,9 +2620,12 @@ class Registration(QtWidgets.QMainWindow):
             in_duty_doctor_list = registration_utils.get_schedule_doctor_by_date_period(
                 self.database, weekday_name, period
             )
+            if len(in_duty_doctor_list) == 0:
+                in_duty_doctor_list = personnel_utils.get_person(
+                    self.database, "醫師", exclude_person="值班醫師"
+                )
+                in_duty_doctor_list.insert(0, None)
         else:
-            # in_duty_doctor_list = personnel_utils.get_person(
-            #     self.database, '醫師', exclude_person='值班醫師', include_person='全部醫師')
             in_duty_doctor_list = personnel_utils.get_person(
                 self.database, "醫師", exclude_person="值班醫師"
             )

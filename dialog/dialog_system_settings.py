@@ -485,6 +485,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self.ui.spinBox_dosage_limitation.setValue(
             number_utils.get_integer(self.system_settings.field("劑量上限"))
         )
+        self.ui.spinBox_powder_divider_limitation.setValue(
+            number_utils.get_integer(self.system_settings.field("包藥機劑量上限"))
+        )
         self.ui.spinBox_dosage_minimum.setValue(
             number_utils.get_integer(self.system_settings.field("最低劑量"))
         )
@@ -1686,6 +1689,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
 
         self.system_settings.post("健保業務", self.ui.comboBox_division.currentText())
         self.system_settings.post("劑量上限", self.ui.spinBox_dosage_limitation.value())
+        self.system_settings.post(
+            "包藥機劑量上限", self.ui.spinBox_powder_divider_limitation.value()
+        )
         self.system_settings.post("最低劑量", self.ui.spinBox_dosage_minimum.value())
         self.system_settings.post(
             "6歲以下最低劑量", self.ui.spinBox_dosage_minimum2.value()

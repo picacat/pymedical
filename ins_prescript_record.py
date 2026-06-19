@@ -59,6 +59,9 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self.dosage_limitation = number_utils.get_integer(
             self.system_settings.field("劑量上限")
         )
+        self.powder_divider_limitation = number_utils.get_integer(
+            self.system_settings.field("包藥機劑量上限")
+        )
         self.check_total_dosage_event = self.system_settings.field(
             "健保處方給藥劑量上限檢查時機"
         )
@@ -839,6 +842,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             ):
                 self._set_dosage_format(current_row, current_column)
                 self.check_total_dosage(current_row)
+                self.check_powder_divider_dosage(current_row)
                 self.check_total_costs(current_row)
             # elif current_column == prescript_utils.INS_PRESCRIPT_COL_NO['Instruction']:
             #     self._set_dosage_percent()
@@ -858,6 +862,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             ):
                 self._set_dosage_format(current_row, current_column)
                 self.check_total_dosage(current_row)
+                self.check_powder_divider_dosage(current_row)
                 self.check_total_costs(current_row)
             # elif current_column == prescript_utils.INS_PRESCRIPT_COL_NO['Instruction']:
             #     self._set_dosage_percent()
@@ -880,6 +885,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
                 #     self.ui.comboBox_package.setFocus(True)
 
                 self.check_total_dosage(current_row)
+                self.check_powder_divider_dosage(current_row)
                 self.check_total_costs(current_row)
             elif current_column == prescript_utils.INS_PRESCRIPT_COL_NO["Instruction"]:
                 if current_row < self.ui.tableWidget_prescript.rowCount() - 1:
@@ -1075,6 +1081,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self._set_total_cost()
 
         self.check_total_dosage(row_no)
+        self.check_powder_divider_dosage(row_no)
         self.check_total_costs(row_no)
 
     def _set_dosage_format(self, row_no, col_no):
@@ -2371,6 +2378,9 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
     def save_prescript(self, check_prescript=True):
         if check_prescript:
             if not self.check_total_dosage(check_type="save"):
+                return False
+
+            if not self.check_powder_divider_dosage():
                 return False
 
             if not self.check_total_costs(check_type="save"):
@@ -4519,6 +4529,48 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             self.ui.tableWidget_prescript, database=self.database, medicine_set=1
         )
         self.ui.label_total_dosage.setText(f"總量: {total_dosage:.1f}")
+
+        return False
+
+    def check_powder_divider_dosage(self, current_row=None):
+        if (
+            self.powder_divider_limitation is None
+            or self.powder_divider_limitation <= 0
+        ):  # 未設定, 不檢查
+            return True
+
+        if current_row is None:
+            current_row = self.ui.tableWidget_prescript.currentRow()
+
+        total_dosage, _ = prescript_utils.get_total_dosage(
+            self.ui.tableWidget_prescript, database=self.database, medicine_set=1
+        )
+        packages = number_utils.get_integer(self.ui.comboBox_package.currentText())
+        total_dosage, _ = prescript_utils.get_total_dosage(
+            self.ui.tableWidget_prescript, database=self.database, medicine_set=1
+        )
+
+        try:
+            single_dosage = round(total_dosage / packages, 1)
+        except Exception:
+            return True
+
+        if single_dosage <= self.powder_divider_limitation:  # 未超過劑量上限
+            return True
+
+        col_no = prescript_utils.INS_PRESCRIPT_COL_NO["Dosage"]
+        self.ui.tableWidget_prescript.setCurrentCell(current_row, col_no)
+        self._set_dosage_format(current_row, col_no)
+
+        system_utils.show_message_box(
+            QtWidgets.QMessageBox.Critical,
+            "劑量檢查",
+            f"""<font size="5" color="red">
+                 <b>目前一包劑量為{single_dosage}克, 超過包藥機單包{self.powder_divider_limitation}克的劑量上限, 請重新調整劑量.</b>
+               </font>
+            """,
+            """請重新調整劑量,若單包粉末量超過上述重量，包藥機可能無法順利將藥粉完全推進紙張中， 容易導致封口不全、藥粉外漏（俗稱「漏包」），或出現包裝紙卡紙、破裂的情況。""",
+        )
 
         return False
 

@@ -4286,12 +4286,18 @@ def get_instruction_html_0(
             database, system_settings, case_key, medicine_set
         )
 
-        total_dosage = f"{total_dosage:.1f}"
+        total_dosage_line = f"{total_dosage:.1f}克"
+        total_packages = packages * pres_days
+        try:
+            dosage_per_package = round(total_dosage / total_packages, 1)
+            dosage_per_package_line = f", 每包{dosage_per_package}克"
+        except Exception:
+            dosage_per_package_line = ""
 
         case_date = row["CaseDate"].date()
         html = f"""
-              指示:一日{packages}包, {pres_days}日份, 共{packages * pres_days}包<br>
-              服法:{instruction}服用 總量:{total_dosage}<br>
+              指示:一日{packages}包{pres_days}日份, 共{total_packages}包{dosage_per_package_line}<br>
+              服法:{instruction}服用 總量:{total_dosage_line}<br>
               醫師/調劑者:{doctor}<br>
               調劑日:{case_date}
         """
