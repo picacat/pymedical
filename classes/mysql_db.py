@@ -309,7 +309,7 @@ class MySQLDatabase(DatabaseInterface):
 
             except Exception as e:
                 # 記錄一下，方便以後回頭看方醫師那邊的網路或資料庫穩不穩定
-                print(f"⚠️ SQL 執行失敗 (第 {attempt + 1} 次): {e}")
+                print(f"⚠️ SQL 執行失敗 (第 {attempt + 1} 次): {e}\nSQL: {sql}")
                 self._reconnect()
 
             finally:

@@ -299,6 +299,9 @@ class DialogReservationModify(QtWidgets.QDialog):
         self.time_dict = {}
         self.number_dict = {}
         for row in rows:
+            if row["Time"] is None or row["ReserveNo"] is None:
+                continue
+
             reserve_no = string_utils.xstr(row["ReserveNo"])
             time = string_utils.xstr(row["Time"])
             reservation_date = (
