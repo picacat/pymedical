@@ -320,7 +320,6 @@ class PyMedical(QtWidgets.QMainWindow):
                 log_utils.write_system_log(
                     self.database, "資料轉檔", "2023ICD10轉檔", station_no
                 )
-                os.remove("complicated_treatment_disease.json")
                 self.get_treatment_list_from_db()
 
         try:
@@ -496,6 +495,9 @@ class PyMedical(QtWidgets.QMainWindow):
                     print("✅ 資料庫連線已安全關閉")
                 except Exception as e:
                     print(f"❌ 關閉資料庫時發生錯誤: {e}")
+                    system_utils.loggin_error(
+                        "system_errors.log", f"關閉資料庫時發生錯誤: {e}"
+                    )
 
             if hasattr(self, "archive_db") and self.archive_db:
                 try:
@@ -503,6 +505,9 @@ class PyMedical(QtWidgets.QMainWindow):
                     self.archive_db.close_database()
                 except Exception as e:
                     print(f"❌ 關閉封存資料庫時發生錯誤: {e}")
+                    system_utils.loggin_error(
+                        "system_errors.log", f"關閉封存資料庫時發生錯誤: {e}"
+                    )
 
             self._close_socket()
             self.deactivate_ic_card_reader()
@@ -523,8 +528,11 @@ class PyMedical(QtWidgets.QMainWindow):
                 system_utils.send_to_tcpip(
                     led_ip, led_port, b"\xed\xed\x0f\x0f\x0f\x0f\x7f\x00\x00"
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                system_utils.loggin_error(
+                    "system_errors.log",
+                    f"關閉叫號燈失敗 (IP={led_ip}, Port={led_port}): {e}",
+                )
 
     def check_system_db(self):
         """檢查資料庫是否需要補充."""
@@ -597,27 +605,6 @@ class PyMedical(QtWidgets.QMainWindow):
         self.ui.label_line_qrcode.setMaximumWidth(icon_size)
         self.ui.label_line_qrcode.setMaximumHeight(icon_size)
         self.ui.label_line_qrcode.setScaledContents(True)
-
-    # def _display_bulletin(self):
-    #     if self.system_settings.field("不要顯示最新消息") == "Y":
-    #         self.ui.label_system_name.hide()
-    #         self.ui.textBrowser.hide()
-    #         return
-
-    #     import ssl
-    #     import urllib
-
-    #     context = ssl._create_unverified_context()
-    #     url = "https://raw.githubusercontent.com/picacat/medical-announcements/refs/heads/main/bulletin.html"
-    #     with urllib.request.urlopen(url, context=context, timeout=10) as response:
-    #         html = response.read().decode("utf-8")
-
-    #     shadow1 = QtWidgets.QGraphicsDropShadowEffect()
-    #     shadow1.setBlurRadius(40)
-    #     self.ui.textBrowser.setStyleSheet("background: transparent;")
-    #     self.ui.textBrowser.setFrameStyle(QtWidgets.QFrame.NoFrame)
-    #     self.ui.textBrowser.setGraphicsEffect(shadow1)
-    #     self.ui.textBrowser.setHtml(html)
 
     def _display_bulletin(self):
         # 1. 檢查使用者設定
@@ -1919,9 +1906,9 @@ class PyMedical(QtWidgets.QMainWindow):
     # 設定權限
     def set_root_permission(self):
         if self.user_name != "超級使用者":
-            self.action_convert.setEnabled(False)
+            self.ui.action_convert.setEnabled(False)
         else:
-            self.action_convert.setEnabled(True)
+            self.ui.action_convert.setEnabled(True)
 
     def _start_udp_server(self):
         self.socket_server.start()
@@ -2488,7 +2475,8 @@ class PyMedical(QtWidgets.QMainWindow):
             cshis = class_utils.get_cshis(self, self.database, self.system_settings)
             cshis.activate_reader_app()
             # ic_card.reset_reader(show_message=False)
-        except Exception:
+        except Exception as e:
+            system_utils.loggin_error("system_errors.log", f"讀卡機啟動失敗: {e}")
             system_utils.show_message_box(
                 QMessageBox.Critical,
                 "讀卡機啟動錯誤",
@@ -2508,8 +2496,8 @@ class PyMedical(QtWidgets.QMainWindow):
             cshis = class_utils.get_cshis(self, self.database, self.system_settings)
             cshis.deactivate_reader_app()
             # ic_card.reset_reader(show_message=False)
-        except Exception:
-            pass
+        except Exception as e:
+            system_utils.loggin_error("system_errors.log", f"讀卡機關閉失敗: {e}")
 
     def _update_files(self):
         if system_utils.is_maintain_expired(self.clinic_name):
@@ -2534,42 +2522,6 @@ class PyMedical(QtWidgets.QMainWindow):
         )
         dialog.exec_()
         dialog.deleteLater()
-
-    # def _special_function1(self):
-    #     import csv
-    #
-    #     with open('doctor.csv', encoding='utf8') as csv_file:
-    #         rows = csv.reader(csv_file)
-    #
-    #         for row in rows:
-    #             case_key = row[0]
-    #             doctor = row[1]
-    #             sql = f'''
-    #                 UPDATE cases
-    #                 SET
-    #                     Doctor = "{doctor}"
-    #                 WHERE
-    #                     CaseKey = {case_key}
-    #             '''
-    #             self.database.exec_sql(sql)
-    #
-    #     print('done')
-
-    # def _special_function2(self):
-    #     import csv
-    #
-    #     sql = '''
-    #         SELECT CaseKey, Doctor FROM cases
-    #         ORDER BY CaseKey
-    #     '''
-    #     rows = self.database.select_record(sql)
-    #
-    #     with open('/home/john/doctor.csv', "w", encoding='utf8') as csv_file:
-    #         writer = csv.writer(csv_file)
-    #         for row in rows:
-    #             writer.writerow([row['CaseKey'], row['Doctor']])
-    #
-    #     print('done')
 
     # 重新啟動系統
     def restart_pymedical(self):
@@ -2899,7 +2851,7 @@ def set_dark_style(app):
 
 
 # 主程式
-def main():
+def main(config):
     set_high_dpi_attributes()
     if sys.platform == "win32":
         set_windows_scale_factor()
@@ -2941,6 +2893,6 @@ if __name__ == "__main__":
         if not pyuac.isUserAdmin():  # type: ignore
             pyuac.runAsAdmin()
         else:
-            main()
+            main(config)
     else:
-        main()
+        main(config)

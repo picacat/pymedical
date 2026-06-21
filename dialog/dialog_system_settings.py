@@ -949,6 +949,40 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self._set_check_box(self.ui.checkBox_set_room_zero, "掛號醫師不在醫師班表")
 
+        self._read_kiosk_disable_time()
+
+    def _read_kiosk_disable_time(self):
+        self.ui.timeEdit_period11.setTime(
+            QtCore.QTime.fromString(
+                self.system_settings.field("早班停止掛號開始時間"), "hh:mm"
+            )
+        )
+        self.ui.timeEdit_period12.setTime(
+            QtCore.QTime.fromString(
+                self.system_settings.field("早班停止掛號結束時間"), "hh:mm"
+            )
+        )
+        self.ui.timeEdit_period21.setTime(
+            QtCore.QTime.fromString(
+                self.system_settings.field("午班停止掛號開始時間"), "hh:mm"
+            )
+        )
+        self.ui.timeEdit_period22.setTime(
+            QtCore.QTime.fromString(
+                self.system_settings.field("午班停止掛號結束時間"), "hh:mm"
+            )
+        )
+        self.ui.timeEdit_period31.setTime(
+            QtCore.QTime.fromString(
+                self.system_settings.field("晚班停止掛號開始時間"), "hh:mm"
+            )
+        )
+        self.ui.timeEdit_period32.setTime(
+            QtCore.QTime.fromString(
+                self.system_settings.field("晚班停止掛號結束時間"), "hh:mm"
+            )
+        )
+
     # 看診設定
     def _read_doctor_settings(self):
         self.ui.spinBox_room.setValue(
@@ -1999,7 +2033,29 @@ class DialogSystemSettings(QtWidgets.QDialog):
             "網路預約開放週數", self.ui.spinBox_max_reserve_weeks.value()
         )
         self.system_settings.post("未回診天數", self.ui.spinBox_no_return_days.value())
+
+        self._save_kiosk_disable_time()
         self._save_start_no()
+
+    def _save_kiosk_disable_time(self):
+        self.system_settings.post(
+            "早班停止掛號開始時間", self.ui.timeEdit_period11.time().toString("hh:mm")
+        )
+        self.system_settings.post(
+            "早班停止掛號結束時間", self.ui.timeEdit_period12.time().toString("hh:mm")
+        )
+        self.system_settings.post(
+            "午班停止掛號開始時間", self.ui.timeEdit_period21.time().toString("hh:mm")
+        )
+        self.system_settings.post(
+            "午班停止掛號結束時間", self.ui.timeEdit_period22.time().toString("hh:mm")
+        )
+        self.system_settings.post(
+            "晚班停止掛號開始時間", self.ui.timeEdit_period31.time().toString("hh:mm")
+        )
+        self.system_settings.post(
+            "晚班停止掛號結束時間", self.ui.timeEdit_period32.time().toString("hh:mm")
+        )
 
     def _save_start_no(self):
         keyword = "指定診別起始號"

@@ -2,9 +2,9 @@
 import configparser
 import os
 import re
-import time
 
 import mysql.connector as mysql
+import mysql.connector.errors as mysql_errors
 
 from classes.database_interface import DatabaseInterface
 from libs import db_utils, string_utils
@@ -52,14 +52,18 @@ class MySQLDatabase(DatabaseInterface):
         """
         try:
             return self.cnx is not None and self.cnx.is_connected()
-        except:
+        except Exception:
             return False
 
     def close_database(self):
         """關閉目前的資料庫連線，並將連線設為 None。"""
         if self.cnx:
-            self.cnx.close()
-            self.cnx = None
+            try:
+                self.cnx.close()
+            except Exception:
+                pass
+            finally:
+                self.cnx = None
 
     def _get_database_name(self):
         """取得目前使用的資料庫名稱。
@@ -149,7 +153,7 @@ class MySQLDatabase(DatabaseInterface):
             print(f"Error: {err}")
 
     def get_cursor(self, dictionary=False, buffered=True):
-        """取得 cursor，若失敗則嘗試重新連線最多 10 次。
+        """取得 cursor。若連線已斷開，嘗試重連一次。
 
         Args:
             dictionary (bool): 是否回傳 dict 格式。
@@ -157,15 +161,20 @@ class MySQLDatabase(DatabaseInterface):
 
         Returns:
             MySQLCursor: 資料庫 cursor。
-        """
-        for _ in range(10):
-            try:
-                return self.cnx.cursor(dictionary=dictionary, buffered=buffered)
-            except Exception:
-                self._reconnect()
-                time.sleep(0.1)
 
-        return None
+        Raises:
+            mysql_errors.InterfaceError: 重連後仍無法取得有效連線時拋出。
+                上層的 select_record 會將此視為連線層級錯誤並重試；其他
+                呼叫端則會直接收到這個明確的例外，而不是無意義的
+                AttributeError。
+        """
+        if not self.connected():
+            self._reconnect()
+
+        if not self.connected():
+            raise mysql_errors.InterfaceError("資料庫連線已中斷，重新連線失敗。")
+
+        return self.cnx.cursor(dictionary=dictionary, buffered=buffered)
 
     def _reconnect(self):
         """關閉並重新連線資料庫，強制指定使用資料庫。"""
@@ -174,6 +183,8 @@ class MySQLDatabase(DatabaseInterface):
                 self.cnx.close()
             except Exception:
                 pass
+            finally:
+                self.cnx = None
 
         try:
             self._create_connection(use_db=True)
@@ -198,6 +209,7 @@ class MySQLDatabase(DatabaseInterface):
             顯示 QMessageBox 錯誤訊息，如果發生檔案不存在、編碼錯誤或 SQL 執行錯誤。
         """
         table_file = os.path.join(BASE_DIR, DB_PATH, f"{table_name}.sql")
+        cursor = None
         try:
             with open(table_file, "r", encoding="utf-8") as db_table:
                 sql = db_table.read()
@@ -231,7 +243,7 @@ class MySQLDatabase(DatabaseInterface):
                 final_statements.append(statement)
 
             # 執行所有 SQL 語句
-            cursor = self.cnx.cursor()
+            cursor = self.get_cursor()
             for stmt in final_statements:
                 cursor.execute(stmt)
             self.cnx.commit()
@@ -249,83 +261,57 @@ class MySQLDatabase(DatabaseInterface):
                 "建表錯誤", f"建立資料表 {table_name} 時出現錯誤：\n{str(err)}"
             )
         finally:
-            try:
-                cursor.close()
-            except:
-                pass
+            if cursor is not None:
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
 
-    # def select_record(self, sql, dictionary=True):
-    #     if not sql:
-    #         return []
+    def select_record(self, sql, params=None, dictionary=True):
+        """執行 SELECT 查詢並回傳結果。
 
-    #     retry_count = 2
-    #     for attempt in range(retry_count):
-    #         cursor = None
-    #         try:
-    #             cursor = self.get_cursor(dictionary)
-    #             if cursor is None:
-    #                 # 如果拿不到游標，嘗試重連後繼續下一次迴圈
-    #                 self._reconnect()
-    #                 continue
+        Args:
+            sql (str): 查詢語句，值的部分請用 %s 佔位符。
+            params (tuple, optional): 對應 %s 佔位符的參數值。
+            dictionary (bool): 是否以 dict 格式回傳每一列。
 
-    #             cursor.execute(sql)
-    #             result = cursor.fetchall()
-    #             return result  # 成功拿到資料就回傳
-
-    #         except Exception as e:
-    #             print(f"SQL: {sql}")
-    #             print(f"⚠️ 執行 SQL 失敗（第 {attempt + 1} 次）：{e}")
-    #             self._reconnect()
-    #         finally:
-    #             # 這裡是你修正的核心：確保關閉時不會崩潰
-    #             if cursor:
-    #                 try:
-    #                     # 檢查 self.cnx 是否還存在且連線中
-    #                     if self.cnx and self.cnx.is_connected():
-    #                         cursor.close()
-    #                 except (ReferenceError, Exception):
-    #                     # 徹底無視關閉游標時的任何異常
-    #                     pass
-
-    #     return []
-
-    def select_record(self, sql, dictionary=True):
+        Returns:
+            list[dict]: 查詢結果列表，失敗時回傳空列表。
+        """
         if not sql:
             return []
 
         retry_count = 2
+        last_exception = None
+
         for attempt in range(retry_count):
             cursor = None
             try:
-                # 這裡會用到你寫的 get_cursor，它內建重連與 buffered=True
                 cursor = self.get_cursor(dictionary=dictionary)
+                cursor.execute(sql, params or ())
+                return cursor.fetchall()
 
-                if cursor is None:
-                    continue
-
-                cursor.execute(sql)
-                result = cursor.fetchall()
-                return result
-
-            except Exception as e:
-                # 記錄一下，方便以後回頭看方醫師那邊的網路或資料庫穩不穩定
-                print(f"⚠️ SQL 執行失敗 (第 {attempt + 1} 次): {e}")
+            except (mysql_errors.OperationalError, mysql_errors.InterfaceError) as e:
+                # 真正屬於連線層級的問題，才值得重連重試
+                print(f"⚠️ 連線層級錯誤 (第 {attempt + 1} 次): {e}")
+                last_exception = e
                 self._reconnect()
 
+            except Exception as e:
+                # SQL 本身寫錯、欄位不存在等，重連沒有意義，直接往上丟
+                print(f"❌ SQL 執行失敗，非連線問題，不重試：{sql}\n{e}")
+                raise
+
             finally:
-                # 這是防止 ReferenceError 的最後一道防線
                 if cursor is not None:
                     try:
-                        # 只有在連線還在且有效時才手動關閉
-                        if (
-                            hasattr(self, "cnx")
-                            and self.cnx
-                            and self.cnx.is_connected()
-                        ):
+                        if self.cnx and self.cnx.is_connected():
                             cursor.close()
-                    except (ReferenceError, Exception):
-                        # 32位元環境下，如果弱引用失效，直接放手讓 GC 處理，不讓程式崩潰
+                    except Exception:
                         pass
+
+        if last_exception:
+            print(f"❌ 重試 {retry_count} 次後仍失敗：{last_exception}")
 
         return []
 
@@ -343,7 +329,12 @@ class MySQLDatabase(DatabaseInterface):
             cursor.execute(sql, (key_value,))
             self.cnx.commit()
         finally:
-            cursor.close()
+            if cursor is not None:
+                try:
+                    if self.cnx and self.cnx.is_connected():
+                        cursor.close()
+                except Exception:
+                    pass
 
     def insert_record(self, table_name, fields, data):
         """新增一筆紀錄至指定資料表。
@@ -371,7 +362,7 @@ class MySQLDatabase(DatabaseInterface):
             try:
                 if cursor and self.cnx and self.cnx.is_connected():
                     cursor.close()
-            except:
+            except Exception:
                 pass
 
         return self.get_last_insert_id()
@@ -398,11 +389,10 @@ class MySQLDatabase(DatabaseInterface):
             self.cnx.rollback()
             raise
         finally:
-            # 加入同樣的保護機制
             try:
                 if cursor and self.cnx and self.cnx.is_connected():
                     cursor.close()
-            except:
+            except Exception:
                 pass
 
     def exec_sql(self, sql, auto_commit=True):
@@ -417,8 +407,25 @@ class MySQLDatabase(DatabaseInterface):
             cursor.execute(sql)
             if auto_commit:
                 self.cnx.commit()
+        except Exception as e:
+            # 失敗時主動清空交易狀態，避免連線殘留未提交/未回復的異動。
+            # 注意：若 sql 是 DDL（如 ALTER TABLE），MySQL 在執行前已隱性
+            # commit，這裡的 rollback 多半是 no-op；主要是為了保護未來
+            # exec_sql 被用於 DML 語句的情境。
+            if auto_commit and self.cnx:
+                try:
+                    self.cnx.rollback()
+                except Exception:
+                    pass
+            print(f"❌ exec_sql 執行失敗：{sql}\n錯誤資訊：{e}")
+            raise
         finally:
-            cursor.close()
+            if cursor is not None:
+                try:
+                    if self.cnx and self.cnx.is_connected():
+                        cursor.close()
+                except Exception:
+                    pass
 
     def begin_transaction(self):
         """開始一個資料庫交易（transaction）。"""
@@ -453,11 +460,11 @@ class MySQLDatabase(DatabaseInterface):
         Returns:
             int: 下一個自動編號值。
         """
-        sql = f'''
+        sql = """
             SELECT AUTO_INCREMENT FROM information_schema.TABLES
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "{table_name}"
-        '''
-        row = self.select_record(sql)
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s
+        """
+        row = self.select_record(sql, (table_name,))
         return row[0]["AUTO_INCREMENT"] if row else None
 
     def host_name(self):
@@ -507,21 +514,25 @@ class MySQLDatabase(DatabaseInterface):
 
     def _is_table_exists(self, table_name):
         sql = "SHOW TABLES LIKE %s"
-        cursor = self.get_cursor()
-        cursor.execute(sql, (table_name,))
-        exists = cursor.fetchone()
-        cursor.close()
-        return bool(exists)
+        rows = self.select_record(sql, (table_name,))
+        return bool(rows)
 
     def check_field_exists(self, table_name, alter_type, column, data_type):
-        """檢查欄位是否存在，必要時自動建立或修改欄位型態。"""
+        """檢查欄位是否存在，必要時自動建立或修改欄位型態。
+
+        Note:
+            table_name、column、data_type 會直接組進 ALTER TABLE 語句的識別字
+            (identifier) 位置，MySQL 參數化查詢無法替換識別字，僅能替換值。
+            因此這幾個參數務必只能來自程式內部可信任的呼叫（例如寫死的表結構
+            定義），不可直接帶入外部輸入。
+        """
         if isinstance(column, list) and len(column) == 2:
             search_column, new_column = column
         else:
             search_column = new_column = column
 
-        sql = f'SHOW COLUMNS FROM {table_name} LIKE "{search_column}"'
-        rows = self.select_record(sql)
+        sql = f"SHOW COLUMNS FROM {table_name} LIKE %s"
+        rows = self.select_record(sql, (search_column,))
         column_exists = bool(rows)
         field_match = (
             column_exists and string_utils.xstr(rows[0]["Field"]) == new_column
@@ -530,11 +541,24 @@ class MySQLDatabase(DatabaseInterface):
             column_exists
             and string_utils.xstr(rows[0]["Type"]).lower() == data_type.lower()
         )
-        if (alter_type == "add" and column_exists) or (
-            alter_type in ["change", "modify"]
-            and (not column_exists or (field_match and type_match))
+        if alter_type == "add" and column_exists:
+            return
+        if (
+            alter_type in ("change", "modify")
+            and column_exists
+            and field_match
+            and type_match
         ):
             return
+        if alter_type in ("change", "modify") and not column_exists:
+            # 不再靜默跳過：舊欄位不存在時印出警告，並讓下面的 ALTER TABLE
+            # 繼續執行，由 MySQL 拋出 Unknown column 之類的真正錯誤，問題
+            # 才會在發生的當下就被看到，而不是被吞掉、之後在別處才爆炸。
+            print(
+                f"⚠️ 嘗試以 {alter_type} 修改資料表 {table_name} 的欄位 "
+                f"`{search_column}`，但該欄位不存在，將繼續執行 ALTER TABLE"
+                "（可能因找不到欄位而報錯）。"
+            )
 
         try:
             self.kill_sleep_connections()
@@ -542,11 +566,11 @@ class MySQLDatabase(DatabaseInterface):
             pass
 
         if alter_type == "add":
-            sql = f"ALTER TABLE {table_name} ADD {column} {data_type}"
+            sql = f"ALTER TABLE {table_name} ADD `{column}` {data_type}"
         elif alter_type == "change":
-            sql = f"ALTER TABLE {table_name} CHANGE {search_column} {new_column} {data_type}"
+            sql = f"ALTER TABLE {table_name} CHANGE `{search_column}` `{new_column}` {data_type}"
         elif alter_type == "modify":
-            sql = f"ALTER TABLE {table_name} MODIFY {new_column} {data_type}"
+            sql = f"ALTER TABLE {table_name} MODIFY `{new_column}` {data_type}"
         self.exec_sql(sql)
 
     def kill_sleep_connections(self, threshold=60):
@@ -586,7 +610,12 @@ class MySQLDatabase(DatabaseInterface):
                     except Exception as e:
                         print(f"❌ 無法刪除 ID {process_id}: {e}")
         finally:
-            cursor.close()
+            if cursor is not None:
+                try:
+                    if self.cnx and self.cnx.is_connected():
+                        cursor.close()
+                except Exception:
+                    pass
 
     def add_index_if_not_exists(self, table_name, index_name, fields):
         """
@@ -596,14 +625,13 @@ class MySQLDatabase(DatabaseInterface):
         :param fields: 欄位串列, 例如 ['MedicineSet', 'CaseDate']
         """
         # 1. 檢查索引是否存在
-        check_sql = f"""
-            SELECT COUNT(*) as total FROM information_schema.STATISTICS 
-            WHERE table_schema = DATABASE() 
-            AND table_name = '{table_name}' 
-            AND index_name = '{index_name}'
+        check_sql = """
+            SELECT COUNT(*) as total FROM information_schema.STATISTICS
+            WHERE table_schema = DATABASE()
+            AND table_name = %s
+            AND index_name = %s
         """
-
-        res = self.select_record(check_sql)
+        res = self.select_record(check_sql, (table_name, index_name))
 
         # 2. 如果不存在則執行建立
         if res and res[0].get("total", 0) == 0:
