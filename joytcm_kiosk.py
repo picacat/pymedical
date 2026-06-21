@@ -1,18 +1,22 @@
-import sys
-from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QPushButton, QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QSpacerItem, QSizePolicy
-from PyQt5.QtCore import Qt
-import importlib
-
-import os
 import datetime
-import gc
+import importlib
+import os
+import sys
 
-from libs import class_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import module_utils
-from libs import string_utils
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QVBoxLayout,
+)
+
+from libs import class_utils, module_utils, system_utils, ui_utils
 
 HOME_WIDGET = 1
 
@@ -23,7 +27,7 @@ class ClockWorker(QtCore.QObject):
     def run(self):
         while True:
             # 獲取當前時間
-            current_time = datetime.datetime.now().strftime('%Y-%m-%d - %H:%M:%S')
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d - %H:%M:%S")
             self.update_time.emit(current_time)  # 發送信號更新界面
             QtCore.QThread.sleep(1)  # 讓線程每秒鐘執行一次
 
@@ -36,9 +40,9 @@ class PasswordDialog(QDialog):
     BUTTON_FONT_SIZE = 24
     BUTTON_HEIGHT = 80
 
-    RED = '#e4442e'
-    DARK_GREEN = '#1e4f0a'
-    LIGHT_GREEN = '#4bab56'
+    RED = "#e4442e"
+    DARK_GREEN = "#1e4f0a"
+    LIGHT_GREEN = "#4bab56"
     BUTTON_FONT_COLOR = DARK_GREEN
 
     STYLE_SHEET = f"""
@@ -91,10 +95,10 @@ class PasswordDialog(QDialog):
         # 定義數字鍵盤佈局
         grid_layout = QVBoxLayout()
         numbers = [
-            ('1', '2', '3'),
-            ('4', '5', '6'),
-            ('7', '8', '9'),
-            ('清除', '0', '確定')
+            ("1", "2", "3"),
+            ("4", "5", "6"),
+            ("7", "8", "9"),
+            ("清除", "0", "確定"),
         ]
 
         for row in numbers:
@@ -108,12 +112,16 @@ class PasswordDialog(QDialog):
 
             # 增加行與行之間的垂直間隔
             grid_layout.addLayout(row_layout)
-            grid_layout.addItem(QSpacerItem(10, 10, QSizePolicy.Expanding, QSizePolicy.Minimum))  # 修改間隔大小
+            grid_layout.addItem(
+                QSpacerItem(10, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
+            )  # 修改間隔大小
 
         self.keyboard_layout.addLayout(grid_layout)
 
         # 使用 spacer來確保數字鍵盤和取消按鈕的間距
-        self.keyboard_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.keyboard_layout.addItem(
+            QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        )
 
         # 取消按鈕
         cancel_button = QPushButton("取消", self)
@@ -123,9 +131,13 @@ class PasswordDialog(QDialog):
 
         # 創建一個新的水平佈局來放置取消按鈕
         cancel_layout = QHBoxLayout()
-        cancel_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        cancel_layout.addItem(
+            QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        )
         cancel_layout.addWidget(cancel_button)
-        cancel_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        cancel_layout.addItem(
+            QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        )
 
         # 添加取消按鈕到鍵盤佈局
         self.keyboard_layout.addLayout(cancel_layout)
@@ -146,16 +158,16 @@ class PasswordDialog(QDialog):
         self.eject_coin10 = False
         self.eject_coin50 = False
 
-        if self.password_input.text() == '16888':
+        if self.password_input.text() == "16888":
             self.eject_coins = True
             self.accept()  # 正確密碼，關閉對話框
-        elif self.password_input.text() == '168885':
+        elif self.password_input.text() == "168885":
             self.eject_coin5 = True
             self.accept()  # 正確密碼，關閉對話框
-        elif self.password_input.text() == '1688810':
+        elif self.password_input.text() == "1688810":
             self.eject_coin10 = True
             self.accept()  # 正確密碼，關閉對話框
-        elif self.password_input.text() == '1688850':
+        elif self.password_input.text() == "1688850":
             self.eject_coin50 = True
             self.accept()  # 正確密碼，關閉對話框
         elif self.password_input.text() == self.correct_password:
@@ -168,8 +180,8 @@ class PasswordDialog(QDialog):
 # 悅兒親子中醫預約報到繳費機 2024.08.11
 class JOYTCM_Kiosk(QtWidgets.QMainWindow):
     BASE_DIR = os.getcwd()
-    UI_DIR = os.path.join(BASE_DIR, 'joytcm_kiosk', 'ui')
-    IMAGE_DIR = os.path.join(BASE_DIR, 'joytcm_kiosk', 'images')
+    UI_DIR = os.path.join(BASE_DIR, "joytcm_kiosk", "ui")
+    IMAGE_DIR = os.path.join(BASE_DIR, "joytcm_kiosk", "images")
     TEXT_FONT = "源泉圓體月 H"
     FONT_SIZE = 42
 
@@ -178,21 +190,21 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
     BUTTON_HEIGHT = 80
 
     ROOM_DICT = {
-        1: '一診',
-        2: '二診',
-        3: '三診',
-        4: '四診',
-        5: '五診',
-        6: '六診',
-        7: '七診',
-        8: '八診',
-        9: '九診',
-        10: '十診',
+        1: "一診",
+        2: "二診",
+        3: "三診",
+        4: "四診",
+        5: "五診",
+        6: "六診",
+        7: "七診",
+        8: "八診",
+        9: "九診",
+        10: "十診",
     }
 
-    RED = '#e4442e'
-    DARK_GREEN = '#1e4f0a'
-    LIGHT_GREEN = '#4bab56'
+    RED = "#e4442e"
+    DARK_GREEN = "#1e4f0a"
+    LIGHT_GREEN = "#4bab56"
 
     # 初始化
     def __init__(self, parent=None, *args):
@@ -207,16 +219,16 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         if config_file is not None:
             self.config_file = config_file
             config_dict = self._parse_config_file(self.config_file)
-            self.host = config_dict['host']
+            self.host = config_dict["host"]
             self.database = class_utils.get_db(
                 host=self.host,
-                user=config_dict['user'],
-                database=config_dict['database'],
-                password=config_dict['password'],
-                charset=config_dict['charset'],
-                buffered=config_dict['buffered'],
+                user=config_dict["user"],
+                database=config_dict["database"],
+                password=config_dict["password"],
+                charset=config_dict["charset"],
+                buffered=config_dict["buffered"],
             )
-            self.server_ip = config_dict['host']
+            self.server_ip = config_dict["host"]
         else:
             self.database = class_utils.get_db()
             self.config_file = self.database.CONFIG_FILE
@@ -225,16 +237,21 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         if not self.database.connected():
             sys.exit(0)
 
-        self.system_settings = class_utils.get_system_settings(self.database, self.config_file)
+        self.system_settings = class_utils.get_system_settings(
+            self.database, self.config_file
+        )
         self.ui = None
+        self.clinic_name = self.system_settings.field("院所名稱")
 
-        # os.system('C:\\NHI\\UTILITY\\csResetFsim.exe')
         self.ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
         self.socket_client = class_utils.get_socket_client()
 
         self._set_ui()
         self._set_signal()
-        self._reset_coin_machine()
+        self.close_kiosk_slot()
+
+        self.ic_card.activate_reader_app()
+        self.ic_card.verify_sam(show_message=False)
 
     # 解構
     def __del__(self):
@@ -249,22 +266,29 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
         self._set_stacked_widget()
 
-    def _reset_coin_machine(self):
+    def close_kiosk_slot(self):
         kiosk = class_utils.get_jetway(self.system_settings)
         kiosk.close_cash_in_machine()
-        # kiosk.reset_coin_out_machine(50)
-        # kiosk.reset_coin_out_machine(10)
-        # kiosk.reset_coin_out_machine(5)
-        # kiosk.close
-
         del kiosk
-        gc.collect()
 
     def set_background(self):
-        header = system_utils.set_image(self, os.path.join(self.IMAGE_DIR, 'header.png'), 0, 0)
-        system_utils.set_image(self, os.path.join(self.IMAGE_DIR, 'logo.png'), 5, 142, width=220, height=180)
-        system_utils.set_image(self, os.path.join(self.IMAGE_DIR, 'header_title.png'), 125, 40)
-        system_utils.set_image(self, os.path.join(self.IMAGE_DIR, 'header_clock.png'), 650, 390)
+        header = system_utils.set_image(
+            self, os.path.join(self.IMAGE_DIR, "header.png"), 0, 0
+        )
+        system_utils.set_image(
+            self,
+            os.path.join(self.IMAGE_DIR, "logo.png"),
+            5,
+            142,
+            width=220,
+            height=180,
+        )
+        system_utils.set_image(
+            self, os.path.join(self.IMAGE_DIR, "header_title.png"), 125, 40
+        )
+        system_utils.set_image(
+            self, os.path.join(self.IMAGE_DIR, "header_clock.png"), 650, 390
+        )
 
         self.exit_area = QtCore.QRect(0, 0, 100, 100)
         self.click_count = 0
@@ -275,7 +299,9 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         header.mousePressEvent = self.label_clicked
 
     def label_clicked(self, event):
-        if event.button() == QtCore.Qt.LeftButton and self.exit_area.contains(event.pos()):
+        if event.button() == QtCore.Qt.LeftButton and self.exit_area.contains(
+            event.pos()
+        ):
             self.timer.start()
             self.click_count += 1
             if self.click_count >= 5:
@@ -311,7 +337,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         self.timer.stop()
 
     def _set_clock(self):
-        color = '#1e4f0a'
+        color = "#1e4f0a"
         x, y = 696, 424
         self.label_clock = QtWidgets.QLabel(self)
         self.label_clock.setFixedWidth(350)
@@ -333,6 +359,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
     def update_clock(self, current_time):
         # 更新 QLabel 的文字
         self.label_clock.setText(current_time)
+        print(current_time)  # 可選：在控制台打印時間，方便調試
 
     # 設定信號
     def _set_signal(self):
@@ -340,7 +367,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
     def close_app(self):
         self.database.close_database()
-        self.ic_card.close_com()
+        self.ic_card.deactivate_reader_app()
         self.close()
 
     # 設定 css style
@@ -355,7 +382,9 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         # self._set_kiosk_completed()
 
     def _set_kiosk_home(self):
-        self.widget_home = module_utils.get_joytcm_kiosk_home(self, self.database, self.system_settings, self.ic_card)
+        self.widget_home = module_utils.get_joytcm_kiosk_home(
+            self, self.database, self.system_settings, self.ic_card
+        )
         self.ui.stackedWidget.addWidget(self.widget_home)
 
     def _set_kiosk_registration(self):
@@ -372,13 +401,18 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
     def _set_kiosk_completed(self):
         self.widget_completed = module_utils.get_kiosk_completed(
-            self, self.database, self.system_settings, self.ic_card,
+            self,
+            self.database,
+            self.system_settings,
+            self.ic_card,
         )
         self.ui.stackedWidget.addWidget(self.widget_completed)
 
     def _set_kiosk_cancel_reservation(self):
-        self.widget_cancel_reservation = module_utils.get_joytcm_kiosk_cancel_reservation(
-            self, self.database, self.system_settings, self.ic_card
+        self.widget_cancel_reservation = (
+            module_utils.get_joytcm_kiosk_cancel_reservation(
+                self, self.database, self.system_settings, self.ic_card
+            )
         )
         self.ui.stackedWidget.addWidget(self.widget_cancel_reservation)
 
@@ -403,8 +437,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
     # 安全模組卡認證
     def setup_ic_card(self):
-        self.ic_card.close_com()
-        self.ic_card.open_com()
+        self.ic_card.activate_reader_app()
         error_code = self.ic_card.verify_sam(show_message=False)
         if error_code != 0:
             sys.exit(0)
@@ -422,11 +455,14 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
     def send_socket_data(self, doctor, room, call_from):
         print(doctor, room, call_from)
         self.socket_client.send_data(
-            ','.join([
-                self.system_settings.field('院所名稱'),
-                call_from,
-                doctor, room,
-            ])
+            ",".join(
+                [
+                    self.system_settings.field("院所名稱"),
+                    call_from,
+                    doctor,
+                    room,
+                ]
+            )
         )
 
 
@@ -438,12 +474,11 @@ def main():
 
     kiosk = JOYTCM_Kiosk()
     kiosk.showFullScreen()
-    # kiosk.setup_ic_card()
     kiosk.open_kiosk_home()
 
     sys.exit(app.exec_())
 
 
 # 程式開始
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

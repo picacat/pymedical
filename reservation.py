@@ -1502,7 +1502,7 @@ class Reservation(QtWidgets.QMainWindow):
                 item.setForeground(QtGui.QColor(color))
 
     def _get_last_case_remark(self, patient_key):
-        if patient_key in ["網路初診"]:
+        if patient_key in ["網路初診", "初診預約", "視訊初診", "視訊初診預約"]:
             return None
 
         sql = f"""
