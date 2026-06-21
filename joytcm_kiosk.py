@@ -252,6 +252,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
         self.ic_card.activate_reader_app()
         self.ic_card.verify_sam(show_message=False)
+        self.set_up_disable_time()
 
     # 解構
     def __del__(self):
@@ -265,6 +266,17 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         self._set_clock()
 
         self._set_stacked_widget()
+
+    def set_up_disable_time(self):
+        disable_time_list = [
+            self.system_settings.field("早班停止掛號開始時間"),
+            self.system_settings.field("早班停止掛號結束時間"),
+            self.system_settings.field("午班停止掛號開始時間"),
+            self.system_settings.field("午班停止掛號結束時間"),
+            self.system_settings.field("晚班停止掛號開始時間"),
+            self.system_settings.field("晚班停止掛號結束時間"),
+        ]
+        print(disable_time_list)
 
     def close_kiosk_slot(self):
         kiosk = class_utils.get_jetway(self.system_settings)
