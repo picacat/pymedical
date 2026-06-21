@@ -250,6 +250,9 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         self._set_signal()
         self.close_kiosk_slot()
 
+        self.ic_card.activate_reader_app()
+        self.ic_card.verify_sam(show_message=False)
+
     # 解構
     def __del__(self):
         pass
@@ -356,6 +359,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
     def update_clock(self, current_time):
         # 更新 QLabel 的文字
         self.label_clock.setText(current_time)
+        print(current_time)  # 可選：在控制台打印時間，方便調試
 
     # 設定信號
     def _set_signal(self):
@@ -363,7 +367,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
     def close_app(self):
         self.database.close_database()
-        self.ic_card.close_com()
+        self.ic_card.deactivate_reader_app()
         self.close()
 
     # 設定 css style
@@ -433,8 +437,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
     # 安全模組卡認證
     def setup_ic_card(self):
-        self.ic_card.close_com()
-        self.ic_card.open_com()
+        self.ic_card.activate_reader_app()
         error_code = self.ic_card.verify_sam(show_message=False)
         if error_code != 0:
             sys.exit(0)
@@ -471,7 +474,6 @@ def main():
 
     kiosk = JOYTCM_Kiosk()
     kiosk.showFullScreen()
-    # kiosk.setup_ic_card()
     kiosk.open_kiosk_home()
 
     sys.exit(app.exec_())

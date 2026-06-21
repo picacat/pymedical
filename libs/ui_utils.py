@@ -537,33 +537,76 @@ WIN32_THEME = ["Fusion", "Windows", "WindowsXP", "WindowsVista"]
 
 
 # 載入 ui 檔
+# def load_ui_file(ui_file, self, native_menu_bar=False):
+#     try:
+#         ui_file_name = os.path.join(BASE_DIR, UI_PATH, ui_file)
+#         ui = uic.loadUi(ui_file_name, self)
+#         if not native_menu_bar:
+#             try:
+#                 ui.menubar.setNativeMenuBar(False)
+#             except Exception:
+#                 pass
+
+#         # try:
+#         #     set_all_input_widget_shadow(ui)
+#         # except Exception:
+#         #     pass
+
+#         return ui
+#     except Exception:
+#         msg_box = QMessageBox()
+#         msg_box.setIcon(QMessageBox.Warning)
+#         msg_box.setWindowTitle("找不到ui檔")
+#         msg_box.setText(
+#             f"<font size='4' color='red'><b>找不到 {ui_file_name}, 請檢查檔案是否存在.</b></font>"
+#         )
+#         msg_box.setInformativeText("請與本公司聯繫, 並告知上面的訊息.")
+#         msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+#         msg_box.exec_()
+
+#         return None
+
+
 def load_ui_file(ui_file, self, native_menu_bar=False):
+    ui_file_name = os.path.join(BASE_DIR, UI_PATH, ui_file)
+
+    # 1. 檢查檔案是否真的不存在，區分「找不到檔案」與「讀取/解析錯誤」
+    if not os.path.exists(ui_file_name):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle("找不到 UI 檔案")
+        msg_box.setText(
+            f"<font size='4' color='red'><b>找不到 {ui_file_name}，請檢查檔案是否存在。</b></font>"
+        )
+        msg_box.setInformativeText("請與本公司聯繫，並告知上面的訊息。")
+        msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+        msg_box.exec_()
+        return None
+
     try:
-        ui_file_name = os.path.join(BASE_DIR, UI_PATH, ui_file)
-        ui = uic.loadUi(ui_file_name, self)
+        # 2. 關鍵修正：顯式指定 utf-8 編碼開啟檔案，解決 Windows (CP950) 與 Debian (UTF-8) 的編碼衝突
+        with open(ui_file_name, "r", encoding="utf-8") as f:
+            ui = uic.loadUi(f, self)
+
         if not native_menu_bar:
             try:
                 ui.menubar.setNativeMenuBar(False)
             except Exception:
                 pass
 
-        # try:
-        #     set_all_input_widget_shadow(ui)
-        # except Exception:
-        #     pass
-
         return ui
-    except Exception:
+
+    except Exception as e:
+        # 3. 處理 UI 檔案內容解析失敗（例如元件損毀或 XML 語法錯誤）
         msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("找不到ui檔")
+        msg_box.setIcon(QMessageBox.Critical)
+        msg_box.setWindowTitle("UI 檔案解析失敗")
         msg_box.setText(
-            f"<font size='4' color='red'><b>找不到 {ui_file_name}, 請檢查檔案是否存在.</b></font>"
+            f"<font size='4' color='red'><b>載入 {ui_file} 時發生錯誤。</b></font>"
         )
-        msg_box.setInformativeText("請與本公司聯繫, 並告知上面的訊息.")
+        msg_box.setInformativeText(f"錯誤訊息: {str(e)}\n請與本公司聯繫。")
         msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
         msg_box.exec_()
-
         return None
 
 

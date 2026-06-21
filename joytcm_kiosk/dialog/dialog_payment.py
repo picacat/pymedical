@@ -1,11 +1,10 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import pyqtSignal, QObject
 import os
 import threading
-from libs import system_utils
-from libs import ui_utils
-from libs import class_utils
+
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QObject, Qt, pyqtSignal
+
+from libs import class_utils, system_utils, ui_utils
 
 
 class Communicate(QObject):
@@ -56,11 +55,15 @@ class DialogPayment(QtWidgets.QDialog):
 
     # 設定GUI
     def _set_ui(self):
-        self.ui = ui_utils.load_ui_file(os.path.join(self.parent.UI_DIR, 'dialog_message_box.ui'), self)
+        self.ui = ui_utils.load_ui_file(
+            os.path.join(self.parent.UI_DIR, "dialog_message_box.ui"), self
+        )
         self.setFixedSize(self.size())  # non resizable dialog
         self.ui.setWindowFlags(Qt.FramelessWindowHint)  # 無視窗邊框
-        image_file = os.path.join(self.parent.BASE_DIR, 'joytcm_kiosk', 'images', 'message_box.png')
-        image_file = image_file.replace('\\', '/')
+        image_file = os.path.join(
+            self.parent.BASE_DIR, "joytcm_kiosk", "images", "message_box.png"
+        )
+        image_file = image_file.replace("\\", "/")
 
         self.setStyleSheet(f"""
             QDialog {{
@@ -71,10 +74,20 @@ class DialogPayment(QtWidgets.QDialog):
             }}
         """)
 
-        system_utils.set_button(
-            self, '返回繳費確認頁', 'white', 0, self.BUTTON_Y,
-            self.parent.BUTTON_FONT, self.parent.RED, self.parent.BUTTON_FONT_SIZE,
-            340, self.parent.BUTTON_HEIGHT, self.back_to_previous, center=True)
+        system_utils.set_label(
+            self,
+            "請開始投入紙鈔或硬幣！",
+            120,
+            self.LINE3_Y + 180,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE + 4,
+            self.parent.RED,
+        )
+
+        # system_utils.set_button(
+        #     self, '返回繳費確認頁', 'white', 0, self.BUTTON_Y,
+        #     self.parent.BUTTON_FONT, self.parent.RED, self.parent.BUTTON_FONT_SIZE,
+        #     340, self.parent.BUTTON_HEIGHT, self.back_to_previous, center=True)
 
     # 設定信號
     def _set_signal(self):
@@ -85,28 +98,64 @@ class DialogPayment(QtWidgets.QDialog):
         x2 = 500
 
         system_utils.set_label(
-            self, '應付金額: NT$', x1, self.LINE1_Y,
-            self.parent.TEXT_FONT, self.parent.FONT_SIZE, self.parent.RED)
+            self,
+            "應付金額: NT$",
+            x1,
+            self.LINE1_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.RED,
+        )
 
         system_utils.set_label(
-            self, str(self.total_amount), x2, self.LINE1_Y,
-            self.parent.TEXT_FONT, self.parent.FONT_SIZE, self.parent.RED)
+            self,
+            str(self.total_amount),
+            x2,
+            self.LINE1_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.RED,
+        )
 
         system_utils.set_label(
-            self, '投入金額: NT$', x1, self.LINE2_Y,
-            self.parent.TEXT_FONT, self.parent.FONT_SIZE, self.parent.DARK_GREEN)
+            self,
+            "投入金額: NT$",
+            x1,
+            self.LINE2_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.DARK_GREEN,
+        )
 
         self.label_inserted_cash = system_utils.set_label(
-            self, str(self.inserted_cash), x2, self.LINE2_Y,
-            self.parent.TEXT_FONT, self.parent.FONT_SIZE, self.parent.DARK_GREEN)
+            self,
+            str(self.inserted_cash),
+            x2,
+            self.LINE2_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.DARK_GREEN,
+        )
 
         system_utils.set_label(
-            self, '尚餘金額: NT$', x1, self.LINE3_Y,
-            self.parent.TEXT_FONT, self.parent.FONT_SIZE, self.parent.LIGHT_GREEN)
+            self,
+            "尚餘金額: NT$",
+            x1,
+            self.LINE3_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.LIGHT_GREEN,
+        )
 
         self.label_remain = system_utils.set_label(
-            self, str(self.total_amount), x2, self.LINE3_Y,
-            self.parent.TEXT_FONT, self.parent.FONT_SIZE, self.parent.LIGHT_GREEN)
+            self,
+            str(self.total_amount),
+            x2,
+            self.LINE3_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.LIGHT_GREEN,
+        )
 
         self.start_charge_cash()
 
@@ -119,9 +168,9 @@ class DialogPayment(QtWidgets.QDialog):
         if not self.kiosk.connected:
             system_utils.show_message_box(
                 QtWidgets.QMessageBox.Warning,
-                '錯誤',
+                "錯誤",
                 '<font size="5" color="red"><b>收鈔機無法啟動, 請檢查收鈔機是否備妥.</b></font>',
-                '請檢查收鈔機的狀態.'
+                "請檢查收鈔機的狀態.",
             )
             self.close()
             return
@@ -129,7 +178,7 @@ class DialogPayment(QtWidgets.QDialog):
         self.stop_event = threading.Event()
         self.charge_cash_thread = threading.Thread(
             target=self.kiosk.charge_cash,
-            args=(self.total_amount, self.comm.update_cash_received, self.stop_event)
+            args=(self.total_amount, self.comm.update_cash_received, self.stop_event),
         )
         self.charge_cash_thread.start()
 
@@ -139,7 +188,7 @@ class DialogPayment(QtWidgets.QDialog):
 
     def _update_cash_received(self, receipt_cash):
         self.inserted_cash = receipt_cash
-        self.label_inserted_cash.setText(f'{self.inserted_cash}')
+        self.label_inserted_cash.setText(f"{self.inserted_cash}")
         self.label_inserted_cash.adjustSize()
 
         if self.inserted_cash >= self.total_amount:
@@ -154,7 +203,7 @@ class DialogPayment(QtWidgets.QDialog):
             return
 
         remain = self.total_amount - self.inserted_cash
-        self.label_remain.setText(f'{remain}')
+        self.label_remain.setText(f"{remain}")
         self.label_remain.adjustSize()
 
     def is_payment_done(self):

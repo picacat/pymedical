@@ -455,7 +455,7 @@ class CSHIS:
 
     #     return response.json()
 
-    def get_hc_signature(self, service_type):
+    def get_hc_signature(self, service_type, show_warning=True):
         service_path = "/api/hc/v1/Signature/Hc"
         data = {"serviceType": service_type}
 
@@ -473,7 +473,7 @@ class CSHIS:
             res_data = response.json()
             error_code = res_data.get("statusCode")
 
-            if error_code != 0:
+            if error_code != 0 and show_warning:
                 cshis_utils.show_ic_card_message(error_code, "讀取健保卡簽章")
                 return None
 
@@ -562,7 +562,9 @@ class CSHIS:
         if self.ic_card_type == "虛擬健保卡":
             return self.read_register_basic_data_by_vhc()
 
-        hc_signature = self.get_hc_signature(service_type="01")
+        hc_signature = self.get_hc_signature(
+            service_type="01", show_warning=show_warning
+        )
         if hc_signature is None or hc_signature["clientRandom"] is None:
             return False
 
