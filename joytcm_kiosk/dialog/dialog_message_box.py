@@ -62,12 +62,12 @@ class DialogMessageBox(QtWidgets.QDialog):
     def _set_signal(self):
         pass
 
-    def _set_back_home_button(self, button_text):
+    def _set_back_home_button(self, button_text, wait_seconds=10):
         color = self.parent.DARK_GREEN
         x, y = 0, self.BUTTON_Y
         push_button = QtWidgets.QPushButton(self)
         push_button.resize(340, self.parent.BUTTON_HEIGHT)
-        push_button.setText("返回首頁(10s)")
+        push_button.setText(f"返回首頁({wait_seconds}s)")
         push_button.setStyleSheet(f"""
             QPushButton {{
                 background-color: {color};  /* 正常狀態背景顏色 */
@@ -84,7 +84,6 @@ class DialogMessageBox(QtWidgets.QDialog):
         push_button.move(x, y)
         push_button.clicked.connect(self.close)
 
-        wait_seconds = 10
         timer = QtCore.QTimer(self)
         timer.start(1000)
 
@@ -647,7 +646,7 @@ class DialogMessageBox(QtWidgets.QDialog):
             self.parent.DARK_GREEN,
             center=True,
         )
-        self._set_back_home_button("返回首頁")
+        self._set_back_home_button("返回首頁", wait_seconds=30)
 
     def set_cancel_not_today(self):
         png_filename = self._get_png_file_name("cancel.png")

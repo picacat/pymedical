@@ -702,9 +702,9 @@ class KioskRegistration(QtWidgets.QMainWindow):
         dialog = self.parent.show_vhc_in_progress()
         # 強制刷新事件循環，確保對話框立即顯示
         QCoreApplication.processEvents()
+        self._back_to_home()
 
         # read_ic_card = self.ic_card.read_register_basic_data(show_warning=False)
-        # dialog.close()
 
         # if not read_ic_card:
         #     self._show_no_iccard()
