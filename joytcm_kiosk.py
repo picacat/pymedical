@@ -496,7 +496,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
         module = importlib.reload(dialog_message_box)
         dialog = module.DialogMessageBox(self, self.database, self.system_settings)
-        dialog.set_in_progress()
+        dialog.set_vhc_in_progress()
         dialog.show()
 
         return dialog

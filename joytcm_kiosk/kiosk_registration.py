@@ -699,7 +699,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
         return treat_type, card, course
 
     def set_vhc_registration_data(self):
-        dialog = self.parent.show_in_progress()
+        dialog = self.parent.show_vhc_in_progress()
         # 強制刷新事件循環，確保對話框立即顯示
         QCoreApplication.processEvents()
 

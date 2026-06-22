@@ -632,7 +632,7 @@ class DialogMessageBox(QtWidgets.QDialog):
         )
 
     def set_vhc_in_progress(self):
-        png_filename = self._get_png_file_name("in_progress.png")
+        png_filename = self._get_png_file_name("qr-code.png")
         system_utils.set_image(
             self, png_filename, 420, 200, width=180, height=180, center=False
         )
