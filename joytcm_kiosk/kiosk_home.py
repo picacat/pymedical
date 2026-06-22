@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtGui import QPixmap
 import os
 
-from libs import ui_utils
-from libs import system_utils
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QPushButton
+
+from libs import system_utils, ui_utils
 
 
 # 掛號機首頁 2024.06.23
@@ -36,7 +36,9 @@ class KioskHome(QtWidgets.QMainWindow):
 
     # 設定GUI
     def _set_ui(self):
-        self.ui = ui_utils.load_ui_file(os.path.join(self.parent.UI_DIR, 'kiosk_home.ui'), self)
+        self.ui = ui_utils.load_ui_file(
+            os.path.join(self.parent.UI_DIR, "kiosk_home.ui"), self
+        )
         self.set_background()
         self._set_push_buttons()
 
@@ -50,7 +52,7 @@ class KioskHome(QtWidgets.QMainWindow):
 
     def _get_image_file(self, filename):
         image_file = os.path.join(self.parent.IMAGE_DIR, filename)
-        image_file = image_file.replace('\\', '/')
+        image_file = image_file.replace("\\", "/")
 
         return image_file
 
@@ -59,7 +61,7 @@ class KioskHome(QtWidgets.QMainWindow):
         png_name = self._get_image_file(png_name)
         pressed_png = self._get_image_file(pressed_png)
 
-        style = f'''
+        style = f"""
             QPushButton{{
                 border: none;
                 background: transparent;
@@ -68,7 +70,7 @@ class KioskHome(QtWidgets.QMainWindow):
             QPushButton:pressed {{
                 image: url({pressed_png});
             }}
-        '''
+        """
         btn.setStyleSheet(style)
         btn.setAttribute(QtCore.Qt.WA_AcceptTouchEvents, True)
         pixmap = QPixmap(png_name)
@@ -78,30 +80,65 @@ class KioskHome(QtWidgets.QMainWindow):
         return btn
 
     def set_background(self):
-        system_utils.set_image(self, os.path.join(self.parent.IMAGE_DIR, 'insert_card.png'), 30, 448)
-        system_utils.set_image(self, os.path.join(self.parent.IMAGE_DIR, 'bottom.png'), -23, 1773)
-        system_utils.set_image(self, os.path.join(self.parent.IMAGE_DIR, 'scan_me.png'), 838, 1628)
         system_utils.set_image(
-            self, os.path.join(self.parent.IMAGE_DIR, 'qrcode.png'), 868, 1700, width=160, height=160)
+            self, os.path.join(self.parent.IMAGE_DIR, "insert_card.png"), 30, 448
+        )
+        system_utils.set_image(
+            self, os.path.join(self.parent.IMAGE_DIR, "bottom.png"), -23, 1773
+        )
+        system_utils.set_image(
+            self, os.path.join(self.parent.IMAGE_DIR, "scan_me.png"), 838, 1628
+        )
+        system_utils.set_image(
+            self,
+            os.path.join(self.parent.IMAGE_DIR, "qrcode.png"),
+            868,
+            1700,
+            width=160,
+            height=160,
+        )
 
     def _set_push_buttons(self):
-        self.pushButton_checkin = self._get_push_button('checkin.png', 'checkin.png', 0, 650)
-        self.pushButton_payment = self._get_push_button('payment.png', 'payment.png', 526, 650)
+        self.pushButton_checkin = self._get_push_button(
+            "checkin.png", "checkin.png", 0, 650
+        )
+        self.pushButton_payment = self._get_push_button(
+            "payment.png", "payment.png", 526, 650
+        )
 
-        self.pushButton_vhc_checkin = self._get_push_button('vhc_checkin.png', 'vhc_checkin.png', 0, 950)
+        self.pushButton_vhc_checkin = self._get_push_button(
+            "vhc_checkin.png", "vhc_checkin.png", 0, 950
+        )
         self.pushButton_cancel_reservation = self._get_push_button(
-            'cancel_reservation.png', 'cancel_reservation.png', 526, 950)
+            "cancel_reservation.png", "cancel_reservation.png", 526, 950
+        )
 
-        self.pushButton_reservation = self._get_push_button('reservation.png', 'reservation.png', 0, 1250)
+        self.pushButton_reservation = self._get_push_button(
+            "reservation.png", "reservation.png", 0, 1250
+        )
 
-        self._disable_button(self.pushButton_vhc_checkin)
-        self._disable_button(self.pushButton_reservation)
+        self.disable_button(self.pushButton_vhc_checkin)
+        self.disable_button(self.pushButton_reservation)
 
-    def _disable_button(self, btn):
+    def disable_button(self, btn):
         opacity_effect = QtWidgets.QGraphicsOpacityEffect()
         opacity_effect.setOpacity(0.2)  # 調整透明度 (0.0 ~ 1.0)
         btn.setGraphicsEffect(opacity_effect)
         btn.setEnabled(False)
+
+    def enable_button(self, btn):
+        opacity_effect = QtWidgets.QGraphicsOpacityEffect()
+        opacity_effect.setOpacity(1.0)  # 調整透明度 (0.0 ~ 1.0)
+        btn.setGraphicsEffect(opacity_effect)
+        btn.setEnabled(True)
+
+    def enable_checkin_button(self, enable: bool):
+        if enable:
+            self.enable_button(self.pushButton_checkin)
+            self.enable_button(self.pushButton_vhc_checkin)
+        else:
+            self.disable_button(self.pushButton_checkin)
+            self.disable_button(self.pushButton_vhc_checkin)
 
     # 預約報到
     def _checkin(self):
@@ -112,7 +149,7 @@ class KioskHome(QtWidgets.QMainWindow):
         self.parent.open_kiosk_payment()
 
     def _vhc_checkin(self):
-        print('vhc checkin')
+        print("vhc checkin")
 
     def _reservation(self):
         pass

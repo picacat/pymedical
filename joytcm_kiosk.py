@@ -23,13 +23,16 @@ HOME_WIDGET = 1
 
 class ClockWorker(QtCore.QObject):
     update_time = QtCore.pyqtSignal(str)
+    _running = True
+
+    def stop(self):
+        self._running = False
 
     def run(self):
-        while True:
-            # 獲取當前時間
+        while self._running:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d - %H:%M:%S")
-            self.update_time.emit(current_time)  # 發送信號更新界面
-            QtCore.QThread.sleep(1)  # 讓線程每秒鐘執行一次
+            self.update_time.emit(current_time)
+            QtCore.QThread.sleep(1)
 
 
 class PasswordDialog(QDialog):
@@ -56,6 +59,11 @@ class PasswordDialog(QDialog):
     def __init__(self, correct_password, parent=None):
         super().__init__(parent)
         self.correct_password = correct_password
+        self.eject_coins = False
+        self.eject_coin5 = False
+        self.eject_coin10 = False
+        self.eject_coin50 = False
+
         self.setWindowTitle("輸入密碼")
         self.setFixedSize(400, 600)
         self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint)  # 無邊框
@@ -252,7 +260,27 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
         self.ic_card.activate_reader_app()
         self.ic_card.verify_sam(show_message=False)
-        self.set_up_disable_time()
+
+        self.disable_ranges = self._build_ranges()
+        self._set_clock()
+
+    def _build_ranges(self):
+        time_list = [
+            self.system_settings.field("早班停止掛號開始時間"),
+            self.system_settings.field("早班停止掛號結束時間"),
+            self.system_settings.field("午班停止掛號開始時間"),
+            self.system_settings.field("午班停止掛號結束時間"),
+            self.system_settings.field("晚班停止掛號開始時間"),
+            self.system_settings.field("晚班停止掛號結束時間"),
+        ]
+
+        def to_time(s: str) -> datetime.time:
+            return datetime.datetime.strptime(
+                s, "%H:%M"
+            ).time()  # 視你的 import 方式調整
+
+        time_objs = [to_time(t) for t in time_list]
+        return list(zip(time_objs[0::2], time_objs[1::2]))
 
     # 解構
     def __del__(self):
@@ -263,20 +291,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_KIOSK, self)
         self.ui.setWindowFlags(QtCore.Qt.FramelessWindowHint)  # 無視窗邊框
         self.set_background()
-        self._set_clock()
-
         self._set_stacked_widget()
-
-    def set_up_disable_time(self):
-        disable_time_list = [
-            self.system_settings.field("早班停止掛號開始時間"),
-            self.system_settings.field("早班停止掛號結束時間"),
-            self.system_settings.field("午班停止掛號開始時間"),
-            self.system_settings.field("午班停止掛號結束時間"),
-            self.system_settings.field("晚班停止掛號開始時間"),
-            self.system_settings.field("晚班停止掛號結束時間"),
-        ]
-        print(disable_time_list)
 
     def close_kiosk_slot(self):
         kiosk = class_utils.get_jetway(self.system_settings)
@@ -371,13 +386,21 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
     def update_clock(self, current_time):
         # 更新 QLabel 的文字
         self.label_clock.setText(current_time)
-        print(current_time)  # 可選：在控制台打印時間，方便調試
+        now = datetime.datetime.now().time()
+        self.widget_home.enable_checkin_button(not self.in_disable_time(now))
+
+    def in_disable_time(self, current_time: datetime.time) -> bool:
+        return any(start <= current_time < end for start, end in self.disable_ranges)
 
     # 設定信號
     def _set_signal(self):
         pass
 
     def close_app(self):
+        self.worker.stop()
+        self.thread.quit()
+        self.thread.wait()
+
         self.database.close_database()
         self.ic_card.deactivate_reader_app()
         self.close()
@@ -435,6 +458,10 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         self.ui.stackedWidget.setCurrentIndex(1)
         self.widget_registration.set_registration_data()
 
+    def open_kiosk_vhc_registration(self):
+        self.ui.stackedWidget.setCurrentIndex(1)
+        self.widget_registration.set_vhc_registration_data()
+
     def open_kiosk_payment(self):
         self.ui.stackedWidget.setCurrentIndex(2)
         self.widget_payment.set_payment_data()
@@ -464,6 +491,16 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
         return dialog
 
+    def show_vhc_in_progress(self):
+        from joytcm_kiosk.dialog import dialog_message_box
+
+        module = importlib.reload(dialog_message_box)
+        dialog = module.DialogMessageBox(self, self.database, self.system_settings)
+        dialog.set_in_progress()
+        dialog.show()
+
+        return dialog
+
     def send_socket_data(self, doctor, room, call_from):
         print(doctor, room, call_from)
         self.socket_client.send_data(
@@ -484,7 +521,7 @@ def main():
     app.setAttribute(QtCore.Qt.AA_SynthesizeTouchForUnhandledMouseEvents, True)
     app.setAttribute(QtCore.Qt.AA_SynthesizeMouseForUnhandledTouchEvents, True)
 
-    kiosk = JOYTCM_Kiosk()
+    kiosk = JOYTCM_Kiosk(None, sys.argv)
     kiosk.showFullScreen()
     kiosk.open_kiosk_home()
 
