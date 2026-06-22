@@ -639,7 +639,7 @@ class DialogMessageBox(QtWidgets.QDialog):
 
         system_utils.set_label(
             self,
-            "虛擬健保卡讀卡中...",
+            "請掃描虛擬健保卡的QR Code",
             0,
             self.LINE3_Y,
             self.parent.TEXT_FONT,
@@ -647,16 +647,7 @@ class DialogMessageBox(QtWidgets.QDialog):
             self.parent.DARK_GREEN,
             center=True,
         )
-        system_utils.set_label(
-            self,
-            "請掃描虛擬健保卡的QR Code",
-            0,
-            self.LINE4_Y,
-            self.parent.TEXT_FONT,
-            self.parent.FONT_SIZE,
-            self.parent.DARK_GREEN,
-            center=True,
-        )
+        self._set_back_home_button("返回首頁")
 
     def set_cancel_not_today(self):
         png_filename = self._get_png_file_name("cancel.png")

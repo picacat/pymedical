@@ -703,87 +703,87 @@ class KioskRegistration(QtWidgets.QMainWindow):
         # 強制刷新事件循環，確保對話框立即顯示
         QCoreApplication.processEvents()
 
-        read_ic_card = self.ic_card.read_register_basic_data(show_warning=False)
-        dialog.close()
+        # read_ic_card = self.ic_card.read_register_basic_data(show_warning=False)
+        # dialog.close()
 
-        if not read_ic_card:
-            self._show_no_iccard()
-            self._back_to_home()
-            return
+        # if not read_ic_card:
+        #     self._show_no_iccard()
+        #     self._back_to_home()
+        #     return
 
-        available_date, available_count = self.ic_card.get_card_status()
-        self.ic_card.basic_data["card_valid_date"] = available_date
-        self.ic_card.basic_data["card_available_count"] = available_count
+        # available_date, available_count = self.ic_card.get_card_status()
+        # self.ic_card.basic_data["card_valid_date"] = available_date
+        # self.ic_card.basic_data["card_available_count"] = available_count
 
-        patient_id = self.ic_card.basic_data["patient_id"]
-        sql = f'''
-            SELECT * FROM patient
-            WHERE
-                ID = "{patient_id}"
-        '''
-        rows = self.database.select_record(sql)
-        if len(rows) <= 0:  # 找不到資料
-            self._show_no_patient()
-            self._back_to_home()
-            return
+        # patient_id = self.ic_card.basic_data["patient_id"]
+        # sql = f'''
+        #     SELECT * FROM patient
+        #     WHERE
+        #         ID = "{patient_id}"
+        # '''
+        # rows = self.database.select_record(sql)
+        # if len(rows) <= 0:  # 找不到資料
+        #     self._show_no_patient()
+        #     self._back_to_home()
+        #     return
 
-        row = rows[0]
-        patient_key = row["PatientKey"]
-        reserve_row = self._get_reserve_row(patient_key)
-        if reserve_row is None:
-            self._show_no_reservation()
-            self._back_to_home()
-            return
+        # row = rows[0]
+        # patient_key = row["PatientKey"]
+        # reserve_row = self._get_reserve_row(patient_key)
+        # if reserve_row is None:
+        #     self._show_no_reservation()
+        #     self._back_to_home()
+        #     return
 
-        # 設定判斷時間
-        period = string_utils.xstr(reserve_row["Period"])
-        if period in ["早班"]:
-            if "大安" in self.clinic_name:
-                cutoff_time = datetime.datetime.strptime("12:45", "%H:%M")
-            else:
-                cutoff_time = datetime.datetime.strptime("12:15", "%H:%M")
-        elif period in ["午班"]:
-            if "大安" in self.clinic_name:
-                cutoff_time = datetime.datetime.strptime("21:15", "%H:%M")
-            else:
-                cutoff_time = datetime.datetime.strptime("17:15", "%H:%M")
-        else:
-            cutoff_time = datetime.datetime.strptime("21:15", "%H:%M")
+        # # 設定判斷時間
+        # period = string_utils.xstr(reserve_row["Period"])
+        # if period in ["早班"]:
+        #     if "大安" in self.clinic_name:
+        #         cutoff_time = datetime.datetime.strptime("12:45", "%H:%M")
+        #     else:
+        #         cutoff_time = datetime.datetime.strptime("12:15", "%H:%M")
+        # elif period in ["午班"]:
+        #     if "大安" in self.clinic_name:
+        #         cutoff_time = datetime.datetime.strptime("21:15", "%H:%M")
+        #     else:
+        #         cutoff_time = datetime.datetime.strptime("17:15", "%H:%M")
+        # else:
+        #     cutoff_time = datetime.datetime.strptime("21:15", "%H:%M")
 
-        # 將目前時間也轉為 datetime 物件（只取時與分）
-        current_time = datetime.datetime.now().strftime("%H:%M")
-        now_time = datetime.datetime.strptime(current_time, "%H:%M")
-        # 判斷是否超過預約時間
-        if now_time > cutoff_time:
-            self._show_not_on_time()
-            self._back_to_home()
-            return
+        # # 將目前時間也轉為 datetime 物件（只取時與分）
+        # current_time = datetime.datetime.now().strftime("%H:%M")
+        # now_time = datetime.datetime.strptime(current_time, "%H:%M")
+        # # 判斷是否超過預約時間
+        # if now_time > cutoff_time:
+        #     self._show_not_on_time()
+        #     self._back_to_home()
+        #     return
 
-        if reserve_row["Arrival"] == "True":
-            self._show_already_arrival()
-            self._back_to_home()
-            return
+        # if reserve_row["Arrival"] == "True":
+        #     self._show_already_arrival()
+        #     self._back_to_home()
+        #     return
 
-        start_date, end_date, pres_days, remain_days = (
-            registration_utils.check_prescription_finished(  # 檢查上次健保給藥是否服藥完畢
-                self.database,
-                self.system_settings,
-                None,
-                patient_key,
-                manual_message=True,
-            )
-        )
-        if (
-            start_date is not None and remain_days is not None and remain_days >= 2
-        ):  # 上次開藥還有兩天
-            if self._query_self_pay_case(
-                reserve_row, start_date, end_date, pres_days, remain_days
-            ):  # 改掛自費
-                self._reservation_arrival(reserve_row, ins_type="自費")
-            else:  # 不要繼續門診
-                self._back_to_home()
-                return
-        else:  # 正常預約報到
-            self._arrival_ins_checkin(reserve_row)
+        # start_date, end_date, pres_days, remain_days = (
+        #     registration_utils.check_prescription_finished(  # 檢查上次健保給藥是否服藥完畢
+        #         self.database,
+        #         self.system_settings,
+        #         None,
+        #         patient_key,
+        #         manual_message=True,
+        #     )
+        # )
+        # if (
+        #     start_date is not None and remain_days is not None and remain_days >= 2
+        # ):  # 上次開藥還有兩天
+        #     if self._query_self_pay_case(
+        #         reserve_row, start_date, end_date, pres_days, remain_days
+        #     ):  # 改掛自費
+        #         self._reservation_arrival(reserve_row, ins_type="自費")
+        #     else:  # 不要繼續門診
+        #         self._back_to_home()
+        #         return
+        # else:  # 正常預約報到
+        #     self._arrival_ins_checkin(reserve_row)
 
-        self._back_to_home()
+        # self._back_to_home()
