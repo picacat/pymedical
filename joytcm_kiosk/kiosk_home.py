@@ -149,7 +149,7 @@ class KioskHome(QtWidgets.QMainWindow):
         self.parent.open_kiosk_payment()
 
     def _vhc_checkin(self):
-        print("vhc checkin")
+        self.parent.open_kiosk_vhc_registration()
 
     def _reservation(self):
         pass
