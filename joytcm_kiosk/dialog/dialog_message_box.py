@@ -638,7 +638,7 @@ class DialogMessageBox(QtWidgets.QDialog):
 
         system_utils.set_label(
             self,
-            "請掃描虛擬健保卡的QR Code",
+            "請掃描虛擬健保卡(新版)的QR Code",
             0,
             self.LINE3_Y,
             self.parent.TEXT_FONT,

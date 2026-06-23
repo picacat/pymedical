@@ -5,7 +5,8 @@ import importlib
 import os
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtCore import QCoreApplication, QTimer
+from PyQt5.QtWidgets import QLineEdit
 
 from libs import (
     case_utils,
@@ -35,6 +36,9 @@ class KioskRegistration(QtWidgets.QMainWindow):
         self.ui = None
         self.clinic_name = self.system_settings.field("院所名稱")
 
+        self._qr_input = None  # 隱藏輸入框
+        self._qr_waiting = False  # 是否正在等待掃描
+
         self._set_ui()
         self._set_signal()
 
@@ -52,12 +56,94 @@ class KioskRegistration(QtWidgets.QMainWindow):
             self, os.path.join(self.parent.IMAGE_DIR, "home.png"), 0, 0
         )
 
+        # 建立隱藏的 QLineEdit 接收掃描器輸入
+        self._qr_input = QLineEdit(self)
+        self._qr_input.setGeometry(0, 0, 1, 1)  # 縮到最小、不可見
+        self._qr_input.setStyleSheet("opacity: 0;")
+        self._qr_input.hide()
+
     # 設定信號
     def _set_signal(self):
-        pass
+        self._qr_input.returnPressed.connect(self._on_qr_scanned)
 
     def _back_to_home(self):
+        self.ic_card.ic_card_type = "健保卡"  # 恢復健保卡模式
+        self.ic_card.qrcode = None  # 清除 QR code
+
         self.parent.open_kiosk_home()
+
+    def set_vhc_registration_data(self):
+        dialog = self.parent.show_vhc_in_progress()
+        # 強制刷新事件循環，確保對話框立即顯示
+        QCoreApplication.processEvents()
+
+        # 清空輸入框，顯示並 focus，等待掃描器輸入
+        self._qr_input.clear()
+        self._qr_input.show()
+        self._qr_input.setFocus()
+        self._qr_waiting = True
+
+        # 可選：設定逾時（例如 30 秒沒掃就取消）
+        self._qr_timer = QTimer(self)
+        self._qr_timer.setSingleShot(True)
+        self._qr_timer.timeout.connect(self._on_qr_timeout)
+        self._qr_timer.start(30000)  # 30 秒
+
+        # 儲存 dialog 供之後關閉
+        self._vhc_dialog = dialog
+
+        # 監聽 dialog 被關閉（按取消或直接關閉視窗）
+        dialog.finished.connect(self._on_qr_cancelled)
+
+    def _on_qr_cancelled(self):
+        if not self._qr_waiting:
+            return  # 已經掃描成功或已逾時，不重複處理
+
+        self._qr_waiting = False
+        self._qr_timer.stop()
+        self._qr_input.hide()
+        self._back_to_home()
+
+    # ----------------------------------------------------------------
+    # 掃描成功 callback
+    # ----------------------------------------------------------------
+    def _on_qr_scanned(self):
+        if not self._qr_waiting:
+            return
+
+        self._qr_waiting = False
+        self._qr_timer.stop()
+        self._qr_input.hide()
+
+        qr_data = self._qr_input.text().strip()
+        self._vhc_dialog.close()
+
+        if not qr_data:
+            self._show_no_iccard()  # 空資料視同讀取失敗
+            self._back_to_home()
+            return
+
+        self.ic_card.ic_card_type = "虛擬健保卡"
+        self.ic_card.qrcode = qr_data
+        if not self.ic_card.read_register_basic_data(show_warning=False):
+            self._show_no_iccard()
+            self._back_to_home()
+            return
+
+        self._process_data()
+
+    # ----------------------------------------------------------------
+    # 逾時 callback
+    # ----------------------------------------------------------------
+    def _on_qr_timeout(self):
+        if not self._qr_waiting:
+            return
+
+        self._qr_waiting = False
+        self._qr_input.hide()
+        self._vhc_dialog.close()
+
+        self._back_to_home()
 
     def set_registration_data(self):
         dialog = self.parent.show_in_progress()
@@ -72,10 +158,9 @@ class KioskRegistration(QtWidgets.QMainWindow):
             self._back_to_home()
             return
 
-        available_date, available_count = self.ic_card.get_card_status()
-        self.ic_card.basic_data["card_valid_date"] = available_date
-        self.ic_card.basic_data["card_available_count"] = available_count
+        self._process_data()
 
+    def _process_data(self):
         patient_id = self.ic_card.basic_data["patient_id"]
         sql = f'''
             SELECT * FROM patient
@@ -96,30 +181,6 @@ class KioskRegistration(QtWidgets.QMainWindow):
             self._back_to_home()
             return
 
-        # 設定判斷時間
-        period = string_utils.xstr(reserve_row["Period"])
-        if period in ["早班"]:
-            if "大安" in self.clinic_name:
-                cutoff_time = datetime.datetime.strptime("12:45", "%H:%M")
-            else:
-                cutoff_time = datetime.datetime.strptime("12:15", "%H:%M")
-        elif period in ["午班"]:
-            if "大安" in self.clinic_name:
-                cutoff_time = datetime.datetime.strptime("21:15", "%H:%M")
-            else:
-                cutoff_time = datetime.datetime.strptime("17:15", "%H:%M")
-        else:
-            cutoff_time = datetime.datetime.strptime("21:15", "%H:%M")
-
-        # 將目前時間也轉為 datetime 物件（只取時與分）
-        current_time = datetime.datetime.now().strftime("%H:%M")
-        now_time = datetime.datetime.strptime(current_time, "%H:%M")
-        # 判斷是否超過預約時間
-        if now_time > cutoff_time:
-            self._show_not_on_time()
-            self._back_to_home()
-            return
-
         if reserve_row["Arrival"] == "True":
             self._show_already_arrival()
             self._back_to_home()
@@ -134,6 +195,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
                 manual_message=True,
             )
         )
+
         if (
             start_date is not None and remain_days is not None and remain_days >= 2
         ):  # 上次開藥還有兩天
@@ -340,21 +402,28 @@ class KioskRegistration(QtWidgets.QMainWindow):
             self.database.exec_sql(sql)
 
     def _write_ic_card(self):
-        available_date, available_count = self.ic_card.get_card_status()
-        if available_count is None:
-            print("read card failed")
-            return False
+        if self.ic_card.ic_card_type == "虛擬健保卡":
+            pass
+        else:
+            available_date, available_count = self.ic_card.get_card_status()
+            if available_count is None:
+                print("read card failed")
+                return False
 
-        now = datetime.datetime.now().strftime("%Y-%m-%d")
-        if available_count <= 0 or available_date < now:
-            self.ic_card.update_hc(show_message=False)
+            now = datetime.datetime.now().strftime("%Y-%m-%d")
+            if available_count <= 0 or available_date < now:
+                self.ic_card.update_hc(show_message=False)
 
         if self.card == "自動取得":
             ic_card_treat = "03"
         else:
             ic_card_treat = "AA"
 
+        if self.ic_card.ic_card_type == "虛擬健保卡":
+            self.ic_card.verify_vhc_card()  # ← 先驗證
+
         error_code = self.ic_card.get_seq_number_256(ic_card_treat, " ", "1")
+
         if error_code != 0:
             self._show_write_iccard_error(error_code)
             return False
@@ -697,93 +766,3 @@ class KioskRegistration(QtWidgets.QMainWindow):
         course = string_utils.xstr(row["Continuance"] + 1)  # 療程自動續1次
 
         return treat_type, card, course
-
-    def set_vhc_registration_data(self):
-        dialog = self.parent.show_vhc_in_progress()
-        # 強制刷新事件循環，確保對話框立即顯示
-        QCoreApplication.processEvents()
-        self._back_to_home()
-
-        # read_ic_card = self.ic_card.read_register_basic_data(show_warning=False)
-
-        # if not read_ic_card:
-        #     self._show_no_iccard()
-        #     self._back_to_home()
-        #     return
-
-        # available_date, available_count = self.ic_card.get_card_status()
-        # self.ic_card.basic_data["card_valid_date"] = available_date
-        # self.ic_card.basic_data["card_available_count"] = available_count
-
-        # patient_id = self.ic_card.basic_data["patient_id"]
-        # sql = f'''
-        #     SELECT * FROM patient
-        #     WHERE
-        #         ID = "{patient_id}"
-        # '''
-        # rows = self.database.select_record(sql)
-        # if len(rows) <= 0:  # 找不到資料
-        #     self._show_no_patient()
-        #     self._back_to_home()
-        #     return
-
-        # row = rows[0]
-        # patient_key = row["PatientKey"]
-        # reserve_row = self._get_reserve_row(patient_key)
-        # if reserve_row is None:
-        #     self._show_no_reservation()
-        #     self._back_to_home()
-        #     return
-
-        # # 設定判斷時間
-        # period = string_utils.xstr(reserve_row["Period"])
-        # if period in ["早班"]:
-        #     if "大安" in self.clinic_name:
-        #         cutoff_time = datetime.datetime.strptime("12:45", "%H:%M")
-        #     else:
-        #         cutoff_time = datetime.datetime.strptime("12:15", "%H:%M")
-        # elif period in ["午班"]:
-        #     if "大安" in self.clinic_name:
-        #         cutoff_time = datetime.datetime.strptime("21:15", "%H:%M")
-        #     else:
-        #         cutoff_time = datetime.datetime.strptime("17:15", "%H:%M")
-        # else:
-        #     cutoff_time = datetime.datetime.strptime("21:15", "%H:%M")
-
-        # # 將目前時間也轉為 datetime 物件（只取時與分）
-        # current_time = datetime.datetime.now().strftime("%H:%M")
-        # now_time = datetime.datetime.strptime(current_time, "%H:%M")
-        # # 判斷是否超過預約時間
-        # if now_time > cutoff_time:
-        #     self._show_not_on_time()
-        #     self._back_to_home()
-        #     return
-
-        # if reserve_row["Arrival"] == "True":
-        #     self._show_already_arrival()
-        #     self._back_to_home()
-        #     return
-
-        # start_date, end_date, pres_days, remain_days = (
-        #     registration_utils.check_prescription_finished(  # 檢查上次健保給藥是否服藥完畢
-        #         self.database,
-        #         self.system_settings,
-        #         None,
-        #         patient_key,
-        #         manual_message=True,
-        #     )
-        # )
-        # if (
-        #     start_date is not None and remain_days is not None and remain_days >= 2
-        # ):  # 上次開藥還有兩天
-        #     if self._query_self_pay_case(
-        #         reserve_row, start_date, end_date, pres_days, remain_days
-        #     ):  # 改掛自費
-        #         self._reservation_arrival(reserve_row, ins_type="自費")
-        #     else:  # 不要繼續門診
-        #         self._back_to_home()
-        #         return
-        # else:  # 正常預約報到
-        #     self._arrival_ins_checkin(reserve_row)
-
-        # self._back_to_home()
