@@ -807,6 +807,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._set_check_box(
             self.ui.checkBox_no_waiting_progress, "網路預約不顯示看診進度"
         )
+        self._set_check_box(self.ui.checkBox_show_progress, "顯示候診一覽表")
         self._set_check_box(self.ui.checkBox_no_first_reservation, "不開放初診網路預約")
         self._set_check_box(self.ui.checkBox_arrival_late, "預約遲到寫入掛號備註")
         self._set_check_box(self.ui.checkBox_over_number, "預約過號寫入掛號備註")
@@ -2010,6 +2011,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._save_check_box(
             self.ui.checkBox_no_waiting_progress, "網路預約不顯示看診進度"
         )
+        self._save_check_box(self.ui.checkBox_show_progress, "顯示候診一覽表")
         self._save_check_box(
             self.ui.checkBox_no_first_reservation, "不開放初診網路預約"
         )

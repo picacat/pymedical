@@ -395,6 +395,7 @@ class SystemSettings:
             "午班停止掛號結束時間",
             "晚班停止掛號開始時間",
             "晚班停止掛號結束時間",
+            "顯示候診一覽表",
         ]:
             station_no = 0
         else:

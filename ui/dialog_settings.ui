@@ -984,7 +984,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>890</width>
               <height>820</height>
              </rect>
             </property>
@@ -1727,8 +1727,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1322</width>
-              <height>792</height>
+              <width>638</width>
+              <height>685</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -2180,7 +2180,7 @@
               <x>0</x>
               <y>-413</y>
               <width>1301</width>
-              <height>1205</height>
+              <height>1236</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_65">
@@ -2786,6 +2786,13 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QCheckBox" name="checkBox_show_progress">
+                    <property name="text">
+                     <string>顯示候診一覽表</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QCheckBox" name="checkBox_no_first_reservation">
                     <property name="text">
                      <string>不開放初診網路預約</string>
@@ -3068,8 +3075,8 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-24</y>
-              <width>1301</width>
+              <y>0</y>
+              <width>685</width>
               <height>982</height>
              </rect>
             </property>
@@ -3875,7 +3882,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>881</width>
               <height>1478</height>
              </rect>
             </property>
@@ -5263,7 +5270,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>836</width>
               <height>2319</height>
              </rect>
             </property>
@@ -7134,7 +7141,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>508</width>
               <height>883</height>
              </rect>
             </property>
@@ -7444,7 +7451,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>980</width>
               <height>1440</height>
              </rect>
             </property>
