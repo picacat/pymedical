@@ -1686,7 +1686,8 @@ class MedicalRecord(QtWidgets.QMainWindow):
             hint_list.append(
                 '<font size="5" color="blue"><b>可申報高度複雜性針灸!</b></font>'
             )
-            treat_type = "高度複雜性針灸"
+            if treat_type is None:
+                treat_type = "高度複雜性針灸"
 
         if (
             disease_code in self.parent.moderate_complicated_massage_list
@@ -1696,7 +1697,8 @@ class MedicalRecord(QtWidgets.QMainWindow):
             hint_list.append(
                 '<font size="5" color="blue"><b>可申報中度複雜性傷科!</b></font>'
             )
-            treat_type = "中度複雜性傷科"
+            if treat_type is None:
+                treat_type = "中度複雜性傷科"
         if (
             disease_code in self.parent.highly_complicated_massage_list
             and treatment not in nhi_utils.HIGHLY_COMPLICATED_MASSAGE_LIST
@@ -1705,7 +1707,8 @@ class MedicalRecord(QtWidgets.QMainWindow):
             hint_list.append(
                 '<font size="5" color="blue"><b>可申報高度複雜性傷科!</b></font>'
             )
-            treat_type = "高度複雜性傷科"
+            if treat_type is None:
+                treat_type = "高度複雜性傷科"
 
         try:
             rows = self.database.select_record(f'''
