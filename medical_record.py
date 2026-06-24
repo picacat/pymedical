@@ -1664,9 +1664,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
         ):
             return
 
-        hint = "以上提醒僅供參考"
-
         hint_list = []
+        hint = "以上僅供參考"
+        treat_type = None
+
         if (
             disease_code in self.parent.moderate_complicated_acupuncture_list
             and treatment not in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_LIST
@@ -1675,6 +1676,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             hint_list.append(
                 '<font size="5" color="blue"><b>可申報中度複雜性針灸!</b></font>'
             )
+            treat_type = "中度複雜性針灸"
 
         if (
             disease_code in self.parent.highly_complicated_acupuncture_list
@@ -1684,6 +1686,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             hint_list.append(
                 '<font size="5" color="blue"><b>可申報高度複雜性針灸!</b></font>'
             )
+            treat_type = "高度複雜性針灸"
 
         if (
             disease_code in self.parent.moderate_complicated_massage_list
@@ -1693,7 +1696,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             hint_list.append(
                 '<font size="5" color="blue"><b>可申報中度複雜性傷科!</b></font>'
             )
-
+            treat_type = "中度複雜性傷科"
         if (
             disease_code in self.parent.highly_complicated_massage_list
             and treatment not in nhi_utils.HIGHLY_COMPLICATED_MASSAGE_LIST
@@ -1702,6 +1705,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             hint_list.append(
                 '<font size="5" color="blue"><b>可申報高度複雜性傷科!</b></font>'
             )
+            treat_type = "高度複雜性傷科"
 
         try:
             rows = self.database.select_record(f'''
@@ -1724,116 +1728,37 @@ class MedicalRecord(QtWidgets.QMainWindow):
                 == "Y"
             ):
                 pass
+            elif treat_type in [
+                None,
+                self.tab_list[0].comboBox_treatment.currentText(),
+            ]:
+                pass
             else:
-                system_utils.show_message_box(
-                    QMessageBox.Information,
-                    "提醒",
-                    f"""<font size="5"><b>診斷碼 {disease_code}</b></font><br>
-                    {"<br>".join(hint_list)}""",
-                    hint,
-                )
-
-    # def disease_code_return_pressed(self):
-    #     icd_code = self.sender().text()
-    #     if icd_code == '':
-    #         return
-
-    #     icd_code = icd_code.replace('\\', '')
-    #     icd_code = icd_code.replace('"', '')
-    #     icd_code = icd_code.replace('\'', '')
-    #     sender_name = self.sender().objectName()
-    #     if sender_name == 'lineEdit_disease_code1':
-    #         line_edit_disease_name = self.ui.lineEdit_disease_name1
-    #     elif sender_name == 'lineEdit_disease_code2':
-    #         line_edit_disease_name = self.ui.lineEdit_disease_name2
-    #     elif sender_name == 'lineEdit_disease_code3':
-    #         line_edit_disease_name = self.ui.lineEdit_disease_name3
-    #     elif sender_name == 'lineEdit_disease_code4':
-    #         line_edit_disease_name = self.ui.lineEdit_disease_name4
-    #     else:
-    #         return
-
-    #     if icd_code.isdigit():
-    #         # 只讀兩筆確定是否要開啟視窗
-    #         sql = f'''
-    #             SELECT
-    #                 icd10.ICD10Key,
-    #                 icd10.ICDCode,
-    #                 icd10.ChineseName,
-    #                 icd10.EnglishName,
-    #                 icd10.SpecialCode
-    #             FROM icdmap
-    #                 LEFT JOIN icd10 ON icdmap.ICD10Code = icd10.ICDCode
-    #             WHERE
-    #                 ICD9Code LIKE "{icd_code}%"
-    #             ORDER BY icd10.ICDCode LIMIT 2
-    #         '''
-    #     else:
-    #         keyword_list = icd_code.split()
-
-    #         chinese_name_script = []
-    #         for keyword in keyword_list:
-    #             chinese_name_script.append(f'ChineseName LIKE "%{keyword}%"')
-
-    #         if len(chinese_name_script) > 0:
-    #             chinese_name_script = ' AND '.join(chinese_name_script)
-    #             chinese_name_script = f'OR ({chinese_name_script})'
-
-    #         english_name_script = ''
-    #         if len(icd_code) >= 5:
-    #             english_name_script = []
-    #             for keyword in keyword_list:
-    #                 english_name_script.append(f'UPPER(EnglishName) LIKE "%{keyword}%"')
-
-    #             if len(english_name_script) > 0:
-    #                 english_name_script = ' AND '.join(english_name_script)
-    #                 english_name_script = f'OR ({english_name_script})'
-
-    #         # 只讀兩筆確定是否要開啟視窗
-    #         sql = f'''
-    #             SELECT * FROM icd10
-    #             WHERE
-    #                 (ICDCode LIKE "{icd_code}%" OR
-    #                  InputCode LIKE "{icd_code}%")
-    #                 {chinese_name_script}
-    #                 {english_name_script}
-    #                 LIMIT 2
-    #         '''
-
-    #     rows = self.database.select_record(sql)
-    #     if len(rows) <= 0:
-    #         system_utils.show_message_box(
-    #             QMessageBox.Critical,
-    #             '無此病名',
-    #             '<font size="5" color="red"><b>找不到此關鍵字的病名, 請重新輸入.</b></font>',
-    #             '請確定輸入的關鍵字是否正確.'
-    #         )
-    #         self.sender().setText(None)
-    #         return
-    #     elif len(rows) == 1:
-    #         self._set_disease(
-    #             self.sender(), line_edit_disease_name,
-    #             string_utils.xstr(rows[0]['ICDCode']).upper(),
-    #             string_utils.xstr(rows[0]['ChineseName'])
-    #         )
-    #         if self.sender().objectName() == 'lineEdit_disease_code1':
-    #             try:  # 參考病歷會閃退
-    #                 self.tab_registration.ui.lineEdit_special_code.setText(
-    #                     string_utils.xstr(rows[0]['SpecialCode'])
-    #                 )
-    #             except Exception:
-    #                 pass
-    #     elif len(rows) >= 2:
-    #         self._open_disease_dialog(icd_code, self.sender(), line_edit_disease_name)
-
-    #     self.check_complicated_treat_disease(self.sender().text())
-
-    #     if line_edit_disease_name == self.ui.lineEdit_disease_name1:
-    #         self.ui.lineEdit_disease_code2.setFocus(True)
-    #     elif line_edit_disease_name == self.ui.lineEdit_disease_name2:
-    #         self.ui.lineEdit_disease_code3.setFocus(True)
-    #     elif line_edit_disease_name == self.ui.lineEdit_disease_name3:
-    #         self.ui.lineEdit_disease_code4.setFocus(True)
+                if treat_type is not None and self.tab_list[
+                    0
+                ].comboBox_treatment.currentText() in ["", None]:
+                    msg_box = QMessageBox()
+                    msg_box.setIcon(QMessageBox.Warning)
+                    msg_box.setWindowTitle("提醒")
+                    msg_box.setText(
+                        f"""<font size="5"><b>診斷碼 {disease_code}</b></font><br>
+                        {"<br>".join(hint_list)}"""
+                    )
+                    msg_box.addButton(QPushButton("關閉"), QMessageBox.NoRole)
+                    msg_box.addButton(
+                        QPushButton(f"執行{treat_type}"), QMessageBox.YesRole
+                    )
+                    exec_treat = msg_box.exec_()
+                    if exec_treat:
+                        self.tab_list[0].comboBox_treatment.setCurrentText(treat_type)
+                else:
+                    system_utils.show_message_box(
+                        QMessageBox.Information,
+                        "提醒",
+                        f"""<font size="5"><b>診斷碼 {disease_code}</b></font><br>
+                        {"<br>".join(hint_list)}""",
+                        hint,
+                    )
 
     def disease_code_return_pressed(self):
         icd_code = self.sender().text().strip()
