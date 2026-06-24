@@ -1,16 +1,18 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore, QtGui, QtChart
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
+from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from libs import class_utils
-from libs import ui_utils
-from libs import case_utils
-from libs import string_utils
-from libs import number_utils
-from libs import charge_utils
-from libs import export_utils
-from libs import system_utils
+from libs import (
+    case_utils,
+    charge_utils,
+    class_utils,
+    export_utils,
+    number_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 醫師自費銷售統計 2019.05.28
@@ -55,10 +57,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         self._set_table_width()
 
     def _set_table_width(self):
-        width = [
-            100,
-            130, 70, 85, 230, 50, 50, 50, 60, 70, 70, 70, 85
-        ]
+        width = [100, 130, 70, 85, 230, 50, 50, 50, 60, 70, 70, 70, 85]
         self.table_widget_doctor_sale.set_table_heading_width(width)
 
         width = [300, 70, 90, 80]
@@ -87,16 +86,18 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         self._plot_chart()
 
     def _read_data(self):
-        period_condition = ''
-        if self.period != '全部':
+        period_condition = ""
+        if self.period != "全部":
             period_condition = f' AND Period = "{self.period}"'
 
-        weekday_condition = ''
+        weekday_condition = ""
         if len(self.weekday_list) > 0:
-            weekday_condition = f' AND WEEKDAY(cases.CaseDate) IN({",".join(self.weekday_list)})'
+            weekday_condition = (
+                f" AND WEEKDAY(cases.CaseDate) IN({','.join(self.weekday_list)})"
+            )
 
-        doctor_condition = ''
-        if self.doctor != '全部':
+        doctor_condition = ""
+        if self.doctor != "全部":
             doctor_condition = f' AND cases.Doctor = "{self.doctor}"'
 
         regist_condition = case_utils.get_regist_type_exclude_sql(self.option)
@@ -111,6 +112,8 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
                 ON prescript.CaseKey = cases.CaseKey
             WHERE
                 prescript.MedicineSet >= 2 AND
+                prescript.MedicineSet != 11 AND
+                MedicineName IS NOT NULL AND
                 cases.CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}"
                 {period_condition}
                 {weekday_condition}
@@ -124,7 +127,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             return
 
         self.progress_dialog = QtWidgets.QProgressDialog(
-            '自費銷售統計中, 請稍後...', '取消', 0, row_count, self
+            "自費銷售統計中, 請稍後...", "取消", 0, row_count, self
         )
 
         self.progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
@@ -138,36 +141,41 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
     def _set_table_data(self, row_no, row):
         self.progress_dialog.setValue(row_no)
 
-        case_key = row['CaseKey']
-        medicine_key = row['MedicineKey']
-        medicine_set = row['MedicineSet']
+        case_key = row["CaseKey"]
+        medicine_key = row["MedicineKey"]
+        medicine_set = row["MedicineSet"]
 
         pres_days = case_utils.get_pres_days(self.database, case_key, medicine_set)
         if pres_days == 0:
             pres_days = 1
 
-        doctor = string_utils.xstr(row['Doctor'])
-        quantity = number_utils.get_float(row['Dosage'])
-        price = number_utils.get_float(row['Price'])
+        doctor = string_utils.xstr(row["Doctor"])
+        quantity = number_utils.get_float(row["Dosage"])
+        price = number_utils.get_float(row["Price"])
         # amount = number_utils.round_up(number_utils.get_float(row['Amount'])) * pres_days
         amount = number_utils.round_up(
-            charge_utils.get_subtotal_fee(number_utils.get_float(row['Amount']), pres_days))
+            charge_utils.get_subtotal_fee(
+                number_utils.get_float(row["Amount"]), pres_days
+            )
+        )
 
-        commission_rate = charge_utils.get_commission_rate(self.database, medicine_key, doctor)
+        commission_rate = charge_utils.get_commission_rate(
+            self.database, medicine_key, doctor
+        )
         commission = charge_utils.calc_commission(quantity, amount, commission_rate)
 
-        if commission_rate != '' and '%' not in commission_rate:
-            commission_rate = f'${commission_rate}'
+        if commission_rate != "" and "%" not in commission_rate:
+            commission_rate = f"${commission_rate}"
 
         sale_row = [
             string_utils.xstr(case_key),
-            string_utils.xstr(row['CaseDate'].date()),
-            string_utils.xstr(row['PatientKey']),
-            string_utils.xstr(row['Name']),
-            string_utils.xstr(row['MedicineName']),
+            string_utils.xstr(row["CaseDate"].date()),
+            string_utils.xstr(row["PatientKey"]),
+            string_utils.xstr(row["Name"]),
+            string_utils.xstr(row["MedicineName"]),
             pres_days,
             quantity,
-            string_utils.xstr(row['Unit']),
+            string_utils.xstr(row["Unit"]),
             price,
             amount,
             commission_rate,
@@ -187,34 +195,34 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             else:
                 align = QtCore.Qt.AlignLeft
 
-            self.ui.tableWidget_doctor_sale.item(
-                row_no, col_no).setTextAlignment(
+            self.ui.tableWidget_doctor_sale.item(row_no, col_no).setTextAlignment(
                 align | QtCore.Qt.AlignVCenter
             )
             if price < 0:
-                self.ui.tableWidget_doctor_sale.item(
-                    row_no, col_no).setForeground(
-                    QtGui.QColor('red')
+                self.ui.tableWidget_doctor_sale.item(row_no, col_no).setForeground(
+                    QtGui.QColor("red")
                 )
 
     # 計算要插入的折扣rows
     def _get_discount_count(self):
         discount_count = 0
         discount_list = []
-        for row_no in range(self.ui.tableWidget_doctor_sale.rowCount()):  # 計算要插入的折扣rows count
+        for row_no in range(
+            self.ui.tableWidget_doctor_sale.rowCount()
+        ):  # 計算要插入的折扣rows count
             case_key = self.ui.tableWidget_doctor_sale.item(row_no, 0)
             if case_key is None:
                 continue
 
-            sql = f'''
+            sql = f"""
                 SELECT CaseKey, DiscountFee FROM cases
                 WHERE
                     CaseKey = {case_key.text()} and
                     DiscountFee > 0
-            '''
+            """
             rows = self.database.select_record(sql)
             if len(rows) > 0:
-                case_key = rows[0]['CaseKey']
+                case_key = rows[0]["CaseKey"]
                 if case_key not in discount_list:
                     discount_list.append(case_key)
                     discount_count += 1
@@ -222,7 +230,9 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         return discount_count
 
     def _insert_discount(self):
-        row_count = self.ui.tableWidget_doctor_sale.rowCount() + self._get_discount_count()
+        row_count = (
+            self.ui.tableWidget_doctor_sale.rowCount() + self._get_discount_count()
+        )
         if row_count <= 0:
             return
 
@@ -244,32 +254,32 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
                 last_case_key = last_case_key.text()
 
     def _check_discount_row(self, row_no, case_key):
-        sql = f'''
+        sql = f"""
             SELECT CaseKey, PatientKey, CaseDate, Name, Doctor, DiscountFee FROM cases
             WHERE
                 CaseKey = {case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
-        discount_fee = number_utils.get_integer(rows[0]['DiscountFee'])
+        discount_fee = number_utils.get_integer(rows[0]["DiscountFee"])
         if discount_fee > 0:  # 有折扣
             self._insert_discount_row(row_no, rows[0], discount_fee)
 
     def _insert_discount_row(self, row_no, row, discount_fee):
         self.ui.tableWidget_doctor_sale.insertRow(row_no)
         discount_row = {
-            'CaseKey': row['CaseKey'],
-            'CaseDate': row['CaseDate'],
-            'PatientKey': row['PatientKey'],
-            'Name': row['Name'],
-            'MedicineName': '折扣',
-            'MedicineSet': 0,
-            'PresDays': 1,
-            'Dosage': 1,
-            'Unit': '次',
-            'Price': -discount_fee,
-            'Amount': -discount_fee,
-            'MedicineKey': None,
-            'Doctor': row['Doctor']
+            "CaseKey": row["CaseKey"],
+            "CaseDate": row["CaseDate"],
+            "PatientKey": row["PatientKey"],
+            "Name": row["Name"],
+            "MedicineName": "折扣",
+            "MedicineSet": 0,
+            "PresDays": 1,
+            "Dosage": 1,
+            "Unit": "次",
+            "Price": -discount_fee,
+            "Amount": -discount_fee,
+            "MedicineKey": None,
+            "Doctor": row["Doctor"],
         }
         self._set_table_data(row_no, discount_row)
 
@@ -280,8 +290,9 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            f'{start_date}至{end_date}{self.doctor}醫師自費銷售統計表.xlsx',
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            f"{start_date}至{end_date}{self.doctor}醫師自費銷售統計表.xlsx",
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
@@ -292,9 +303,9 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            f'<h3>醫師自費銷售統計檔{excel_file_name}匯出完成.</h3>',
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            f"<h3>醫師自費銷售統計檔{excel_file_name}匯出完成.</h3>",
+            "Microsoft Excel 格式.",
         )
 
     def _calculate_total(self):
@@ -313,21 +324,23 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
 
         self.ui.tableWidget_doctor_sale.insertRow(row_count)
         self.ui.tableWidget_doctor_sale.setItem(
-            row_count, 4, QtWidgets.QTableWidgetItem('總計')
+            row_count, 4, QtWidgets.QTableWidgetItem("總計")
         )
         total_amount = round(total_amount)
         self.ui.tableWidget_doctor_sale.setItem(
             row_count, 9, QtWidgets.QTableWidgetItem(string_utils.xstr(total_amount))
         )
-        self.ui.tableWidget_doctor_sale.item(
-            row_count, 9).setTextAlignment(
+        self.ui.tableWidget_doctor_sale.item(row_count, 9).setTextAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         )
         self.ui.tableWidget_doctor_sale.setItem(
-            row_count, 11, QtWidgets.QTableWidgetItem(string_utils.xstr(number_utils.round_up(total_commission)))
+            row_count,
+            11,
+            QtWidgets.QTableWidgetItem(
+                string_utils.xstr(number_utils.round_up(total_commission))
+            ),
         )
-        self.ui.tableWidget_doctor_sale.item(
-            row_count, 11).setTextAlignment(
+        self.ui.tableWidget_doctor_sale.item(row_count, 11).setTextAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         )
 
@@ -339,7 +352,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
                 continue
 
             medicine_name = medicine_name.text()
-            if medicine_name == '總計':
+            if medicine_name == "總計":
                 continue
 
             quantity = self.ui.tableWidget_doctor_sale.item(row_no, 6)
@@ -371,33 +384,33 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             if medicine_name != self.ui.tableWidget_sale_summary.item(row_no, 0).text():
                 continue
 
-            total_quantity = (
-                quantity +
-                number_utils.get_float(self.ui.tableWidget_sale_summary.item(row_no, 1).text())
+            total_quantity = quantity + number_utils.get_float(
+                self.ui.tableWidget_sale_summary.item(row_no, 1).text()
             )
-            total_amount = (
-                    amount +
-                    number_utils.get_float(self.ui.tableWidget_sale_summary.item(row_no, 2).text())
+            total_amount = amount + number_utils.get_float(
+                self.ui.tableWidget_sale_summary.item(row_no, 2).text()
             )
-            total_commission = (
-                    commission +
-                    number_utils.get_float(self.ui.tableWidget_sale_summary.item(row_no, 3).text())
+            total_commission = commission + number_utils.get_float(
+                self.ui.tableWidget_sale_summary.item(row_no, 3).text()
             )
 
-            summary_row = [medicine_name, total_quantity, total_amount, total_commission]
+            summary_row = [
+                medicine_name,
+                total_quantity,
+                total_amount,
+                total_commission,
+            ]
             for col_no in range(len(summary_row)):
                 item = QtWidgets.QTableWidgetItem()
                 item.setData(QtCore.Qt.EditRole, summary_row[col_no])
                 self.ui.tableWidget_sale_summary.setItem(row_no, col_no, item)
                 if col_no in [1, 2, 3]:
                     self.ui.tableWidget_sale_summary.item(
-                        row_no, col_no).setTextAlignment(
-                        QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                    )
+                        row_no, col_no
+                    ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
                 if total_amount < 0:
-                    self.ui.tableWidget_sale_summary.item(
-                        row_no, col_no).setForeground(
-                        QtGui.QColor('red')
+                    self.ui.tableWidget_sale_summary.item(row_no, col_no).setForeground(
+                        QtGui.QColor("red")
                     )
 
             medicine_exists = True
@@ -413,9 +426,8 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
                 self.ui.tableWidget_sale_summary.setItem(row_count, col_no, item)
                 if col_no in [1, 2, 3]:
                     self.ui.tableWidget_sale_summary.item(
-                        row_count, col_no).setTextAlignment(
-                        QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                    )
+                        row_count, col_no
+                    ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
     def _calculate_summary_total(self):
         total_amount = 0
@@ -433,38 +445,40 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
 
         self.ui.tableWidget_sale_summary.insertRow(row_count)
         self.ui.tableWidget_sale_summary.setItem(
-            row_count, 0, QtWidgets.QTableWidgetItem('總計')
+            row_count, 0, QtWidgets.QTableWidgetItem("總計")
         )
         total_amount = round(total_amount)
         self.ui.tableWidget_sale_summary.setItem(
             row_count, 2, QtWidgets.QTableWidgetItem(string_utils.xstr(total_amount))
         )
-        self.ui.tableWidget_sale_summary.item(
-            row_count, 2).setTextAlignment(
+        self.ui.tableWidget_sale_summary.item(row_count, 2).setTextAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         )
         self.ui.tableWidget_sale_summary.setItem(
-            row_count, 3, QtWidgets.QTableWidgetItem(string_utils.xstr(total_commission))
+            row_count,
+            3,
+            QtWidgets.QTableWidgetItem(string_utils.xstr(total_commission)),
         )
-        self.ui.tableWidget_sale_summary.item(
-            row_count, 3).setTextAlignment(
+        self.ui.tableWidget_sale_summary.item(row_count, 3).setTextAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         )
 
     def _plot_chart(self):
         total_amount = number_utils.get_float(
             self.ui.tableWidget_sale_summary.item(
-                self.ui.tableWidget_sale_summary.rowCount()-1, 2
+                self.ui.tableWidget_sale_summary.rowCount() - 1, 2
             ).text()
         )
 
         series = QtChart.QPieSeries()
         for row_no in range(self.ui.tableWidget_sale_summary.rowCount()):
             medicine_name = self.ui.tableWidget_sale_summary.item(row_no, 0).text()
-            amount = number_utils.get_float(self.ui.tableWidget_sale_summary.item(row_no, 2).text())
+            amount = number_utils.get_float(
+                self.ui.tableWidget_sale_summary.item(row_no, 2).text()
+            )
             total_amount -= amount
 
-            if row_no >= 10 or medicine_name == '總計':
+            if row_no >= 10 or medicine_name == "總計":
                 break
 
             series.append(medicine_name, amount)
@@ -473,14 +487,14 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             slice.setLabelVisible()
 
         if self.ui.tableWidget_sale_summary.rowCount() > 10:
-            series.append('其他', total_amount)
+            series.append("其他", total_amount)
             slice = series.slices()[10]
             slice.setExploded()
             slice.setLabelVisible()
 
         chart = QtChart.QChart()
         chart.addSeries(series)
-        chart.setTitle(f'{self.doctor}醫師自費銷售排行榜Top10')
+        chart.setTitle(f"{self.doctor}醫師自費銷售排行榜Top10")
         chart.legend().hide()
         chart.setAnimationOptions(QtChart.QChart.AllAnimations)
 
