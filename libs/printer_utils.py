@@ -8790,6 +8790,7 @@ def get_self_prescript_receipt_html(database, system_setting, case_key):
         WHERE
             CaseKey = {case_key} AND
             MedicineSet >= 2 AND
+            MedicineSet != 11 AND
             Price > 0
         ORDER BY MedicineSet, PrescriptNo, PrescriptKey
     """
@@ -8826,7 +8827,7 @@ def get_self_prescript_receipt_html(database, system_setting, case_key):
             <tr>
                 <td align="left" width="50%">{medicine_name}</td>
                 <td align="right" width="25%">{dosage}{unit}</td>
-                <td align="right" width="25%">{total_amount}</td>
+                <td align="right" width="25%">{round(total_amount, 1)}</td>
             </tr>
         """
 
