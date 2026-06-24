@@ -4288,11 +4288,19 @@ def get_instruction_html_0(
 
         total_dosage_line = f"{total_dosage:.1f}克"
         total_packages = packages * pres_days
-        try:
-            dosage_per_package = round(total_dosage / total_packages, 1)
-            dosage_per_package_line = f", 每包{dosage_per_package}克"
-        except Exception:
-            dosage_per_package_line = ""
+
+        dosage_per_package_line = ""
+        powder_divider_limitation = number_utils.get_integer(
+            system_settings.field("包藥機劑量上限")
+        )
+        if (
+            powder_divider_limitation > 0
+        ):  # 包藥機劑量上限大於0才顯示每包幾克，避免不必要的資訊干擾
+            try:
+                dosage_per_package = round(total_dosage / total_packages, 1)
+                dosage_per_package_line = f", 每包{dosage_per_package}克"
+            except Exception:
+                pass
 
         case_date = row["CaseDate"].date()
         html = f"""
