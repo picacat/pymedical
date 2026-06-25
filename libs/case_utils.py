@@ -240,6 +240,9 @@ def set_pres_days(database, case_key, medicine_set=1, pres_days=0):
 
 
 def get_pres_days(database, case_key, medicine_set=1):
+    if medicine_set is None:
+        return 0
+
     sql = f"""
         SELECT Days FROM dosage
         WHERE
@@ -284,6 +287,9 @@ def get_no_pharmacy(database, case_key):
 
 
 def get_packages(database, case_key, medicine_set=1):
+    if medicine_set is None:
+        return 0
+
     sql = f"""
         SELECT Packages FROM dosage
         WHERE
