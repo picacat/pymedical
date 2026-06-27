@@ -1573,6 +1573,12 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 if len(rows) > 0:
                     break
 
+        if self.system_settings.field("調整庫存量") == "即時調整":
+            # ★ 先還原舊處方的庫存，再存檔，再扣新庫存
+            stock_utils.restore_self_prescript(
+                self.database, self.case_key, medicine_set
+            )
+
         self._save_dosage(medicine_set)
         self._save_medicine(medicine_set)
 

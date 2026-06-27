@@ -2392,6 +2392,13 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             except Exception:
                 pass
 
+        if (
+            self.system_settings.field("調整庫存量") == "即時調整"
+            and self.parent.record_saved
+        ):
+            # ★ 先還原舊處方的庫存，再存檔，再扣新庫存
+            stock_utils.restore_ins_prescript(self.database, self.case_key)
+
         self._save_dosage()
         self._save_medicine()
         self._save_treatment()

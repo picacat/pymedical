@@ -62,6 +62,51 @@ def add_medicine_quantity(database, medicine_key, stock_quantity):
     database.exec_sql(sql)
 
 
+def restore_ins_prescript(database, case_key):
+    """還原舊健保處方的庫存（存檔前呼叫）"""
+
+    medicine_set = 1
+    pres_days = case_utils.get_pres_days(database, case_key, medicine_set)
+    if pres_days == 0:
+        return
+
+    sql = f"""
+        SELECT MedicineKey, Dosage FROM prescript
+        WHERE
+            CaseKey = {case_key} AND
+            MedicineSet = {medicine_set}
+    """
+    rows = database.select_record(sql)
+    for row in rows:
+        medicine_key = row["MedicineKey"]
+        if medicine_key is None:
+            continue
+
+        total_dosage = number_utils.get_float(row["Dosage"]) * pres_days
+        add_medicine_quantity(database, medicine_key, total_dosage)  # 加回庫存
+
+
+def restore_self_prescript(database, case_key, medicine_set):
+    """還原舊處方的庫存（存檔前呼叫）"""
+    pres_days = case_utils.get_pres_days(database, case_key, medicine_set)
+    if pres_days == 0:
+        pres_days = 1
+
+    sql = f"""
+        SELECT MedicineKey, Dosage FROM prescript
+        WHERE
+            CaseKey = {case_key} AND
+            MedicineSet = {medicine_set}
+    """
+    rows = database.select_record(sql)
+    for row in rows:
+        medicine_key = row["MedicineKey"]
+        if medicine_key is None:
+            continue
+        total_dosage = number_utils.get_float(row["Dosage"]) * pres_days
+        add_medicine_quantity(database, medicine_key, total_dosage)  # 加回庫存
+
+
 def subtract_medicine_quantity(database, medicine_key, stock_quantity):
     sql = f"""
         SELECT Quantity FROM medicine
@@ -191,9 +236,6 @@ def adjust_stock_out_quantity(database, stock_out_key):
 
 
 def adjust_ins_prescript(database, case_key):
-    if case_utils.get_doctor_done(database, case_key):  # 完診就不再調整庫存
-        return
-
     medicine_set = 1
     pres_days = case_utils.get_pres_days(database, case_key, medicine_set)
     if pres_days == 0:
