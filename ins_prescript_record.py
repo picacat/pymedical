@@ -59,7 +59,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self.dosage_limitation = number_utils.get_integer(
             self.system_settings.field("劑量上限")
         )
-        self.powder_divider_limitation = number_utils.get_integer(
+        self.powder_divider_limitation = number_utils.get_float(
             self.system_settings.field("包藥機劑量上限")
         )
         self.check_total_dosage_event = self.system_settings.field(

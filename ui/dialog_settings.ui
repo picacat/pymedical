@@ -984,7 +984,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>890</width>
+              <width>1301</width>
               <height>820</height>
              </rect>
             </property>
@@ -1192,9 +1192,15 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QSpinBox" name="spinBox_powder_divider_limitation">
+                   <widget class="QDoubleSpinBox" name="doubleSpinBox_powder_divider_limitation">
+                    <property name="decimals">
+                     <number>1</number>
+                    </property>
                     <property name="maximum">
-                     <number>10</number>
+                     <double>10.000000000000000</double>
+                    </property>
+                    <property name="singleStep">
+                     <double>0.100000000000000</double>
                     </property>
                    </widget>
                   </item>
@@ -2178,8 +2184,8 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-413</y>
-              <width>1301</width>
+              <y>0</y>
+              <width>977</width>
               <height>1236</height>
              </rect>
             </property>
