@@ -58,10 +58,10 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         self._set_table_width()
 
     def _set_table_width(self):
-        width = [100, 130, 70, 85, 230, 50, 50, 50, 60, 70, 70, 70, 85]
+        width = [100, 130, 70, 85, 200, 50, 50, 50, 60, 100, 70, 70, 85]
         self.table_widget_doctor_sale.set_table_heading_width(width)
 
-        width = [300, 70, 90, 80]
+        width = [270, 70, 120, 80]
         self.table_widget_sale_summary.set_table_heading_width(width)
 
     # 設定信號
@@ -481,10 +481,10 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             if medicine_name != self.ui.tableWidget_sale_summary.item(row_no, 0).text():
                 continue
 
-            total_quantity = quantity + number_utils.get_float(
+            total_quantity = quantity + number_utils.get_integer(
                 self.ui.tableWidget_sale_summary.item(row_no, 1).text()
             )
-            total_amount = amount + number_utils.get_float(
+            total_amount = amount + number_utils.get_integer(
                 self.ui.tableWidget_sale_summary.item(row_no, 2).text()
             )
             total_commission = commission + number_utils.get_float(
@@ -493,8 +493,8 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
 
             summary_row = [
                 medicine_name,
-                total_quantity,
-                total_amount,
+                number_utils.get_integer(total_quantity),
+                number_utils.get_integer(total_amount),
                 total_commission,
             ]
             for col_no in range(len(summary_row)):
