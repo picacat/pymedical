@@ -7,84 +7,100 @@ def get_module_name(tab_name):
     字典格式: 'Tab名稱': ['模組檔名', '類別名稱']
     """
     module_dict = {
-        '門診掛號': ['registration', 'Registration'],
-        '預約掛號': ['reservation', 'Reservation'],
-        '批價作業': ['cashier', 'Cashier'],
-        '藥局作業': ['pharmacy', 'Pharmacy'],
-        '健保卡欠還卡': ['return_card', 'ReturnCard'],
-        '欠還款作業': ['debt', 'Debt'],
-        '櫃台購藥': ['purchase_list', 'PurchaseList'],
-        '退貨': ['return_goods', 'ReturnGoods'],
-        '購買商品': ['purchase', 'Purchase'],
-        '自費療程實現': ['course_accomplish', 'CourseAccomplish'],
-        '掛號櫃台結帳': ['income', 'Income'],
-        '病患查詢': ['patient_list', 'PatientList'],
-        '健保IC卡資料上傳': ['ic_record_upload', 'ICRecordUpload'],
-        '醫師看診作業': ['waiting_list', 'WaitingList'],
-        '病歷資料': ['medical_record', 'MedicalRecord'],
-        '參考病歷': ['medical_record', 'MedicalRecord'],
-        '病歷統計': ['statistics_medical_record', 'StatisticsMedicalRecord'],
-        '檢驗報告查詢': ['examination_list', 'ExaminationList'],
-        '檢驗報告登錄': ['examination', 'Examination'],
-        '自費銷售記錄': ['purchase_records', 'PurchaseRecords'],
-        '自費銷售抽成總表': ['statistics_commission_summary', 'StatisticsCommissionSummary'],
-        '醫師自費銷售金額總表': ['statistics_sales_summary', 'StatisticsSalesSummary'],
-        '收費設定': ['charge_settings', 'ChargeSettings'],
-        '醫師班表': ['doctor_schedule', 'DoctorSchedule'],
-        '藥師班表': ['pharmacist_schedule', 'PharmacistSchedule'],
-        '護理師跟診表': ['doctor_nurse_table', 'DoctorNurseTable'],
-        '使用者管理': ['users', 'Users'],
-        '診察資料': ['dict_diagnostic', 'DictDiagnostic'],
-        '處方資料': ['dict_medicine', 'DictMedicine'],
-        '其他資料': ['dict_misc', 'DictMisc'],
-        '健保藥品': ['dict_ins_drug', 'DictInsDrug'],
-        '病歷查詢': ['medical_record_list', 'MedicalRecordList'],
-        '病患資料': ['patient', 'Patient'],
-        '申報檢查': ['ins_check', 'InsCheck'],
-        '健保申報': ['ins_apply', 'InsApply'],
-        '健保抽審': ['ins_judge', 'InsJudge'],
-        '健保申復': ['ins_appeal', 'InsAppeal'],
-        '孕產照護報表': ['statistics_ins_pregnant', 'StatisticsInsPregnant'],
-        '照護機構院民資料報表': ['statistics_nursing_home', 'StatisticsNursingHome'],
-        '清冠一號補助清冊': ['ins_apply_infectious', 'InsApplyInfectious'],
-        '矯正機關內門診報表': ['statistics_correction_reg', 'StatisticsCorrectionReg'],
-        '診斷證明書': ['certificate_diagnosis', 'CertificateDiagnosis'],
-        '醫療費用證明書': ['certificate_payment', 'CertificatePayment'],
-        '日報表': ['statistics_daily', 'StatisticsDaily'],
-        '醫師統計': ['statistics_doctor', 'StatisticsDoctor'],
-        '醫師月報表': ['statistics_doctor_monthly', 'StatisticsDoctorMonthly'],
-        '醫師金額統計': ['statistics_doctor_amount', 'StatisticsDoctorAmount'],
-        '回診率統計': ['statistics_return_rate', 'StatisticsReturnRate'],
-        '未回診統計': ['statistics_no_return_rate', 'StatisticsNoReturnRate'],
-        '用藥統計': ['statistics_medicine', 'StatisticsMedicine'],
-        '健保申報業績': ['statistics_ins_performance', 'StatisticsInsPerformance'],
-        '醫師銷售業績統計': ['statistics_doctor_performance', 'StatisticsDoctorPerformance'],
-        '健保門診優惠統計': ['statistics_ins_discount', 'StatisticsInsDiscount'],
-        '綜合業績報表': ['statistics_multiple_performance', 'StatisticsMultiplePerformance'],
-        '業績成長統計': ['statistics_growth_rate', 'StatisticsGrowthRate'],
-        '自費抽成統計': ['statistics_commission', 'StatisticsCommission'],
-        '診數統計': ['statistics_period_count', 'StatisticsPeriodCount'],
-        '分院專案統計': ['statistics_branch_project', 'StatisticsBranchProject'],
-        '分院日報表': ['statistics_branch_daily', 'StatisticsBranchDaily'],
-        '推拿師統計': ['statistics_massager', 'StatisticsMassager'],
-        '資料回復': ['restore_records', 'RestoreRecords'],
-        '養生館掛號': ['massage_registration', 'MassageRegistration'],
-        '系統日誌': ['event_log', 'EventLog'],
-        '廠商資料': ['dict_supplier', 'DictSupplier'],
-        '進貨': ['stock_in', 'StockIn'],
-        '銷貨': ['stock_dispense', 'StockDispense'],
-        '出貨': ['stock_out', 'StockOut'],
-        '補貨': ['stock_replenishment', 'StockReplenishment'],
-        '盤點': ['stock_inventory', 'StockInventory'],
-        '進貨商品資料': ['goods', 'Goods'],
-        '物理治療預約': ['physiotherapy', 'Physiotherapy'],
-        '自費印花稅統計': ['statistics_stamp_duty', 'StatisticsStampDuty'],
-        '執行業務所得統計': ['statistics_business_income', 'StatisticsBusinessIncome'],
-        '何處得知本診所統計': ['statistics_trace', 'StatisticsTrace'],
-        '病患年齡分佈統計': ['statistics_patient_age_group', 'StatisticsPatientAgeGroup'],
-        '健保申報分列項目表': ['statistics_ins_apply_year', 'StatisticsInsApplyYear'],
-        '年度診次統計': ['statistics_period_year', 'StatisticsPeriodYear'],
-        '醫師處方類別抽成統計': ['statistics_doctor_medicine', 'StatisticsDoctorMedicine']
+        "門診掛號": ["registration", "Registration"],
+        "預約掛號": ["reservation", "Reservation"],
+        "批價作業": ["cashier", "Cashier"],
+        "藥局作業": ["pharmacy", "Pharmacy"],
+        "健保卡欠還卡": ["return_card", "ReturnCard"],
+        "欠還款作業": ["debt", "Debt"],
+        "櫃台購藥": ["purchase_list", "PurchaseList"],
+        "退貨": ["return_goods", "ReturnGoods"],
+        "購買商品": ["purchase", "Purchase"],
+        "自費療程實現": ["course_accomplish", "CourseAccomplish"],
+        "掛號櫃台結帳": ["income", "Income"],
+        "病患查詢": ["patient_list", "PatientList"],
+        "健保IC卡資料上傳": ["ic_record_upload", "ICRecordUpload"],
+        "醫師看診作業": ["waiting_list", "WaitingList"],
+        "病歷資料": ["medical_record", "MedicalRecord"],
+        "參考病歷": ["medical_record", "MedicalRecord"],
+        "病歷統計": ["statistics_medical_record", "StatisticsMedicalRecord"],
+        "檢驗報告查詢": ["examination_list", "ExaminationList"],
+        "檢驗報告登錄": ["examination", "Examination"],
+        "自費銷售記錄": ["purchase_records", "PurchaseRecords"],
+        "自費銷售抽成總表": [
+            "statistics_commission_summary",
+            "StatisticsCommissionSummary",
+        ],
+        "醫師自費銷售金額總表": ["statistics_sales_summary", "StatisticsSalesSummary"],
+        "收費設定": ["charge_settings", "ChargeSettings"],
+        "醫師班表": ["doctor_schedule", "DoctorSchedule"],
+        "藥師班表": ["pharmacist_schedule", "PharmacistSchedule"],
+        "護理師跟診表": ["doctor_nurse_table", "DoctorNurseTable"],
+        "使用者管理": ["users", "Users"],
+        "診察資料": ["dict_diagnostic", "DictDiagnostic"],
+        "處方資料": ["dict_medicine", "DictMedicine"],
+        "其他資料": ["dict_misc", "DictMisc"],
+        "健保藥品": ["dict_ins_drug", "DictInsDrug"],
+        "病歷查詢": ["medical_record_list", "MedicalRecordList"],
+        "病患資料": ["patient", "Patient"],
+        "申報檢查": ["ins_check", "InsCheck"],
+        "健保申報": ["ins_apply", "InsApply"],
+        "健保抽審": ["ins_judge", "InsJudge"],
+        "健保申復": ["ins_appeal", "InsAppeal"],
+        "孕產照護報表": ["statistics_ins_pregnant", "StatisticsInsPregnant"],
+        "照護機構院民資料報表": ["statistics_nursing_home", "StatisticsNursingHome"],
+        "清冠一號補助清冊": ["ins_apply_infectious", "InsApplyInfectious"],
+        "矯正機關內門診報表": ["statistics_correction_reg", "StatisticsCorrectionReg"],
+        "診斷證明書": ["certificate_diagnosis", "CertificateDiagnosis"],
+        "醫療費用證明書": ["certificate_payment", "CertificatePayment"],
+        "日報表": ["statistics_daily", "StatisticsDaily"],
+        "醫師統計": ["statistics_doctor", "StatisticsDoctor"],
+        "醫師月報表": ["statistics_doctor_monthly", "StatisticsDoctorMonthly"],
+        "醫師金額統計": ["statistics_doctor_amount", "StatisticsDoctorAmount"],
+        "回診率統計": ["statistics_return_rate", "StatisticsReturnRate"],
+        "未回診統計": ["statistics_no_return_rate", "StatisticsNoReturnRate"],
+        "用藥統計": ["statistics_medicine", "StatisticsMedicine"],
+        "健保申報業績": ["statistics_ins_performance", "StatisticsInsPerformance"],
+        "醫師銷售業績統計": [
+            "statistics_doctor_performance",
+            "StatisticsDoctorPerformance",
+        ],
+        "健保門診優惠統計": ["statistics_ins_discount", "StatisticsInsDiscount"],
+        "綜合業績報表": [
+            "statistics_multiple_performance",
+            "StatisticsMultiplePerformance",
+        ],
+        "業績成長統計": ["statistics_growth_rate", "StatisticsGrowthRate"],
+        "自費抽成統計": ["statistics_commission", "StatisticsCommission"],
+        "診數統計": ["statistics_period_count", "StatisticsPeriodCount"],
+        "分院專案統計": ["statistics_branch_project", "StatisticsBranchProject"],
+        "分院日報表": ["statistics_branch_daily", "StatisticsBranchDaily"],
+        "推拿師統計": ["statistics_massager", "StatisticsMassager"],
+        "資料回復": ["restore_records", "RestoreRecords"],
+        "養生館掛號": ["massage_registration", "MassageRegistration"],
+        "系統日誌": ["event_log", "EventLog"],
+        "廠商資料": ["dict_supplier", "DictSupplier"],
+        "進貨": ["stock_in", "StockIn"],
+        "銷貨": ["stock_dispense", "StockDispense"],
+        "出貨": ["stock_out", "StockOut"],
+        "補貨": ["stock_replenishment", "StockReplenishment"],
+        "盤點": ["stock_inventory", "StockInventory"],
+        "進貨商品資料": ["goods", "Goods"],
+        "物理治療預約": ["physiotherapy", "Physiotherapy"],
+        "自費印花稅統計": ["statistics_stamp_duty", "StatisticsStampDuty"],
+        "執行業務所得統計": ["statistics_business_income", "StatisticsBusinessIncome"],
+        "何處得知本診所統計": ["statistics_trace", "StatisticsTrace"],
+        "病患優待身份統計": ["statistics_discount_type", "StatisticsDiscountType"],
+        "病患年齡分佈統計": [
+            "statistics_patient_age_group",
+            "StatisticsPatientAgeGroup",
+        ],
+        "健保申報分列項目表": ["statistics_ins_apply_year", "StatisticsInsApplyYear"],
+        "年度診次統計": ["statistics_period_year", "StatisticsPeriodYear"],
+        "醫師處方類別抽成統計": [
+            "statistics_doctor_medicine",
+            "StatisticsDoctorMedicine",
+        ],
     }
 
     target_class = None
@@ -103,14 +119,14 @@ def get_module_name(tab_name):
 
 
 def get_module(tab_name):
-    if tab_name.find('病歷資料') != -1:
-        tab_name = '病歷資料'
-    elif tab_name.find('病患資料') != -1:
-        tab_name = '病患資料'
-    elif tab_name.find('檢驗報告-') != -1:
-        tab_name = '檢驗報告登錄'
-    elif tab_name.find('醫療費用證明書-') != -1:
-        tab_name = '醫療費用證明書'
+    if tab_name.find("病歷資料") != -1:
+        tab_name = "病歷資料"
+    elif tab_name.find("病患資料") != -1:
+        tab_name = "病患資料"
+    elif tab_name.find("檢驗報告-") != -1:
+        tab_name = "檢驗報告登錄"
+    elif tab_name.find("醫療費用證明書-") != -1:
+        tab_name = "醫療費用證明書"
 
     module_name = get_module_name(tab_name)
 
@@ -118,11 +134,15 @@ def get_module(tab_name):
 
 
 # 病歷登錄-健保處方
-def get_ins_prescript_record(parent, database, system_settings, case_key, medicine_set, call_from):
+def get_ins_prescript_record(
+    parent, database, system_settings, case_key, medicine_set, call_from
+):
     import ins_prescript_record
 
     module = importlib.reload(ins_prescript_record)
-    tab_widget = module.InsPrescriptRecord(parent, database, system_settings, case_key, medicine_set, call_from)
+    tab_widget = module.InsPrescriptRecord(
+        parent, database, system_settings, case_key, medicine_set, call_from
+    )
 
     return tab_widget
 
@@ -132,49 +152,71 @@ def get_ins_care_record(parent, database, system_settings, case_key, medicine_se
     import ins_care_record
 
     module = importlib.reload(ins_care_record)
-    tab_widget = module.InsCareRecord(parent, database, system_settings, case_key, medicine_set)
+    tab_widget = module.InsCareRecord(
+        parent, database, system_settings, case_key, medicine_set
+    )
 
     return tab_widget
 
 
 # 病歷登錄-自費處方
-def get_self_prescript_record(parent, database, system_settings, case_key, medicine_set, call_from):
+def get_self_prescript_record(
+    parent, database, system_settings, case_key, medicine_set, call_from
+):
     import self_prescript_record
 
     module = importlib.reload(self_prescript_record)
-    tab_widget = module.SelfPrescriptRecord(parent, database, system_settings, case_key, medicine_set, call_from)
+    tab_widget = module.SelfPrescriptRecord(
+        parent, database, system_settings, case_key, medicine_set, call_from
+    )
 
     return tab_widget
 
 
 # 病歷登錄-最近病歷
-def get_medical_record_recently_history(parent, database, system_settings, case_key, patient_key, call_from):
+def get_medical_record_recently_history(
+    parent, database, system_settings, case_key, patient_key, call_from
+):
     import medical_record_recently_history
 
     module = importlib.reload(medical_record_recently_history)
     tab_widget = module.MedicalRecordRecentlyHistory(
-        parent, database, system_settings, case_key, patient_key, call_from)
+        parent, database, system_settings, case_key, patient_key, call_from
+    )
 
     return tab_widget
 
 
 # 病歷登錄-批價明細
-def get_medical_record_fees(parent, database, system_settings, medical_record, case_key, patient_key, call_from):
+def get_medical_record_fees(
+    parent, database, system_settings, medical_record, case_key, patient_key, call_from
+):
     import medical_record_fees
 
     module = importlib.reload(medical_record_fees)
     tab_widget = module.MedicalRecordFees(
-        parent, database, system_settings, medical_record, case_key, patient_key, call_from)
+        parent,
+        database,
+        system_settings,
+        medical_record,
+        case_key,
+        patient_key,
+        call_from,
+    )
 
     return tab_widget
 
 
 # 病歷登錄-門診資料
-def get_medical_record_registration(parent, database, system_settings, case_key, call_from):
+def get_medical_record_registration(
+    parent, database, system_settings, case_key, call_from
+):
     import medical_record_registration
 
     module = importlib.reload(medical_record_registration)
-    tab_widget = module.MedicalRecordRegistration(parent, database, system_settings, case_key, call_from)
+    tab_widget = module.MedicalRecordRegistration(
+        parent, database, system_settings, case_key, call_from
+    )
 
     return tab_widget
 
@@ -184,17 +226,23 @@ def get_medical_record_family(parent, database, system_settings, case_key, call_
     import medical_record_family
 
     module = importlib.reload(medical_record_family)
-    tab_widget = module.MedicalRecordFamily(parent, database, system_settings, case_key, call_from)
+    tab_widget = module.MedicalRecordFamily(
+        parent, database, system_settings, case_key, call_from
+    )
 
     return tab_widget
 
 
 # 病歷登錄-檢驗報告
-def get_medical_record_examination(parent, database, system_settings, patient_key, call_from):
+def get_medical_record_examination(
+    parent, database, system_settings, patient_key, call_from
+):
     import medical_record_examination
 
     module = importlib.reload(medical_record_examination)
-    tab_widget = module.MedicalRecordExamination(parent, database, system_settings, patient_key, call_from)
+    tab_widget = module.MedicalRecordExamination(
+        parent, database, system_settings, patient_key, call_from
+    )
 
     return tab_widget
 
@@ -204,7 +252,9 @@ def get_medical_record_image(parent, database, system_settings, case_key, patien
     import medical_record_image
 
     module = importlib.reload(medical_record_image)
-    tab_widget = module.MedicalRecordImage(parent, database, system_settings, case_key, patient_key)
+    tab_widget = module.MedicalRecordImage(
+        parent, database, system_settings, case_key, patient_key
+    )
 
     return tab_widget
 
@@ -224,7 +274,9 @@ def get_medical_record_memo(parent, database, system_settings, case_key, patient
     import medical_record_memo
 
     module = importlib.reload(medical_record_memo)
-    tab_widget = module.MedicalRecordMemo(parent, database, system_settings, case_key, patient_key)
+    tab_widget = module.MedicalRecordMemo(
+        parent, database, system_settings, case_key, patient_key
+    )
 
     return tab_widget
 
@@ -234,17 +286,23 @@ def get_medical_record_order(parent, database, system_settings, case_key, call_f
     import medical_record_order
 
     module = importlib.reload(medical_record_order)
-    tab_widget = module.MedicalRecordOrder(parent, database, system_settings, case_key, call_from)
+    tab_widget = module.MedicalRecordOrder(
+        parent, database, system_settings, case_key, call_from
+    )
 
     return tab_widget
 
 
 # 病歷登錄-兒童生長曲線圖
-def get_medical_record_growth_chart(parent, database, system_settings, case_key, call_from):
+def get_medical_record_growth_chart(
+    parent, database, system_settings, case_key, call_from
+):
     import medical_record_growth_chart
 
     module = importlib.reload(medical_record_growth_chart)
-    tab_widget = module.MedicalRecordGrowthChart(parent, database, system_settings, case_key, call_from)
+    tab_widget = module.MedicalRecordGrowthChart(
+        parent, database, system_settings, case_key, call_from
+    )
 
     return tab_widget
 
@@ -254,7 +312,9 @@ def get_pregnant_female(parent, database, system_settings, case_key, call_from):
     import pregnant_female
 
     module = importlib.reload(pregnant_female)
-    tab_widget = module.PregnantFemale(parent, database, system_settings, case_key, call_from)
+    tab_widget = module.PregnantFemale(
+        parent, database, system_settings, case_key, call_from
+    )
 
     return tab_widget
 
@@ -264,7 +324,9 @@ def get_pregnant_male(parent, database, system_settings, case_key, call_from):
     import pregnant_male
 
     module = importlib.reload(pregnant_male)
-    tab_widget = module.PregnantMale(parent, database, system_settings, case_key, call_from)
+    tab_widget = module.PregnantMale(
+        parent, database, system_settings, case_key, call_from
+    )
 
     return tab_widget
 
@@ -274,7 +336,9 @@ def get_physique_table(parent, database, system_settings, case_key, call_from):
     import physique_table
 
     module = importlib.reload(physique_table)
-    widget = module.PhysiqueTable(parent, database, system_settings, case_key, call_from)
+    widget = module.PhysiqueTable(
+        parent, database, system_settings, case_key, call_from
+    )
 
     return widget
 
@@ -322,6 +386,7 @@ def get_check_database(parent, database, system_settings, call_from):
 # 系統登入
 def get_login(parent, database, system_settings, call_from=None):
     import login
+
     module = importlib.reload(login)
     dialog = module.Login(parent, database, system_settings, call_from)
 
@@ -529,368 +594,863 @@ def get_dict_address_book(parent, *args):
 
 
 # 櫃台結帳-現金收入分析
-def get_income_cash_flow(parent, database, system_settings, start_date, end_date, period,
-                         regist_type, therapist, room, cashier, income_source, calculate_by_cashier):
+def get_income_cash_flow(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    regist_type,
+    therapist,
+    room,
+    cashier,
+    income_source,
+    calculate_by_cashier,
+):
     import income_cash_flow
 
     module = importlib.reload(income_cash_flow)
     widget = module.IncomeCashFlow(
-        parent, database, system_settings, start_date, end_date, period,
-        regist_type, therapist, room, cashier, income_source, calculate_by_cashier)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        regist_type,
+        therapist,
+        room,
+        cashier,
+        income_source,
+        calculate_by_cashier,
+    )
 
     return widget
 
 
 # 櫃台結帳-交帳明細一覽
-def get_income_list(parent, database, system_settings, start_date, end_date, period,
-                    regist_type, therapist, room,
-                    tableWidget_registration, tableWidget_charge,
-                    income_source, income_list_columns):
+def get_income_list(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    regist_type,
+    therapist,
+    room,
+    tableWidget_registration,
+    tableWidget_charge,
+    income_source,
+    income_list_columns,
+):
     import income_list
 
     module = importlib.reload(income_list)
     widget = module.IncomeList(
-        parent, database, system_settings, start_date, end_date, period, regist_type, therapist, room,
-        tableWidget_registration, tableWidget_charge, income_source, income_list_columns)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        regist_type,
+        therapist,
+        room,
+        tableWidget_registration,
+        tableWidget_charge,
+        income_source,
+        income_list_columns,
+    )
 
     return widget
 
 
 # 櫃台結帳-自費明細表
-def get_income_self_prescript(parent, database, system_settings, start_date, end_date, period,
-                              regist_type, therapist, room, cashier, income_source):
+def get_income_self_prescript(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    regist_type,
+    therapist,
+    room,
+    cashier,
+    income_source,
+):
     import income_self_prescript
 
     module = importlib.reload(income_self_prescript)
     widget = module.IncomeSelfPrescript(
-        parent, database, system_settings, start_date, end_date, period,
-        regist_type, therapist, room, cashier, income_source)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        regist_type,
+        therapist,
+        room,
+        cashier,
+        income_source,
+    )
 
     return widget
 
 
 # 櫃台結帳-專案銷售明細
-def get_income_project(parent, database, system_settings, start_date, end_date, period,
-                       regist_type, therapist, room, cashier, income_source):
+def get_income_project(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    regist_type,
+    therapist,
+    room,
+    cashier,
+    income_source,
+):
     import income_project
 
     module = importlib.reload(income_project)
     widget = module.IncomeProject(
-        parent, database, system_settings, start_date, end_date, period,
-        regist_type, therapist, room, cashier, income_source)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        regist_type,
+        therapist,
+        room,
+        cashier,
+        income_source,
+    )
 
     return widget
 
 
 # 櫃台結帳-健保收費明細
-def get_income_ins_list(parent, database, system_settings, start_date, end_date, period,
-                        regist_type, therapist, room, cashier, income_source):
+def get_income_ins_list(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    regist_type,
+    therapist,
+    room,
+    cashier,
+    income_source,
+):
     import income_ins_list
 
     module = importlib.reload(income_ins_list)
     widget = module.IncomeInsList(
-        parent, database, system_settings, start_date, end_date, period,
-        regist_type, therapist, room, cashier, income_source)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        regist_type,
+        therapist,
+        room,
+        cashier,
+        income_source,
+    )
 
     return widget
 
 
 # 申報資料
-def get_ins_apply_list(parent, database, system_settings, apply_year, apply_month,
-                       period, apply_type, clinic_id, case_type, ins_list=None):
+def get_ins_apply_list(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    period,
+    apply_type,
+    clinic_id,
+    case_type,
+    ins_list=None,
+):
     import ins_apply_list
 
     module = importlib.reload(ins_apply_list)
     widget = module.InsApplyList(
-        parent, database, system_settings, apply_year, apply_month, period,
-        apply_type, clinic_id, case_type, ins_list)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        period,
+        apply_type,
+        clinic_id,
+        case_type,
+        ins_list,
+    )
 
     return widget
 
 
 # 健保申報-產生申報資料
-def get_ins_apply_generate_file(parent, database, system_settings, apply_year, apply_month,
-                                start_date, end_date, period, apply_type, clinic_id, pre_ins_apply):
+def get_ins_apply_generate_file(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    start_date,
+    end_date,
+    period,
+    apply_type,
+    clinic_id,
+    pre_ins_apply,
+):
     import ins_apply_generate_file
 
     module = importlib.reload(ins_apply_generate_file)
     widget = module.InsApplyGenerateFile(
-        parent, database, system_settings, apply_year, apply_month,
-        start_date, end_date, period, apply_type, clinic_id, pre_ins_apply)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        start_date,
+        end_date,
+        period,
+        apply_type,
+        clinic_id,
+        pre_ins_apply,
+    )
 
     return widget
 
 
 # 健保申報-顯示申報統計
-def get_ins_apply_calculated_data(parent, database, system_settings, ins_calculated_table):
+def get_ins_apply_calculated_data(
+    parent, database, system_settings, ins_calculated_table
+):
     import ins_apply_calculated_data
 
     module = importlib.reload(ins_apply_calculated_data)
     widget = module.InsApplyCalculatedData(
-        parent, database, system_settings, ins_calculated_table)
+        parent, database, system_settings, ins_calculated_table
+    )
 
     return widget
 
 
 # 健保申報-計算申報統計
-def get_ins_apply_calculate(parent, database, system_settings, apply_year, apply_month,
-                            start_date, end_date, period, apply_type, clinic_id):
+def get_ins_apply_calculate(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    start_date,
+    end_date,
+    period,
+    apply_type,
+    clinic_id,
+):
     import ins_apply_calculate
 
     module = importlib.reload(ins_apply_calculate)
     widget = module.InsApplyCalculate(
-        parent, database, system_settings, apply_year, apply_month,
-        start_date, end_date, period, apply_type, clinic_id)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        start_date,
+        end_date,
+        period,
+        apply_type,
+        clinic_id,
+    )
 
     return widget
 
 
 # 健保申報-計算合理量
-def get_ins_apply_adjust_fee(parent, database, system_settings, apply_year, apply_month, start_date, end_date,
-                             period, apply_type, clinic_id, ins_calculated_table):
+def get_ins_apply_adjust_fee(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    start_date,
+    end_date,
+    period,
+    apply_type,
+    clinic_id,
+    ins_calculated_table,
+):
     import ins_apply_adjust_fee
 
     module = importlib.reload(ins_apply_adjust_fee)
     widget = module.InsApplyAdjustFee(
-        parent, database, system_settings, apply_year, apply_month, start_date, end_date,
-        period, apply_type, clinic_id, ins_calculated_table)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        start_date,
+        end_date,
+        period,
+        apply_type,
+        clinic_id,
+        ins_calculated_table,
+    )
 
     return widget
 
 
 # 健保申報-申請總表
-def get_ins_apply_total_fee(parent, database, system_settings, apply_year, apply_month, start_date, end_date,
-                            period, apply_type, clinic_id, ins_generate_date, ins_calculated_table):
+def get_ins_apply_total_fee(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    start_date,
+    end_date,
+    period,
+    apply_type,
+    clinic_id,
+    ins_generate_date,
+    ins_calculated_table,
+):
     import ins_apply_total_fee
 
     module = importlib.reload(ins_apply_total_fee)
     widget = module.InsApplyTotalFee(
-        parent, database, system_settings, apply_year, apply_month, start_date, end_date,
-        period, apply_type, clinic_id, ins_generate_date, ins_calculated_table)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        start_date,
+        end_date,
+        period,
+        apply_type,
+        clinic_id,
+        ins_generate_date,
+        ins_calculated_table,
+    )
 
     return widget
 
 
 # 健保申報-醫護班表
-def get_ins_apply_schedule_table(parent, database, system_settings, apply_year, apply_month, start_date, end_date,
-                                 period, apply_type, clinic_id, ins_generate_date, ins_calculated_table):
+def get_ins_apply_schedule_table(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    start_date,
+    end_date,
+    period,
+    apply_type,
+    clinic_id,
+    ins_generate_date,
+    ins_calculated_table,
+):
     import ins_apply_schedule_table
 
     module = importlib.reload(ins_apply_schedule_table)
     widget = module.InsApplyScheduleTable(
-        parent, database, system_settings, apply_year, apply_month, start_date, end_date,
-        period, apply_type, clinic_id, ins_generate_date, ins_calculated_table)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        start_date,
+        end_date,
+        period,
+        apply_type,
+        clinic_id,
+        ins_generate_date,
+        ins_calculated_table,
+    )
 
     return widget
 
 
 # 健保申報-申報金額核對
-def get_ins_check_apply_fee(parent, database, system_settings, apply_year, apply_month, start_date, end_date,
-                            period, apply_type, clinic_id, ins_generate_date, ins_total_fee):
+def get_ins_check_apply_fee(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    start_date,
+    end_date,
+    period,
+    apply_type,
+    clinic_id,
+    ins_generate_date,
+    ins_total_fee,
+):
     import ins_check_apply_fee
 
     module = importlib.reload(ins_check_apply_fee)
     widget = module.InsCheckApplyFee(
-        parent, database, system_settings, apply_year, apply_month, start_date, end_date,
-        period, apply_type, clinic_id, ins_generate_date, ins_total_fee)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        start_date,
+        end_date,
+        period,
+        apply_type,
+        clinic_id,
+        ins_generate_date,
+        ins_total_fee,
+    )
 
     return widget
 
 
 # 健保申報-申報業績
-def get_ins_apply_fee_performance(parent, database, system_settings, apply_year, apply_month, doctor,
-                                  start_date, end_date, period, apply_type, exclude_c5):
+def get_ins_apply_fee_performance(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    doctor,
+    start_date,
+    end_date,
+    period,
+    apply_type,
+    exclude_c5,
+):
     import ins_apply_fee_performance
 
     module = importlib.reload(ins_apply_fee_performance)
     widget = module.InsApplyFeePerformance(
-        parent, database, system_settings, apply_year, apply_month, doctor,
-        start_date, end_date, period, apply_type, exclude_c5)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        doctor,
+        start_date,
+        end_date,
+        period,
+        apply_type,
+        exclude_c5,
+    )
 
     return widget
 
 
 # 健保申復-產生XML檔
-def get_ins_appeal_xml(parent, database, system_settings, apply_year, apply_month,
-                       apply_date, period, apply_type_code, clinic_id, apply_upload_date):
+def get_ins_appeal_xml(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    apply_date,
+    period,
+    apply_type_code,
+    clinic_id,
+    apply_upload_date,
+):
     import ins_appeal_xml
 
     module = importlib.reload(ins_appeal_xml)
     widget = module.InsAppealXML(
-        parent, database, system_settings, apply_year, apply_month,
-        apply_date, period, apply_type_code, clinic_id, apply_upload_date)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        apply_date,
+        period,
+        apply_type_code,
+        clinic_id,
+        apply_upload_date,
+    )
 
     return widget
 
 
 # 健保申報-產生XML檔
-def get_ins_apply_xml(parent, database, system_settings, apply_year, apply_month,
-                      start_date, end_date, period, apply_type, clinic_id, ins_total_fee, pre_ins_apply):
+def get_ins_apply_xml(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    start_date,
+    end_date,
+    period,
+    apply_type,
+    clinic_id,
+    ins_total_fee,
+    pre_ins_apply,
+):
     import ins_apply_xml
 
     module = importlib.reload(ins_apply_xml)
     widget = module.InsApplyXML(
-        parent, database, system_settings, apply_year, apply_month,
-        start_date, end_date, period, apply_type, clinic_id, ins_total_fee, pre_ins_apply)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        start_date,
+        end_date,
+        period,
+        apply_type,
+        clinic_id,
+        ins_total_fee,
+        pre_ins_apply,
+    )
 
     return widget
 
 
 # 健保申報-檢視申報資料
 def get_ins_apply_tab(
-        parent, database, system_settings, apply_year, apply_month, period, apply_type, clinic_id, ins_list=None):
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    period,
+    apply_type,
+    clinic_id,
+    ins_list=None,
+):
     import ins_apply_tab
 
     module = importlib.reload(ins_apply_tab)
     widget = module.InsApplyTab(
-        parent, database, system_settings, apply_year, apply_month, period, apply_type, clinic_id, ins_list)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        period,
+        apply_type,
+        clinic_id,
+        ins_list,
+    )
 
     return widget
 
 
 # 健保申報-巡迴醫療
-def get_ins_apply_tour(parent, database, system_settings, apply_year, apply_month,
-                       start_date, end_date, period, apply_type, clinic_id):
+def get_ins_apply_tour(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    start_date,
+    end_date,
+    period,
+    apply_type,
+    clinic_id,
+):
     import ins_apply_tour
 
     module = importlib.reload(ins_apply_tour)
     widget = module.InsApplyTour(
-        parent, database, system_settings, apply_year, apply_month,
-        start_date, end_date, period, apply_type, clinic_id)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        start_date,
+        end_date,
+        period,
+        apply_type,
+        clinic_id,
+    )
 
     return widget
 
 
 # 健保申報-法定傳染病通報隔離-清冠一號補助清冊
-def get_ins_apply_infectious(parent, database, system_settings, apply_year, apply_month,
-                             period, apply_type, clinic_id):
+def get_ins_apply_infectious(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    period,
+    apply_type,
+    clinic_id,
+):
     import ins_apply_infectious
 
     module = importlib.reload(ins_apply_infectious)
     widget = module.InsApplyInfectious(
-        parent, database, system_settings, apply_year, apply_month,
-        period, apply_type, clinic_id)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        period,
+        apply_type,
+        clinic_id,
+    )
 
     return widget
 
 
 # 健保申報-健保指標
-def get_ins_apply_indicator(parent, database, system_settings, apply_date, period, apply_type_code, clinic_id):
+def get_ins_apply_indicator(
+    parent, database, system_settings, apply_date, period, apply_type_code, clinic_id
+):
     import ins_apply_indicator
 
     module = importlib.reload(ins_apply_indicator)
     widget = module.InsApplyIndicator(
-        parent, database, system_settings, apply_date, period, apply_type_code, clinic_id)
+        parent,
+        database,
+        system_settings,
+        apply_date,
+        period,
+        apply_type_code,
+        clinic_id,
+    )
 
     return widget
 
 
 # 申報檢查-欄位錯誤檢查
-def get_check_errors(parent, database, system_settings, apply_year, apply_month, apply_type,
-                     start_date, end_date, check_empty_symptom):
+def get_check_errors(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    apply_type,
+    start_date,
+    end_date,
+    check_empty_symptom,
+):
     import check_errors
 
     module = importlib.reload(check_errors)
     widget = module.CheckErrors(
-        parent, database, system_settings, apply_year, apply_month, apply_type,
-        start_date, end_date, check_empty_symptom)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        apply_type,
+        start_date,
+        end_date,
+        check_empty_symptom,
+    )
 
     return widget
 
 
 # 申報檢查-療程檢查
-def get_check_course(parent, database, system_settings, apply_year, apply_month, apply_type, check_two_months):
+def get_check_course(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    apply_type,
+    check_two_months,
+):
     import check_course
 
     module = importlib.reload(check_course)
     widget = module.CheckCourse(
-        parent, database, system_settings, apply_year, apply_month, apply_type, check_two_months)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        apply_type,
+        check_two_months,
+    )
 
     return widget
 
 
 # 申報檢查-卡序檢查
-def get_check_card(parent, database, system_settings, apply_year, apply_month, apply_type, check_two_months):
+def get_check_card(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    apply_type,
+    check_two_months,
+):
     import check_card
 
     module = importlib.reload(check_card)
     widget = module.CheckCard(
-        parent, database, system_settings, apply_year, apply_month, apply_type, check_two_months)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        apply_type,
+        check_two_months,
+    )
 
     return widget
 
 
 # 申報檢查-門診次數檢查
-def get_check_medical_record_count(parent, database, system_settings, apply_year, apply_month, apply_type,
-                                   treat_limit, diag_limit,
-                                   moderate_acupuncture_limit, highly_acupuncture_limit,
-                                   moderate_massage_limit, highly_massage_limit,
-                                   merge_limit, treat_drug_limit):
+def get_check_medical_record_count(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    apply_type,
+    treat_limit,
+    diag_limit,
+    moderate_acupuncture_limit,
+    highly_acupuncture_limit,
+    moderate_massage_limit,
+    highly_massage_limit,
+    merge_limit,
+    treat_drug_limit,
+):
     import check_medical_record_count
 
     module = importlib.reload(check_medical_record_count)
     widget = module.CheckMedicalRecordCount(
-        parent, database, system_settings, apply_year, apply_month, apply_type,
-        treat_limit, diag_limit,
-        moderate_acupuncture_limit, highly_acupuncture_limit,
-        moderate_massage_limit, highly_massage_limit,
-        merge_limit, treat_drug_limit)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        apply_type,
+        treat_limit,
+        diag_limit,
+        moderate_acupuncture_limit,
+        highly_acupuncture_limit,
+        moderate_massage_limit,
+        highly_massage_limit,
+        merge_limit,
+        treat_drug_limit,
+    )
 
     return widget
 
 
 # 申報檢查-用藥天數檢查
-def get_check_prescript_days(parent, database, system_settings,
-                             apply_year, apply_month, apply_type, duplicated_days, check_two_months):
+def get_check_prescript_days(
+    parent,
+    database,
+    system_settings,
+    apply_year,
+    apply_month,
+    apply_type,
+    duplicated_days,
+    check_two_months,
+):
     import check_prescript_days
 
     module = importlib.reload(check_prescript_days)
     widget = module.CheckPrescriptDays(
-        parent, database, system_settings, apply_year, apply_month, apply_type, duplicated_days, check_two_months)
+        parent,
+        database,
+        system_settings,
+        apply_year,
+        apply_month,
+        apply_type,
+        duplicated_days,
+        check_two_months,
+    )
 
     return widget
 
 
 # 申報檢查-健保碼檢查
-def get_check_ins_drug(parent, database, system_settings, apply_year, apply_month, apply_type):
+def get_check_ins_drug(
+    parent, database, system_settings, apply_year, apply_month, apply_type
+):
     import check_ins_drug
 
     module = importlib.reload(check_ins_drug)
     widget = module.CheckInsDrug(
-        parent, database, system_settings, apply_year, apply_month, apply_type)
+        parent, database, system_settings, apply_year, apply_month, apply_type
+    )
 
     return widget
 
 
 # 申報檢查-處置檢查
-def get_check_ins_treat(parent, database, system_settings, apply_year, apply_month, apply_type):
+def get_check_ins_treat(
+    parent, database, system_settings, apply_year, apply_month, apply_type
+):
     import check_ins_treat
 
     module = importlib.reload(check_ins_treat)
     widget = module.CheckInsTreat(
-        parent, database, system_settings, apply_year, apply_month, apply_type)
+        parent, database, system_settings, apply_year, apply_month, apply_type
+    )
 
     return widget
 
 
 # 健保抽審-電子化抽審
-def get_ins_upload_emr(parent, database, system_settings, apply_date,
-                       apply_type, period, clinic_id, apply_upload_date):
+def get_ins_upload_emr(
+    parent,
+    database,
+    system_settings,
+    apply_date,
+    apply_type,
+    period,
+    clinic_id,
+    apply_upload_date,
+):
     import ins_upload_emr
 
     module = importlib.reload(ins_upload_emr)
     widget = module.InsUploadEMR(
-        parent, database, system_settings, apply_date, apply_type, period, clinic_id, apply_upload_date)
+        parent,
+        database,
+        system_settings,
+        apply_date,
+        apply_type,
+        period,
+        clinic_id,
+        apply_upload_date,
+    )
 
     return widget
 
 
 # 病患資料
-def get_patient_data(parent, database, system_settings, patient_key, call_froim, ic_card):
+def get_patient_data(
+    parent, database, system_settings, patient_key, call_froim, ic_card
+):
     import patient_data
 
     module = importlib.reload(patient_data)
-    widget = module.PatientData(parent, database, system_settings, patient_key, call_froim, ic_card)
+    widget = module.PatientData(
+        parent, database, system_settings, patient_key, call_froim, ic_card
+    )
 
     return widget
 
@@ -920,7 +1480,9 @@ def get_purchase_records_list(parent, database, system_settings, dialog, no_zero
     import purchase_records_list
 
     module = importlib.reload(purchase_records_list)
-    widget = module.PurchaseRecordList(parent, database, system_settings, dialog, no_zero_bonus)
+    widget = module.PurchaseRecordList(
+        parent, database, system_settings, dialog, no_zero_bonus
+    )
 
     return widget
 
@@ -950,7 +1512,9 @@ def get_pycashier_payment(parent, database, system_settings, ic_card, coinsys):
     from slot_machine import pycashier_payment
 
     module = importlib.reload(pycashier_payment)
-    widget = module.PyCashierPayment(parent, database, system_settings, ic_card, coinsys)
+    widget = module.PyCashierPayment(
+        parent, database, system_settings, ic_card, coinsys
+    )
 
     return widget
 
@@ -990,7 +1554,9 @@ def get_pycashier2_payment(parent, database, system_settings, ic_card, coinsys):
     from payment_machine import pycashier_payment
 
     module = importlib.reload(pycashier_payment)
-    widget = module.PyCashierPayment(parent, database, system_settings, ic_card, coinsys)
+    widget = module.PyCashierPayment(
+        parent, database, system_settings, ic_card, coinsys
+    )
 
     return widget
 
@@ -1044,6 +1610,7 @@ def get_kiosk_completed(parent, database, system_settings, ic_card):
 
     return widget
 
+
 # 資料回復
 def get_restore_medical_records(parent, database, system_settings):
     import restore_medical_records
@@ -1055,35 +1622,59 @@ def get_restore_medical_records(parent, database, system_settings):
 
 
 # 分院日報表-人數統計
-def get_statistics_branch_daily_person(parent, database, system_settings, database_list, year, month, day):
+def get_statistics_branch_daily_person(
+    parent, database, system_settings, database_list, year, month, day
+):
     import statistics_branch_daily_person
 
     module = importlib.reload(statistics_branch_daily_person)
     widget = module.StatisticsBranchDailyPerson(
-        parent, database, system_settings, database_list, year, month, day)
+        parent, database, system_settings, database_list, year, month, day
+    )
 
     return widget
 
 
 # 分院日報表-門診金額統計
-def get_statistics_branch_daily_income(parent, database, system_settings, database_list, year, month, day):
+def get_statistics_branch_daily_income(
+    parent, database, system_settings, database_list, year, month, day
+):
     import statistics_branch_daily_income
 
     module = importlib.reload(statistics_branch_daily_income)
     widget = module.StatisticsBranchDailyIncome(
-        parent, database, system_settings, database_list, year, month, day)
+        parent, database, system_settings, database_list, year, month, day
+    )
 
     return widget
 
 
 # 分院專案統計
-def get_statistics_branch_project_sales(parent, database, database_list, system_settings,
-                                        start_date, end_date, ins_type, doctor, project_name):
+def get_statistics_branch_project_sales(
+    parent,
+    database,
+    database_list,
+    system_settings,
+    start_date,
+    end_date,
+    ins_type,
+    doctor,
+    project_name,
+):
     import statistics_branch_project_sales
 
     module = importlib.reload(statistics_branch_project_sales)
     widget = module.StatisticsBranchProjectSales(
-        parent, database, database_list, system_settings, start_date, end_date, ins_type, doctor, project_name)
+        parent,
+        database,
+        database_list,
+        system_settings,
+        start_date,
+        end_date,
+        ins_type,
+        doctor,
+        project_name,
+    )
 
     return widget
 
@@ -1094,7 +1685,8 @@ def get_statistics_commission_amount(parent, database, system_settings, year, mo
 
     module = importlib.reload(statistics_commission_amount)
     widget = module.StatisticsCommissionAmount(
-        parent, database, system_settings, year, month)
+        parent, database, system_settings, year, month
+    )
 
     return widget
 
@@ -1105,482 +1697,945 @@ def get_statistics_daily_person(parent, database, system_settings, year, month, 
 
     module = importlib.reload(statistics_daily_person)
     widget = module.StatisticsDailyPerson(
-        parent, database, system_settings, year, month, day)
+        parent, database, system_settings, year, month, day
+    )
 
     return widget
 
 
 # 綜合業績報表-人數統計
-def get_statistics_multiple_performance_week_person(parent, database, system_settings, year, month):
+def get_statistics_multiple_performance_week_person(
+    parent, database, system_settings, year, month
+):
     import statistics_multiple_performance_week_person
 
     module = importlib.reload(statistics_multiple_performance_week_person)
-    widget = module.StatisticsMultiplePerformanceWeekPerson(parent, database, system_settings, year, month)
+    widget = module.StatisticsMultiplePerformanceWeekPerson(
+        parent, database, system_settings, year, month
+    )
 
     return widget
 
 
 # 綜合業績報表-週收入統計
-def get_statistics_multiple_performance_week_income(parent, database, system_settings, year, month):
+def get_statistics_multiple_performance_week_income(
+    parent, database, system_settings, year, month
+):
     import statistics_multiple_performance_week_income
 
     module = importlib.reload(statistics_multiple_performance_week_income)
-    widget = module.StatisticsMultiplePerformanceWeekIncome(parent, database, system_settings, year, month)
+    widget = module.StatisticsMultiplePerformanceWeekIncome(
+        parent, database, system_settings, year, month
+    )
 
     return widget
 
 
 # 綜合業績報表-週專案統計
-def get_statistics_multiple_performance_week_project(parent, database, system_settings, year, month):
+def get_statistics_multiple_performance_week_project(
+    parent, database, system_settings, year, month
+):
     import statistics_multiple_performance_week_project
 
     module = importlib.reload(statistics_multiple_performance_week_project)
-    widget = module.StatisticsMultiplePerformanceWeekProject(parent, database, system_settings, year, month)
+    widget = module.StatisticsMultiplePerformanceWeekProject(
+        parent, database, system_settings, year, month
+    )
 
     return widget
 
 
 # 綜合業績報表-週醫師統計
-def get_statistics_multiple_performance_week_doctor(parent, database, system_settings, year, month):
+def get_statistics_multiple_performance_week_doctor(
+    parent, database, system_settings, year, month
+):
     import statistics_multiple_performance_week_doctor
 
     module = importlib.reload(statistics_multiple_performance_week_doctor)
-    widget = module.StatisticsMultiplePerformanceWeekDoctor(parent, database, system_settings, year, month)
+    widget = module.StatisticsMultiplePerformanceWeekDoctor(
+        parent, database, system_settings, year, month
+    )
 
     return widget
 
 
 # 醫師統計-醫師月報表
-def get_statistics_doctor_monthly_count(parent, database, system_settings, year, month, doctor):
+def get_statistics_doctor_monthly_count(
+    parent, database, system_settings, year, month, doctor
+):
     import statistics_doctor_monthly_count
 
     module = importlib.reload(statistics_doctor_monthly_count)
-    widget = module.StatisticsDoctorMonthlyCount(parent, database, system_settings, year, month, doctor)
+    widget = module.StatisticsDoctorMonthlyCount(
+        parent, database, system_settings, year, month, doctor
+    )
 
     return widget
 
+
 # 醫師統計-醫師人數月報表
-def get_statistics_doctor_monthly_person_count(parent, database, system_settings, year, month, doctor):
+def get_statistics_doctor_monthly_person_count(
+    parent, database, system_settings, year, month, doctor
+):
     import statistics_doctor_monthly_person_count
 
     module = importlib.reload(statistics_doctor_monthly_person_count)
-    widget = module.StatisticsDoctorMonthlyPersonCount(parent, database, system_settings, year, month, doctor)
+    widget = module.StatisticsDoctorMonthlyPersonCount(
+        parent, database, system_settings, year, month, doctor
+    )
 
     return widget
 
+
 # 醫師統計-醫師月報表-收入統計
-def get_statistics_doctor_monthly_income(parent, database, system_settings, year, month, doctor):
+def get_statistics_doctor_monthly_income(
+    parent, database, system_settings, year, month, doctor
+):
     import statistics_doctor_monthly_income
 
     module = importlib.reload(statistics_doctor_monthly_income)
-    widget = module.StatisticsDoctorMonthlyIncome(parent, database, system_settings, year, month, doctor)
+    widget = module.StatisticsDoctorMonthlyIncome(
+        parent, database, system_settings, year, month, doctor
+    )
 
     return widget
 
 
 # 醫師銷售業績統計-自費產品銷售抽成統計
-def get_statistics_doctor_commission(parent, database, system_settings,
-                                     start_date, end_date, period, ins_type, doctor):
+def get_statistics_doctor_commission(
+    parent, database, system_settings, start_date, end_date, period, ins_type, doctor
+):
     import statistics_doctor_commission
 
     module = importlib.reload(statistics_doctor_commission)
     widget = module.StatisticsDoctorCommission(
-        parent, database, system_settings, start_date, end_date, period, ins_type, doctor)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        doctor,
+    )
 
     return widget
 
 
 # 醫師銷售業績統計-專案產品銷售抽成統計
-def get_statistics_doctor_project_sale(parent, database, system_settings,
-                                       start_date, end_date, period, ins_type, doctor):
+def get_statistics_doctor_project_sale(
+    parent, database, system_settings, start_date, end_date, period, ins_type, doctor
+):
     import statistics_doctor_project_sale
 
     module = importlib.reload(statistics_doctor_project_sale)
     widget = module.StatisticsDoctorProjectSale(
-        parent, database, system_settings, start_date, end_date, period, ins_type, doctor)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        doctor,
+    )
 
     return widget
 
 
 # 醫師統計-門診人數統計
-def get_statistics_doctor_amount_income(parent, database, system_settings,
-                                        start_date, end_date, period, ins_type, doctor, option, weekday_list):
+def get_statistics_doctor_amount_income(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    ins_type,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_doctor_amount_income
 
     module = importlib.reload(statistics_doctor_amount_income)
     widget = module.StatisticsDoctorAmountIncome(
-        parent, database, system_settings, start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-門診人數統計
-def get_statistics_doctor_amount_salary(parent, database, system_settings,
-                                        start_date, end_date, period, ins_type, doctor, option, weekday_list):
+def get_statistics_doctor_amount_salary(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    ins_type,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_doctor_amount_salary
 
     module = importlib.reload(statistics_doctor_amount_salary)
     widget = module.StatisticsDoctorAmountSalary(
-        parent, database, system_settings, start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-醫師處方類別統計
-def get_statistics_doctor_medicine_percent(parent, database, system_settings,
-                                           start_date, end_date, period, ins_type, doctor, option, weekday_list):
+def get_statistics_doctor_medicine_percent(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    ins_type,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_doctor_medicine_percent
 
     module = importlib.reload(statistics_doctor_medicine_percent)
     widget = module.StatisticsDoctorMedicinePercent(
-        parent, database, system_settings, start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-門診人數統計
-def get_statistics_doctor_count(parent, database, system_settings,
-                                start_date, end_date, period, ins_type, doctor, option, weekday_list):
+def get_statistics_doctor_count(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    ins_type,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_doctor_count
 
     module = importlib.reload(statistics_doctor_count)
     widget = module.StatisticsDoctorCount(
-        parent, database, system_settings, start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-門診收入統計
-def get_statistics_doctor_income(parent, database, system_settings,
-                                 start_date, end_date, period, ins_type, doctor, option, weekday_list):
+def get_statistics_doctor_income(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    ins_type,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_doctor_income
 
     module = importlib.reload(statistics_doctor_income)
     widget = module.StatisticsDoctorIncome(
-        parent, database, system_settings, start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-自費銷售統計
-def get_statistics_doctor_sale(parent, database, system_settings,
-                               start_date, end_date, period, doctor, option, weekday_list):
+def get_statistics_doctor_sale(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_doctor_sale
 
     module = importlib.reload(statistics_doctor_sale)
     widget = module.StatisticsDoctorSale(
-        parent, database, system_settings, start_date, end_date, period, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-初複診統計
-def get_statistics_doctor_visit_count(parent, database, system_settings,
-                                      start_date, end_date, period, doctor, option, weekday_list):
+def get_statistics_doctor_visit_count(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_doctor_visit_count
 
     module = importlib.reload(statistics_doctor_visit_count)
     widget = module.StatisticsDoctorVisitCount(
-        parent, database, system_settings, start_date, end_date, period, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-指定醫師初複診統計
-def get_statistics_designated_doctor_visit_count(parent, database, system_settings,
-                                                 start_date, end_date, period, doctor, option, weekday_list):
+def get_statistics_designated_doctor_visit_count(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_designated_doctor_visit_count
 
     module = importlib.reload(statistics_designated_doctor_visit_count)
     widget = module.StatisticsDesignatedDoctorVisitCount(
-        parent, database, system_settings, start_date, end_date, period, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-門診收入總覽
-def get_statistics_doctor_summary(parent, database, system_settings,
-                                  start_date, end_date, period, doctor, option, weekday_list):
+def get_statistics_doctor_summary(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_doctor_summary
 
     module = importlib.reload(statistics_doctor_summary)
     widget = module.StatisticsDoctorSummary(
-        parent, database, system_settings, start_date, end_date, period, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-醫師業績
-def get_statistics_doctor_achievement(parent, database, system_settings,
-                                      start_date, end_date, period, doctor, option, weekday_list):
+def get_statistics_doctor_achievement(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_doctor_achievement
 
     module = importlib.reload(statistics_doctor_achievement)
     widget = module.StatisticsDoctorAchievement(
-        parent, database, system_settings, start_date, end_date, period, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 醫師統計-醫師業績
 def get_statistics_ins_performance_doctor(
-        parent, database, system_settings, start_date, end_date, doctor, exclude_c5):
+    parent, database, system_settings, start_date, end_date, doctor, exclude_c5
+):
     import statistics_ins_performance_doctor
 
     module = importlib.reload(statistics_ins_performance_doctor)
     widget = module.StatisticsInsPerformanceDoctor(
-        parent, database, system_settings, start_date, end_date, doctor, exclude_c5)
+        parent, database, system_settings, start_date, end_date, doctor, exclude_c5
+    )
 
     return widget
 
 
 # 健保門診優惠統計-掛號費優待統計
-def get_statistics_ins_discount_regist_fee(parent, database, system_settings,
-                                           start_date, end_date, doctor,
-                                           first_course, only_discount, basic_regist_fee_discount):
+def get_statistics_ins_discount_regist_fee(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    doctor,
+    first_course,
+    only_discount,
+    basic_regist_fee_discount,
+):
     import statistics_ins_discount_regist_fee
 
     module = importlib.reload(statistics_ins_discount_regist_fee)
     widget = module.StatisticsInsDiscountRegistFee(
-        parent, database, system_settings, start_date, end_date, doctor,
-        first_course, only_discount, basic_regist_fee_discount)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        doctor,
+        first_course,
+        only_discount,
+        basic_regist_fee_discount,
+    )
 
     return widget
 
 
 # 健保門診優惠統計-免收門診負擔統計
-def get_statistics_ins_discount_diag_share_fee(parent, database, system_settings,
-                                               start_date, end_date, doctor, first_course):
+def get_statistics_ins_discount_diag_share_fee(
+    parent, database, system_settings, start_date, end_date, doctor, first_course
+):
     import statistics_ins_discount_diag_share_fee
 
     module = importlib.reload(statistics_ins_discount_diag_share_fee)
     widget = module.StatisticsInsDiscountDiagShareFee(
-        parent, database, system_settings, start_date, end_date, doctor, first_course)
+        parent, database, system_settings, start_date, end_date, doctor, first_course
+    )
 
     return widget
 
 
 # 健保門診優惠統計-免收藥品負擔統計
-def get_statistics_ins_discount_drug_share_fee(parent, database, system_settings, start_date, end_date, doctor):
+def get_statistics_ins_discount_drug_share_fee(
+    parent, database, system_settings, start_date, end_date, doctor
+):
     import statistics_ins_discount_drug_share_fee
 
     module = importlib.reload(statistics_ins_discount_drug_share_fee)
     widget = module.StatisticsInsDiscountDrugShareFee(
-        parent, database, system_settings, start_date, end_date, doctor)
+        parent, database, system_settings, start_date, end_date, doctor
+    )
 
     return widget
 
 
 # 健保業績-依病歷
-def get_statistics_ins_performance_medical_record(parent, database, system_settings, start_date, end_date, doctor):
+def get_statistics_ins_performance_medical_record(
+    parent, database, system_settings, start_date, end_date, doctor
+):
     import statistics_ins_performance_medical_record
 
     module = importlib.reload(statistics_ins_performance_medical_record)
     widget = module.StatisticsInsPerformanceMedicalRecord(
-        parent, database, system_settings, start_date, end_date, doctor)
+        parent, database, system_settings, start_date, end_date, doctor
+    )
 
     return widget
 
 
 # 孕產照護報表-助孕照護-女
-def get_statistics_ins_pregnant_female(parent, database, system_settings, start_date, end_date):
+def get_statistics_ins_pregnant_female(
+    parent, database, system_settings, start_date, end_date
+):
     import statistics_ins_pregnant_female
 
     module = importlib.reload(statistics_ins_pregnant_female)
-    widget = module.StatisticsInsPregnantFemale(parent, database, system_settings, start_date, end_date)
+    widget = module.StatisticsInsPregnantFemale(
+        parent, database, system_settings, start_date, end_date
+    )
 
     return widget
 
 
 # 孕產照護報表-助孕照護-男
-def get_statistics_ins_pregnant_male(parent, database, system_settings, start_date, end_date):
+def get_statistics_ins_pregnant_male(
+    parent, database, system_settings, start_date, end_date
+):
     import statistics_ins_pregnant_male
 
     module = importlib.reload(statistics_ins_pregnant_male)
-    widget = module.StatisticsInsPregnantMale(parent, database, system_settings, start_date, end_date)
+    widget = module.StatisticsInsPregnantMale(
+        parent, database, system_settings, start_date, end_date
+    )
 
     return widget
 
 
 # 孕產照護報表-保胎照護
-def get_statistics_ins_pregnant_keep_baby(parent, database, system_settings, start_date, end_date):
+def get_statistics_ins_pregnant_keep_baby(
+    parent, database, system_settings, start_date, end_date
+):
     import statistics_ins_pregnant_keep_baby
 
     module = importlib.reload(statistics_ins_pregnant_keep_baby)
-    widget = module.StatisticsInsPregnantKeepBaby(parent, database, system_settings, start_date, end_date)
+    widget = module.StatisticsInsPregnantKeepBaby(
+        parent, database, system_settings, start_date, end_date
+    )
 
     return widget
 
 
 # 推拿師統計-推拿人數統計
-def get_statistics_massager_count(parent, database, system_settings, start_date, end_date, period,
-                                  ins_type, massager, only_traditional_massage):
+def get_statistics_massager_count(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    ins_type,
+    massager,
+    only_traditional_massage,
+):
     import statistics_massager_count
 
     module = importlib.reload(statistics_massager_count)
     widget = module.StatisticsMassagerCount(
-        parent, database, system_settings, start_date, end_date, period,
-        ins_type, massager, only_traditional_massage)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        massager,
+        only_traditional_massage,
+    )
 
     return widget
 
 
 # 推拿師統計-推拿人數統計總表
-def get_statistics_massager_summary(parent, database, system_settings,
-                                    start_date, end_date, only_traditional_massage):
+def get_statistics_massager_summary(
+    parent, database, system_settings, start_date, end_date, only_traditional_massage
+):
     import statistics_massager_summary
 
     module = importlib.reload(statistics_massager_summary)
     widget = module.StatisticsMassagerSummary(
-        parent, database, system_settings, start_date, end_date, only_traditional_massage)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        only_traditional_massage,
+    )
 
     return widget
 
 
 # 推拿師統計-推拿收入統計
-def get_statistics_massager_income(parent, database, system_settings,
-                                   start_date, end_date, period, ins_type, massager, only_traditional_massage):
+def get_statistics_massager_income(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    ins_type,
+    massager,
+    only_traditional_massage,
+):
     import statistics_massager_income
 
     module = importlib.reload(statistics_massager_income)
     widget = module.StatisticsMassagerIncome(
-        parent, database, system_settings, start_date, end_date, period, ins_type, massager, only_traditional_massage)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        massager,
+        only_traditional_massage,
+    )
 
     return widget
 
 
 # 推拿師統計-推拿業績明細
-def get_statistics_massager_list(parent, database, system_settings,
-                                 start_date, end_date, period, massager, only_traditional_massage):
+def get_statistics_massager_list(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    massager,
+    only_traditional_massage,
+):
     import statistics_massager_list
 
     module = importlib.reload(statistics_massager_list)
     widget = module.StatisticsMassagerList(
-        parent, database, system_settings, start_date, end_date, period, massager, only_traditional_massage)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        massager,
+        only_traditional_massage,
+    )
 
     return widget
 
 
 # 病歷統計-疾病排行
-def get_statistics_medical_record_disease_rank(parent, database, system_settings,
-                                               start_date, end_date, ins_type, doctor, option, weekday_list):
+def get_statistics_medical_record_disease_rank(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    ins_type,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_medical_record_disease_rank
 
     module = importlib.reload(statistics_medical_record_disease_rank)
     widget = module.StatisticsMedicalRecordDiseaseRank(
-        parent, database, system_settings, start_date, end_date, ins_type, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        ins_type,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
 
 # 病歷統計-看診時間統計
-def get_statistics_medical_record_diag_time_length(parent, database, system_settings,
-                                                   start_date, end_date, ins_type, doctor, weekday_list):
+def get_statistics_medical_record_diag_time_length(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    ins_type,
+    doctor,
+    weekday_list,
+):
     import statistics_medical_record_diag_time_length
 
     module = importlib.reload(statistics_medical_record_diag_time_length)
     widget = module.StatisticsMedicalRecordDiagTimeLength(
-        parent, database, system_settings, start_date, end_date, ins_type, doctor, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        ins_type,
+        doctor,
+        weekday_list,
+    )
 
     return widget
 
 
 # 用藥統計
-def get_statistics_medicine_sales(parent, database, system_settings,
-                                  start_date, end_date, ins_type, doctor, medicine_type):
+def get_statistics_medicine_sales(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    ins_type,
+    doctor,
+    medicine_type,
+):
     import statistics_medicine_sales
 
     module = importlib.reload(statistics_medicine_sales)
     widget = module.StatisticsMedicineSales(
-        parent, database, system_settings, start_date, end_date, ins_type, doctor, medicine_type)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        ins_type,
+        doctor,
+        medicine_type,
+    )
 
     return widget
 
 
 # 醫師未回診率統計
-def get_statistics_no_return_rate_doctor(parent, database, system_settings,
-                                         start_date, end_date, no_return_start_date, no_return_end_date,
-                                         ins_type, treat_type, visit, doctor):
+def get_statistics_no_return_rate_doctor(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    no_return_start_date,
+    no_return_end_date,
+    ins_type,
+    treat_type,
+    visit,
+    doctor,
+):
     import statistics_no_return_rate_doctor
 
     module = importlib.reload(statistics_no_return_rate_doctor)
     widget = module.StatisticsNoReturnRateDoctor(
-        parent, database, system_settings, start_date, end_date, no_return_start_date, no_return_end_date,
-        ins_type, treat_type, visit, doctor)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        no_return_start_date,
+        no_return_end_date,
+        ins_type,
+        treat_type,
+        visit,
+        doctor,
+    )
 
     return widget
 
 
 # 照護機構院民資料報表
-def get_statistics_nursing_home_data(parent, database, system_settings, year, month, doctor, nursing_home):
+def get_statistics_nursing_home_data(
+    parent, database, system_settings, year, month, doctor, nursing_home
+):
     import statistics_nursing_home_data
 
     module = importlib.reload(statistics_nursing_home_data)
     widget = module.StatisticsNursingHomeData(
-        parent, database, system_settings, year, month, doctor, nursing_home)
+        parent, database, system_settings, year, month, doctor, nursing_home
+    )
 
     return widget
 
 
 # 照護機構院民資料日報表
-def get_statistics_nursing_home_daily_data(parent, database, system_settings, year, month, doctor, nursing_home):
+def get_statistics_nursing_home_daily_data(
+    parent, database, system_settings, year, month, doctor, nursing_home
+):
     import statistics_nursing_home_daily_data
 
     module = importlib.reload(statistics_nursing_home_daily_data)
     widget = module.StatisticsNursingHomeDailyData(
-        parent, database, system_settings, year, month, doctor, nursing_home)
+        parent, database, system_settings, year, month, doctor, nursing_home
+    )
 
     return widget
 
 
 # 醫師診數統計
-def get_statistics_doctor_period_count(parent, database, system_settings,
-                                       start_date, end_date, ins_type, period, doctor):
+def get_statistics_doctor_period_count(
+    parent, database, system_settings, start_date, end_date, ins_type, period, doctor
+):
     import statistics_doctor_period_count
 
     module = importlib.reload(statistics_doctor_period_count)
     widget = module.StatisticsDoctorPeriodCount(
-        parent, database, system_settings, start_date, end_date, ins_type, period, doctor)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        ins_type,
+        period,
+        doctor,
+    )
 
     return widget
 
 
 # 回診率統計-醫師回診率統計
-def get_statistics_return_rate_doctor(parent, database, system_settings,
-                                      start_date, end_date, ins_type, treat_type, visit, doctor, doctor_return_days,
-                                      return_times):
+def get_statistics_return_rate_doctor(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    ins_type,
+    treat_type,
+    visit,
+    doctor,
+    doctor_return_days,
+    return_times,
+):
 
     import statistics_return_rate_doctor
 
     module = importlib.reload(statistics_return_rate_doctor)
     widget = module.StatisticsReturnRateDoctor(
-        parent, database, system_settings, start_date, end_date,
-        ins_type, treat_type, visit, doctor, doctor_return_days, return_times)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        ins_type,
+        treat_type,
+        visit,
+        doctor,
+        doctor_return_days,
+        return_times,
+    )
 
     return widget
 
 
 # 回診率統計-推拿師父回診率統計
-def get_statistics_return_rate_massager(parent, database, system_settings,
-                                        start_date, end_date, ins_type, treat_type, visit,
-                                        massager, massager_return_days, return_times):
+def get_statistics_return_rate_massager(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    ins_type,
+    treat_type,
+    visit,
+    massager,
+    massager_return_days,
+    return_times,
+):
     import statistics_return_rate_massager
 
     module = importlib.reload(statistics_return_rate_massager)
     widget = module.StatisticsReturnRateMassager(
-        parent, database, system_settings, start_date, end_date,
-        ins_type, treat_type, visit, massager, massager_return_days, return_times)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        ins_type,
+        treat_type,
+        visit,
+        massager,
+        massager_return_days,
+        return_times,
+    )
 
     return widget
 
 
 # 醫師自費銷售金額總表
-def get_statistics_doctor_sale_summary(parent, database, system_settings, start_date, end_date, ins_type, doctor):
+def get_statistics_doctor_sale_summary(
+    parent, database, system_settings, start_date, end_date, ins_type, doctor
+):
     import statistics_doctor_sale_summary
 
     module = importlib.reload(statistics_doctor_sale_summary)
     widget = module.StatisticsDoctorSaleSummary(
-        parent, database, system_settings, start_date, end_date, ins_type, doctor)
+        parent, database, system_settings, start_date, end_date, ins_type, doctor
+    )
 
     return widget
 
@@ -1640,7 +2695,9 @@ def get_statistics_growth_month(parent, database, system_settings, year, month):
     import statistics_growth_month
 
     module = importlib.reload(statistics_growth_month)
-    widget = module.StatisticsGrowthMonth(parent, database, system_settings, year, month)
+    widget = module.StatisticsGrowthMonth(
+        parent, database, system_settings, year, month
+    )
 
     return widget
 
@@ -1660,7 +2717,9 @@ def get_statistics_growth_income(parent, database, system_settings, year, month)
     import statistics_growth_income
 
     module = importlib.reload(statistics_growth_income)
-    widget = module.StatisticsGrowthIncome(parent, database, system_settings, year, month)
+    widget = module.StatisticsGrowthIncome(
+        parent, database, system_settings, year, month
+    )
 
     return widget
 
@@ -1686,27 +2745,67 @@ def get_physiotherapy_income(parent, database, system_settings):
 
 
 # 醫師統計-門診人數統計
-def get_statistics_stamp_duty_list(parent, database, system_settings,
-                                   start_date, end_date, period, ins_type,
-                                   doctor, option, weekday_list, under_250):
+def get_statistics_stamp_duty_list(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    ins_type,
+    doctor,
+    option,
+    weekday_list,
+    under_250,
+):
     import statistics_stamp_duty_list
 
     module = importlib.reload(statistics_stamp_duty_list)
     widget = module.StatisticsStampDutyList(
-        parent, database, system_settings, start_date, end_date, period,
-        ins_type, doctor, option, weekday_list, under_250)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        doctor,
+        option,
+        weekday_list,
+        under_250,
+    )
 
     return widget
 
 
 # 統計表-執行業務所得
-def get_statistics_business_income_list(parent, database, system_settings,
-                                        start_date, end_date, period, ins_type, doctor, option, weekday_list):
+def get_statistics_business_income_list(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    ins_type,
+    doctor,
+    option,
+    weekday_list,
+):
     import statistics_business_income_list
 
     module = importlib.reload(statistics_business_income_list)
     widget = module.StatisticsBusinessIncomeList(
-        parent, database, system_settings, start_date, end_date, period, ins_type, doctor, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        ins_type,
+        doctor,
+        option,
+        weekday_list,
+    )
 
     return widget
 
@@ -1793,15 +2892,34 @@ def get_kiosk1_completed(parent, database, system_settings):
 
 
 # 自費抽成統計-銷售抽成統計
-def get_statistics_commission_sale(parent, database, system_settings,
-                               start_date, end_date, period, seller, option, weekday_list):
+def get_statistics_commission_sale(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+    period,
+    seller,
+    option,
+    weekday_list,
+):
     import statistics_commission_sale
 
     module = importlib.reload(statistics_commission_sale)
     widget = module.StatisticsCommissionSale(
-        parent, database, system_settings, start_date, end_date, period, seller, option, weekday_list)
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
+        period,
+        seller,
+        option,
+        weekday_list,
+    )
 
     return widget
+
 
 # 掛號機首頁
 def get_pycashier3_home(parent, database, system_settings, ic_card):
@@ -1828,7 +2946,9 @@ def get_pycashier3_payment(parent, database, system_settings, ic_card, coinsys):
     from slot_machine2 import pycashier_payment
 
     module = importlib.reload(pycashier_payment)
-    widget = module.PyCashierPayment(parent, database, system_settings, ic_card, coinsys)
+    widget = module.PyCashierPayment(
+        parent, database, system_settings, ic_card, coinsys
+    )
 
     return widget
 

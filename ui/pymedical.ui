@@ -53,7 +53,7 @@
          <x>0</x>
          <y>0</y>
          <width>1203</width>
-         <height>930</height>
+         <height>911</height>
         </rect>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -1012,7 +1012,7 @@
      <x>0</x>
      <y>0</y>
      <width>1224</width>
-     <height>36</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_registration">
@@ -1149,6 +1149,7 @@
      </property>
      <addaction name="action_trace"/>
      <addaction name="action_patient_age_group"/>
+     <addaction name="action_discount_type"/>
     </widget>
     <addaction name="action_statistics_daily"/>
     <addaction name="separator"/>
@@ -2282,6 +2283,18 @@
    </property>
    <property name="toolTip">
     <string>銷貨</string>
+   </property>
+  </action>
+  <action name="action_discount_type">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/view-process-users.png</normaloff>../icons/view-process-users.png</iconset>
+   </property>
+   <property name="text">
+    <string>病患優待身份統計</string>
+   </property>
+   <property name="toolTip">
+    <string>病患優待身份統計</string>
    </property>
   </action>
  </widget>

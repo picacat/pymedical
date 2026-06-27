@@ -877,6 +877,7 @@ class PyMedical(QtWidgets.QMainWindow):
 
         self.ui.action_purchase_records.triggered.connect(self._open_subroutine)
         self.ui.action_trace.triggered.connect(self._open_subroutine)
+        self.ui.action_discount_type.triggered.connect(self._open_subroutine)
         self.ui.action_patient_age_group.triggered.connect(self._open_subroutine)
         self.ui.action_statistics_ins_apply_year.triggered.connect(
             self._open_subroutine
@@ -1238,6 +1239,7 @@ class PyMedical(QtWidgets.QMainWindow):
             "自費印花稅統計",
             "執行業務所得統計",
             "何處得知本診所統計",
+            "病患優待身份統計",
             "健保申報分列項目表",
             "年度診次統計",
             "銷貨",
