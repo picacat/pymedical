@@ -3171,7 +3171,14 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if self.call_from == "醫師看診作業":
             doctor_done = True
 
-        if not self.update_medical_record(set_doctor_done=doctor_done):
+        if force_save:
+            check_prescript = False
+        else:
+            check_prescript = True
+
+        if not self.update_medical_record(
+            set_doctor_done=doctor_done, check_prescript=check_prescript
+        ):
             return
 
         try:
