@@ -33,6 +33,7 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
         self.ui = None
         self.program_name = "自費印花稅統計"
         self.user_name = system_utils.get_user_name(self.system_settings)
+        self.clinic_name = self.system_settings.field("院所名稱")
 
         self._set_ui()
         self._set_signal()
@@ -128,19 +129,43 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
 
     def _calculate_case_amount(self):
         rows = self._get_case_rows()
+        grand_total_case = 0  # cases.TotalFee 的加總
+
         for row in rows:
             case_key = row["CaseKey"]
-            mdicine_sets = self._get_medicine_sets(case_key)
-            for medicine_set in mdicine_sets:
-                medicine_set = number_utils.get_integer(medicine_set["MedicineSet"])
-                amount = self._get_dosage_total_fee(case_key, medicine_set)
-                item_type = self._get_item_type(case_key, medicine_set)
+            case_total_fee = number_utils.get_integer(row["TotalFee"])
+            grand_total_case += case_total_fee
+
+            medicine_sets = self._get_medicine_sets(case_key)
+
+            dosage_totals = {}
+            dosage_sum = 0
+            for medicine_set in medicine_sets:
+                ms = number_utils.get_integer(medicine_set["MedicineSet"])
+                amount = self._get_dosage_total_fee(case_key, ms)
+                dosage_totals[ms] = amount
+                dosage_sum += amount
+
+            remaining = case_total_fee
+            ms_list = list(dosage_totals.items())
+
+            for i, (ms, amount) in enumerate(ms_list):
+                if i == len(ms_list) - 1:
+                    # 最後一個 medicine_set 用剩餘金額，確保加總等於 case_total_fee
+                    adjusted_amount = remaining
+                else:
+                    if dosage_sum > 0:
+                        adjusted_amount = round(amount * case_total_fee / dosage_sum)
+                    else:
+                        adjusted_amount = 0
+                    remaining -= adjusted_amount
+
+                item_type = self._get_item_type(case_key, ms)
                 row_no = self._get_row_no(item_type)
                 if row_no is None:
-                    print(item_type)
                     continue
 
-                self._set_data(row_no, amount)
+                self._set_data(row_no, adjusted_amount)
 
     def _get_medicine_sets(self, case_key):
         sql = f'''

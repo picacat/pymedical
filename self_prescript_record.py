@@ -50,6 +50,7 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         self.no_instruction_pres_days = self.system_settings.field(
             "單一處方服法不可取代用藥天數"
         )
+        self.clinic_name = self.system_settings.field("院所名稱")
         self.ratio = charge_utils.get_ratio(
             self.database
         )  # 2026-02-05 初蘊-自費藥品售價倍率
@@ -2626,7 +2627,7 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 row_no, prescript_utils.SELF_PRESCRIPT_COL_NO["MedicineName"]
             )
             if (
-                self.system_settings.field("院所名稱") == "專嘉中醫診所"
+                self.clinic_name == "專嘉中醫診所"
                 and medicine_name_item is not None
                 and medicine_name_item.text() == "自費粉藥"
             ):

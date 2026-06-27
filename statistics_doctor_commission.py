@@ -1,18 +1,19 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from libs import class_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import string_utils
-from libs import number_utils
-from libs import case_utils
-from libs import nhi_utils
-from libs import charge_utils
-from libs import export_utils
+from libs import (
+    case_utils,
+    charge_utils,
+    class_utils,
+    export_utils,
+    nhi_utils,
+    number_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 醫師銷售業績統計 2019.10.19
@@ -29,6 +30,7 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
         self.ins_type = args[5]
         self.doctor = args[6]
         self.ui = None
+        self.clinic_name = self.system_settings.field("院所名稱")
 
         self._set_ui()
         self._set_signal()
@@ -56,16 +58,34 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
     def _set_table_width(self):
         width = [
             100,
-            130, 50, 50, 70, 80, 50, 50,
-            250, 50, 50, 90, 50, 90, 90,
-            60, 90, 80, 110, 110,
+            130,
+            50,
+            50,
+            70,
+            80,
+            50,
+            50,
+            250,
+            50,
+            50,
+            90,
+            50,
+            90,
+            90,
+            60,
+            90,
+            80,
+            110,
+            110,
             100,
         ]
         self.table_widget_self_prescript.set_table_heading_width(width)
 
     # 設定信號
     def _set_signal(self):
-        self.ui.tableWidget_self_prescript.doubleClicked.connect(self._open_medical_record)
+        self.ui.tableWidget_self_prescript.doubleClicked.connect(
+            self._open_medical_record
+        )
         self.ui.toolButton_export_to_excel.clicked.connect(self._export_to_excel)
 
     def _open_medical_record(self):
@@ -87,16 +107,16 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
                 cases.CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}" AND
                 prescript.MedicineSet >= 2
         '''
-        if self.period != '全部':
+        if self.period != "全部":
             sql += f' AND cases.ChargePeriod = "{self.period}"'
-        if self.ins_type != '全部':
+        if self.ins_type != "全部":
             sql += f' AND cases.InsType = "{self.ins_type}"'
-        if self.doctor != '全部':
+        if self.doctor != "全部":
             sql += f' AND cases.Doctor = "{self.doctor}"'
 
-        sql += f'''
+        sql += f"""
             GROUP BY cases.CaseKey
-            ORDER BY cases.CaseDate, FIELD(cases.Period, {string_utils.xstr(nhi_utils.PERIOD)[1:-1]})'''
+            ORDER BY cases.CaseDate, FIELD(cases.Period, {string_utils.xstr(nhi_utils.PERIOD)[1:-1]})"""
 
         rows = self.database.select_record(sql)
 
@@ -110,7 +130,7 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
 
         row_count = len(rows)
         self.progress_dialog = QtWidgets.QProgressDialog(
-            '門診收入統計中, 請稍後...', '取消', 0, row_count, self
+            "門診收入統計中, 請稍後...", "取消", 0, row_count, self
         )
 
         self.progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
@@ -118,48 +138,55 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
         self.ui.tableWidget_self_prescript.setRowCount(0)
         for index, row in enumerate(rows):
             self.progress_dialog.setValue(index)
-            case_date = row['CaseDate']
+            case_date = row["CaseDate"]
             if case_date is None:
                 continue
 
             self.ui.tableWidget_self_prescript.setRowCount(
                 self.ui.tableWidget_self_prescript.rowCount() + 1
             )
-            case_key = row['CaseKey']
-            doctor = string_utils.xstr(row['Doctor'])
+            case_key = row["CaseKey"]
+            doctor = string_utils.xstr(row["Doctor"])
             medical_record = [
                 case_key,
-                case_date.strftime('%Y-%m-%d'),
-                string_utils.xstr(row['Period']),
-                row['Room'],
-                row['PatientKey'],
-                string_utils.xstr(row['Name']),
-                string_utils.xstr(row['InsType']),
-                None, None, None, None, None, None,
-                row['TotalFee'],
-                None, None, None, None,
+                case_date.strftime("%Y-%m-%d"),
+                string_utils.xstr(row["Period"]),
+                row["Room"],
+                row["PatientKey"],
+                string_utils.xstr(row["Name"]),
+                string_utils.xstr(row["InsType"]),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                row["TotalFee"],
+                None,
+                None,
+                None,
+                None,
                 doctor,
-                string_utils.xstr(row['Cashier']),
+                string_utils.xstr(row["Cashier"]),
             ]
             for col_no in range(len(medical_record)):
                 item = QtWidgets.QTableWidgetItem()
                 item.setData(QtCore.Qt.EditRole, medical_record[col_no])
                 self.ui.tableWidget_self_prescript.setItem(
-                    row_no, col_no, item,
+                    row_no,
+                    col_no,
+                    item,
                 )
                 if col_no in [4, 13]:
                     self.ui.tableWidget_self_prescript.item(
-                        row_no, col_no).setTextAlignment(
-                        QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                    )
+                        row_no, col_no
+                    ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
                 elif col_no in [2, 3, 6]:
                     self.ui.tableWidget_self_prescript.item(
-                        row_no, col_no).setTextAlignment(
-                        QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
-                    )
-                self.ui.tableWidget_self_prescript.item(
-                    row_no, col_no).setBackground(
-                    QtGui.QColor('lightgray')
+                        row_no, col_no
+                    ).setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+                self.ui.tableWidget_self_prescript.item(row_no, col_no).setBackground(
+                    QtGui.QColor("lightgray")
                 )
             row_no += self._read_prescript(case_key, row_no, doctor)
             row_no += 1
@@ -167,7 +194,7 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
         self.progress_dialog.setValue(row_count)
         self.progress_dialog.deleteLater()
 
-    '''
+    """
         醫師自費抽成算法
         1.折扣90%以上
           專案1成
@@ -187,45 +214,57 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
 
         5.折扣0%
           醫師個人負擔成本50%
-    '''
+    """
+
     def _read_prescript(self, case_key, row_no, doctor):
-        sql = f'''
+        sql = f"""
             SELECT * FROM prescript
             WHERE
                 CaseKey = {case_key} AND
                 MedicineSet >= 2
             ORDER BY MedicineSet, PrescriptKey
-        '''
+        """
         rows = self.database.select_record(sql)
 
         prescript_row_no = 0
         row_count = 0
         for row in rows:
-            medicine_name = string_utils.xstr(row['MedicineName'])
-            medicine_set = row['MedicineSet']
+            medicine_name = string_utils.xstr(row["MedicineName"])
+            medicine_set = row["MedicineSet"]
             pres_days = case_utils.get_pres_days(self.database, case_key, medicine_set)
             if pres_days <= 0:
                 pres_days = 1
 
-            dosage = number_utils.get_float(row['Dosage'])
+            dosage = number_utils.get_float(row["Dosage"])
             if dosage <= 0:
                 dosage = 1
 
-            price = number_utils.get_float(number_utils.get_float(row['Price']))
-            amount = number_utils.get_float(number_utils.get_float(row['Amount']))
+            price = number_utils.get_float(number_utils.get_float(row["Price"]))
+            amount = number_utils.get_float(number_utils.get_float(row["Amount"]))
 
             if amount <= 0:
                 amount = price * dosage
 
-            if self.system_settings.field('自費折扣方式') == '統一折扣':
+            if self.system_settings.field("自費折扣方式") == "統一折扣":
                 discount_rate = 100
             else:
-                discount_rate = case_utils.get_discount_rate(self.database, case_key, medicine_set)
+                discount_rate = case_utils.get_discount_rate(
+                    self.database, case_key, medicine_set
+                )
                 if discount_rate < 0:
                     discount_rate = 100
 
+            if (
+                self.clinic_name == "專嘉中醫診所"
+                and medicine_name is not None
+                and medicine_name == "自費粉藥"
+            ):
+                pres_days = 1
+
             subtotal = charge_utils.get_subtotal_fee(amount, pres_days)
-            discount_fee = charge_utils.get_discount_fee(self.system_settings, subtotal, discount_rate)
+            discount_fee = charge_utils.get_discount_fee(
+                self.system_settings, subtotal, discount_rate
+            )
             if discount_fee is not None:
                 subtotal -= discount_fee
 
@@ -234,7 +273,9 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
                 self.ui.tableWidget_self_prescript.rowCount() + 1
             )
 
-            medicine_commission_rate = charge_utils.get_commission_rate(self.database, row['MedicineKey'], doctor)
+            medicine_commission_rate = charge_utils.get_commission_rate(
+                self.database, row["MedicineKey"], doctor
+            )
 
             if discount_rate is None:
                 commission_rate = 0
@@ -250,34 +291,46 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
                 commission_rate = 0
 
             if commission_rate > 0:
-                medicine_rate = number_utils.get_integer(medicine_commission_rate.split('%')[0])
+                medicine_rate = number_utils.get_integer(
+                    medicine_commission_rate.split("%")[0]
+                )
                 commission_rate = commission_rate * medicine_rate / 100
 
             commission = number_utils.round_up(subtotal * commission_rate / 100)
 
             prescript_record = [
                 case_key,
-                None, None, None, None, None, None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
                 medicine_set,
                 medicine_name,
                 dosage,
-                string_utils.xstr(row['Unit']),
-                '{0:.1f}'.format(price),
+                string_utils.xstr(row["Unit"]),
+                "{0:.1f}".format(price),
                 pres_days,
-                '{0:.1f}'.format(subtotal),
+                "{0:.1f}".format(subtotal),
                 medicine_commission_rate,
-                '{0}%'.format(discount_rate),
-                '{0}%'.format(commission_rate),
+                "{0}%".format(discount_rate),
+                "{0}%".format(commission_rate),
                 commission,
-                None, None,
+                None,
+                None,
             ]
             for col_no in range(len(prescript_record)):
                 item = QtWidgets.QTableWidgetItem()
                 item.setData(QtCore.Qt.EditRole, prescript_record[col_no])
                 self.ui.tableWidget_self_prescript.setItem(
-                    row_no+prescript_row_no, col_no, item,
+                    row_no + prescript_row_no,
+                    col_no,
+                    item,
                 )
-                cell_item = self.ui.tableWidget_self_prescript.item(row_no + prescript_row_no, col_no)
+                cell_item = self.ui.tableWidget_self_prescript.item(
+                    row_no + prescript_row_no, col_no
+                )
                 if col_no in [9, 11, 12, 13, 14, 15, 16, 17]:
                     if cell_item is not None:
                         cell_item.setTextAlignment(
@@ -297,23 +350,27 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "匯出自費產品銷售統計",
-            '{0}至{1}{2}自費產品銷售統計表.xlsx'.format(
+            "{0}至{1}{2}自費產品銷售統計表.xlsx".format(
                 self.start_date[:10], self.end_date[:10], self.doctor
             ),
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
 
         export_utils.export_table_widget_to_excel(
-            excel_file_name, self.ui.tableWidget_self_prescript, [0], [9, 11, 12, 13, 17]
+            excel_file_name,
+            self.ui.tableWidget_self_prescript,
+            [0],
+            [9, 11, 12, 13, 17],
         )
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            '<h3>自費產品銷售統計表{0}匯出完成.</h3>'.format(excel_file_name),
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            "<h3>自費產品銷售統計表{0}匯出完成.</h3>".format(excel_file_name),
+            "Microsoft Excel 格式.",
         )
 
     def _export_to_excel(self):
@@ -323,21 +380,25 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            f'{start_date}至{end_date}{self.doctor}醫師銷售業績統計表.xlsx',
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            f"{start_date}至{end_date}{self.doctor}醫師銷售業績統計表.xlsx",
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
 
         export_utils.export_table_widget_to_excel(
-            excel_file_name, self.ui.tableWidget_self_prescript, [0], [9, 11, 12, 13, 17]
+            excel_file_name,
+            self.ui.tableWidget_self_prescript,
+            [0],
+            [9, 11, 12, 13, 17],
         )
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            f'<h3>醫師銷售業績統計檔{excel_file_name}匯出完成.</h3>',
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            f"<h3>醫師銷售業績統計檔{excel_file_name}匯出完成.</h3>",
+            "Microsoft Excel 格式.",
         )
 
     def _calculate_total(self):
@@ -345,7 +406,7 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
 
         for row_no in range(self.ui.tableWidget_self_prescript.rowCount()):
             case_date_item = self.ui.tableWidget_self_prescript.item(row_no, 1)
-            if case_date_item is None or case_date_item.text() == '':
+            if case_date_item is None or case_date_item.text() == "":
                 continue
 
             receipt_fee_item = self.ui.tableWidget_self_prescript.item(row_no, 13)
@@ -356,20 +417,30 @@ class StatisticsDoctorCommission(QtWidgets.QMainWindow):
 
         total_row = [
             None,
-            None, None, None, None, None, None, None,
-            '合計',
-            None, None, None, None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "合計",
+            None,
+            None,
+            None,
+            None,
             string_utils.xstr(total_fee),
         ]
 
         row_no = self.ui.tableWidget_self_prescript.rowCount() + 1
-        self.ui.tableWidget_self_prescript.setRowCount(self.ui.tableWidget_self_prescript.rowCount()+2)
+        self.ui.tableWidget_self_prescript.setRowCount(
+            self.ui.tableWidget_self_prescript.rowCount() + 2
+        )
         for col_no in range(len(total_row)):
             item = QtWidgets.QTableWidgetItem()
             item.setData(QtCore.Qt.EditRole, total_row[col_no])
             self.ui.tableWidget_self_prescript.setItem(row_no, col_no, item)
             if col_no in [13]:
                 self.ui.tableWidget_self_prescript.item(
-                    row_no, col_no).setTextAlignment(
-                    QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                )
+                    row_no, col_no
+                ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)

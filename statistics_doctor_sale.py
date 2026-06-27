@@ -30,6 +30,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         self.option = args[6]
         self.weekday_list = args[7]
         self.ui = None
+        self.clinic_name = self.system_settings.field("院所名稱")
 
         self._set_ui()
         self._set_signal()
@@ -105,7 +106,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         sql = f'''
             SELECT
                 prescript.*,
-                cases.CaseKey, cases.PatientKey, cases.Name, cases.CaseDate, cases.Doctor
+                cases.CaseKey, cases.PatientKey, cases.Name, cases.CaseDate, cases.Doctor, cases.TotalFee
             FROM
                 prescript
             LEFT JOIN cases
@@ -113,12 +114,14 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             WHERE
                 prescript.MedicineSet >= 2 AND
                 prescript.MedicineSet != 11 AND
+                Amount > 0 AND
                 MedicineName IS NOT NULL AND
                 cases.CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}"
                 {period_condition}
                 {weekday_condition}
                 {regist_condition}
                 {doctor_condition}
+            GROUP BY prescript.PrescriptKey
             ORDER BY cases.CaseKey, prescript.PrescriptKey
         '''
         rows = self.database.select_record(sql)
@@ -135,6 +138,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
 
         self.table_widget_doctor_sale.set_db_data(sql, self._set_table_data)
         self._insert_discount()
+        self._insert_balance()
         self.progress_dialog.setValue(row_count)
         self.progress_dialog.deleteLater()
 
@@ -144,6 +148,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         case_key = row["CaseKey"]
         medicine_key = row["MedicineKey"]
         medicine_set = row["MedicineSet"]
+        medicine_name = row["MedicineName"]
 
         pres_days = case_utils.get_pres_days(self.database, case_key, medicine_set)
         if pres_days == 0:
@@ -153,11 +158,21 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         quantity = number_utils.get_float(row["Dosage"])
         price = number_utils.get_float(row["Price"])
         # amount = number_utils.round_up(number_utils.get_float(row['Amount'])) * pres_days
+
+        if (
+            self.clinic_name == "專嘉中醫診所"
+            and medicine_name is not None
+            and medicine_name == "自費粉藥"
+        ):
+            pres_days = 1
+
         amount = number_utils.round_up(
             charge_utils.get_subtotal_fee(
                 number_utils.get_float(row["Amount"]), pres_days
             )
         )
+        if number_utils.get_integer(row["TotalFee"]) == 0:
+            amount = 0
 
         commission_rate = charge_utils.get_commission_rate(
             self.database, medicine_key, doctor
@@ -172,7 +187,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             string_utils.xstr(row["CaseDate"].date()),
             string_utils.xstr(row["PatientKey"]),
             string_utils.xstr(row["Name"]),
-            string_utils.xstr(row["MedicineName"]),
+            medicine_name,
             pres_days,
             quantity,
             string_utils.xstr(row["Unit"]),
@@ -203,31 +218,86 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
                     QtGui.QColor("red")
                 )
 
-    # 計算要插入的折扣rows
-    def _get_discount_count(self):
-        discount_count = 0
-        discount_list = []
-        for row_no in range(
-            self.ui.tableWidget_doctor_sale.rowCount()
-        ):  # 計算要插入的折扣rows count
-            case_key = self.ui.tableWidget_doctor_sale.item(row_no, 0)
-            if case_key is None:
-                continue
+            if medicine_name == "差額":
+                self.ui.tableWidget_doctor_sale.item(row_no, col_no).setForeground(
+                    QtGui.QColor("darkgreen")
+                )
 
-            sql = f"""
-                SELECT CaseKey, DiscountFee FROM cases
-                WHERE
-                    CaseKey = {case_key.text()} and
-                    DiscountFee > 0
-            """
-            rows = self.database.select_record(sql)
-            if len(rows) > 0:
-                case_key = rows[0]["CaseKey"]
-                if case_key not in discount_list:
-                    discount_list.append(case_key)
-                    discount_count += 1
+    def _insert_balance(self):
+        row_count = self.ui.tableWidget_doctor_sale.rowCount()
+        if row_count <= 0:
+            return
 
-        return discount_count
+        # 第一階段：純讀取，收集每個 case 的 amount 和插入位置
+        case_data = {}  # case_key -> {'amount': float, 'insert_row': int}
+        last_case_key = self.ui.tableWidget_doctor_sale.item(0, 0).text()
+
+        for row_no in range(row_count):
+            case_key_item = self.ui.tableWidget_doctor_sale.item(row_no, 0)
+            case_key = case_key_item.text() if case_key_item is not None else ""
+
+            medicine_item = self.ui.tableWidget_doctor_sale.item(row_no, 4)
+            medicine_name = medicine_item.text() if medicine_item is not None else ""
+
+            if case_key != "" and case_key != last_case_key:
+                # 記錄上一個 case 的插入位置（在它最後一行的下一行）
+                case_data[last_case_key]["insert_row"] = row_no
+                last_case_key = case_key
+                case_data[case_key] = {"amount": 0, "insert_row": row_no}
+
+            if last_case_key not in case_data:
+                case_data[last_case_key] = {"amount": 0, "insert_row": 0}
+
+            if medicine_name != "差額":
+                amount_item = self.ui.tableWidget_doctor_sale.item(row_no, 9)
+                if amount_item is not None:
+                    case_data[last_case_key]["amount"] += number_utils.get_float(
+                        amount_item.text()
+                    )
+
+        # 最後一個 case
+        case_data[last_case_key]["insert_row"] = row_count
+
+        # 第二階段：從後往前插入，避免 index 錯位
+        for case_key in reversed(list(case_data.keys())):
+            data = case_data[case_key]
+            self._check_balance_row(data["insert_row"], case_key, data["amount"])
+
+    def _check_balance_row(self, row_no, case_key, amount):
+        sql = f"""
+            SELECT CaseKey, CaseDate, PatientKey, Name, Doctor, TotalFee FROM cases
+            WHERE
+                CaseKey = {case_key}
+        """
+        rows = self.database.select_record(sql)
+        if len(rows) <= 0:
+            return
+
+        row = rows[0]
+        total_fee = number_utils.get_float(rows[0]["TotalFee"])
+        if amount != total_fee:
+            balance = amount - total_fee
+            self._insert_balance_row(row_no, row, balance)
+
+    def _insert_balance_row(self, row_no, row, balance):
+        self.ui.tableWidget_doctor_sale.insertRow(row_no)
+        discount_row = {
+            "CaseKey": row["CaseKey"],
+            "CaseDate": row["CaseDate"],
+            "PatientKey": row["PatientKey"],
+            "Name": row["Name"],
+            "MedicineName": "差額",
+            "MedicineSet": 0,
+            "PresDays": 1,
+            "Dosage": 1,
+            "Unit": "次",
+            "Price": -balance,
+            "Amount": -balance,
+            "MedicineKey": None,
+            "Doctor": row["Doctor"],
+            "TotalFee": -balance,
+        }
+        self._set_table_data(row_no, discount_row)
 
     def _insert_discount(self):
         row_count = (
@@ -253,9 +323,35 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             if last_case_key is not None:
                 last_case_key = last_case_key.text()
 
+    # 計算要插入的折扣rows
+    def _get_discount_count(self):
+        discount_count = 0
+        discount_list = []
+        for row_no in range(
+            self.ui.tableWidget_doctor_sale.rowCount()
+        ):  # 計算要插入的折扣rows count
+            case_key = self.ui.tableWidget_doctor_sale.item(row_no, 0)
+            if case_key is None:
+                continue
+
+            sql = f"""
+                SELECT CaseKey, DiscountFee, TotalFee FROM cases
+                WHERE
+                    CaseKey = {case_key.text()} and
+                    DiscountFee > 0
+            """
+            rows = self.database.select_record(sql)
+            if len(rows) > 0:
+                case_key = rows[0]["CaseKey"]
+                if case_key not in discount_list:
+                    discount_list.append(case_key)
+                    discount_count += 1
+
+        return discount_count
+
     def _check_discount_row(self, row_no, case_key):
         sql = f"""
-            SELECT CaseKey, PatientKey, CaseDate, Name, Doctor, DiscountFee FROM cases
+            SELECT CaseKey, PatientKey, CaseDate, Name, Doctor, DiscountFee, TotalFee FROM cases
             WHERE
                 CaseKey = {case_key}
         """
@@ -280,6 +376,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             "Amount": -discount_fee,
             "MedicineKey": None,
             "Doctor": row["Doctor"],
+            "TotalFee": -discount_fee,
         }
         self._set_table_data(row_no, discount_row)
 
@@ -352,7 +449,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
                 continue
 
             medicine_name = medicine_name.text()
-            if medicine_name == "總計":
+            if medicine_name in ["折扣", "總計", "差額"]:
                 continue
 
             quantity = self.ui.tableWidget_doctor_sale.item(row_no, 6)
