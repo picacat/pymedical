@@ -36,6 +36,9 @@
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
             <widget class="QToolButton" name="toolButton_add_user">
+             <property name="toolTip">
+              <string>新增使用者</string>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
@@ -47,6 +50,9 @@
            </item>
            <item>
             <widget class="QToolButton" name="toolButton_remove_user">
+             <property name="toolTip">
+              <string>刪除使用者</string>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
@@ -58,6 +64,9 @@
            </item>
            <item>
             <widget class="QToolButton" name="toolButton_edit_user">
+             <property name="toolTip">
+              <string>編輯使用者</string>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
@@ -69,6 +78,9 @@
            </item>
            <item>
             <widget class="QToolButton" name="toolButton_show_all">
+             <property name="toolTip">
+              <string>顯示已離職名單</string>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
@@ -80,12 +92,29 @@
            </item>
            <item>
             <widget class="QToolButton" name="toolButton_permission">
+             <property name="toolTip">
+              <string>權限設定</string>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
              <property name="icon">
               <iconset>
                <normaloff>../icons/changes-prevent.png</normaloff>../icons/changes-prevent.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="toolButton_permission_duplicate">
+             <property name="toolTip">
+              <string>複製權限</string>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/edit-copy.png</normaloff>../icons/edit-copy.png</iconset>
              </property>
             </widget>
            </item>
@@ -262,7 +291,7 @@
      <x>0</x>
      <y>0</y>
      <width>1115</width>
-     <height>25</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">

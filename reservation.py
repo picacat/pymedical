@@ -263,6 +263,9 @@ class Reservation(QtWidgets.QMainWindow):
         self.ui.action_print_reservation_list.triggered.connect(
             self._print_reservation_list
         )
+        self.ui.action_print_reservation_list2.triggered.connect(
+            lambda: self._print_reservation_list(print_less=True)
+        )
         self.ui.action_print_correction_area_reservation_list.triggered.connect(
             self._print_correction_area_reservation_list
         )
@@ -2874,7 +2877,7 @@ class Reservation(QtWidgets.QMainWindow):
             self, self.database, self.system_settings, reservation_key, printable
         )
 
-    def _print_reservation_list(self):
+    def _print_reservation_list(self, print_less=False):
         start_date = self.ui.dateEdit_start_date.date().toString("yyyy-MM-dd 00:00:00")
         end_date = self.ui.dateEdit_end_date.date().toString("yyyy-MM-dd 23:59:59")
         period = self.ui.comboBox_period.currentText()
@@ -2889,6 +2892,7 @@ class Reservation(QtWidgets.QMainWindow):
             period,
             doctor,
             self.ui.tableWidget_reservation_list,
+            print_less=print_less,
         )
 
     def _print_correction_area_reservation_list(self):

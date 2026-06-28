@@ -1228,6 +1228,7 @@
    <addaction name="action_print_reservation"/>
    <addaction name="action_medical_record_past_history"/>
    <addaction name="action_print_reservation_list"/>
+   <addaction name="action_print_reservation_list2"/>
    <addaction name="separator"/>
    <addaction name="action_reserve_reservation"/>
    <addaction name="action_off_day_setting"/>
@@ -1627,6 +1628,18 @@
    </property>
    <property name="shortcut">
     <string>F5</string>
+   </property>
+  </action>
+  <action name="action_print_reservation_list2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/printer-network.png</normaloff>../icons/printer-network.png</iconset>
+   </property>
+   <property name="text">
+    <string>印預約名單2</string>
+   </property>
+   <property name="toolTip">
+    <string>列印預約名單2</string>
    </property>
   </action>
  </widget>

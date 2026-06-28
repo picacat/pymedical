@@ -6958,6 +6958,7 @@ def get_print_reservation_list(
     period,
     doctor,
     tableWidget_reservation_list,
+    print_less,
 ):
     from printer import print_reservation_list
 
@@ -6971,6 +6972,7 @@ def get_print_reservation_list(
         period,
         doctor,
         tableWidget_reservation_list,
+        print_less,
     )
 
     return print_module
@@ -6987,6 +6989,7 @@ def print_reservation_list(
     doctor,
     tableWidget_reservation_list,
     print_type=None,
+    print_less=True,
 ):
     print_reserve_list = get_print_reservation_list(
         parent,
@@ -6997,8 +7000,9 @@ def print_reservation_list(
         period,
         doctor,
         tableWidget_reservation_list,
+        print_less,
     )
-    print_form(system_settings, print_reserve_list, print_type)
+    print_form(system_settings, print_reserve_list, print_type, print_less)
 
 
 # 列印矯正機關內門診預約名單

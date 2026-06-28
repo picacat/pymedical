@@ -1,12 +1,10 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
+from PyQt5.QtWidgets import QFileDialog
 
-from libs import printer_utils
-from libs import system_utils
+from libs import printer_utils, string_utils, system_utils
 
 
 # 列印預約名單
@@ -22,12 +20,13 @@ class PrintReservationList:
         self.period = args[4]
         self.doctor = args[5]
         self.tableWidget_reservation_list = args[6]
+        self.print_less = args[7]
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '報表印表機')
+        self.printer = printer_utils.get_printer(self.system_settings, "報表印表機")
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
-        self.no_reservation_time = self.system_settings.field('預約班表不顯示時間')
+        self.no_reservation_time = self.system_settings.field("預約班表不顯示時間")
 
         self._set_ui()
         self._set_signal()
@@ -55,7 +54,9 @@ class PrintReservationList:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
@@ -64,8 +65,9 @@ class PrintReservationList:
         pdf_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            f'{self.start_date}-{self.end_date}{self.doctor}預約名單.pdf',
-            "pdf檔案 (*.pdf);;Text Files (*.txt)", options=options
+            f"{self.start_date}-{self.end_date}{self.doctor}預約名單.pdf",
+            "pdf檔案 (*.pdf);;Text Files (*.txt)",
+            options=options,
         )
         if not pdf_file_name:
             return
@@ -76,7 +78,11 @@ class PrintReservationList:
 
     def print_html(self, printing):
         self.current_print = self.print_html
-        self.printer.setOrientation(QPrinter.Landscape)
+        if self.print_less:
+            self.printer.setOrientation(QPrinter.Portrait)
+        else:
+            self.printer.setOrientation(QPrinter.Landscape)
+
         self.printer.setPaperSize(printer_utils.get_paper_size(self.system_settings))
 
         document = printer_utils.get_document(self.printer, self.font)
@@ -86,12 +92,16 @@ class PrintReservationList:
             document.print(self.printer)
 
     def _get_html(self):
-        reservation_list = self._get_reservation_list_html()
-        clinic_name = self.system_settings.field('院所名稱')
+        if self.print_less:
+            reservation_list = self._get_reservation_list_less_html()
+        else:
+            reservation_list = self._get_reservation_list_html()
+
+        clinic_name = self.system_settings.field("院所名稱")
         start_date = self.start_date[:10]
         end_date = self.end_date[:10]
 
-        html = f'''
+        html = f"""
             <html>
                 <body>
                     <br>
@@ -103,26 +113,29 @@ class PrintReservationList:
                     <br><br>
                 </body>
             </html>
-        '''
+        """
 
         return html
 
     def _get_reservation_list_html(self):
-        reservation_list_row = ''
+        reservation_list_row = ""
 
         for row_no in range(self.tableWidget_reservation_list.rowCount()):
+            name = self.tableWidget_reservation_list.item(row_no, 5).text()
+            if name == "保留預約":
+                continue
+
             sequence = row_no + 1
 
             if row_no % 2 > 0:
-                bgcolor = '#E3E3E3'
+                bgcolor = "#E3E3E3"
             else:
-                bgcolor = 'white'
+                bgcolor = "white"
 
             reservation_date = self.tableWidget_reservation_list.item(row_no, 1).text()
             reservation_time = self.tableWidget_reservation_list.item(row_no, 2).text()
             period = self.tableWidget_reservation_list.item(row_no, 3).text()
             patient_key = self.tableWidget_reservation_list.item(row_no, 4).text()
-            name = self.tableWidget_reservation_list.item(row_no, 5).text()
             telephone = self.tableWidget_reservation_list.item(row_no, 13).text()
             cellphone = self.tableWidget_reservation_list.item(row_no, 14).text()
             doctor = self.tableWidget_reservation_list.item(row_no, 7).text()
@@ -130,8 +143,8 @@ class PrintReservationList:
             source = self.tableWidget_reservation_list.item(row_no, 11).text()
             create_time = self.tableWidget_reservation_list.item(row_no, 15).text()
 
-            if self.no_reservation_time == 'Y':
-                reservation_list_row += f'''
+            if self.no_reservation_time == "Y":
+                reservation_list_row += f"""
                     <tr bgcolor={bgcolor}>
                         <td align=center>{sequence}</td>
                         <td align=center>{reservation_date}</td>
@@ -145,9 +158,9 @@ class PrintReservationList:
                         <td align=center>{source}</td>
                         <td align=center>{create_time}</td>
                     </tr>
-                '''
+                """
             else:
-                reservation_list_row += f'''
+                reservation_list_row += f"""
                     <tr bgcolor={bgcolor}>
                         <td align=center>{sequence}</td>
                         <td align=center>{reservation_date}</td>
@@ -162,10 +175,10 @@ class PrintReservationList:
                         <td align=center>{source}</td>
                         <td align=center>{create_time}</td>
                     </tr>
-                '''
+                """
 
-        if self.no_reservation_time == 'Y':
-            html = f'''
+        if self.no_reservation_time == "Y":
+            html = f"""
                 <table align=center cellpadding="1" cellspacing="0" width="95%"
                     style="border-collapse: collapse; border-width: 1px; border-style: solid;">
                     <thead>
@@ -187,9 +200,9 @@ class PrintReservationList:
                         {reservation_list_row}
                     </tbody>
                 </table>
-            '''
+            """
         else:
-            html = f'''
+            html = f"""
                 <table align=center cellpadding="1" cellspacing="0" width="95%"
                     style="border-collapse: collapse; border-width: 1px; border-style: solid;">
                     <thead>
@@ -212,6 +225,115 @@ class PrintReservationList:
                         {reservation_list_row}
                     </tbody>
                 </table>
-            '''
+            """
+
+        return html
+
+    def _get_reservation_list_less_html(self):
+        reservation_list_row = ""
+
+        for row_no in range(self.tableWidget_reservation_list.rowCount()):
+            name = self.tableWidget_reservation_list.item(row_no, 5).text()
+            if name == "保留預約":
+                continue
+
+            sequence = row_no + 1
+
+            if row_no % 2 > 0:
+                bgcolor = "#E3E3E3"
+            else:
+                bgcolor = "white"
+
+            reservation_date = self.tableWidget_reservation_list.item(row_no, 1).text()
+            reservation_time = self.tableWidget_reservation_list.item(row_no, 2).text()
+            period = self.tableWidget_reservation_list.item(row_no, 3).text()
+            patient_key = self.tableWidget_reservation_list.item(row_no, 4).text()
+            name = string_utils.get_mask_name(name)
+            telephone = self.tableWidget_reservation_list.item(row_no, 13).text()
+            cellphone = self.tableWidget_reservation_list.item(row_no, 14).text()
+            doctor = self.tableWidget_reservation_list.item(row_no, 7).text()
+            reservation_no = self.tableWidget_reservation_list.item(row_no, 9).text()
+            source = self.tableWidget_reservation_list.item(row_no, 11).text()
+            create_time = self.tableWidget_reservation_list.item(row_no, 15).text()
+
+            if source == "現場預約":
+                source = ""
+            else:
+                source = "是"
+
+            if patient_key in ["初診預約", "網路初診"]:
+                patient_key = "-"
+
+            if self.no_reservation_time == "Y":
+                reservation_list_row += f"""
+                    <tr bgcolor={bgcolor}>
+                        <td align=center>{sequence}</td>
+                        <td align=center>{reservation_date}</td>
+                        <td align=center>{period}</td>
+                        <td align=center>{patient_key}</td>
+                        <td align=center>{name}</td>
+                        <td align=center>{reservation_no}</td>
+                        <td align=center>{doctor}</td>
+                        <td align=center>{source}</td>
+                    </tr>
+                """
+            else:
+                reservation_list_row += f"""
+                    <tr bgcolor={bgcolor}>
+                        <td align=center>{sequence}</td>
+                        <td align=center>{reservation_date}</td>
+                        <td align=center>{reservation_time}</td>
+                        <td align=center>{period}</td>
+                        <td align=center>{patient_key}</td>
+                        <td align=center>{name}</td>
+                        <td align=center>{reservation_no}</td>
+                        <td align=center>{doctor}</td>
+                        <td align=center>{source}</td>
+                    </tr>
+                """
+
+        if self.no_reservation_time == "Y":
+            html = f"""
+                <table align=center cellpadding="1" cellspacing="0" width="95%"
+                    style="border-collapse: collapse; border-width: 1px; border-style: solid;">
+                    <thead>
+                        <tr bgcolor="LightGray">
+                            <th>序</th>
+                            <th>預約日期</th>
+                            <th>班別</th>
+                            <th>病歷號</th>
+                            <th>姓名</th>
+                            <th>預約號</th>
+                            <th>預約醫師</th>
+                            <th>網路預約</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {reservation_list_row}
+                    </tbody>
+                </table>
+            """
+        else:
+            html = f"""
+                <table align=center cellpadding="1" cellspacing="0" width="95%"
+                    style="border-collapse: collapse; border-width: 1px; border-style: solid;">
+                    <thead>
+                        <tr bgcolor="LightGray">
+                            <th>序</th>
+                            <th>預約日期</th>
+                            <th>時間</th>
+                            <th>班別</th>
+                            <th>病歷號</th>
+                            <th>姓名</th>
+                            <th>預約號</th>
+                            <th>預約醫師</th>
+                            <th>網路預約</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {reservation_list_row}
+                    </tbody>
+                </table>
+            """
 
         return html
