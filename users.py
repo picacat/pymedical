@@ -316,17 +316,20 @@ class Users(QtWidgets.QMainWindow):
         input_dialog = QtWidgets.QInputDialog()
         input_dialog.setOkButtonText("確定")
         input_dialog.setCancelButtonText("取消")
-
         current_user_key = self.table_widget_users.field_value(0)
         if current_user_key is None:
             return
-
         current_user = self.table_widget_users.field_value(3)
+
         user_list = []
+        user_key_map = {}  # 新增：記錄 user -> user_key 的對應
+
         for row_no in range(self.ui.tableWidget_users.rowCount()):
+            user_key = self.ui.tableWidget_users.item(row_no, 0).text()
             user = self.ui.tableWidget_users.item(row_no, 3).text()
             if user != current_user:
                 user_list.append(user)
+                user_key_map[user] = user_key  # 新增：儲存對應關係
 
         to_whom, ok = input_dialog.getItem(
             self, "複製權限", "要複製權限給誰?", user_list, 0, False
@@ -334,4 +337,32 @@ class Users(QtWidgets.QMainWindow):
         if not ok or not to_whom:
             return
 
-        print(to_whom)
+        to_whom_key = user_key_map[to_whom]  # 新增：取得對應的 user_key
+
+        sql = f"""
+            SELECT * FROM permission
+            WHERE PersonKey = {current_user_key}
+        """
+        rows = self.database.select_record(sql)
+
+        self.database.exec_sql(f"""
+            DELETE FROM permission
+            WHERE
+                PersonKey = {to_whom_key}
+        """)
+        fields = ["PersonKey", "ProgramName", "PermissionItem", "Permission"]
+        for row in rows:
+            data = [
+                to_whom_key,
+                row["ProgramName"],
+                row["PermissionItem"],
+                row["Permission"],
+            ]
+            self.database.insert_record("permission", fields, data)
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "複製權限",
+            f'<font size="4"><b>已將{current_user}的權限複製給{to_whom}!.</b></font>',
+            "權限複製完成.",
+        )
