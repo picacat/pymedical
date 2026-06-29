@@ -384,6 +384,7 @@ class CSHIS:
         cshis_utils.show_ic_card_message(error_code, "醫事人員卡解鎖")
 
     def reset_reader(self, show_message=True):
+        error_code = self.finalize_cshis6()
         error_code = self.init_cshis6()
         if show_message:
             cshis_utils.show_ic_card_message(error_code, "讀卡機重新啟動")
@@ -436,24 +437,13 @@ class CSHIS:
         service_path = "/api/hc/v1/Verification/VirtualHc"
         data = {"token": self.qrcode}
         response = self._get_requests_response(service_path, "POST", data)
-        try:
-            error_code = response.json()["statusCode"]
-        except Exception:
+        if response is None:
             return False
 
-        return True
-
-    # def get_hc_signature(self, service_type):
-    #     service_path = "/api/hc/v1/Signature/Hc"
-    #     data = {'serviceType': service_type}
-    #     response = self._get_requests_response(service_path, 'POST', data)
-
-    #     error_code = response.json()['statusCode']
-    #     if error_code != 0:
-    #         cshis_utils.show_ic_card_message(error_code, '讀取健保卡簽章')
-    #         return None
-
-    #     return response.json()
+        try:
+            return response.json().get("statusCode", -1) == 0
+        except Exception:
+            return False
 
     def get_hc_signature(self, service_type, show_warning=True):
         service_path = "/api/hc/v1/Signature/Hc"
@@ -486,23 +476,29 @@ class CSHIS:
     def get_hpc_signature(self, service_type):
         api_status = self.get_api_status()
         hpc_mode = api_status["hpc"]["status"]
-        if hpc_mode != 0:  # 未置入卡片
-            cshis_utils.show_ic_card_message(1102, "讀取醫事人員卡簽章")  # 未置入卡片
+        if hpc_mode == 0:  # 未置入卡片
+            cshis_utils.show_ic_card_message(1102, "讀取醫事人員卡簽章")
             return None
 
         sam_mode = api_status["sam"]["status"]
-        if sam_mode != 2:  # 未完成sam認證
+        if sam_mode != 2:  # 未完成 SAM 認證
             self.verify_sam(show_message=False)
 
         service_path = "/api/hpc/v1/Signature"
         data = {"serviceType": service_type}
         response = self._get_requests_response(service_path, "POST", data)
-        error_code = response.json()["statusCode"]
+
+        if response is None:
+            cshis_utils.show_ic_card_message(-1, "讀取醫事人員卡簽章")
+            return None
+
+        res_data = response.json()
+        error_code = res_data.get("statusCode", -1)
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "讀取醫事人員卡簽章")
             return None
 
-        return response.json()
+        return res_data
 
     def get_hpchc_signature(self, service_type):
         api_status = self.get_api_status()
@@ -795,7 +791,7 @@ class CSHIS:
             "hpcIdNo": hpchc_signature["hpcIdNo"],
             "hcId": hpchc_signature["hcId"],
             "hcIdNo": hpchc_signature["hcIdNo"],
-            # 'format': hpchc_signature['format'],
+            "format": "0",
         }
         response = self._get_requests_response(
             service_path, "POST", data, local_url=False
@@ -849,6 +845,7 @@ class CSHIS:
     def read_treatment_no_need_hpc_thread(self, out_queue):
         hc_signature = self.get_hc_signature(service_type="01")
         if hc_signature is None or hc_signature["clientRandom"] is None:
+            out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
         service_path = "/api/v1/Treatment/NoNeedHPC"
@@ -867,6 +864,7 @@ class CSHIS:
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
+            out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
         treatment_data = cshis_utils.decode_cshis6_treatment_data(response.json())
@@ -901,6 +899,7 @@ class CSHIS:
     def read_treatment_need_hpc_thread(self, out_queue):
         hpchc_signature = self.get_hpchc_signature(service_type="01")
         if hpchc_signature is None or hpchc_signature["clientRandom"] is None:
+            out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
         service_path = "/api/v1/Treatment/NeedHPC"
@@ -922,6 +921,7 @@ class CSHIS:
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
+            out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
         disease_data = cshis_utils.decode_cshis6_disease_data(response.json())
@@ -950,6 +950,7 @@ class CSHIS:
     def read_prescript_data_thread(self, out_queue):
         hpchc_signature = self.get_hpchc_signature(service_type="01")
         if hpchc_signature is None or hpchc_signature["clientRandom"] is None:
+            out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
         service_path = "/api/v1/Prescription/Query"
@@ -970,6 +971,7 @@ class CSHIS:
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
+            out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
         prescriptions = response.json()["outpatientPrescriptions"]
@@ -1000,12 +1002,8 @@ class CSHIS:
         self, out_queue, treat_item, baby_treat, treat_after_check
     ):
         hc_signature = self.get_hc_signature(service_type="03")
-        # if self.ic_card_type == '虛擬健保卡':
-        #     hc_signature = self.get_vhc_signature(service_type='03')
-        # else:
-        #     hc_signature = self.get_hc_signature(service_type='03')
-
         if hc_signature is None or hc_signature["clientRandom"] is None:
+            out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
         service_path = "/api/v1/SequelNumber/Next"
@@ -1069,9 +1067,10 @@ class CSHIS:
     ):
         hc_signature = self.get_hc_signature(service_type="02")
         if hc_signature is None or hc_signature["clientRandom"] is None:
+            out_queue.put(-1)  # ✅ 單一值
             return False
 
-        service_path = "/api/v1/Treatment/WriteCode"
+        service_path = "/api/v1/Treatment/WriteCodeFee"
         data = {
             "clientRandom": hc_signature["clientRandom"],
             "hospitalId": hc_signature["hospitalId"],
@@ -1079,9 +1078,8 @@ class CSHIS:
             "signature": hc_signature["signature"],
             "hcId": hc_signature["hcId"],
             "hcIdNo": hc_signature["hcIdNo"],
-            "treatmentDateTime": registration_datetime,
             "afterCheck": treat_after_check,
-            "format": "2",
+            "treatmentDateTime": registration_datetime,
             "mainCode": disease_code1,
             "subCode1": disease_code2,
             "subCode2": disease_code3,
@@ -1089,7 +1087,7 @@ class CSHIS:
             "subCode4": "",
             "subCode5": "",
             "outpatientFee": share_fee,
-            "sostFee": share_fee,
+            "costFee": share_fee,
             "inpatientFee": 0,
             "inpatient30Fee": 0,
             "inpatient180Fee": 0,
@@ -1150,6 +1148,7 @@ class CSHIS:
     ):
         hc_signature = self.get_hc_signature(service_type="02")
         if hc_signature is None or hc_signature["clientRandom"] is None:
+            out_queue.put((-1, [], []))  # ✅ 3-tuple
             return False
 
         service_path = "/api/v1/Prescription/Write"
@@ -1201,6 +1200,7 @@ class CSHIS:
     def return_seq_number_thread(self, out_queue, treat_date):
         hc_signature = self.get_hc_signature(service_type="03")
         if hc_signature is None or hc_signature["clientRandom"] is None:
+            out_queue.put(-1)  # ✅
             return False
 
         service_path = "/api/v1/SequelNumber/Rollback"
@@ -1257,6 +1257,7 @@ class CSHIS:
         sam_signature = self.get_sam_signature(service_type="30")
         if sam_signature["clientRandom"] is None:
             cshis_utils.show_ic_card_message(4050, "請求虛擬健保卡授權失敗")
+            out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
         sam_id = sam_signature["samId"]
@@ -1620,9 +1621,11 @@ class CSHIS:
                 }
             )
 
-        prescript_sign_list, hex_prescript_sign_list = self.write_multi_prescript_sign(
-            reg_datetime, prescriptions
-        )
+        result = self.write_multi_prescript_sign(reg_datetime, prescriptions)
+        if result is None:
+            return
+
+        prescript_sign_list, hex_prescript_sign_list = result
 
         if hex_prescript_sign_list is None:
             return
@@ -1706,11 +1709,12 @@ class CSHIS:
             }
         ]
 
-        treat_sign, hex_treat_sign = self.write_multi_prescript_sign(
-            reg_datetime, prescription
-        )
+        result = self.write_multi_prescript_sign(reg_datetime, prescription)
+        if result is None:
+            return
 
-        if len(treat_sign) <= 0:
+        treat_sign, hex_treat_sign = result
+        if not hex_treat_sign:
             return
 
         treat_sign = hex_treat_sign[0]
@@ -1733,29 +1737,6 @@ class CSHIS:
             treat_sign,
         ]
         self.database.insert_record("presextend", fields, data)
-
-        # if len(treat_sign) <= 0:
-        #     return
-
-        # treat_sign = treat_sign[0]
-        # binary_data = base64.b64decode(treat_sign)
-        # hex_string = binary_data.hex().upper()
-        # treat_sign = hex_string
-
-        # case_key = case_row['CaseKey']
-        # self.database.exec_sql(f'''
-        #     DELETE FROM presextend
-        #     WHERE
-        #         PrescriptKey = {case_key} AND
-        #         ExtendType = "處置簽章"
-        # ''')
-        # fields = [
-        #     'PrescriptKey', 'ExtendType', 'Content',
-        # ]
-        # data = [
-        #     case_row['CaseKey'], '處置簽章', treat_sign,
-        # ]
-        # self.database.insert_record('presextend', fields, data)
 
     # 寫入病名及費用
     def write_ic_treatment(self, case_key, treat_after_check):
