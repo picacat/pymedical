@@ -1228,7 +1228,6 @@
    <addaction name="action_print_reservation"/>
    <addaction name="action_medical_record_past_history"/>
    <addaction name="action_print_reservation_list"/>
-   <addaction name="action_print_reservation_list2"/>
    <addaction name="separator"/>
    <addaction name="action_reserve_reservation"/>
    <addaction name="action_off_day_setting"/>
@@ -1256,6 +1255,7 @@
     <addaction name="action_first_visit_info"/>
     <addaction name="separator"/>
     <addaction name="action_print_reservation_list"/>
+    <addaction name="action_print_reservation_list2"/>
     <addaction name="action_print_correction_area_reservation_list"/>
     <addaction name="separator"/>
     <addaction name="action_export_reservation_excel"/>

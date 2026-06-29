@@ -1014,7 +1014,30 @@
          </item>
          <item>
           <layout class="QGridLayout" name="gridLayout_17">
-           <item row="10" column="0">
+           <item row="21" column="0">
+            <spacer name="verticalSpacer_8">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="3" column="0">
+            <widget class="QCheckBox" name="checkBox_medicine_gp">
+             <property name="text">
+              <string>處方詞庫</string>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="0">
             <widget class="QCheckBox" name="checkBox_disease_gp">
              <property name="text">
               <string>病名詞庫</string>
@@ -1031,38 +1054,15 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="0">
-            <widget class="QCheckBox" name="checkBox_medicine_gp">
+           <item row="2" column="0">
+            <widget class="QCheckBox" name="checkBox_database_gp">
              <property name="text">
-              <string>處方詞庫</string>
+              <string>基礎資料庫</string>
              </property>
              <property name="checked">
               <bool>false</bool>
              </property>
             </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QCheckBox" name="checkBox_compound_gp">
-             <property name="text">
-              <string>成方詞庫</string>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="20" column="0">
-            <spacer name="verticalSpacer_8">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
            </item>
            <item row="7" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -1145,16 +1145,6 @@
              </item>
             </layout>
            </item>
-           <item row="8" column="0">
-            <widget class="QCheckBox" name="checkBox_symptom_gp">
-             <property name="text">
-              <string>主訴詞庫</string>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
            <item row="5" column="0">
             <widget class="QCheckBox" name="checkBox_user_gp">
              <property name="text">
@@ -1165,15 +1155,106 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QCheckBox" name="checkBox_database_gp">
+           <item row="4" column="0">
+            <widget class="QCheckBox" name="checkBox_compound_gp">
              <property name="text">
-              <string>基礎資料庫</string>
+              <string>成方詞庫</string>
              </property>
              <property name="checked">
               <bool>false</bool>
              </property>
             </widget>
+           </item>
+           <item row="9" column="0">
+            <widget class="QCheckBox" name="checkBox_symptom_gp">
+             <property name="text">
+              <string>主訴詞庫</string>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_10">
+             <item>
+              <widget class="QCheckBox" name="checkBox_reserve_gp">
+               <property name="text">
+                <string>預約檔</string>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_36">
+               <property name="text">
+                <string>從</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEdit_reserve_start_date_gp">
+               <property name="text">
+                <string>112/03/01</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_37">
+               <property name="text">
+                <string>至</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEdit_reserve_end_date_gp">
+               <property name="text">
+                <string>112/03/31</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_13">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_19">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_24">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
           </layout>
          </item>
