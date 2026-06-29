@@ -1260,7 +1260,6 @@ class CvtGP:
             "Doctor",
             "Source",
             "Registrar",
-            "Remark",
         ]
 
         for row in rows:
@@ -1292,7 +1291,4 @@ class CvtGP:
                 source,
                 registrar,
             ]
-            try:
-                self.database.insert_record("reserve", fields, data)
-            except Exception:
-                pass
+            self.database.insert_record("reserve", fields, data)
