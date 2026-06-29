@@ -49,6 +49,8 @@ class CvtGP:
             self._cvt_patient()
         if self.parent.ui.checkBox_medical_record_gp.isChecked():
             self._cvt_medical_record()
+        if self.parent.ui.checkBox_reserve_gp.isChecked():
+            self._cvt_reserve()
         if self.parent.ui.checkBox_symptom_gp.isChecked():
             self._cvt_symptom()
         if self.parent.ui.checkBox_disease_gp.isChecked():
@@ -1218,3 +1220,79 @@ class CvtGP:
             rows.append(dict(zip(columns, row)))
 
         return rows
+
+    def _cvt_reserve(self):
+        start_date = self.parent.ui.lineEdit_reserve_start_date_gp.text()
+        end_date = self.parent.ui.lineEdit_reserve_end_date_gp.text()
+
+        self.parent.ui.label_progress.setText("預約資料檔")
+
+        sql = f"""
+            SELECT * FROM Reg_Book
+            WHERE
+                Booking_Date BETWEEN '{start_date}' AND '{end_date}'
+            ORDER BY RB_Id
+        """
+        try:
+            rows = self._exec_sql(sql)
+        except Exception:
+            return
+
+        period_dict = {
+            "A": "早班",
+            "B": "午班",
+            "C": "晚班",
+        }
+
+        sql = "TRUNCATE reserve"
+        self.database.exec_sql(sql)
+
+        self.progress_bar.setMaximum(len(rows))
+        self.progress_bar.setValue(0)
+
+        fields = [
+            "PatientKey",
+            "Name",
+            "ReserveDate",
+            "Period",
+            "Room",
+            "ReserveNo",
+            "Doctor",
+            "Source",
+            "Registrar",
+            "Remark",
+        ]
+
+        for row in rows:
+            self.progress_bar.setValue(self.progress_bar.value() + 1)
+
+            name = self._get_field_value(row["chn_name"])
+            try:
+                reserve_date = self._get_date(row["Booking_Date"])
+                reserve_time = self._get_field_value(row["Booking_Time"])
+                reservation_date = f"{reserve_date} {reserve_time}"
+            except Exception:
+                reservation_date = None
+
+            doctor = self._get_field_value(row["doctor_name"])
+            source = self._get_field_value(row["BookMemo"])
+            if source not in [None, ""]:
+                source = "網路預約"
+
+            registrar = self._get_field_value(row["operator"])
+
+            data = [
+                row["pid"],
+                name,
+                reservation_date,
+                period_dict[row["Class_Code"]],
+                row["Room_No"],
+                row["BookNo"],
+                doctor,
+                source,
+                registrar,
+            ]
+            try:
+                self.database.insert_record("reserve", fields, data)
+            except Exception:
+                pass

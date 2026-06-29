@@ -2950,8 +2950,8 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         ):
             error_message.append("診斷碼無高度複雜性傷科適應症")
 
-        if self.disease_code2 in [None, ""]:
-            error_message.append("高度複雜性傷科(多部位損傷)需要兩個診斷碼")
+        # if self.disease_code2 in [None, ""]:
+        #     error_message.append("高度複雜性傷科(多部位損傷)需要兩個診斷碼")
 
         if len(error_message) > 0:
             system_utils.show_message_box(

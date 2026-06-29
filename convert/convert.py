@@ -48,6 +48,8 @@ class DialogConvert(QtWidgets.QDialog):
 
         self.ui.lineEdit_start_date_gp.setText("115/02/01")
         self.ui.lineEdit_end_date_gp.setText("115/02/28")
+        self.ui.lineEdit_reserve_start_date_gp.setText("115/07/01")
+        self.ui.lineEdit_reserve_end_date_gp.setText("115/12/31")
 
     def _set_combo_box(self):
         ui_utils.set_combo_box(self.ui.comboBox_dosage_mode, ["日劑量", "次劑量"])
