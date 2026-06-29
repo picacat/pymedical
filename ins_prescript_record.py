@@ -1139,24 +1139,32 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         if self.system_settings.field("健保處方詞庫只顯示單方複方") == "Y":
             medicine_type_condition = 'AND (MedicineType in ("單方", "複方") OR (MedicineType = "成方" AND Unit = "克"))'
         else:
-            # medicine_type_condition = '''
-            #     AND (MedicineType NOT IN ("水藥", "外用", "高貴", "穴道", "處置", "器材", "檢驗")) OR
-            #     (MedicineType = "成方" AND Unit != "錢"))
-            # '''
             medicine_type_condition = """
                 AND (MedicineType NOT IN ("水藥", "外用", "高貴", "穴道", "處置", "器材", "檢驗"))
             """
 
-        sql = f'''
+        # sql = f'''
+        #     SELECT * FROM medicine
+        #     WHERE
+        #         (MedicineName like "%{keyword}%" OR
+        #          InputCode LIKE "{keyword}%" OR
+        #          MedicineCode = "{keyword}" OR
+        #          InsCode = "{keyword}")
+        #         {medicine_type_condition}
+        # '''
+        # rows = self.database.select_record(sql)
+
+        sql = f"""
             SELECT * FROM medicine
             WHERE
-                (MedicineName like "%{keyword}%" OR
-                 InputCode LIKE "{keyword}%" OR
-                 MedicineCode = "{keyword}" OR
-                 InsCode = "{keyword}")
+                (MedicineName LIKE %s OR
+                InputCode LIKE %s OR
+                MedicineCode = %s OR
+                InsCode = %s)
                 {medicine_type_condition}
-        '''
-        rows = self.database.select_record(sql)
+        """
+        params = (f"%{keyword}%", f"{keyword}%", keyword, keyword)
+        rows = self.database.select_record(sql, params)
 
         if len(rows) <= 0:
             item.setText(previous_medicine_name)
@@ -1294,16 +1302,28 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
                 AND (MedicineType in ("處置", "穴道", "外用") OR (MedicineType = "成方" AND Unit = "次"))
             """
 
-        sql = f'''
+        # sql = f'''
+        #     SELECT * FROM medicine
+        #     WHERE
+        #         (MedicineName like "{keyword}%" OR
+        #         InputCode LIKE "{keyword}%" OR
+        #         MedicineCode = "{keyword}" OR
+        #         InsCode = "{keyword}")
+        #         {medicine_type_condition}
+        # '''
+        # rows = self.database.select_record(sql)
+
+        sql = f"""
             SELECT * FROM medicine
             WHERE
-                (MedicineName like "{keyword}%" OR
-                InputCode LIKE "{keyword}%" OR
-                MedicineCode = "{keyword}" OR
-                InsCode = "{keyword}")
+                (MedicineName LIKE %s OR
+                InputCode LIKE %s OR
+                MedicineCode = %s OR
+                InsCode = %s)
                 {medicine_type_condition}
-        '''
-        rows = self.database.select_record(sql)
+        """
+        params = (f"{keyword}%", f"{keyword}%", keyword, keyword)
+        rows = self.database.select_record(sql, params)
 
         if len(rows) <= 0:
             item.setText(previous_medicine_name)
