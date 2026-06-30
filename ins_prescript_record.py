@@ -1143,17 +1143,6 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
                 AND (MedicineType NOT IN ("水藥", "外用", "高貴", "穴道", "處置", "器材", "檢驗"))
             """
 
-        # sql = f'''
-        #     SELECT * FROM medicine
-        #     WHERE
-        #         (MedicineName like "%{keyword}%" OR
-        #          InputCode LIKE "{keyword}%" OR
-        #          MedicineCode = "{keyword}" OR
-        #          InsCode = "{keyword}")
-        #         {medicine_type_condition}
-        # '''
-        # rows = self.database.select_record(sql)
-
         sql = f"""
             SELECT * FROM medicine
             WHERE

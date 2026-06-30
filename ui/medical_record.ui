@@ -1265,13 +1265,13 @@
      <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
    </property>
    <property name="text">
-    <string>存檔列印</string>
+    <string>存檔列印 [F10]</string>
    </property>
    <property name="toolTip">
     <string>存檔後列印處方箋</string>
    </property>
    <property name="shortcut">
-    <string>F11</string>
+    <string>F10</string>
    </property>
   </action>
   <action name="action_dictionary">
@@ -1294,6 +1294,9 @@
    <property name="text">
     <string>關閉病歷</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
   </action>
   <action name="action_patient">
    <property name="icon">
@@ -1301,13 +1304,13 @@
      <normaloff>../icons/user-info.png</normaloff>../icons/user-info.png</iconset>
    </property>
    <property name="text">
-    <string>病患資料</string>
+    <string>病患資料 [F3]</string>
    </property>
    <property name="toolTip">
     <string>顯示病患資料</string>
    </property>
    <property name="shortcut">
-    <string>F2</string>
+    <string>F3</string>
    </property>
   </action>
   <action name="action_past_history">
@@ -1316,13 +1319,13 @@
      <normaloff>../icons/folder-documents.png</normaloff>../icons/folder-documents.png</iconset>
    </property>
    <property name="text">
-    <string>過去病歷</string>
+    <string>過去病歷 [F2]</string>
    </property>
    <property name="toolTip">
     <string>顯示完整的過去病歷</string>
    </property>
    <property name="shortcut">
-    <string>F12</string>
+    <string>F2</string>
    </property>
   </action>
   <action name="action_save">
@@ -1331,13 +1334,13 @@
      <normaloff>../icons/filesave.svg</normaloff>../icons/filesave.svg</iconset>
    </property>
    <property name="text">
-    <string>存檔不印</string>
+    <string>存檔不印 {F11]</string>
    </property>
    <property name="toolTip">
     <string>僅存檔, 不印任何的單據</string>
    </property>
    <property name="shortcut">
-    <string>F10</string>
+    <string>F11</string>
    </property>
   </action>
   <action name="action_reference">
@@ -1346,7 +1349,10 @@
      <normaloff>../icons/emblem-documents.png</normaloff>../icons/emblem-documents.png</iconset>
    </property>
    <property name="text">
-    <string>參考病歷</string>
+    <string>參考病歷 [F7]</string>
+   </property>
+   <property name="shortcut">
+    <string>F7</string>
    </property>
   </action>
   <action name="action_append_self_medical_record">
@@ -1409,10 +1415,13 @@
      <normaloff>../icons/appointment-new.png</normaloff>../icons/appointment-new.png</iconset>
    </property>
    <property name="text">
-    <string>預約門診</string>
+    <string>預約門診 [F8]</string>
    </property>
    <property name="toolTip">
     <string>預約門診</string>
+   </property>
+   <property name="shortcut">
+    <string>F8</string>
    </property>
   </action>
   <action name="action_medical_record_collection">
@@ -1469,10 +1478,13 @@
      <normaloff>../icons/applications-internet.png</normaloff>../icons/applications-internet.png</iconset>
    </property>
    <property name="text">
-    <string>雲端藥歷</string>
+    <string>雲端藥歷 [F6]</string>
    </property>
    <property name="toolTip">
     <string>開啟雲端藥歷</string>
+   </property>
+   <property name="shortcut">
+    <string>F6</string>
    </property>
   </action>
   <action name="action_exam_precheck">
@@ -1543,6 +1555,9 @@
    <property name="toolTip">
     <string>強制存檔</string>
    </property>
+   <property name="shortcut">
+    <string>F12</string>
+   </property>
   </action>
   <action name="action_medicine_to_herb">
    <property name="icon">
@@ -1564,9 +1579,6 @@
    <property name="text">
     <string>參考處方</string>
    </property>
-   <property name="shortcut">
-    <string>F3</string>
-   </property>
   </action>
   <action name="action_broadcast_voice">
    <property name="icon">
@@ -1574,13 +1586,13 @@
      <normaloff>../icons/kblogger.png</normaloff>../icons/kblogger.png</iconset>
    </property>
    <property name="text">
-    <string>廣播叫號</string>
+    <string>廣播叫號 [F5]</string>
    </property>
    <property name="toolTip">
     <string>廣播叫號</string>
    </property>
    <property name="shortcut">
-    <string>F3</string>
+    <string>F5</string>
    </property>
   </action>
   <action name="action_open_memo">
@@ -1593,9 +1605,6 @@
    </property>
    <property name="toolTip">
     <string>開啟備忘錄</string>
-   </property>
-   <property name="shortcut">
-    <string>F6</string>
    </property>
   </action>
   <action name="action_save_and_pdf">
