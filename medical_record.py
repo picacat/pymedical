@@ -446,6 +446,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
 
+        # self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
+        #     self.ui.textEdit_symptom, self.database, "主訴"
+        # )
+
         self.add_tab_button = QtWidgets.QToolButton()
         self.add_tab_button.setIcon(QtGui.QIcon("./icons/document-new.svg"))
         self.add_tab_button.clicked.connect(self.add_prescript_tab)
@@ -4138,55 +4142,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
         # 正常傳遞事件給原生 QTextEdit 處理
         if key not in [Qt.Key_Enter, Qt.Key_Return]:
             return QtWidgets.QTextEdit.keyPressEvent(sender, event)
-
-    # def _text_edit_key_press(self, event):
-    #     if self.ui.textEdit_symptom.hasFocus():
-    #         diagnostic_type = '主訴'
-    #         sender = self.ui.textEdit_symptom
-    #     elif self.ui.textEdit_tongue.hasFocus():
-    #         diagnostic_type = '舌診'
-    #         sender = self.ui.textEdit_tongue
-    #     elif self.ui.textEdit_pulse.hasFocus():
-    #         diagnostic_type = '脈象'
-    #         sender = self.ui.textEdit_pulse
-    #     elif self.ui.textEdit_remark.hasFocus():
-    #         diagnostic_type = '備註'
-    #         sender = self.ui.textEdit_remark
-    #     else:
-    #         diagnostic_type = '主訴'
-    #         sender = self.ui.textEdit_symptom
-
-    #     key = event.key()
-    #     char = event.text()
-    #     self.input_code += char
-
-    #     if key in [
-    #         Qt.Key_Enter, Qt.Key_Return,
-    #         Qt.Key_Escape,
-    #         Qt.Key_Space, Qt.Key_Comma,
-    #         Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right,
-    #     ]:
-    #         if key in [Qt.Key_Enter, Qt.Key_Return]:
-    #             self.input_code = self.input_code[:-1]
-    #             if self.input_code != '':
-    #                 self._query_diagnostic_dict(event, sender, self.input_code, diagnostic_type)
-    #             else:
-    #                 return QtWidgets.QTextEdit.keyPressEvent(sender, event)
-    #         elif key in [
-    #             Qt.Key_Escape, Qt.Key_Space,
-    #             Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right,
-    #         ]:
-    #             self.input_code = ''
-
-    #         self.input_code = ''
-    #     elif key in [Qt.Key_Backspace, Qt.Key_Delete]:
-    #         if len(self.input_code) > 1:
-    #             self.input_code = self.input_code[:-2]
-    #         else:
-    #             self.input_code = ''
-
-    #     if key not in [Qt.Key_Enter, Qt.Key_Return]:
-    #         return QtWidgets.QTextEdit.keyPressEvent(sender, event)
 
     def _query_diagnostic_dict(self, event, sender, input_code, diagnostic_type):
         clean_input_code = string_utils.replace_ascii_char(["\\", '"', "'"], input_code)

@@ -1,5 +1,5 @@
-import sys
 import importlib
+import sys
 
 
 # 資料庫類別
@@ -74,11 +74,11 @@ def get_voice_client():
 
 # 讀卡機控制軟體
 def get_cshis(parent, database, system_settings):
-    if system_settings.field('使用讀卡機') != 'Y':
+    if system_settings.field("使用讀卡機") != "Y":
         return None
 
-    if sys.platform == 'win32':
-        if system_settings.field('讀卡機控制軟體版本') == 'cshis6':
+    if sys.platform == "win32":
+        if system_settings.field("讀卡機控制軟體版本") == "cshis6":
             from classes import cshis6_win32 as cshis
         else:
             from classes import cshis_win32 as cshis
@@ -93,17 +93,26 @@ def get_cshis(parent, database, system_settings):
 
 # 虛擬健保卡讀卡機控制軟體
 def get_vhccshis(parent, database, system_settings, qrcode):
-    if sys.platform == 'win32':
-        if system_settings.field('讀卡機控制軟體版本') == 'cshis6':
+    if sys.platform == "win32":
+        if system_settings.field("讀卡機控制軟體版本") == "cshis6":
             from classes import cshis6_win32 as cshis
+
             module = importlib.reload(cshis)
-            object = module.CSHIS(parent, database, system_settings, ic_card_type='虛擬健保卡', qrcode=qrcode)
+            object = module.CSHIS(
+                parent,
+                database,
+                system_settings,
+                ic_card_type="虛擬健保卡",
+                qrcode=qrcode,
+            )
         else:
             from classes import vhccshis_win32 as vhccshis
+
             module = importlib.reload(vhccshis)
             object = module.VHCCSHIS(parent, database, system_settings, qrcode)
     else:
         from classes import vhccshis
+
         module = importlib.reload(vhccshis)
         object = module.VHCCSHIS(parent, database, system_settings, qrcode)
 
@@ -112,7 +121,7 @@ def get_vhccshis(parent, database, system_settings, qrcode):
 
 # 健保卡控制軟體加值作業
 def get_cshisx(database, system_settings):
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         from classes import cshisx_win32 as cshisx
     else:
         from classes import cshisx
@@ -125,7 +134,7 @@ def get_cshisx(database, system_settings):
 
 # hca 函數庫
 def get_hca_api(database, system_settings):
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         from classes import hca_api_win32 as hca_api
     else:
         from classes import hca_api
@@ -203,20 +212,37 @@ def get_jetway(system_settings):
 
 
 # ic資料上傳
-def get_ic_upload_xml1(parent, database, system_settings, tableWidget_ic_record, upload_type):
+def get_ic_upload_xml1(
+    parent, database, system_settings, tableWidget_ic_record, upload_type
+):
     from classes import ic_upload_xml_1
 
     module = importlib.reload(ic_upload_xml_1)
-    object = module.ICUploadXML1(parent, database, system_settings, tableWidget_ic_record, upload_type)
+    object = module.ICUploadXML1(
+        parent, database, system_settings, tableWidget_ic_record, upload_type
+    )
 
     return object
 
 
 # ic資料上傳 新格式
-def get_ic_upload_xml2(parent, database, system_settings, tableWidget_ic_record, upload_type):
+def get_ic_upload_xml2(
+    parent, database, system_settings, tableWidget_ic_record, upload_type
+):
     from classes import ic_upload_xml_2
 
     module = importlib.reload(ic_upload_xml_2)
-    object = module.ICUploadXML2(parent, database, system_settings, tableWidget_ic_record, upload_type)
+    object = module.ICUploadXML2(
+        parent, database, system_settings, tableWidget_ic_record, upload_type
+    )
+
+    return object
+
+
+def get_dict_autocomplete(text_edit, database, clinic_type):
+    from classes import dict_autocomplete
+
+    module = importlib.reload(dict_autocomplete)
+    object = module.DictAutoComplete(text_edit, database, clinic_type)
 
     return object

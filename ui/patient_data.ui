@@ -38,9 +38,9 @@
          <property name="geometry">
           <rect>
            <x>0</x>
-           <y>0</y>
+           <y>-312</y>
            <width>573</width>
-           <height>1112</height>
+           <height>1143</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -520,38 +520,10 @@
                   <string>從何處得知本診所</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_5">
-                  <item row="0" column="1">
-                   <widget class="QCheckBox" name="checkBox_trace02">
+                  <item row="4" column="1">
+                   <widget class="QCheckBox" name="checkBox_trace14">
                     <property name="text">
-                     <string>關鍵字搜尋</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QCheckBox" name="checkBox_trace03">
-                    <property name="text">
-                     <string>Google地圖</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="3">
-                   <widget class="QCheckBox" name="checkBox_trace04">
-                    <property name="text">
-                     <string>醫師自營社群</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QCheckBox" name="checkBox_trace01">
-                    <property name="text">
-                     <string>舊患者</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="2">
-                   <widget class="QCheckBox" name="checkBox_trace19">
-                    <property name="text">
-                     <string>BNI</string>
+                     <string>書籍雜誌</string>
                     </property>
                    </widget>
                   </item>
@@ -562,13 +534,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="5" column="0">
-                   <widget class="QCheckBox" name="checkBox_trace17">
-                    <property name="text">
-                     <string>活動引流</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="4" column="3">
                    <widget class="QCheckBox" name="checkBox_trace16">
                     <property name="text">
@@ -576,45 +541,10 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="2">
-                   <widget class="QCheckBox" name="checkBox_trace15">
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="checkBox_trace02">
                     <property name="text">
-                     <string>親友介紹</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="1">
-                   <widget class="QCheckBox" name="checkBox_trace14">
-                    <property name="text">
-                     <string>書籍雜誌</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QCheckBox" name="checkBox_trace13">
-                    <property name="text">
-                     <string>電視媒體</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="3">
-                   <widget class="QCheckBox" name="checkBox_trace12">
-                    <property name="text">
-                     <string>戶外看板招牌</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="2">
-                   <widget class="QCheckBox" name="checkBox_trace11">
-                    <property name="text">
-                     <string>Podcast</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QCheckBox" name="checkBox_trace10">
-                    <property name="text">
-                     <string>論壇</string>
+                     <string>關鍵字搜尋</string>
                     </property>
                    </widget>
                   </item>
@@ -625,35 +555,7 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="3">
-                   <widget class="QCheckBox" name="checkBox_trace08">
-                    <property name="text">
-                     <string>非自營影音</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QCheckBox" name="checkBox_trace07">
-                    <property name="text">
-                     <string>非自營社群</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QCheckBox" name="checkBox_trace06">
-                    <property name="text">
-                     <string>自營影音Youtube</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QCheckBox" name="checkBox_trace05">
-                    <property name="text">
-                     <string>診所自營社群</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0" colspan="4">
+                  <item row="7" column="0" colspan="4">
                    <layout class="QHBoxLayout" name="horizontalLayout_8">
                     <item>
                      <widget class="QLabel" name="label_27">
@@ -666,6 +568,118 @@
                      <widget class="QLineEdit" name="lineEdit_trace_remark"/>
                     </item>
                    </layout>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QCheckBox" name="checkBox_trace07">
+                    <property name="text">
+                     <string>非自營社群</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="checkBox_trace05">
+                    <property name="text">
+                     <string>診所自營社群</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="2">
+                   <widget class="QCheckBox" name="checkBox_trace19">
+                    <property name="text">
+                     <string>BNI</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="2">
+                   <widget class="QCheckBox" name="checkBox_trace15">
+                    <property name="text">
+                     <string>親友介紹</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="3">
+                   <widget class="QCheckBox" name="checkBox_trace08">
+                    <property name="text">
+                     <string>非自營影音</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="checkBox_trace01">
+                    <property name="text">
+                     <string>舊患者</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QCheckBox" name="checkBox_trace10">
+                    <property name="text">
+                     <string>論壇</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QCheckBox" name="checkBox_trace13">
+                    <property name="text">
+                     <string>電視媒體</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="3">
+                   <widget class="QCheckBox" name="checkBox_trace19_2">
+                    <property name="text">
+                     <string>附近住戶</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="2">
+                   <widget class="QCheckBox" name="checkBox_trace11">
+                    <property name="text">
+                     <string>Podcast</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="checkBox_trace03">
+                    <property name="text">
+                     <string>Google地圖</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="3">
+                   <widget class="QCheckBox" name="checkBox_trace12">
+                    <property name="text">
+                     <string>戶外看板招牌</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QCheckBox" name="checkBox_trace17">
+                    <property name="text">
+                     <string>活動引流</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QCheckBox" name="checkBox_trace06">
+                    <property name="text">
+                     <string>自營影音Youtube</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="3">
+                   <widget class="QCheckBox" name="checkBox_trace04">
+                    <property name="text">
+                     <string>醫師自營社群</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="QCheckBox" name="checkBox_trace17_2">
+                    <property name="text">
+                     <string>路過</string>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </widget>
