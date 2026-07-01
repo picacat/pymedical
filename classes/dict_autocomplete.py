@@ -151,6 +151,9 @@ class DictAutoComplete(QObject):
         self._prefix_start_pos = None
         self._min_prefix_pos = None  # 上次套用完成的位置，往前掃描抓詞時碰到這裡就停止
         self._deleting = False  # 這次 textChanged 是不是因為刪字造成的
+        self._last_text_length = len(
+            self.text_edit.toPlainText()
+        )  # 用來偵測是不是一次性大量變動的文字
 
         self.repo = ClinicRepository(database)
         try:
@@ -190,9 +193,19 @@ class DictAutoComplete(QObject):
         self._fallback_focus_out_event = self.text_edit.focusOutEvent
         self.text_edit.focusOutEvent = self._focus_out_event
 
+        # 滑鼠點擊：把點擊後的游標位置當成新的搜尋邊界起點（可能是點到既有內容中間）
+        self._fallback_mouse_press_event = self.text_edit.mousePressEvent
+        self.text_edit.mousePressEvent = self._mouse_press_event
+
     def _focus_out_event(self, event):
         self.popup.hide()
         self._fallback_focus_out_event(event)
+
+    def _mouse_press_event(self, event):
+        self.popup.hide()
+        self._fallback_mouse_press_event(event)
+        # 呼叫完 fallback 之後，Qt 已經把游標移到點擊的位置了，這裡才讀得到正確的值
+        self._min_prefix_pos = self.text_edit.textCursor().position()
 
     def _on_item_clicked(self, list_item):
         self._insert_completion(list_item.text())
@@ -232,6 +245,18 @@ class DictAutoComplete(QObject):
 
         # 其餘按鍵，照原本的方式處理（可能是預設的 QTextEdit 行為，也可能是別的程式接管過的邏輯）
         self._fallback_key_press_event(event)
+
+        # 方向鍵/Home/End 等移動游標的按鍵，可能把游標移到既有內容中間，
+        # 把這裡當成新的搜尋邊界起點（跟滑鼠點擊是同樣的道理）
+        if key in (
+            Qt.Key_Left,
+            Qt.Key_Right,
+            Qt.Key_Home,
+            Qt.Key_End,
+            Qt.Key_PageUp,
+            Qt.Key_PageDown,
+        ) or (key in (Qt.Key_Up, Qt.Key_Down) and not self.popup.isVisible()):
+            self._min_prefix_pos = self.text_edit.textCursor().position()
 
     def _move_selection(self, key):
         count = self.popup.count()
@@ -294,31 +319,52 @@ class DictAutoComplete(QObject):
     _DELIMITERS = " \t\n,，。.;；:：、"
 
     def _get_prefix_and_start(self):
-        cursor = self.text_edit.textCursor()
-        block_text = cursor.block().text()
-        pos_in_block = cursor.positionInBlock()
-        text_before_cursor = block_text[:pos_in_block]
-        block_start_abs = cursor.position() - pos_in_block
+        doc = self.text_edit.document()
+        cursor_pos = self.text_edit.textCursor().position()
 
-        # 掃描下限：不能跨過上次套用完成的邊界位置，避免跟前一個剛帶入的詞黏在一起
-        min_i = 0
-        if self._min_prefix_pos is not None:
-            candidate = self._min_prefix_pos - block_start_abs
-            if 0 <= candidate <= len(text_before_cursor):
-                min_i = candidate
+        # 邊界一律用絕對位置比較，不牽扯段落內的相對位置換算，避免多段落內容時算錯。
+        # 邊界只有在「游標已經到達或超過邊界」時才生效；如果游標還在邊界之前
+        # （代表在既有內容中間插入），邊界不該介入，讓它照正常的標點符號斷詞運作。
+        min_pos = 0
+        if self._min_prefix_pos is not None and cursor_pos >= self._min_prefix_pos:
+            min_pos = self._min_prefix_pos
 
-        i = len(text_before_cursor)
-        while i > min_i and text_before_cursor[i - 1] not in self._DELIMITERS:
-            i -= 1
+        start_pos = cursor_pos
+        temp_cursor = QTextCursor(doc)
+        while start_pos > min_pos:
+            temp_cursor.setPosition(start_pos - 1)
+            temp_cursor.setPosition(start_pos, QTextCursor.KeepAnchor)
+            ch = temp_cursor.selectedText()
+            # \u2029 是 Qt 內部用來代表換段落的字元（不是一般的 \n），一併當成分隔符號
+            if ch in self._DELIMITERS or ch == "\u2029":
+                break
+            start_pos -= 1
 
-        prefix = text_before_cursor[i:]
-        start_pos = cursor.position() - len(prefix)
+        prefix_cursor = QTextCursor(doc)
+        prefix_cursor.setPosition(start_pos)
+        prefix_cursor.setPosition(cursor_pos, QTextCursor.KeepAnchor)
+        prefix = prefix_cursor.selectedText()
+
         return prefix, start_pos
 
     def _on_text_changed(self):
+        current_length = len(self.text_edit.toPlainText())
+        length_diff = current_length - self._last_text_length
+        self._last_text_length = current_length
+
         if self._deleting:
             self._deleting = False
             self.popup.hide()
+            return
+
+        # 一次變動超過幾個字元，代表不太可能是使用者打字/輸入法一次 commit 的正常輸入
+        # （例如程式呼叫 setText() 載入既有的主訴資料、或貼上一段文字），
+        # 這種情況直接把邊界設在目前文件的結尾，避免把整段既有內容也拖進搜尋範圍
+        if abs(length_diff) > 5:
+            self.popup.hide()
+            end_cursor = QTextCursor(self.text_edit.document())
+            end_cursor.movePosition(QTextCursor.End)
+            self._min_prefix_pos = end_cursor.position()
             return
 
         prefix, start_pos = self._get_prefix_and_start()
