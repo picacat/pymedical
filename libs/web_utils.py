@@ -59,8 +59,9 @@ def open_with_clean_cache(exe_path: str, address: str, profile_key: str):
             exe_path,
             "--new-window",
             f"--user-data-dir={temp_profile}",
-            "--no-first-run",
-            "--no-default-browser-check",
+            "--no-first-run",  # 跳過首次啟動流程
+            "--no-default-browser-check",  # 不跳出「設為預設瀏覽器」提示
+            "--disable-features=msEdgeWelcomePage,EdgeWelcomeExperience",  # 關閉 Edge 歡迎頁
             address,
         ]
     )
