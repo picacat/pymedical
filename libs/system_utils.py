@@ -297,8 +297,10 @@ def dump_table(
 def pip3_install(package):
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-    except Exception:
-        pass
+        return True
+    except Exception as e:
+        print(f"【警告】自動安裝套件 {package} 失敗：{e}")
+        return False
 
 
 def pip3_uninstall(package):
