@@ -1733,8 +1733,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>638</width>
-              <height>685</height>
+              <width>1322</width>
+              <height>792</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -2185,7 +2185,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>977</width>
+              <width>1301</width>
               <height>1236</height>
              </rect>
             </property>
@@ -3082,7 +3082,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>685</width>
+              <width>1301</width>
               <height>982</height>
              </rect>
             </property>
@@ -3887,8 +3887,8 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
-              <width>881</width>
+              <y>-306</y>
+              <width>1301</width>
               <height>1478</height>
              </rect>
             </property>
@@ -4590,6 +4590,13 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QCheckBox" name="checkBox_symptom_auto_complete">
+                    <property name="text">
+                     <string>輸入主訴資料自動補全</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <spacer name="verticalSpacer_11">
                     <property name="orientation">
                      <enum>Qt::Vertical</enum>
@@ -5276,7 +5283,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>836</width>
+              <width>1301</width>
               <height>2319</height>
              </rect>
             </property>
@@ -7147,7 +7154,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>508</width>
+              <width>1301</width>
               <height>883</height>
              </rect>
             </property>
@@ -7457,7 +7464,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>980</width>
+              <width>1301</width>
               <height>1440</height>
              </rect>
             </property>

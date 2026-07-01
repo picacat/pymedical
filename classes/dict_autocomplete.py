@@ -256,7 +256,23 @@ class DictAutoComplete(QObject):
             cursor.setPosition(
                 self.text_edit.textCursor().position(), QTextCursor.KeepAnchor
             )
-        cursor.insertText(completion)
+
+        insert_pos = (
+            cursor.selectionStart() if cursor.hasSelection() else cursor.position()
+        )
+
+        # 檢查插入點前一個字元：不是標點符號（也不是文件開頭）才在選字前面補逗號分隔，
+        # 避免詞黏在一起，也避免前面已經有標點時重複加逗號
+        text_to_insert = completion
+        if insert_pos > 0:
+            check_cursor = QTextCursor(self.text_edit.document())
+            check_cursor.setPosition(insert_pos)
+            check_cursor.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor)
+            preceding_char = check_cursor.selectedText()
+            if preceding_char and preceding_char not in self._DELIMITERS:
+                text_to_insert = ", " + completion
+
+        cursor.insertText(text_to_insert)
         self.text_edit.setTextCursor(cursor)
         self._min_prefix_pos = (
             cursor.position()

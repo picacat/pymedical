@@ -1087,6 +1087,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self._set_check_box(self.ui.checkBox_herb_only, "處方詞庫僅列出水藥")
         self._set_check_box(self.ui.checkBox_symptom_br, "主訴換行")
+        self._set_check_box(
+            self.ui.checkBox_symptom_auto_complete, "輸入主訴資料自動補全"
+        )
         self.ui.comboBox_disease_group.setCurrentText(
             self.system_settings.field("病名詞庫預設類別")
         )
@@ -2272,6 +2275,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self._save_check_box(self.ui.checkBox_herb_only, "處方詞庫僅列出水藥")
         self._save_check_box(self.ui.checkBox_symptom_br, "主訴換行")
+        self._save_check_box(
+            self.ui.checkBox_symptom_auto_complete, "輸入主訴資料自動補全"
+        )
         self.system_settings.post(
             "病名詞庫預設類別", self.ui.comboBox_disease_group.currentText()
         )

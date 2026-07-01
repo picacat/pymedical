@@ -78,9 +78,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self._set_ui()
         self._set_signal()
 
-        self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
-            self.ui.textEdit_symptom, self.database, "主訴"
-        )
+        if self.system_settings.field("輸入主訴資料自動補全") == "Y":
+            self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
+                self.ui.textEdit_symptom, self.database, "主訴"
+            )
 
         self._set_data()
         self._set_prescript_tab_cornor_widget()
@@ -4123,12 +4124,15 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
                 if self.input_code != "":
                     input_code = self.input_code  # 複製變數進 lambda 閉包
-                    QtCore.QTimer.singleShot(
-                        50,
-                        lambda: self._query_diagnostic_dict(
-                            event, sender, input_code, diagnostic_type
-                        ),
-                    )
+                    if self.system_settings.field("輸入主訴資料自動補全") == "Y":
+                        pass
+                    else:
+                        QtCore.QTimer.singleShot(
+                            50,
+                            lambda: self._query_diagnostic_dict(
+                                event, sender, input_code, diagnostic_type
+                            ),
+                        )
                 else:
                     return QtWidgets.QTextEdit.keyPressEvent(sender, event)
 
