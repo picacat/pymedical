@@ -2,7 +2,6 @@
 # -*- coding: UTF-8 -*-
 # 開啟網址
 import os
-import shutil
 import subprocess
 import sys
 import time
@@ -49,20 +48,19 @@ def find_browser_exe(browser: str):
 
 
 def open_with_clean_cache(exe_path: str, address: str, profile_key: str):
-    """
-    用獨立暫存 user-data-dir 啟動瀏覽器，等同強制清空快取。
-    profile_key 用來區分不同瀏覽器各自的暫存資料夾，避免互相干擾。
-    """
     temp_profile = os.path.join(
         os.environ.get("TEMP", "."), f"nhi_medcloud_temp_profile_{profile_key}"
     )
-    shutil.rmtree(temp_profile, ignore_errors=True)
+    # 不再每次刪除，只在資料夾不存在時才是全新
+    os.makedirs(temp_profile, exist_ok=True)
 
     subprocess.Popen(
         [
             exe_path,
             "--new-window",
             f"--user-data-dir={temp_profile}",
+            "--no-first-run",
+            "--no-default-browser-check",
             address,
         ]
     )
