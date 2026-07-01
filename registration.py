@@ -6098,8 +6098,8 @@ class Registration(QtWidgets.QMainWindow):
         self.database.exec_sql(sql)
 
     def _open_med_vpn(self):
-        # web_utils.open_med_vpn(self.system_settings)
-        web_utils.open_nhi_medcloud(use_virtual_card=False, user_data_dir=None)
+        web_utils.open_med_vpn(self.system_settings)
+        # web_utils.open_nhi_medcloud(use_virtual_card=False, user_data_dir=None)
 
     def _open_med_vpn_vhc(self):
         web_utils.open_med_vpn(self.system_settings, vhc_ic_card=True)
