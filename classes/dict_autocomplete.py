@@ -160,7 +160,7 @@ class DictAutoComplete(QObject):
         self.popup.setAttribute(Qt.WA_ShowWithoutActivating, True)
         self.popup.setStyleSheet("""
             QListWidget {
-                font-size: 16px;
+                font-size: 18px;
             }
             QListWidget::item {
                 padding: 4px 8px;
