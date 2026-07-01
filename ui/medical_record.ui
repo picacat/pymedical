@@ -1205,7 +1205,6 @@
    <addaction name="action_broadcast_voice"/>
    <addaction name="separator"/>
    <addaction name="action_reference"/>
-   <addaction name="action_medical_record_collection"/>
    <addaction name="action_open_hosts"/>
    <addaction name="action_exam_result"/>
    <addaction name="separator"/>
@@ -1252,6 +1251,7 @@
     <addaction name="action_exam_precheck"/>
     <addaction name="separator"/>
     <addaction name="action_reference_prescript"/>
+    <addaction name="action_medical_record_collection"/>
     <addaction name="action_medical_record_experience"/>
     <addaction name="separator"/>
     <addaction name="action_medicine_to_herb"/>
