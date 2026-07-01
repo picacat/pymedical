@@ -321,6 +321,8 @@ try:
 except ModuleNotFoundError:
     pip3_install("gtts")
     pip3_install("pygame")
+    from gtts import gTTS
+    from pygame import mixer
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
 CSS_PATH = "css"

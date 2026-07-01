@@ -4473,8 +4473,8 @@ class MedicalRecord(QtWidgets.QMainWindow):
         )
 
     def _open_med_vpn(self):
-        # web_utils.open_med_vpn(self.system_settings)
-        web_utils.open_nhi_medcloud(use_virtual_card=False, user_data_dir=None)
+        web_utils.open_med_vpn(self.system_settings)
+        # web_utils.open_nhi_medcloud(use_virtual_card=False, user_data_dir=None)
 
     def is_doctor_done(self):
         if self.case_key is None:
