@@ -14,27 +14,34 @@ classes/dict_autocomplete.py
 
         return object
 
-    # ins_prescript_record.py
-    self.dict_autocomplete = class_utils.get_dict_autocomplete(
-        self.textEdit_main_complaint,  # Qt Designer 裡既有的 QTextEdit
-        self.database,
-        "主訴",
+    # medical_record.py（一定要在 _set_signal() 之後才建立，見下方說明）
+    self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
+        self.ui.textEdit_symptom, self.database, "主訴"
     )
 
 DictAutoComplete 不是 QTextEdit 的替代品，而是「附加」在你既有的 QTextEdit 上：
 - 一建立就會去資料庫撈 ClinicType = clinic_type 的全部資料放進記憶體快取
 - 監聽該 QTextEdit 的 textChanged，輸入文字時即時在記憶體裡過濾、彈出下拉清單
 - 同時比對 ClinicName（內容包含）與 InputCode（前綴比對，給快速縮碼輸入用）
-- 清單依 HitRate 由高到低排序；使用者選擇某筆後，HitRate +1 並回寫資料庫
+- 清單依中文字順序排序（長度優先，再依 Big5 編碼順序，跟舊系統的排序邏輯一致）
 - 上下鍵選擇、Enter/Tab 套用、Esc 或找不到符合項目時自動關閉清單
-  （這部分由 QCompleter 內建處理，不需要額外寫鍵盤事件邏輯）
+
+實作上刻意不使用 QCompleter：QCompleter 的 popup 在某些環境下會把上下鍵整個
+攔截掉、不透過任何我們攔得到的管道（eventFilter / keyPressEvent 都試過都攔不到），
+導致「反白看起來有動，但實際選到的永遠是第一筆」這種難以除錯的問題。
+改成自己刻一個 QListWidget 當下拉清單，所有鍵盤事件都經過我們自己接管的
+keyPressEvent，狀態完全掌控在自己手上，才能保證可靠。
+
+重要：這個 class 會接管 text_edit.keyPressEvent。如果 text_edit 在別的地方
+（例如 medical_record.py 的 _set_signal()）也會設定 keyPressEvent，
+請確保 DictAutoComplete 是在那之後才建立，不然我們接管的行為會被蓋掉。
 """
 
 from dataclasses import dataclass
 
-from PyQt5.QtCore import QEvent, QObject, QStringListModel, Qt
+from PyQt5.QtCore import QObject, Qt
 from PyQt5.QtGui import QTextCursor
-from PyQt5.QtWidgets import QCompleter
+from PyQt5.QtWidgets import QListWidget
 
 # ---------------------------------------------------------------------------
 # 資料層：負責跟 clinic table 互動
@@ -46,7 +53,6 @@ class ClinicItem:
     clinic_key: int
     clinic_name: str
     input_code: str
-    hit_rate: int
 
 
 class ClinicRepository:
@@ -56,19 +62,18 @@ class ClinicRepository:
         self.database.select_record(sql, params) -> 查詢
             （mysql-connector-python，dictionary=True，所以每筆回傳的是 dict，
              key 是欄位名稱，例如 row["ClinicKey"]）
-        self.database.update_record(table_name, fields, primary_key, key_value, data) -> 寫入/更新
     """
 
     def __init__(self, database):
         self.database = database
 
     def load_by_type(self, clinic_type):
-        """一次撈出某個 ClinicType 的全部資料，給建立時呼叫"""
+        """一次撈出某個 ClinicType 的全部資料，給建立時呼叫，依中文字順序排序"""
         sql = """
-            SELECT ClinicKey, ClinicName, InputCode, HitRate
+            SELECT ClinicKey, ClinicName, InputCode
             FROM clinic
             WHERE ClinicType = %s AND ClinicName IS NOT NULL
-            ORDER BY HitRate DESC, ClinicName ASC
+            ORDER BY LENGTH(ClinicName), CAST(CONVERT(`ClinicName` USING big5) AS BINARY)
         """
         params = (clinic_type,)
         rows = self.database.select_record(sql, params)
@@ -78,16 +83,9 @@ class ClinicRepository:
                 clinic_key=row["ClinicKey"],
                 clinic_name=row["ClinicName"],
                 input_code=row["InputCode"] or "",
-                hit_rate=row["HitRate"] or 0,
             )
             for row in rows
         ]
-
-    def bump_hit_rate(self, clinic_key):
-        """使用者選用某筆關鍵字後呼叫，累加熱門度（共用既有的 db_utils.increment_hit_rate）"""
-        from libs import db_utils
-
-        db_utils.increment_hit_rate(self.database, "clinic", "ClinicKey", clinic_key)
 
 
 # ---------------------------------------------------------------------------
@@ -110,10 +108,10 @@ class ClinicCache:
         matched = [
             item
             for item in self._items
-            if kw in item.clinic_name.lower()
+            if item.clinic_name.lower().startswith(kw)
             or (item.input_code and item.input_code.lower().startswith(kw))
         ]
-        # 已經依 HitRate 預先排序過了（load_by_type 的 ORDER BY），這裡維持原順序即可
+        # 已經依中文字順序預先排序過了（load_by_type 的 ORDER BY），這裡維持原順序即可
         return matched[:limit]
 
     def get_by_name(self, name):
@@ -125,7 +123,7 @@ class ClinicCache:
 
 
 # ---------------------------------------------------------------------------
-# 控制層：掛載到既有 QTextEdit 上
+# 控制層：掛載到既有 QTextEdit 上，自己刻下拉清單
 # ---------------------------------------------------------------------------
 
 
@@ -140,12 +138,12 @@ class DictAutoComplete(QObject):
     """
 
     def __init__(self, text_edit, database, clinic_type, parent=None):
-        print(
-            f"[dict_autocomplete] 建立新的 DictAutoComplete, clinic_type={clinic_type}"
-        )  # 暫時除錯用
         super().__init__(parent or text_edit)
         self.text_edit = text_edit
         self._prefix_start_pos = None
+        self._min_prefix_pos = None  # 上次套用完成的位置，往前掃描抓詞時碰到這裡就停止
+        self._just_inserted = False  # 剛套用完成，緊接著的第一個 Backspace 要忽略
+        self._deleting = False  # 這次 textChanged 是不是因為刪字造成的
 
         self.repo = ClinicRepository(database)
         try:
@@ -155,64 +153,93 @@ class DictAutoComplete(QObject):
             items = []
         self.cache = ClinicCache(items)
 
-        self.completer = QCompleter(self.text_edit)
-        self.completer.setModel(QStringListModel([], self.completer))
-        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
-        # 過濾邏輯已經在 ClinicCache.search 裡自己做了，這裡關掉 Qt 內建過濾
-        self.completer.setFilterMode(Qt.MatchContains)
-        self.completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
-        self.completer.setWidget(self.text_edit)
-        self.completer.activated.connect(self._insert_completion)
+        # 自己刻的下拉清單視窗：無邊框、不搶焦點，純粹拿來顯示 + 反白，
+        # 所有鍵盤操作邏輯都在 DictAutoComplete 自己身上，不靠這個 widget 自己處理按鍵
+        self.popup = QListWidget()
+        self.popup.setWindowFlags(Qt.ToolTip | Qt.FramelessWindowHint)
+        self.popup.setFocusPolicy(Qt.NoFocus)
+        self.popup.setAttribute(Qt.WA_ShowWithoutActivating, True)
+        self.popup.setStyleSheet("""
+            QListWidget {
+                font-size: 16px;
+            }
+            QListWidget::item {
+                padding: 4px 8px;
+            }
+        """)
+        self.popup.itemClicked.connect(self._on_item_clicked)
+        self.popup.hide()
 
         # 文字一有變動（打字、刪除、貼上都算）就重新計算要不要顯示清單
-        # 上下鍵選擇 / Enter,Tab 套用 / Esc 關閉，這些都是 QCompleter 內建處理，不用自己寫
         self.text_edit.textChanged.connect(self._on_text_changed)
 
-        # 額外處理：popup 顯示時按 Tab 不要插入 Tab 字元
-        self.text_edit.installEventFilter(self)
+        # 直接接管 keyPressEvent（跟專案裡其他地方的做法一致）。
+        # 記下目前的 keyPressEvent，讓沒被我們攔截的按鍵可以照樣往下傳
+        # （不管它原本是預設的，還是已經被其他程式碼接管過，例如 medical_record.py 的 _text_edit_key_press）。
+        self._fallback_key_press_event = self.text_edit.keyPressEvent
+        self.text_edit.keyPressEvent = self._key_press_event
 
-    def eventFilter(self, watched, event):
-        if watched is self.text_edit and event.type() == QEvent.KeyPress:
-            print(
-                f"[dict_autocomplete] key={event.key()}, popup_visible={self.completer.popup().isVisible()}"
-            )  # 暫時除錯用
+    def _on_item_clicked(self, list_item):
+        self._insert_completion(list_item.text())
 
-        if (
-            watched is self.text_edit
-            and event.type() == QEvent.KeyPress
-            and self.completer.popup().isVisible()
-        ):
-            key = event.key()
+    def _key_press_event(self, event):
+        key = event.key()
 
-            # Enter / Tab：套用目前反白的項目，並吃掉這個按鍵
-            # （不能依賴 QTextEdit 預設行為，否則 Enter 會變成換行）
+        # 剛套用完成，緊接著的下一個按鍵：如果是 Backspace 就忽略不做任何事，
+        # 不管是不是 Backspace，這個保護都只作用這麼一次
+        if self._just_inserted:
+            self._just_inserted = False
+            if key == Qt.Key_Backspace:
+                return
+
+        if self.popup.isVisible():
+            # Enter / Tab：套用目前反白的項目，不讓它變成換行或插入 Tab 字元
             if key in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Tab, Qt.Key_Backtab):
                 self._accept_current_completion()
-                return True
+                return
 
-            # Esc：直接關閉清單，不做其他事
+            # Esc：直接關閉清單
             if key == Qt.Key_Escape:
-                self.completer.popup().hide()
-                return True
+                self.popup.hide()
+                return
 
-            # Up/Down/PageUp/PageDown 等導覽鍵交給 QCompleter 內建機制轉發給 popup，這裡不處理
+            # 上下鍵：直接操作我們自己的 QListWidget，完全不假手他人
+            if key in (Qt.Key_Up, Qt.Key_Down):
+                self._move_selection(key)
+                return
 
-        return super().eventFilter(watched, event)
+        # Backspace / Delete：正常刪字，但標記起來，讓 _on_text_changed 不要因為刪除又跳出清單
+        if key in (Qt.Key_Backspace, Qt.Key_Delete):
+            self._deleting = True
+
+        # 其餘按鍵，照原本的方式處理（可能是預設的 QTextEdit 行為，也可能是別的程式接管過的邏輯）
+        self._fallback_key_press_event(event)
+
+    def _move_selection(self, key):
+        count = self.popup.count()
+        if count == 0:
+            return
+
+        row = self.popup.currentRow()
+        if row < 0:
+            row = 0
+
+        if key == Qt.Key_Down:
+            row = min(row + 1, count - 1)
+        else:
+            row = max(row - 1, 0)
+
+        self.popup.setCurrentRow(row)
 
     def _accept_current_completion(self):
-        """套用目前在下拉清單中反白的項目"""
-        popup = self.completer.popup()
-        index = popup.currentIndex()
-        if index.isValid():
-            completion = index.data()
-            self._insert_completion(completion)
-        else:
-            popup.hide()
+        item = self.popup.currentItem()
+        if item is None:
+            self.popup.hide()
+            return
+
+        self._insert_completion(item.text())
 
     def _insert_completion(self, completion):
-        print(
-            f"[dict_autocomplete] _insert_completion 被呼叫, completion={completion!r}"
-        )  # 暫時除錯用
         cursor = self.text_edit.textCursor()
         if self._prefix_start_pos is not None:
             cursor.setPosition(self._prefix_start_pos)
@@ -221,36 +248,34 @@ class DictAutoComplete(QObject):
             )
         cursor.insertText(completion)
         self.text_edit.setTextCursor(cursor)
-
-        # 使用者真的選用了這個關鍵字 -> 累加熱門度（寫回資料庫，並同步更新記憶體快取，方便排序）
-        item = self.cache.get_by_name(completion)
-        if item:
-            try:
-                self.repo.bump_hit_rate(item.clinic_key)
-                item.hit_rate += 1
-            except Exception as e:
-                # 累加熱門度失敗不該影響輸入體驗，記錄就好
-                print(f"更新 HitRate 失敗: {e}")
+        self._min_prefix_pos = (
+            cursor.position()
+        )  # 記下這個位置，之後掃描抓詞不會跨過來黏在一起
+        self._just_inserted = True  # 緊接著的下一個 Backspace 要忽略
 
         # 套用完成後把清單收起來，避免 insertText 觸發的 textChanged 又把同一筆結果跳出來
-        self.completer.popup().hide()
+        self.popup.hide()
 
-    # 中文沒有空白分詞，QTextCursor.WordUnderCursor 對中文不準，改自己往前掃描
-    # 遇到空白/標點/換行才停止，回傳 (目前輸入片段, 該片段在文件中的起始位置)
+    # 中文沒有空白分詞，改自己往前掃描，遇到空白/標點/換行才停止
+    # 回傳 (目前輸入片段, 該片段在文件中的起始位置)
     _DELIMITERS = " \t\n,，。.;；:：、"
-
-    def _text_under_cursor(self):
-        prefix, _ = self._get_prefix_and_start()
-        return prefix
 
     def _get_prefix_and_start(self):
         cursor = self.text_edit.textCursor()
         block_text = cursor.block().text()
         pos_in_block = cursor.positionInBlock()
         text_before_cursor = block_text[:pos_in_block]
+        block_start_abs = cursor.position() - pos_in_block
+
+        # 掃描下限：不能跨過上次套用完成的邊界位置，避免跟前一個剛帶入的詞黏在一起
+        min_i = 0
+        if self._min_prefix_pos is not None:
+            candidate = self._min_prefix_pos - block_start_abs
+            if 0 <= candidate <= len(text_before_cursor):
+                min_i = candidate
 
         i = len(text_before_cursor)
-        while i > 0 and text_before_cursor[i - 1] not in self._DELIMITERS:
+        while i > min_i and text_before_cursor[i - 1] not in self._DELIMITERS:
             i -= 1
 
         prefix = text_before_cursor[i:]
@@ -258,28 +283,38 @@ class DictAutoComplete(QObject):
         return prefix, start_pos
 
     def _on_text_changed(self):
+        if self._deleting:
+            self._deleting = False
+            self.popup.hide()
+            return
+
         prefix, start_pos = self._get_prefix_and_start()
         self._prefix_start_pos = start_pos
 
         if len(prefix) < 1:
-            self.completer.popup().hide()
+            self.popup.hide()
             return
 
         results = self.cache.search(prefix)
         if not results:
-            self.completer.popup().hide()
+            self.popup.hide()
             return
 
-        names = [item.clinic_name for item in results]
-        self.completer.setCompletionPrefix(prefix)
-        self.completer.model().setStringList(names)
-        self.completer.popup().setCurrentIndex(
-            self.completer.completionModel().index(0, 0)
-        )
+        self.popup.clear()
+        for item in results:
+            self.popup.addItem(item.clinic_name)
+        self.popup.setCurrentRow(0)
 
-        rect = self.text_edit.cursorRect()
-        rect.setWidth(
-            self.completer.popup().sizeHintForColumn(0)
-            + self.completer.popup().verticalScrollBar().sizeHint().width()
-        )
-        self.completer.complete(rect)
+        self._position_popup()
+        self.popup.show()
+
+    def _position_popup(self):
+        cursor_rect = self.text_edit.cursorRect()
+        global_pos = self.text_edit.mapToGlobal(cursor_rect.bottomLeft())
+
+        row_height = self.popup.sizeHintForRow(0) if self.popup.count() > 0 else 24
+        visible_rows = min(self.popup.count(), 12)
+        height = row_height * visible_rows + 4
+        width = max(self.text_edit.width() // 2, 220)
+
+        self.popup.setGeometry(global_pos.x(), global_pos.y(), width, height)

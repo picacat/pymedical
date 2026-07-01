@@ -77,6 +77,11 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
         self._set_ui()
         self._set_signal()
+
+        # self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
+        #     self.ui.textEdit_symptom, self.database, "主訴"
+        # )
+
         self._set_data()
         self._set_prescript_tab_cornor_widget()
 
@@ -445,10 +450,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
-
-        # self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
-        #     self.ui.textEdit_symptom, self.database, "主訴"
-        # )
 
         self.add_tab_button = QtWidgets.QToolButton()
         self.add_tab_button.setIcon(QtGui.QIcon("./icons/document-new.svg"))
