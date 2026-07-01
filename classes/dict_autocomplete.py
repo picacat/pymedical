@@ -142,7 +142,6 @@ class DictAutoComplete(QObject):
         self.text_edit = text_edit
         self._prefix_start_pos = None
         self._min_prefix_pos = None  # 上次套用完成的位置，往前掃描抓詞時碰到這裡就停止
-        self._just_inserted = False  # 剛套用完成，緊接著的第一個 Backspace 要忽略
         self._deleting = False  # 這次 textChanged 是不是因為刪字造成的
 
         self.repo = ClinicRepository(database)
@@ -179,18 +178,19 @@ class DictAutoComplete(QObject):
         self._fallback_key_press_event = self.text_edit.keyPressEvent
         self.text_edit.keyPressEvent = self._key_press_event
 
+        # 焦點離開時自動關閉下拉清單
+        self._fallback_focus_out_event = self.text_edit.focusOutEvent
+        self.text_edit.focusOutEvent = self._focus_out_event
+
+    def _focus_out_event(self, event):
+        self.popup.hide()
+        self._fallback_focus_out_event(event)
+
     def _on_item_clicked(self, list_item):
         self._insert_completion(list_item.text())
 
     def _key_press_event(self, event):
         key = event.key()
-
-        # 剛套用完成，緊接著的下一個按鍵：如果是 Backspace 就忽略不做任何事，
-        # 不管是不是 Backspace，這個保護都只作用這麼一次
-        if self._just_inserted:
-            self._just_inserted = False
-            if key == Qt.Key_Backspace:
-                return
 
         if self.popup.isVisible():
             # Enter / Tab：套用目前反白的項目，不讓它變成換行或插入 Tab 字元
@@ -209,7 +209,17 @@ class DictAutoComplete(QObject):
                 return
 
         # Backspace / Delete：正常刪字，但標記起來，讓 _on_text_changed 不要因為刪除又跳出清單
-        if key in (Qt.Key_Backspace, Qt.Key_Delete):
+        if key == Qt.Key_Backspace:
+            self._deleting = True
+            # 邊界要跟著刪除動作同步縮小：如果這次刪掉的字還在邊界範圍內（殘留字），
+            # 邊界就跟著往前退一格；退到底了（殘留字全刪光）才整個失效
+            if self._min_prefix_pos is not None:
+                cursor_pos = self.text_edit.textCursor().position()
+                if cursor_pos <= self._min_prefix_pos:
+                    self._min_prefix_pos -= 1
+                    if self._min_prefix_pos < 0:
+                        self._min_prefix_pos = None
+        elif key == Qt.Key_Delete:
             self._deleting = True
 
         # 其餘按鍵，照原本的方式處理（可能是預設的 QTextEdit 行為，也可能是別的程式接管過的邏輯）
@@ -251,7 +261,6 @@ class DictAutoComplete(QObject):
         self._min_prefix_pos = (
             cursor.position()
         )  # 記下這個位置，之後掃描抓詞不會跨過來黏在一起
-        self._just_inserted = True  # 緊接著的下一個 Backspace 要忽略
 
         # 套用完成後把清單收起來，避免 insertText 觸發的 textChanged 又把同一筆結果跳出來
         self.popup.hide()
@@ -298,6 +307,19 @@ class DictAutoComplete(QObject):
         results = self.cache.search(prefix)
         if not results:
             self.popup.hide()
+            # 這段前綴確定搜尋不到，把目前位置設成新的邊界，
+            # 避免之後繼續打字又跟這段「已知搜尋失敗」的文字黏在一起，永遠比對不到
+            self._min_prefix_pos = self.text_edit.textCursor().position()
+            return
+
+        if (
+            len(results) == 1
+            and results[0].clinic_name.lower() == prefix.strip().lower()
+        ):
+            # 只剩一筆而且完全打完了（不只是開頭符合），不用再跳清單出來選
+            # 順便設新邊界，避免之後繼續打字又跟這個已經完成的詞黏在一起
+            self.popup.hide()
+            self._min_prefix_pos = self.text_edit.textCursor().position()
             return
 
         self.popup.clear()

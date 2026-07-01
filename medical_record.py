@@ -78,9 +78,9 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self._set_ui()
         self._set_signal()
 
-        # self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
-        #     self.ui.textEdit_symptom, self.database, "主訴"
-        # )
+        self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
+            self.ui.textEdit_symptom, self.database, "主訴"
+        )
 
         self._set_data()
         self._set_prescript_tab_cornor_widget()
