@@ -105,13 +105,21 @@ class ClinicCache:
         if not keyword:
             return []
         kw = keyword.strip().lower()
-        matched = [
-            item
-            for item in self._items
-            if item.clinic_name.lower().startswith(kw)
-            or (item.input_code and item.input_code.lower().startswith(kw))
-        ]
-        # 已經依中文字順序預先排序過了（load_by_type 的 ORDER BY），這裡維持原順序即可
+
+        # 兩段式比對：開頭符合（含 InputCode 縮碼）優先，比較相關；
+        # 包含但不是開頭的排在後面，當作補充，避免口語化的長句完全找不到
+        prefix_matches = []
+        contains_matches = []
+        for item in self._items:
+            name_lower = item.clinic_name.lower()
+            input_code_hit = item.input_code and item.input_code.lower().startswith(kw)
+
+            if name_lower.startswith(kw) or input_code_hit:
+                prefix_matches.append(item)
+            elif kw in name_lower:
+                contains_matches.append(item)
+
+        matched = prefix_matches + contains_matches
         return matched[:limit]
 
     def get_by_name(self, name):
@@ -160,7 +168,7 @@ class DictAutoComplete(QObject):
         self.popup.setAttribute(Qt.WA_ShowWithoutActivating, True)
         self.popup.setStyleSheet("""
             QListWidget {
-                font-size: 18px;
+                font-size: 16px;
             }
             QListWidget::item {
                 padding: 4px 8px;
