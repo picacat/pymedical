@@ -1265,7 +1265,7 @@
      <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
    </property>
    <property name="text">
-    <string>存檔列印 [F10]</string>
+    <string>存檔列印F10</string>
    </property>
    <property name="toolTip">
     <string>存檔後列印處方箋</string>
@@ -1304,7 +1304,7 @@
      <normaloff>../icons/user-info.png</normaloff>../icons/user-info.png</iconset>
    </property>
    <property name="text">
-    <string>病患資料 [F3]</string>
+    <string>病患資料F3</string>
    </property>
    <property name="toolTip">
     <string>顯示病患資料</string>
@@ -1319,7 +1319,7 @@
      <normaloff>../icons/folder-documents.png</normaloff>../icons/folder-documents.png</iconset>
    </property>
    <property name="text">
-    <string>過去病歷 [F2]</string>
+    <string>過去病歷F2</string>
    </property>
    <property name="toolTip">
     <string>顯示完整的過去病歷</string>
@@ -1334,7 +1334,7 @@
      <normaloff>../icons/filesave.svg</normaloff>../icons/filesave.svg</iconset>
    </property>
    <property name="text">
-    <string>存檔不印 {F11]</string>
+    <string>存檔不印F11</string>
    </property>
    <property name="toolTip">
     <string>僅存檔, 不印任何的單據</string>
@@ -1349,7 +1349,7 @@
      <normaloff>../icons/emblem-documents.png</normaloff>../icons/emblem-documents.png</iconset>
    </property>
    <property name="text">
-    <string>參考病歷 [F7]</string>
+    <string>參考病歷F7</string>
    </property>
    <property name="shortcut">
     <string>F7</string>
@@ -1415,7 +1415,7 @@
      <normaloff>../icons/appointment-new.png</normaloff>../icons/appointment-new.png</iconset>
    </property>
    <property name="text">
-    <string>預約門診 [F8]</string>
+    <string>預約門診F8</string>
    </property>
    <property name="toolTip">
     <string>預約門診</string>
@@ -1478,7 +1478,7 @@
      <normaloff>../icons/applications-internet.png</normaloff>../icons/applications-internet.png</iconset>
    </property>
    <property name="text">
-    <string>雲端藥歷 [F6]</string>
+    <string>雲端藥歷F6</string>
    </property>
    <property name="toolTip">
     <string>開啟雲端藥歷</string>
