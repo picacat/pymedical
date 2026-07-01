@@ -1586,7 +1586,7 @@
      <normaloff>../icons/kblogger.png</normaloff>../icons/kblogger.png</iconset>
    </property>
    <property name="text">
-    <string>廣播叫號 [F5]</string>
+    <string>廣播叫號F5</string>
    </property>
    <property name="toolTip">
     <string>廣播叫號</string>
