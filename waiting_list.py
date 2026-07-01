@@ -1637,8 +1637,8 @@ class WaitingList(QtWidgets.QMainWindow):
         self._read_wait_completed()
 
     def _open_med_vpn(self):
-        web_utils.open_med_vpn(self.system_settings)
-        # web_utils.open_nhi_medcloud(use_virtual_card=False, user_data_dir=None)
+        # web_utils.open_med_vpn(self.system_settings)
+        web_utils.open_nhi_medcloud(use_virtual_card=False)
 
     def _table_widget_waiting_list_key_press(self, event):
         key = event.key()
