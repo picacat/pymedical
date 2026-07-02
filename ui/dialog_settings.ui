@@ -3887,7 +3887,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-306</y>
+              <y>-338</y>
               <width>1301</width>
               <height>1478</height>
              </rect>
@@ -4590,9 +4590,9 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_symptom_no_auto_complete">
+                   <widget class="QCheckBox" name="checkBox_symptom_auto_complete">
                     <property name="text">
-                     <string>輸入主訴資料不要自動補全</string>
+                     <string>輸入主訴自動補全</string>
                     </property>
                    </widget>
                   </item>
