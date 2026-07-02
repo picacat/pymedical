@@ -507,7 +507,10 @@ class Reservation(QtWidgets.QMainWindow):
 
     # 設定醫師
     def set_combo_box_doctor(self):
-        if self.system_settings.field("預約選擇當診醫師") == "Y":
+        if (
+            self.doctor is None
+            and self.system_settings.field("預約選擇當診醫師") == "Y"
+        ):
             self._set_combo_box_current_doctor()
 
     def _set_radio_button_period(self, period):
