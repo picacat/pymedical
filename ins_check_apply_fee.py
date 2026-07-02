@@ -120,7 +120,7 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
             categories.append("針傷合併")
 
         # 針灸複雜度分類（各自獨立判斷）
-        if ins_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE:
+        elif ins_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE:
             categories.append("高度複針")
         elif ins_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE:
             categories.append("中度複針")
