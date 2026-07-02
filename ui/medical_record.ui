@@ -1265,13 +1265,13 @@
      <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
    </property>
    <property name="text">
-    <string>存檔列印F10</string>
+    <string>存檔列印F11</string>
    </property>
    <property name="toolTip">
     <string>存檔後列印處方箋</string>
    </property>
    <property name="shortcut">
-    <string>F10</string>
+    <string>F11</string>
    </property>
   </action>
   <action name="action_dictionary">
@@ -1319,13 +1319,13 @@
      <normaloff>../icons/folder-documents.png</normaloff>../icons/folder-documents.png</iconset>
    </property>
    <property name="text">
-    <string>過去病歷F2</string>
+    <string>過去病歷F12</string>
    </property>
    <property name="toolTip">
     <string>顯示完整的過去病歷</string>
    </property>
    <property name="shortcut">
-    <string>F2</string>
+    <string>F12</string>
    </property>
   </action>
   <action name="action_save">
@@ -1334,13 +1334,13 @@
      <normaloff>../icons/filesave.svg</normaloff>../icons/filesave.svg</iconset>
    </property>
    <property name="text">
-    <string>存檔不印F11</string>
+    <string>存檔不印F10</string>
    </property>
    <property name="toolTip">
     <string>僅存檔, 不印任何的單據</string>
    </property>
    <property name="shortcut">
-    <string>F11</string>
+    <string>F10</string>
    </property>
   </action>
   <action name="action_reference">
@@ -1556,7 +1556,7 @@
     <string>強制存檔</string>
    </property>
    <property name="shortcut">
-    <string>F12</string>
+    <string>F9</string>
    </property>
   </action>
   <action name="action_medicine_to_herb">

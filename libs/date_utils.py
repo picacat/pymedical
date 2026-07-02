@@ -1,18 +1,18 @@
-import datetime
 import calendar
-import requests
-from libs import dialog_utils
-from libs import number_utils
+import datetime
 
+import requests
+
+from libs import dialog_utils, number_utils
 
 WEEK_DAY_LIST = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
 ]
 
 
@@ -21,8 +21,11 @@ def get_age(birth_date, current_date=datetime.datetime.now()):
     if birth_date is None or current_date is None:
         return None, None
 
-    year = current_date.year - birth_date.year - \
-        ((current_date.month, current_date.day) < (birth_date.month, birth_date.day))
+    year = (
+        current_date.year
+        - birth_date.year
+        - ((current_date.month, current_date.day) < (birth_date.month, birth_date.day))
+    )
 
     if current_date.month == birth_date.month:
         if current_date.day >= birth_date.day:  # 生日已滿
@@ -54,14 +57,14 @@ def get_age_month(birth_date, current_date=datetime.datetime.now()):
 
 # 取得日期分隔符號
 def get_date_separator(in_date):
-    separator = ''
+    separator = ""
 
-    if in_date.find('-') > 0:
-        separator = '-'
-    elif in_date.find('/') > 0:
-        separator = '/'
-    elif in_date.find('.') > 0:
-        separator = '.'
+    if in_date.find("-") > 0:
+        separator = "-"
+    elif in_date.find("/") > 0:
+        separator = "/"
+    elif in_date.find(".") > 0:
+        separator = "."
 
     return separator
 
@@ -86,7 +89,7 @@ def date_to_zh_tw_date(in_date):
     try:
         month = new_date[1]
         day = new_date[2]
-        zh_tw_date = f'{year:0>3}{separator}{month:0>2}{separator}{day:0>2}'
+        zh_tw_date = f"{year:0>3}{separator}{month:0>2}{separator}{day:0>2}"
     except IndexError:
         return in_date
 
@@ -109,7 +112,7 @@ def date_to_west_date(in_date):
     try:
         month = new_date[1]
         day = new_date[2]
-        west_date = f'{year}-{month:0>2}-{day:0>2}'
+        west_date = f"{year}-{month:0>2}-{day:0>2}"
     except IndexError:
         return in_date
 
@@ -118,7 +121,7 @@ def date_to_west_date(in_date):
 
 # 健保民國年轉為西元年
 def nhi_date_to_west_date(nhi_date):
-    if nhi_date is None or nhi_date == '':
+    if nhi_date is None or nhi_date == "":
         return nhi_date
 
     try:
@@ -129,7 +132,7 @@ def nhi_date_to_west_date(nhi_date):
     year += 1911
 
     try:
-        west_date = f'{year}-{month:0>2}-{day:0>2}'
+        west_date = f"{year}-{month:0>2}-{day:0>2}"
     except IndexError:
         return nhi_date
 
@@ -138,15 +141,25 @@ def nhi_date_to_west_date(nhi_date):
 
 # 健保民國日期時間轉為西元日期時間
 def nhi_datetime_to_west_datetime(nhi_datetime):
-    if nhi_datetime in [None, '']:
+    if nhi_datetime in [None, ""]:
         return nhi_datetime
 
-    year, month, day = int(nhi_datetime[:3]), int(nhi_datetime[3:5]), int(nhi_datetime[5:7])
-    hour, minute, second = int(nhi_datetime[7:9]), int(nhi_datetime[9:11]), int(nhi_datetime[11:13])
+    year, month, day = (
+        int(nhi_datetime[:3]),
+        int(nhi_datetime[3:5]),
+        int(nhi_datetime[5:7]),
+    )
+    hour, minute, second = (
+        int(nhi_datetime[7:9]),
+        int(nhi_datetime[9:11]),
+        int(nhi_datetime[11:13]),
+    )
     year += 1911
 
     try:
-        west_datetime = f'{year}-{month:0>2}-{day:0>2} {hour:0>2}:{minute:0>2}:{second:0>2}'
+        west_datetime = (
+            f"{year}-{month:0>2}-{day:0>2} {hour:0>2}:{minute:0>2}:{second:0>2}"
+        )
     except IndexError:
         return nhi_datetime
 
@@ -155,52 +168,57 @@ def nhi_datetime_to_west_datetime(nhi_datetime):
 
 # 西元日期時間轉健保日期時間
 def west_datetime_to_nhi_datetime(param):
-    if param in [None, '']:
+    if param in [None, ""]:
         return param
 
     if type(param) is str:
-        param = datetime.datetime.strptime(param, '%Y-%m-%d %H:%M:%S')
+        param = datetime.datetime.strptime(param, "%Y-%m-%d %H:%M:%S")
 
     year = param.year - 1911
-    nhi_datetime = f'{year:0>3}{param.month:0>2}{param.day:0>2}{param.hour:0>2}{param.minute:0>2}{param.second:0>2}'
+    nhi_datetime = f"{year:0>3}{param.month:0>2}{param.day:0>2}{param.hour:0>2}{param.minute:0>2}{param.second:0>2}"
 
     return nhi_datetime
 
 
 # 西元日期轉健保日期 YYYY-MM-DD -> YYYMMDD
-def west_date_to_nhi_date(in_date, separator=''):
+def west_date_to_nhi_date(in_date, separator="", mask=False):
     if in_date is None:
         return in_date
 
     if type(in_date) is str:
-        in_date = datetime.datetime.strptime(in_date, '%Y-%m-%d')
+        in_date = datetime.datetime.strptime(in_date, "%Y-%m-%d")
 
     year = in_date.year - 1911
-    nhi_date = f'{year:0>3}{separator}{in_date.month:0>2}{separator}{in_date.day:0>2}'
+    if mask:
+        nhi_date = f"{year:0>3}{separator}*{separator}*"
+    else:
+        nhi_date = (
+            f"{year:0>3}{separator}{in_date.month:0>2}{separator}{in_date.day:0>2}"
+        )
 
     return nhi_date
 
 
-def get_weekday_name(weekday, region='zh_TW'):
-    if region == 'zh_TW':
+def get_weekday_name(weekday, region="zh_TW"):
+    if region == "zh_TW":
         weekday_name = [
-            '星期一',
-            '星期二',
-            '星期三',
-            '星期四',
-            '星期五',
-            '星期六',
-            '星期日',
+            "星期一",
+            "星期二",
+            "星期三",
+            "星期四",
+            "星期五",
+            "星期六",
+            "星期日",
         ]
     else:
         weekday_name = [
-            'Monday',
-            'Tuesday',
-            'Wednesday',
-            'Thursday',
-            'Friday',
-            'Saturday',
-            'Sunday',
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
         ]
 
     return weekday_name[weekday]
@@ -242,14 +260,14 @@ def date_to_str():
 
 
 def get_start_date_by_year_month(year, month):
-    start_date = f'{year}-{month}-01 00:00:00'
+    start_date = f"{year}-{month}-01 00:00:00"
 
     return start_date
 
 
 def get_end_date_by_year_month(year, month):
     last_day = calendar.monthrange(year, month)[1]
-    end_date = f'{year}-{month}-{last_day} 23:59:59'
+    end_date = f"{year}-{month}-{last_day} 23:59:59"
 
     return end_date
 
@@ -275,11 +293,11 @@ def get_two_month_date(database, system_settings, patient_key, apply_year, apply
     '''
     rows = database.select_record(sql)  # 檢查兩個月前是否有病歷
     if len(rows) <= 0:  # 如果沒病歷, 找出最後一次的病歷
-        ins_judge_init_date = system_settings.field('電子化抽審初診日期')
-        if ins_judge_init_date != '':
+        ins_judge_init_date = system_settings.field("電子化抽審初診日期")
+        if ins_judge_init_date != "":
             end_date_script = f' AND CaseDate >= "{ins_judge_init_date}"'
         else:
-            end_date_script = ''
+            end_date_script = ""
 
         sql = f'''
             SELECT CaseDate FROM cases
@@ -294,7 +312,7 @@ def get_two_month_date(database, system_settings, patient_key, apply_year, apply
         if len(rows) > 0:
             # start_date = get_start_date_by_year_month(
             #     rows[0]['CaseDate'].year, rows[0]['CaseDate'].month)  # 雙月檢查
-            start_date = rows[0]['CaseDate'].strftime('%Y-%m-%d 00:00:00')
+            start_date = rows[0]["CaseDate"].strftime("%Y-%m-%d 00:00:00")
 
     end_date = get_end_date_by_year_month(apply_year, apply_month)
 
@@ -377,9 +395,19 @@ def is_birthday_today(birth_date):
     return birth_month == current_month and birth_day == current_day
 
 
-def get_dialog_date(parent, database, system_settings, title=None, zh_tw=False,
-                    current_date=None, date_type='str', call_from=None):
-    dialog = dialog_utils.get_dialog_calendar(parent, database, system_settings, call_from)
+def get_dialog_date(
+    parent,
+    database,
+    system_settings,
+    title=None,
+    zh_tw=False,
+    current_date=None,
+    date_type="str",
+    call_from=None,
+):
+    dialog = dialog_utils.get_dialog_calendar(
+        parent, database, system_settings, call_from
+    )
     if current_date is None:
         current_date = datetime.datetime.today()
 
@@ -392,16 +420,16 @@ def get_dialog_date(parent, database, system_settings, title=None, zh_tw=False,
         return None
 
     selected_date = dialog.ui.calendarWidget.selectedDate()
-    if date_type == 'str':
-        selected_date = selected_date.toString('yyyy/MM/dd')
+    if date_type == "str":
+        selected_date = selected_date.toString("yyyy/MM/dd")
 
     if zh_tw:
         selected_date = date_to_zh_tw_date(selected_date)
 
     if dialog.ui.checkBox_infectious_date.isChecked():
-        selected_date = f'確診日期: {selected_date}'
+        selected_date = f"確診日期: {selected_date}"
     if dialog.ui.checkBox_injury.isChecked():
-        selected_date = f'{selected_date}{dialog.ui.checkBox_injury.text()}'
+        selected_date = f"{selected_date}{dialog.ui.checkBox_injury.text()}"
 
     dialog.deleteLater()
 
@@ -409,23 +437,24 @@ def get_dialog_date(parent, database, system_settings, title=None, zh_tw=False,
 
 
 def get_time_server_date():
-    url = 'http://worldtimeapi.org/api/timezone/Asia/Taipei'
+    url = "http://worldtimeapi.org/api/timezone/Asia/Taipei"
 
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-        datetime_str = data['datetime']
+        datetime_str = data["datetime"]
         current_datetime = datetime_str[:10]
     except Exception:
-        current_datetime = datetime.datetime.today().strftime('%Y-%m-%d')
+        current_datetime = datetime.datetime.today().strftime("%Y-%m-%d")
 
     return current_datetime
+
 
 def get_default_date(system_settings):
     today = datetime.datetime.now()
     current_date = today
-    if system_settings.field('日期查詢預設為昨日') == 'Y':
+    if system_settings.field("日期查詢預設為昨日") == "Y":
         current_date = today + datetime.timedelta(days=-1)
 
     return current_date
