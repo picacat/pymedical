@@ -113,24 +113,55 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
                     item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
     def _get_treat_categories(self, ins_code):
+        """回傳這個代碼命中的所有分類（可能不只一個）"""
         categories = []
 
-        # 針傷合併（獨立判斷，不影響其他分類）
-        if ins_code in nhi_utils.MERGE_TREAT_CODE:
+        # 針傷合併：F01~F68 全部，獨立計算，不影響其他判斷
+        if ins_code in nhi_utils.MERGE_TREAT_CODE:  # F01~F68
             categories.append("針傷合併")
 
-        # 針灸複雜度分類（各自獨立判斷）
-        elif ins_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE:
+        # 針灸複雜性（各自獨立判斷，彼此互斥）
+        if ins_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE:  # D07,D08,F52-F68
             categories.append("高度複針")
-        elif ins_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE:
+        elif (
+            ins_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE
+        ):  # D05,D06,F35-F51
             categories.append("中度複針")
-        elif ins_code in ("D01", "D02", "D03", "D04"):
+        elif ins_code in ("D01", "D02"):
             categories.append("一般針灸")
 
-        # 傷科複雜度分類（各自獨立判斷）
-        if ins_code in nhi_utils.HIGHLY_COMPLICATED_MASSAGE_CODE:
+        # 傷科複雜性（需要自訂清單，nhi_utils現有的清單不夠完整）
+        HIGHLY_COMPLICATED_MASSAGE_FULL = nhi_utils.HIGHLY_COMPLICATED_MASSAGE_CODE + [
+            "F06",
+            "F09",
+            "F12",
+            "F15",
+            "F23",
+            "F26",
+            "F29",
+            "F32",
+            "F40",
+            "F43",
+            "F46",
+            "F49",
+            "F57",
+            "F60",
+            "F63",
+            "F66",
+        ]
+        MODERATE_COMPLICATED_MASSAGE_FULL = (
+            nhi_utils.MODERATE_COMPLICATED_MASSAGE_CODE
+            + [
+                "F03",
+                "F20",
+                "F37",
+                "F54",
+            ]
+        )
+
+        if ins_code in HIGHLY_COMPLICATED_MASSAGE_FULL:
             categories.append("高度複傷")
-        elif ins_code in nhi_utils.MODERATE_COMPLICATED_MASSAGE_CODE:
+        elif ins_code in MODERATE_COMPLICATED_MASSAGE_FULL:
             categories.append("中度複傷")
         elif ins_code in ("E01", "E02"):
             categories.append("一般傷科")
@@ -156,14 +187,16 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
 
         for row_no, (doctor_id, ins_counts) in enumerate(self.dict_treat_count.items()):
             doctor = personnel_utils.person_id_to_name(self.database, doctor_id)
-
             table_widget.setItem(row_no, 0, QTableWidgetItem(doctor))
+
             category_totals = {key: 0 for key in column_map}
 
             for ins_code, count in ins_counts.items():
-                categories = self._get_treat_categories(ins_code)  # 改成拿清單
+                categories = self._get_treat_categories(
+                    ins_code
+                )  # 拿清單，可能不只一個
                 for category in categories:
-                    category_totals[category] += count  # 每個命中的分類都各自累加
+                    category_totals[category] += count
 
             for category, col_no in column_map.items():
                 value = category_totals[category]
@@ -384,7 +417,7 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
             if apply_fee <= 0:
                 error_message.append("無申報金額")
 
-            result = self._parse_pdata(ddata)
+            result = self._parse_pdata(ddata, dhead_data["d1"])
             if result["diag_fee"] != diag_fee:
                 error_message.append(
                     f"診察費不平衡, 清單段: {diag_fee}, 醫令段: {result['diag_fee']}"
@@ -485,7 +518,7 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
                 row_no, i, QtWidgets.QTableWidgetItem(string_utils.xstr(data[i]))
             )
 
-    def _parse_pdata(self, ddata):
+    def _parse_pdata(self, ddata, case_type=None):
         pdata = ddata.xpath("./pdata")
 
         pdata_fee = {
@@ -540,7 +573,7 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
                 pdata_fee["pharmacy_fee"] += total_fee
 
             ins_code = string_utils.xstr(xdata["p4"])
-            if ins_code in nhi_utils.TREAT_ALL_CODE:
+            if case_type == "29" and ins_code in nhi_utils.TREAT_ALL_CODE:
                 doctor_id = string_utils.xstr(xdata["p16"])
                 self.dict_treat_count.setdefault(doctor_id, {})
                 self.dict_treat_count[doctor_id][ins_code] = (
