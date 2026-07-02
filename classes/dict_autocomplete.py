@@ -6,17 +6,21 @@ classes/dict_autocomplete.py
 跟專案裡其他 classes 一樣，搭配 class_utils 的工廠函式使用：
 
     # class_utils.py
-    def get_dict_autocomplete(text_edit, database, clinic_type):
+    def get_dict_autocomplete(text_edit, database, clinic_type, match_mode="prefix"):
         from classes import dict_autocomplete
 
         module = importlib.reload(dict_autocomplete)
-        object = module.DictAutoComplete(text_edit, database, clinic_type)
+        object = module.DictAutoComplete(text_edit, database, clinic_type, match_mode=match_mode)
 
         return object
 
     # medical_record.py（一定要在 _set_signal() 之後才建立，見下方說明）
     self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
         self.ui.textEdit_symptom, self.database, "主訴"
+    )
+    # 如果想要模糊比對（關鍵字出現在中間也算），加上 match_mode="contains"：
+    self.dict_autocomplete_symptom = class_utils.get_dict_autocomplete(
+        self.ui.textEdit_symptom, self.database, "主訴", match_mode="contains"
     )
 
 DictAutoComplete 不是 QTextEdit 的替代品，而是「附加」在你既有的 QTextEdit 上：
@@ -101,25 +105,32 @@ class ClinicCache:
         for item in items:
             self._by_name.setdefault(item.clinic_name, item)
 
-    def search(self, keyword, limit=20):
+    def search(self, keyword, limit=20, match_mode="prefix"):
+        """
+        Args:
+            match_mode (str): "prefix"（預設，開頭符合）或 "contains"（模糊，內容包含即可）
+                              InputCode 縮碼不管哪種模式，一律用開頭比對
+        """
         if not keyword:
             return []
         kw = keyword.strip().lower()
 
-        # 兩段式比對：開頭符合（含 InputCode 縮碼）優先，比較相關；
-        # 包含但不是開頭的排在後面，當作補充，避免口語化的長句完全找不到
-        prefix_matches = []
-        contains_matches = []
-        for item in self._items:
-            name_lower = item.clinic_name.lower()
-            input_code_hit = item.input_code and item.input_code.lower().startswith(kw)
+        if match_mode == "contains":
+            matched = [
+                item
+                for item in self._items
+                if kw in item.clinic_name.lower()
+                or (item.input_code and item.input_code.lower().startswith(kw))
+            ]
+        else:
+            matched = [
+                item
+                for item in self._items
+                if item.clinic_name.lower().startswith(kw)
+                or (item.input_code and item.input_code.lower().startswith(kw))
+            ]
 
-            if name_lower.startswith(kw) or input_code_hit:
-                prefix_matches.append(item)
-            elif kw in name_lower:
-                contains_matches.append(item)
-
-        matched = prefix_matches + contains_matches
+        # 已經依中文字順序預先排序過了（load_by_type 的 ORDER BY），這裡維持原順序即可
         return matched[:limit]
 
     def get_by_name(self, name):
@@ -145,9 +156,14 @@ class DictAutoComplete(QObject):
         clinic_type (str): 要載入的 ClinicType，例如 '主訴'
     """
 
-    def __init__(self, text_edit, database, clinic_type, parent=None):
+    def __init__(
+        self, text_edit, database, clinic_type, match_mode="prefix", parent=None
+    ):
         super().__init__(parent or text_edit)
         self.text_edit = text_edit
+        self.match_mode = (
+            match_mode  # "prefix"（預設，開頭符合）或 "contains"（模糊，內容包含即可）
+        )
         self._prefix_start_pos = None
         self._min_prefix_pos = None  # 上次套用完成的位置，往前掃描抓詞時碰到這裡就停止
         self._deleting = False  # 這次 textChanged 是不是因為刪字造成的
@@ -374,7 +390,7 @@ class DictAutoComplete(QObject):
             self.popup.hide()
             return
 
-        results = self.cache.search(prefix)
+        results = self.cache.search(prefix, match_mode=self.match_mode)
         if not results:
             self.popup.hide()
             # 這段前綴確定搜尋不到，把目前位置設成新的邊界，

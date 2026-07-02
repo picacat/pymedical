@@ -239,10 +239,10 @@ def get_ic_upload_xml2(
     return object
 
 
-def get_dict_autocomplete(text_edit, database, clinic_type):
+def get_dict_autocomplete(text_edit, database, clinic_type, match_mode="prefix"):
     from classes import dict_autocomplete
 
     module = importlib.reload(dict_autocomplete)
-    object = module.DictAutoComplete(text_edit, database, clinic_type)
+    object = module.DictAutoComplete(text_edit, database, clinic_type, match_mode)
 
     return object
