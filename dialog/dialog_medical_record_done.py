@@ -1,16 +1,18 @@
-
 # -*- coding: UTF-8 -*-
 
 
 import datetime
 
 from PyQt5 import QtWidgets
-from libs import ui_utils
-from libs import system_utils
-from libs import string_utils
-from libs import nhi_utils
-from libs import registration_utils
-from libs import number_utils
+
+from libs import (
+    nhi_utils,
+    number_utils,
+    registration_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 門診掛號 2018.01.22
@@ -36,36 +38,36 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_DIALOG_MEDICAL_RECORD_DONE, self)
         self.setFixedSize(self.size())  # non resizable dialog
         system_utils.set_css(self, self.system_settings)
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('確定')
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText('取消')
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("確定")
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText("取消")
 
-        if self.done_type == 'doctor_done':
-            self.ui.groupBox_time.setTitle('完診時間')
-            self.ui.label_person.setText('主治醫師')
+        if self.done_type == "doctor_done":
+            self.ui.groupBox_time.setTitle("完診時間")
+            self.ui.label_person.setText("主治醫師")
 
         else:
-            self.ui.groupBox_time.setTitle('批價時間')
-            self.ui.label_person.setText('批價人員')
+            self.ui.groupBox_time.setTitle("批價時間")
+            self.ui.label_person.setText("批價人員")
 
         self._set_combo_box()
 
     # 設定comboBox
     def _set_combo_box(self):
-        if self.done_type == 'doctor_done':
-            script = '''
+        if self.done_type == "doctor_done":
+            script = """
                 SELECT * FROM person
                 WHERE
                     Position IN ("醫師", "支援醫師") AND
                     ID IS NOT NULL
                 ORDER BY PersonKey
-            '''
+            """
         else:
-            script = 'SELECT * FROM person ORDER BY PersonKey'
+            script = "SELECT * FROM person ORDER BY PersonKey"
 
         rows = self.database.select_record(script)
         person_list = []
         for row in rows:
-            person_list.append(string_utils.xstr(row['Name']))
+            person_list.append(string_utils.xstr(row["Name"]))
 
         ui_utils.set_combo_box(self.ui.comboBox_person, person_list, None)
         ui_utils.set_combo_box(self.ui.comboBox_period, nhi_utils.PERIOD, None)
@@ -76,11 +78,11 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
         self.ui.buttonBox.rejected.connect(self.button_rejected)
 
     def _read_medical_records(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM cases
             WHERE
                 CaseKey = {self.case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
 
         if len(rows) <= 0:
@@ -91,31 +93,23 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
         self._set_widgets()
 
     def _set_widgets(self):
-        if self.done_type == 'doctor_done':
-            field = 'Doctor'
-            date_field = 'DoctorDate'
-            period = 'Period'
+        if self.done_type == "doctor_done":
+            field = "Doctor"
         else:
-            field = 'Cashier'
-            date_field = 'ChargeDate'
-            period = 'ChargePeriod'
+            field = "Cashier"
 
-        if string_utils.xstr(self.row[date_field]) == '':
-            done_date = self.row['CaseDate']
-            done_time = datetime.datetime.now().time()
-        else:
-            done_date = self.row[date_field]
-            done_time = datetime.time(
-                self.row[date_field].hour,
-                self.row[date_field].minute,
-                self.row[date_field].second
-            )
+        done_date = self.row["CaseDate"]
+        done_time = datetime.time(
+            self.row["CaseDate"].hour,
+            self.row["CaseDate"].minute,
+            self.row["CaseDate"].second,
+        )
 
         self.ui.dateEdit_case_date.setDate(done_date)
         self.ui.timeEdit_case_time.setTime(done_time)
 
-        period = string_utils.xstr(self.row[period])
-        if period != '':
+        period = string_utils.xstr(self.row["Period"])
+        if period != "":
             self.ui.comboBox_period.setCurrentText(period)
         else:
             self.ui.comboBox_period.setCurrentText(
@@ -123,19 +117,23 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
             )
 
         person = string_utils.xstr((self.row[field]))
-        if person != '':
+        if person != "":
             self.ui.comboBox_person.setCurrentText(person)
         else:
-            self.ui.comboBox_person.setCurrentText(self.system_settings.field('使用者'))
+            self.ui.comboBox_person.setCurrentText(self.system_settings.field("使用者"))
 
-        self.ui.lineEdit_total_fee.setText(string_utils.xstr(self.row['TotalFee']))
-        self.ui.lineEdit_receipt_fee.setText(string_utils.xstr(self.row['TotalFee']))
+        self.ui.lineEdit_total_fee.setText(string_utils.xstr(self.row["TotalFee"]))
+        self.ui.lineEdit_receipt_fee.setText(string_utils.xstr(self.row["TotalFee"]))
 
-        self.ui.lineEdit_drug_share_fee.setText(string_utils.xstr(self.row['DrugShareFee']))
-        self.ui.lineEdit_receipt_drug_share_fee.setText(string_utils.xstr(self.row['DrugShareFee']))
+        self.ui.lineEdit_drug_share_fee.setText(
+            string_utils.xstr(self.row["DrugShareFee"])
+        )
+        self.ui.lineEdit_receipt_drug_share_fee.setText(
+            string_utils.xstr(self.row["DrugShareFee"])
+        )
 
     def button_accepted(self):
-        if self.done_type == 'doctor_done':
+        if self.done_type == "doctor_done":
             self._update_doctor_done()
         else:
             self._update_charge_done()
@@ -145,11 +143,13 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
 
     def _update_doctor_done(self):
         receipt_fee = number_utils.get_integer(self.ui.lineEdit_receipt_fee.text())
-        drug_share_fee = number_utils.get_integer(self.ui.lineEdit_receipt_drug_share_fee.text())
-        date = self.ui.dateEdit_case_date.date().toString('yyyy-MM-dd')
-        time = self.ui.timeEdit_case_time.time().toString('hh:mm:ss')
+        drug_share_fee = number_utils.get_integer(
+            self.ui.lineEdit_receipt_drug_share_fee.text()
+        )
+        date = self.ui.dateEdit_case_date.date().toString("yyyy-MM-dd")
+        time = self.ui.timeEdit_case_time.time().toString("hh:mm:ss")
         period = self.ui.comboBox_period.currentText()
-        doctor_date = f'{date} {time}'
+        doctor_date = f"{date} {time}"
         doctor = self.ui.comboBox_person.currentText()
 
         self.database.exec_sql(f'''
@@ -163,7 +163,7 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
                 CaseKey = {self.case_key}
         ''')
 
-        if period != '':
+        if period != "":
             self.database.exec_sql(f'''
                 UPDATE cases
                 SET
@@ -171,7 +171,7 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
                 WHERE
                     CaseKey = {self.case_key}
             ''')
-        if doctor != '':
+        if doctor != "":
             self.database.exec_sql(f'''
                 UPDATE cases
                 SET
@@ -181,13 +181,15 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
             ''')
 
     def _update_charge_done(self):
-        date = self.ui.dateEdit_case_date.date().toString('yyyy-MM-dd')
-        time = self.ui.timeEdit_case_time.time().toString('hh:mm:ss')
-        charge_date = f'{date} {time}'
+        date = self.ui.dateEdit_case_date.date().toString("yyyy-MM-dd")
+        time = self.ui.timeEdit_case_time.time().toString("hh:mm:ss")
+        charge_date = f"{date} {time}"
         period = self.ui.comboBox_period.currentText()
         cashier = self.ui.comboBox_person.currentText()
         receipt_fee = number_utils.get_integer(self.ui.lineEdit_receipt_fee.text())
-        drug_share_fee = number_utils.get_integer(self.ui.lineEdit_receipt_drug_share_fee.text())
+        drug_share_fee = number_utils.get_integer(
+            self.ui.lineEdit_receipt_drug_share_fee.text()
+        )
 
         self.database.exec_sql(f'''
             UPDATE cases
@@ -200,7 +202,7 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
                 CaseKey = {self.case_key}
         ''')
 
-        if period != '':
+        if period != "":
             self.database.exec_sql(f'''
                 UPDATE cases
                 SET
@@ -208,7 +210,7 @@ class DialogMedicalRecordDone(QtWidgets.QDialog):
                 WHERE
                     CaseKey = {self.case_key}
             ''')
-        if cashier != '':
+        if cashier != "":
             self.database.exec_sql(f'''
                 UPDATE cases
                 SET
