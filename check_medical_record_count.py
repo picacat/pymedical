@@ -1786,11 +1786,9 @@ class CheckMedicalRecordCount(QtWidgets.QMainWindow):
                 (Doctor = "{doctor}") AND
                 (CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}") AND
                 (cases.InsType = "健保") AND
-                (cases.Injury NOT IN {tuple(nhi_utils.OCCUPATIONAL_INJURY_TYPE)}) AND
-                (cases.TreatType NOT IN {tuple(nhi_utils.ALL_CARE_TREAT)}) AND
-                (cases.RegistType NOT IN {self.long_term_care}) AND                
-                (cases.Share NOT IN ("山地離島")) AND
-                (cases.Card IS NOT NULL) AND (LENGTH(cases.Card) > 0) AND (cases.Card != "欠卡") AND
+
+                {self._get_case_type_29_condition()} AND
+
                 (Treatment IN {tuple(nhi_utils.MODERATE_COMPLICATED_MASSAGE_LIST)}) AND
                 ({self.apply_type_sql})
             ORDER BY CaseDate
@@ -1831,11 +1829,9 @@ class CheckMedicalRecordCount(QtWidgets.QMainWindow):
                 (Doctor = "{doctor}") AND
                 (CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}") AND
                 (cases.InsType = "健保") AND
-                (cases.Injury NOT IN {tuple(nhi_utils.OCCUPATIONAL_INJURY_TYPE)}) AND
-                (cases.TreatType NOT IN {tuple(nhi_utils.ALL_CARE_TREAT)}) AND
-                (cases.RegistType NOT IN {self.long_term_care}) AND                        
-                (cases.Share NOT IN ("山地離島")) AND
-                (cases.Card IS NOT NULL) AND (LENGTH(cases.Card) > 0) AND (cases.Card != "欠卡") AND
+
+                {self._get_case_type_29_condition()} AND
+
                 (Treatment IN {tuple(nhi_utils.HIGHLY_COMPLICATED_MASSAGE_LIST)}) AND
                 ({self.apply_type_sql})
             ORDER BY CaseDate

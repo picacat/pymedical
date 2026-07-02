@@ -3526,7 +3526,10 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             treatment in nhi_utils.COMPLICATED_ACUPUNCTURE_TREAT
             and self.copy_from != "病歷拷貝"
         ):
-            self._open_complicated_acupuncture_dialog(treatment, second_treatment)
+            if treatment == "高針合併中傷合併特殊疾病":
+                self._open_complicated_massage_dialog(treatment, second_treatment)
+            else:
+                self._open_complicated_acupuncture_dialog(treatment, second_treatment)
         elif (
             self.parent.age_year is not None
             and self.parent.age_year < 7
