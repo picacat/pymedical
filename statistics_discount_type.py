@@ -153,7 +153,7 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             SELECT
                 patient.DiscountType,
                 COUNT(DISTINCT cases.PatientKey) AS count,
-                COUNT(*) AS case_count
+                COUNT(DISTINCT cases.PatientKey, DATE(cases.CaseDate)) AS case_count
             FROM cases
                 LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
             WHERE
@@ -171,7 +171,7 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             SELECT
                 patient.DiscountType,
                 COUNT(DISTINCT patient.PatientKey) AS count,
-                COUNT(cases.CaseKey) AS case_count
+                COUNT(DISTINCT cases.PatientKey, DATE(cases.CaseDate)) AS case_count
             FROM patient
                 LEFT JOIN cases ON cases.PatientKey = patient.PatientKey
             WHERE
@@ -271,14 +271,16 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             '''
 
         sql = f'''
-            SELECT patient.PatientKey, patient.Name, cases.CaseDate
+            SELECT
+                patient.PatientKey, patient.Name,
+                DATE(cases.CaseDate) AS CaseDate
             FROM cases
                 LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
             WHERE
                 patient.DiscountType = "{discount_type}"
                 {date_condition}
-            GROUP BY DATE(cases.CaseDate)
-            ORDER BY patient.PatientKey, cases.CaseDate
+            GROUP BY patient.PatientKey, DATE(cases.CaseDate)
+            ORDER BY patient.PatientKey, DATE(cases.CaseDate)
         '''
         rows = self.database.select_record(sql)
         self.ui.tableWidget_patient_list.setRowCount(len(rows))
