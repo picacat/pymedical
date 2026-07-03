@@ -333,6 +333,7 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
         patient_key = self.table_widget_patient_list.field_value(0)
         self.parent.open_patient_record(patient_key, "病患查詢")
 
+    # 匯出資料到 Excel
     def _export_to_excel(self):
         options = QtWidgets.QFileDialog.Options()
         excel_file_name, _ = QtWidgets.QFileDialog.getSaveFileName(
