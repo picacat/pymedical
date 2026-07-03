@@ -22,7 +22,7 @@ from libs import (
 )
 
 
-# 申報金額核對 2018.12.17
+# 申報金額核對 2026.07.03
 class InsCheckApplyFee(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):

@@ -155,6 +155,7 @@ PRINT_MISC_FORM = [
     "15-60mm自費同意書",
     "16-80mm自費同意書",
     '17-3"健保及自費印花稅總繳收據',
+    "18-熱感自費印花稅總繳收據",
     '21-3"二維條碼處方箋',
     "30-80mm熱感領藥單",
 ]
@@ -903,6 +904,11 @@ def get_print_misc_form(form):
 
         module = importlib.reload(print_misc_form17)
         print_form = module.PrintMiscForm17
+    elif form == "18-熱感自費印花稅總繳收據":
+        from printer import print_misc_form18
+
+        module = importlib.reload(print_misc_form18)
+        print_form = module.PrintMiscForm18
     elif form == '21-3"二維條碼處方箋':
         from printer import print_misc_form21
 
@@ -2930,9 +2936,9 @@ def get_prescript_html2(
             },
             1: {
                 "medicine_name_width": 70,
-                "dosage_width": 15,
+                "dosage_width": 30,
                 "total_dosage_width": 0,
-                "separator_width": 1,
+                "separator_width": 0,
             },
         }
     else:
@@ -3072,7 +3078,7 @@ def get_prescript_html2(
 
                 prescript_line += f'''
                     <td align="left" width="{medicine_name_width}%">{medicine_name}</td>
-                    <td align="right" width="{dosage_width}%">{dosage_str}{unit}</td>
+                    <td align="left" width="{dosage_width}%">{dosage_str}{unit}</td>
                 '''
             else:
                 prescript_line += f'''
@@ -10268,3 +10274,90 @@ def get_order_script(system_setting):
             """
 
     return order_script
+
+
+# 一般格式使用
+def get_case_html_0(
+    database,
+    case_key,
+    ins_type,
+    medicine_set,
+    birthday_mask=True,
+    id_mask=True,
+    tw_date=True,
+    background_color=None,
+):
+    rows = get_case_row(database, case_key)
+
+    if len(rows) <= 0:
+        return ""
+
+    row = rows[0]
+    card = string_utils.xstr(row["Card"])
+    if number_utils.get_integer(row["Continuance"]) >= 1:
+        card += "-" + string_utils.xstr(row["Continuance"])
+
+    birthday = row["Birthday"]
+    if birthday is not None:
+        if birthday_mask:
+            birthday = string_utils.xstr(
+                date_utils.west_date_to_nhi_date(row["Birthday"], "-")
+            )
+            birthday = birthday[:7] + "**"
+        elif tw_date:
+            birthday = string_utils.xstr(
+                date_utils.west_date_to_nhi_date(row["Birthday"], "-")
+            )
+
+    patient_id = row["ID"]
+    if patient_id is not None and id_mask:
+        patient_id = patient_id[:6] + "****"
+
+    # if background_color is not None:
+    #     color = f' style="background-color: {background_color}"'
+    # else:
+    #     color = ''
+
+    patient_key = get_patient_key(row)
+    name = string_utils.xstr(row["Name"])
+    gender = string_utils.xstr(row["Gender"])
+    birthday_str = string_utils.xstr(birthday)
+    case_date = row["CaseDate"].strftime("%Y-%m-%d")
+    if tw_date:
+        case_date = date_utils.west_date_to_nhi_date(row["CaseDate"], "-")
+
+    patient_key_header = get_patient_key_header(row, "病號")
+    share_type = string_utils.xstr(row["Share"])[:2]
+
+    if ins_type == "健保":
+        html = f"""
+            <tr>
+              <td width="50%">姓名:{name}({gender})</td>
+              <td width="54%">生日:{birthday_str}</td>
+            </tr>
+        """
+    else:
+        if medicine_set is None:
+            medicine_set = ""
+        else:
+            medicine_set = f"({medicine_set - 1})"
+
+        html = f"""
+            <tr>
+              <td width="50%">姓名:{name}({gender})</td>
+              <td width="50%">生日:{birthday_str}</td>
+            </tr>
+        """
+
+    html += f"""
+        <tr>
+          <td width="50%">{patient_key_header}:{patient_key}</td>
+          <td width="50%">ID:{patient_id}</td>
+        </tr>
+        <tr>
+          <td width="50%">日期:{case_date}</td>
+          <td width="50%">保險:{ins_type} {medicine_set}</td>
+        </tr>
+    """
+
+    return html
