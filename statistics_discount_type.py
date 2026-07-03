@@ -277,6 +277,7 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             WHERE
                 patient.DiscountType = "{discount_type}"
                 {date_condition}
+            GROUP BY DATE(cases.CaseDate)
             ORDER BY patient.PatientKey, cases.CaseDate
         '''
         rows = self.database.select_record(sql)
