@@ -268,7 +268,7 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             WHERE
                 DiscountType IS NOT NULL AND LENGTH(DiscountType) > 0 AND
                 DATE(CaseDate) BETWEEN "{start_date.toString("yyyy-MM-dd")}" AND "{end_date.toString("yyyy-MM-dd")}"
-            GROUP BY patient.PatientKey ORDER BY patient.PatientKey
+            GROUP BY DATE(cases.CaseDate) ORDER BY patient.PatientKey
         '''
         rows = self.database.select_record(sql)
         self.ui.tableWidget_patient_list.setRowCount(len(rows))
