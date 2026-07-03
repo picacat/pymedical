@@ -158,6 +158,7 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
                 LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
             WHERE
                 DATE(cases.CaseDate) BETWEEN "{start_date.toString("yyyy-MM-dd")}" AND "{end_date.toString("yyyy-MM-dd")}" AND
+                cases.InsType = "健保" AND
                 patient.DiscountType IS NOT NULL AND LENGTH(patient.DiscountType) > 0
             GROUP BY patient.DiscountType
         '''
@@ -173,7 +174,9 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
                 COUNT(DISTINCT patient.PatientKey) AS count,
                 COUNT(DISTINCT cases.PatientKey, DATE(cases.CaseDate)) AS case_count
             FROM patient
-                LEFT JOIN cases ON cases.PatientKey = patient.PatientKey
+                LEFT JOIN cases ON
+                    cases.PatientKey = patient.PatientKey AND
+                    cases.InsType = "健保"
             WHERE
                 patient.DiscountType IS NOT NULL AND LENGTH(patient.DiscountType) > 0
             GROUP BY patient.DiscountType
@@ -277,7 +280,8 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             FROM cases
                 LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
             WHERE
-                patient.DiscountType = "{discount_type}"
+                patient.DiscountType = "{discount_type}" AND
+                cases.InsType = "健保"
                 {date_condition}
             GROUP BY patient.PatientKey, DATE(cases.CaseDate)
             ORDER BY patient.PatientKey, DATE(cases.CaseDate)
