@@ -2745,6 +2745,29 @@ class MedicalRecordCheck(QtWidgets.QDialog):
             ):
                 error_message.append("診斷碼無高度複雜性傷科適應症")
 
+        if "高針合併中傷" in self.treatment:
+            if not case_utils.is_moderate_complicated_massage_ok(
+                self.disease_code1,
+                self.disease_code2,
+                self.disease_code3,
+                self.disease_code4,
+                self.parent.parent.moderate_complicated_massage_list,
+                self.parent.parent.special_disease_list,
+            ):
+                error_message.append("診斷碼無中度複雜性傷科適應症")
+
+        if "高針合併高傷" in self.treatment:
+            if not case_utils.is_highly_complicated_massage_ok(
+                self.disease_code1,
+                self.disease_code2,
+                self.disease_code3,
+                self.disease_code4,
+                self.parent.parent.highly_complicated_massage_list,
+                self.parent.parent.moderate_complicated_massage_list,
+                self.parent.parent.special_disease_list,
+            ):
+                error_message.append("診斷碼無高度複雜性傷科適應症")
+
         if "中度複雜性傷科合併特殊疾病" in self.second_treatment:
             if not case_utils.is_moderate_complicated_massage_with_special_disease_ok(
                 self.disease_code1,

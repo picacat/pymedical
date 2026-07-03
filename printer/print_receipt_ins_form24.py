@@ -1,13 +1,11 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
-from PyQt5.QtPrintSupport import QPrinter
 import sys
 
-from libs import printer_utils
-from libs import system_utils
-from libs import case_utils
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+from PyQt5.QtPrintSupport import QPrinter
+
+from libs import case_utils, printer_utils, system_utils
 
 
 # 健保收據格式24 80mm 熱感紙(有框) 客製化 日知堂
@@ -22,17 +20,19 @@ class PrintReceiptInsForm24:
         self.ui = None
         self.medicine_set = 1
 
-        self.printer = printer_utils.get_printer(self.system_settings, '健保醫療收據印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "健保醫療收據印表機"
+        )
 
         self.current_print = None
         self.additional = None
 
-        if sys.platform == 'darwin':
+        if sys.platform == "darwin":
             dash_count = 34
         else:
             dash_count = 36
 
-        self.dash_line = '-' * dash_count
+        self.dash_line = "-" * dash_count
 
         self._set_ui()
         self._set_signal()
@@ -56,7 +56,7 @@ class PrintReceiptInsForm24:
     def _check_printing(self):
         printing = True
 
-        if self.additional == '健保另包':
+        if self.additional == "健保另包":
             if printer_utils.is_additional_prescript(self.database, self.case_key):
                 printing = True
             else:
@@ -87,7 +87,14 @@ class PrintReceiptInsForm24:
     def print_html(self, printing=None):
         self.current_print = self.print_html
         # self.printer.setPaperSize(QtCore.QSizeF(74, 148), QPrinter.Millimeter)
-        printer_utils.set_paper_size(self.printer, self.system_settings, 74, 188, QPrinter.Millimeter, '健保醫療收據')
+        printer_utils.set_paper_size(
+            self.printer,
+            self.system_settings,
+            74,
+            188,
+            QPrinter.Millimeter,
+            "健保醫療收據",
+        )
 
         document = printer_utils.get_document(self.printer, self.font)
         document.setDocumentMargin(printer_utils.get_document_margin())
@@ -98,46 +105,62 @@ class PrintReceiptInsForm24:
 
     def _html(self):
         case_record = printer_utils.get_case_html_23(
-            self.database, self.case_key, '健保', tw_date=True
+            self.database, self.case_key, "健保", tw_date=True
         )
         prescript_record = printer_utils.get_prescript_html23(
-            self.database, self.system_settings,
-            self.case_key, self.medicine_set, '費用收據', blocks=1,
-            instruction=self.additional, print_total_dosage='Y', print_treat_item=False)
+            self.database,
+            self.system_settings,
+            self.case_key,
+            self.medicine_set,
+            "費用收據",
+            blocks=1,
+            instruction=self.additional,
+            print_total_dosage="Y",
+            print_treat_item=False,
+        )
         instruction = printer_utils.get_instruction_html_0(
-            self.database, self.system_settings, self.case_key, self.medicine_set
+            self.database,
+            self.system_settings,
+            self.case_key,
+            self.medicine_set,
+            tw_date=True,
         )
         fees_record = printer_utils.get_ins_fees_html_23(self.database, self.case_key)
         additional_label = printer_utils.get_additional_label(self.additional)
 
-        clinic_name = self.system_settings.field('院所名稱')
-        clinic_id = self.system_settings.field('院所代號')
-        clinic_telephone = self.system_settings.field('院所電話')
-        clinic_address = self.system_settings.field('院所地址')
-        disease_name = printer_utils.get_disease_name(self.database, self.system_settings, self.case_key)
+        clinic_name = self.system_settings.field("院所名稱")
+        clinic_id = self.system_settings.field("院所代號")
+        clinic_telephone = self.system_settings.field("院所電話")
+        clinic_address = self.system_settings.field("院所地址")
+        disease_name = printer_utils.get_disease_name(
+            self.database, self.system_settings, self.case_key
+        )
 
-        pres_days = case_utils.get_pres_days(self.database, self.case_key, self.medicine_set)
+        pres_days = case_utils.get_pres_days(
+            self.database, self.case_key, self.medicine_set
+        )
         if pres_days > 0:
-            warning = '''
+            warning = """
                 警語:請置於兒童不易取得處<br>
                 副作用: 本處方用藥在醫學文獻上尚無副作用之記載<br>
                 保存方式: 置於乾燥陰涼處<br>
                 保存期限: 三個月
-            '''
+            """
         else:
-            warning = ''
+            warning = ""
 
         receipt_title_image = printer_utils.get_title_image(
-            clinic_name, clinic_id, clinic_telephone, clinic_address)
+            clinic_name, clinic_id, clinic_telephone, clinic_address
+        )
 
-        if self.system_settings.field('不印報稅提示') == 'Y':
-            tax_hint = ''
+        if self.system_settings.field("不印報稅提示") == "Y":
+            tax_hint = ""
         else:
-            tax_hint = self.system_settings.field('醫療費用收據自訂報稅備註')
-            if tax_hint in ['', None]:
-              tax_hint = '本收據可為報稅憑證, 遺失恕不補發'
+            tax_hint = self.system_settings.field("醫療費用收據自訂報稅備註")
+            if tax_hint in ["", None]:
+                tax_hint = "本收據可為報稅憑證, 遺失恕不補發"
 
-        prescript_html = f'''
+        prescript_html = f"""
             <table style="border-collapse: collapse; border:1px #cccccc solid;" cellpadding="2" border="1">
                 <thead>
                 <tr>
@@ -156,11 +179,11 @@ class PrintReceiptInsForm24:
             {additional_label}
             <br>適應症:{disease_name}<br>
             {warning}
-        '''
-        if self.system_settings.field('費用收據不印處方') == 'Y':
-            prescript_html = ''
+        """
+        if self.system_settings.field("費用收據不印處方") == "Y":
+            prescript_html = ""
 
-        html = f'''
+        html = f"""
             <html>
               <body>
                 {receipt_title_image}
@@ -181,6 +204,6 @@ class PrintReceiptInsForm24:
               </b>
               </body>
             </html>
-        '''
+        """
 
         return html

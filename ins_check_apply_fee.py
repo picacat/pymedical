@@ -10,8 +10,10 @@ from PyQt5.QtWidgets import QTableWidgetItem
 
 from libs import (
     class_utils,
+    date_utils,
     nhi_utils,
     number_utils,
+    patient_utils,
     personnel_utils,
     string_utils,
     system_utils,
@@ -46,6 +48,7 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
         self._set_ui()
         self._set_signal()
         self._check_ins_apply_fee()
+        # self.print_highly_acupuncture_list()
 
     # 解構
     def __del__(self):
@@ -113,24 +116,55 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
                     item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
     def _get_treat_categories(self, ins_code):
+        """回傳這個代碼命中的所有分類（可能不只一個）"""
         categories = []
 
-        # 針傷合併（獨立判斷，不影響其他分類）
-        if ins_code in nhi_utils.MERGE_TREAT_CODE:
+        # 針傷合併：F01~F68 全部，獨立計算，不影響其他判斷
+        if ins_code in nhi_utils.MERGE_TREAT_CODE:  # F01~F68
             categories.append("針傷合併")
 
-        # 針灸複雜度分類（各自獨立判斷）
-        if ins_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE:
+        # 針灸複雜性（各自獨立判斷，彼此互斥）
+        if ins_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE:  # D07,D08,F52-F68
             categories.append("高度複針")
-        elif ins_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE:
+        elif (
+            ins_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE
+        ):  # D05,D06,F35-F51
             categories.append("中度複針")
-        elif ins_code in ("D01", "D02", "D03", "D04"):
+        elif ins_code in ("D01", "D02"):
             categories.append("一般針灸")
 
-        # 傷科複雜度分類（各自獨立判斷）
-        if ins_code in nhi_utils.HIGHLY_COMPLICATED_MASSAGE_CODE:
+        # 傷科複雜性（需要自訂清單，nhi_utils現有的清單不夠完整）
+        HIGHLY_COMPLICATED_MASSAGE_FULL = nhi_utils.HIGHLY_COMPLICATED_MASSAGE_CODE + [
+            "F06",
+            "F09",
+            "F12",
+            "F15",
+            "F23",
+            "F26",
+            "F29",
+            "F32",
+            "F40",
+            "F43",
+            "F46",
+            "F49",
+            "F57",
+            "F60",
+            "F63",
+            "F66",
+        ]
+        MODERATE_COMPLICATED_MASSAGE_FULL = (
+            nhi_utils.MODERATE_COMPLICATED_MASSAGE_CODE
+            + [
+                "F03",
+                "F20",
+                "F37",
+                "F54",
+            ]
+        )
+
+        if ins_code in HIGHLY_COMPLICATED_MASSAGE_FULL:
             categories.append("高度複傷")
-        elif ins_code in nhi_utils.MODERATE_COMPLICATED_MASSAGE_CODE:
+        elif ins_code in MODERATE_COMPLICATED_MASSAGE_FULL:
             categories.append("中度複傷")
         elif ins_code in ("E01", "E02"):
             categories.append("一般傷科")
@@ -156,14 +190,16 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
 
         for row_no, (doctor_id, ins_counts) in enumerate(self.dict_treat_count.items()):
             doctor = personnel_utils.person_id_to_name(self.database, doctor_id)
-
             table_widget.setItem(row_no, 0, QTableWidgetItem(doctor))
+
             category_totals = {key: 0 for key in column_map}
 
             for ins_code, count in ins_counts.items():
-                categories = self._get_treat_categories(ins_code)  # 改成拿清單
+                categories = self._get_treat_categories(
+                    ins_code
+                )  # 拿清單，可能不只一個
                 for category in categories:
-                    category_totals[category] += count  # 每個命中的分類都各自累加
+                    category_totals[category] += count
 
             for category, col_no in column_map.items():
                 value = category_totals[category]
@@ -384,7 +420,7 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
             if apply_fee <= 0:
                 error_message.append("無申報金額")
 
-            result = self._parse_pdata(ddata)
+            result = self._parse_pdata(ddata, dhead_data["d1"])
             if result["diag_fee"] != diag_fee:
                 error_message.append(
                     f"診察費不平衡, 清單段: {diag_fee}, 醫令段: {result['diag_fee']}"
@@ -485,7 +521,7 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
                 row_no, i, QtWidgets.QTableWidgetItem(string_utils.xstr(data[i]))
             )
 
-    def _parse_pdata(self, ddata):
+    def _parse_pdata(self, ddata, case_type=None):
         pdata = ddata.xpath("./pdata")
 
         pdata_fee = {
@@ -540,7 +576,7 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
                 pdata_fee["pharmacy_fee"] += total_fee
 
             ins_code = string_utils.xstr(xdata["p4"])
-            if ins_code in nhi_utils.TREAT_ALL_CODE:
+            if case_type == "29" and ins_code in nhi_utils.TREAT_ALL_CODE:
                 doctor_id = string_utils.xstr(xdata["p16"])
                 self.dict_treat_count.setdefault(doctor_id, {})
                 self.dict_treat_count[doctor_id][ins_code] = (
@@ -548,3 +584,101 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
                 )
 
         return pdata_fee
+
+    def print_highly_acupuncture_list(self):
+        patients = self.list_highly_acupuncture_patients()
+        i = 0
+        for p in patients:
+            if p["case_type"] != "29":
+                continue
+
+            i += 1
+            case_date = date_utils.nhi_date_to_west_date(p["case_date"])
+            patient_key = patient_utils.get_patient_key_by_id(
+                self.database, p["patient_id"]
+            )
+            sql = f'''
+                select DATE(CaseDate) as CaseDate, PatientKey, Name, Treatment from cases
+                where
+                    DATE(CaseDate) = "{case_date}" and
+                    PatientKey = {patient_key} and
+                    InsType = "健保"
+            '''
+            rows = self.database.select_record(sql)
+            if not rows:
+                continue
+
+            row = rows[0]
+            print(i, row["CaseDate"], row["PatientKey"], row["Name"], row["Treatment"])
+
+    def list_highly_acupuncture_patients(self):
+        """
+        解析XML，列出所有屬於高度複針(D07,D08,F52-F68)的病人清單
+        回傳 list of dict: [{id, name, doctor_id, ins_code, case_type, case_date}, ...]
+        """
+        xml_file_name = nhi_utils.get_ins_xml_file_name(
+            self.system_settings, self.apply_type_code, self.apply_date
+        )
+        if not os.path.isfile(xml_file_name):
+            return []
+
+        tree = ET.parse(xml_file_name)
+        root = tree.getroot()
+
+        dbody_list = root.xpath("//outpatient/ddata/dbody")
+        dhead_list = root.xpath("//outpatient/ddata/dhead")
+
+        result = []
+
+        for row_no, ddata in enumerate(dbody_list):
+            dhead_data = xml_utils.convert_node_to_dict(dhead_list[row_no])
+            case_type = dhead_data["d1"]
+
+            xdata = xml_utils.convert_node_to_dict(ddata)
+            patient_id = string_utils.xstr(xdata.get("d3"))  # 病人身份證
+
+            pdata_list = ddata.xpath("./pdata")
+            for pdata in pdata_list:
+                p_xdata = xml_utils.convert_node_to_dict(pdata)
+                ins_code = string_utils.xstr(p_xdata.get("p4"))
+
+                if ins_code in ("D07", "D08") or (
+                    ins_code.startswith("F")
+                    and ins_code[1:].isdigit()
+                    and 52 <= int(ins_code[1:]) <= 68
+                ):
+                    doctor_id = string_utils.xstr(p_xdata.get("p16"))
+                    # 查病人姓名
+                    sql = f'''
+                            SELECT Name FROM patient
+                            WHERE ID = "{patient_id}"
+                            LIMIT 1
+                        '''
+                    rows = self.database.select_record(sql)
+                    patient_name = (
+                        string_utils.xstr(rows[0]["Name"])
+                        if len(rows) > 0
+                        else "(查無此人)"
+                    )
+
+                    # 查醫師姓名
+                    doctor_name = personnel_utils.person_id_to_name(
+                        self.database, doctor_id
+                    )
+                    case_date = string_utils.xstr(p_xdata.get("p14"))[
+                        :7
+                    ]  # 就醫日期(民國年格式)
+
+                    result.append(
+                        {
+                            "case_type": case_type,
+                            "patient_id": patient_id,
+                            "patient_name": patient_name,
+                            "doctor_id": doctor_id,
+                            "doctor_name": doctor_name,
+                            "ins_code": ins_code,
+                            "case_date": case_date,
+                        }
+                    )
+
+        return result

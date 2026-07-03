@@ -4247,7 +4247,7 @@ def get_instruction_html_one_line(
 
 
 def get_instruction_html_0(
-    database, system_settings, case_key, medicine_set, additional=None
+    database, system_settings, case_key, medicine_set, additional=None, tw_date=False
 ):
     sql = f"""
         SELECT CaseDate, Doctor, DrugShareFee, TotalFee FROM cases
@@ -4303,6 +4303,9 @@ def get_instruction_html_0(
                 pass
 
         case_date = row["CaseDate"].date()
+        if tw_date:
+            case_date = date_utils.west_date_to_nhi_date(row["CaseDate"], "-")
+
         html = f"""
               指示:一日{packages}包{pres_days}日份, 共{total_packages}包{dosage_per_package_line}<br>
               服法:{instruction}服用 總量:{total_dosage_line}<br>
@@ -8129,15 +8132,14 @@ def get_case_html_23(
     if number_utils.get_integer(row["Continuance"]) >= 1:
         card += "-" + string_utils.xstr(row["Continuance"])
 
+    case_date = row["CaseDate"].strftime("%Y-%m-%d")
     birthday = row["Birthday"]
-    # age = ''
-    if birthday is not None:
+    if tw_date:
+        case_date = date_utils.west_date_to_nhi_date(row["CaseDate"], "-")
         if birthday_mask:
-            birthday = birthday.strftime("%Y-*-*")
-        elif tw_date:
-            birthday = string_utils.xstr(
-                date_utils.west_date_to_nhi_date(row["Birthday"], "-")
-            )
+            birthday = date_utils.west_date_to_nhi_date(row["Birthday"], "-", mask=True)
+        else:
+            birthday = date_utils.west_date_to_nhi_date(row["Birthday"], "-")
 
     id = row["ID"]
     if id_mask and id is not None:
@@ -8147,10 +8149,6 @@ def get_case_html_23(
         color = f' style="background-color: {background_color}"'
     else:
         color = ""
-
-    case_date = row["CaseDate"].strftime("%Y-%m-%d")
-    if tw_date:
-        case_date = date_utils.west_date_to_nhi_date(row["CaseDate"], "-")
 
     patient_key = get_patient_key(row)
     patient_key_header = get_patient_key_header(row, "病號")
