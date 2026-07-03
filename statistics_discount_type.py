@@ -32,6 +32,8 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
         self.system_settings = args[1]
         self.ui = None
         self.sql = None
+        self.statistics_start_date = None  # None 表示統計所有日期
+        self.statistics_end_date = None
 
         self._set_ui()
         self._set_signal()
@@ -66,6 +68,9 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
         self.ui.action_close.triggered.connect(self.close_form)
         self.ui.action_export_to_excel.triggered.connect(self._export_to_excel)
         self.ui.tableWidget_patient_list.doubleClicked.connect(self.open_patient_record)
+        self.ui.tableWidget_discount_type.itemSelectionChanged.connect(
+            self._discount_type_selection_changed
+        )
 
     def close_tab(self):
         current_tab = self.parent.ui.tabWidget_window.currentIndex()
@@ -77,7 +82,7 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
 
     # 設定欄位寬度
     def _set_table_width(self):
-        width = [200, 100]
+        width = [200, 100, 100]
         self.table_widget_discount_type.set_table_heading_width(width)
 
         width = [90, 100, 260]
@@ -92,57 +97,41 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             dialog.deleteLater()
             return
 
+        # 重新填表時先擋掉 selection 信號, 避免途中觸發 _discount_type_selection_changed
+        self.ui.tableWidget_discount_type.blockSignals(True)
+
         if dialog.radioButton_all.isChecked():
+            self.statistics_start_date = None
+            self.statistics_end_date = None
             self.ui.label_period.setText("統計期間: 所有日期")
             rows = self._calculate_discount_type_all()
-            self._set_patient_table_all()
         else:
             start_date = dialog.ui.dateEdit_start_date
             end_date = dialog.ui.dateEdit_end_date
+            self.statistics_start_date = start_date.date().toString("yyyy-MM-dd")
+            self.statistics_end_date = end_date.date().toString("yyyy-MM-dd")
             self.ui.label_period.setText(
-                f"""統計期間:{start_date.date().toString("yyyy-MM-dd")} 至 {end_date.date().toString("yyyy-MM-dd")}"""
+                f"統計期間:{self.statistics_start_date} 至 {self.statistics_end_date}"
             )
             rows = self._calculate_discount_type_period(
                 start_date.date(), end_date.date()
             )
-            self._set_patient_table_duration(start_date.date(), end_date.date())
+
+        self.ui.tableWidget_discount_type.blockSignals(False)
+
+        # 預設選取第一列, 觸發 _discount_type_selection_changed 填入病患門診明細
+        self.ui.tableWidget_patient_list.setRowCount(0)
+        if len(rows) > 0:
+            self.ui.tableWidget_discount_type.selectRow(0)
 
         try:
             self.create_bar_chart(rows)
         except Exception:
             pass
 
-    def _calculate_discount_type_period(self, start_date, end_date):
-        sql = f'''
-            SELECT CaseDate, PatientKey FROM cases
-            WHERE
-                DATE(CaseDate) BETWEEN "{start_date.toString("yyyy-MM-dd")}" AND "{end_date.toString("yyyy-MM-dd")}"
-            GROUP BY PatientKey ORDER BY PatientKey
-        '''
-        rows = self.database.select_record(sql)
-        if len(rows) <= 0:
-            return rows
-
-        patient_list = [[row["CaseDate"], row["PatientKey"]] for row in rows]
-        if not patient_list:
-            return []
-
-        patient_key_list = [str(row[1]) for row in patient_list]
-        if not patient_key_list:
-            return []
-
-        patient_keys_sql = f"({', '.join(patient_key_list)})"
-
-        sql = f"""
-            SELECT patient.DiscountType, COUNT(*) AS count FROM patient
-            WHERE
-                DiscountType IS NOT NULL AND LENGTH(DiscountType) > 0 AND
-                PatientKey IN {patient_keys_sql}
-            GROUP BY DiscountType
-        """
-
-        rows = self.database.select_record(sql)
-        print(rows)
+    # 將統計結果填入 tableWidget_discount_type
+    # column[0]: 優待身份  column[1]: 人數  column[2]: 門診次數
+    def _set_discount_type_table(self, rows):
         self.ui.tableWidget_discount_type.setRowCount(len(rows))
         for row_no, row in enumerate(rows):
             self.ui.tableWidget_discount_type.setItem(
@@ -154,30 +143,44 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             item = QtWidgets.QTableWidgetItem(str(row["count"]))
             item.setTextAlignment(QtCore.Qt.AlignRight)
             self.ui.tableWidget_discount_type.setItem(row_no, 1, item)
+
+            item = QtWidgets.QTableWidgetItem(str(row["case_count"]))
+            item.setTextAlignment(QtCore.Qt.AlignRight)
+            self.ui.tableWidget_discount_type.setItem(row_no, 2, item)
+
+    def _calculate_discount_type_period(self, start_date, end_date):
+        sql = f'''
+            SELECT
+                patient.DiscountType,
+                COUNT(DISTINCT cases.PatientKey) AS count,
+                COUNT(*) AS case_count
+            FROM cases
+                LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
+            WHERE
+                DATE(cases.CaseDate) BETWEEN "{start_date.toString("yyyy-MM-dd")}" AND "{end_date.toString("yyyy-MM-dd")}" AND
+                patient.DiscountType IS NOT NULL AND LENGTH(patient.DiscountType) > 0
+            GROUP BY patient.DiscountType
+        '''
+        rows = self.database.select_record(sql)
+        self._set_discount_type_table(rows)
 
         return rows
 
     def _calculate_discount_type_all(self):
         sql = """
-            SELECT *, COUNT(*) AS count FROM patient
+            SELECT
+                patient.DiscountType,
+                COUNT(DISTINCT patient.PatientKey) AS count,
+                COUNT(cases.CaseKey) AS case_count
+            FROM patient
+                LEFT JOIN cases ON cases.PatientKey = patient.PatientKey
             WHERE
-                DiscountType IS NOT NULL AND LENGTH(DiscountType) > 0
-            GROUP BY DiscountType
+                patient.DiscountType IS NOT NULL AND LENGTH(patient.DiscountType) > 0
+            GROUP BY patient.DiscountType
         """
 
         rows = self.database.select_record(sql)
-
-        self.ui.tableWidget_discount_type.setRowCount(len(rows))
-        for row_no, row in enumerate(rows):
-            self.ui.tableWidget_discount_type.setItem(
-                row_no,
-                0,
-                QtWidgets.QTableWidgetItem(string_utils.xstr(row["DiscountType"])),
-            )
-
-            item = QtWidgets.QTableWidgetItem(str(row["count"]))
-            item.setTextAlignment(QtCore.Qt.AlignRight)
-            self.ui.tableWidget_discount_type.setItem(row_no, 1, item)
+        self._set_discount_type_table(rows)
 
         return rows
 
@@ -197,22 +200,25 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
         total = sum([row["count"] for row in data_rows])
 
         # 建立 QBarSet
-        bar_set = QBarSet("次數")
+        bar_set = QBarSet("人數")
+        bar_set_cases = QBarSet("門診次數")
         contents = []
         for row in data_rows:
             contents.append(row["DiscountType"])
             bar_set.append(row["count"])
+            bar_set_cases.append(row["case_count"])
 
         # 建立 QBarSeries 並加進 QBarSet
         series = QBarSeries()
         series.append(bar_set)
+        series.append(bar_set_cases)
         series.setLabelsVisible(True)  # 顯示數字
         series.setLabelsPosition(QBarSeries.LabelsOutsideEnd)  # 顯示在條外側
 
         # 建立 Chart
         chart = QChart()
         chart.addSeries(series)
-        chart.setTitle("從何處得知本診所 - 次數統計")
+        chart.setTitle("病患優待身份 - 人數/門診次數統計")
         chart.setAnimationOptions(QChart.SeriesAnimations)
 
         # 分類軸（Y軸）
@@ -222,8 +228,12 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
         axis_y.setLabelsAngle(-30)  # 或 -45 看效果
 
         # 數值軸（X軸）
+        max_value = max(
+            max(row["count"] for row in data_rows),
+            max(row["case_count"] for row in data_rows),
+        )
         axis_x = QValueAxis()
-        axis_x.setRange(0, max(row["count"] for row in data_rows) + 1)
+        axis_x.setRange(0, max_value + 1)
         axis_x.setTitleText("次數")
         chart.setAxisY(axis_x, series)
 
@@ -234,41 +244,40 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
         # 加入 layout（在 tableWidget_discount_type 右邊）
         self.ui.horizontalLayout_trace.addWidget(chart_view)
 
-    def _set_patient_table_all(self):
-        sql = """
-            SELECT * FROM patient
-            WHERE
-                DiscountType IS NOT NULL AND LENGTH(DiscountType) > 0
-            GROUP BY patient.PatientKey ORDER BY patient.PatientKey
-        """
-        rows = self.database.select_record(sql)
-        self.ui.tableWidget_patient_list.setRowCount(len(rows))
+    # tableWidget_discount_type 選取列改變時, 依該優待身份列出病患門診明細
+    def _discount_type_selection_changed(self):
+        row_no = self.ui.tableWidget_discount_type.currentRow()
+        if row_no < 0:
+            return
 
-        for row_no, row in enumerate(rows):
-            patient_key = row["PatientKey"]
-            name = string_utils.xstr(row["Name"])
-            discount_type = string_utils.xstr(row["DiscountType"])
+        item = self.ui.tableWidget_discount_type.item(row_no, 0)
+        if item is None:
+            return
 
-            self.ui.tableWidget_patient_list.setItem(
-                row_no, 0, QtWidgets.QTableWidgetItem(string_utils.xstr(patient_key))
-            )
-            self.ui.tableWidget_patient_list.setItem(
-                row_no, 1, QtWidgets.QTableWidgetItem(name)
-            )
-            self.ui.tableWidget_patient_list.setItem(
-                row_no, 2, QtWidgets.QTableWidgetItem(discount_type)
-            )
+        discount_type = item.text()
+        if not discount_type:
+            return
 
-        self.ui.tableWidget_patient_list.resizeRowsToContents()
+        self._set_patient_case_list(discount_type)
 
-    def _set_patient_table_duration(self, start_date, end_date):
+    # 列出指定優待身份的病患在統計期間內的每一筆門診
+    # column[0]: 病歷號  column[1]: 姓名  column[2]: 門診日期
+    def _set_patient_case_list(self, discount_type):
+        date_condition = ""
+        if self.statistics_start_date is not None:
+            date_condition = f'''
+                AND DATE(cases.CaseDate)
+                    BETWEEN "{self.statistics_start_date}" AND "{self.statistics_end_date}"
+            '''
+
         sql = f'''
-            SELECT * FROM patient
-                LEFT join cases ON cases.PatientKey = patient.PatientKey
+            SELECT patient.PatientKey, patient.Name, cases.CaseDate
+            FROM cases
+                LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
             WHERE
-                DiscountType IS NOT NULL AND LENGTH(DiscountType) > 0 AND
-                DATE(CaseDate) BETWEEN "{start_date.toString("yyyy-MM-dd")}" AND "{end_date.toString("yyyy-MM-dd")}"
-            GROUP BY patient.PatientKey ORDER BY patient.PatientKey
+                patient.DiscountType = "{discount_type}"
+                {date_condition}
+            ORDER BY patient.PatientKey, cases.CaseDate
         '''
         rows = self.database.select_record(sql)
         self.ui.tableWidget_patient_list.setRowCount(len(rows))
@@ -276,7 +285,11 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
         for row_no, row in enumerate(rows):
             patient_key = row["PatientKey"]
             name = string_utils.xstr(row["Name"])
-            discount_type = string_utils.xstr(row["DiscountType"])
+            case_date = row["CaseDate"]
+            if hasattr(case_date, "strftime"):
+                case_date = case_date.strftime("%Y-%m-%d")
+            else:
+                case_date = string_utils.xstr(case_date)
 
             self.ui.tableWidget_patient_list.setItem(
                 row_no, 0, QtWidgets.QTableWidgetItem(string_utils.xstr(patient_key))
@@ -284,9 +297,10 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             self.ui.tableWidget_patient_list.setItem(
                 row_no, 1, QtWidgets.QTableWidgetItem(name)
             )
-            self.ui.tableWidget_patient_list.setItem(
-                row_no, 2, QtWidgets.QTableWidgetItem(discount_type)
-            )
+
+            item = QtWidgets.QTableWidgetItem(case_date)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.ui.tableWidget_patient_list.setItem(row_no, 2, item)
 
         self.ui.tableWidget_patient_list.resizeRowsToContents()
 
@@ -325,7 +339,7 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             return
 
         export_utils.export_table_widget_to_excel(
-            excel_file_name, self.ui.tableWidget_discount_type, numeric_cell=[1]
+            excel_file_name, self.ui.tableWidget_discount_type, numeric_cell=[1, 2]
         )
 
         system_utils.show_message_box(

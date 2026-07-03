@@ -52,7 +52,7 @@
        <widget class="QTableWidget" name="tableWidget_discount_type">
         <property name="maximumSize">
          <size>
-          <width>350</width>
+          <width>450</width>
           <height>16777215</height>
          </size>
         </property>
@@ -72,7 +72,12 @@
         </column>
         <column>
          <property name="text">
-          <string>次數</string>
+          <string>人數</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>門診次數</string>
          </property>
         </column>
        </widget>
@@ -106,7 +111,7 @@
         </column>
         <column>
          <property name="text">
-          <string>優待類別</string>
+          <string>門診日期</string>
          </property>
         </column>
        </widget>
