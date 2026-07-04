@@ -683,7 +683,7 @@ class DialogMessageBox(QtWidgets.QDialog):
     def get_self_pay_case(self):
         return self.self_pay
 
-    def set_in_progress(self):
+    def set_in_progress(self, payment=False):
         png_filename = self._get_png_file_name("in_progress.png")
         system_utils.set_image(
             self, png_filename, 420, 200, width=180, height=180, center=False
@@ -699,14 +699,22 @@ class DialogMessageBox(QtWidgets.QDialog):
             self.parent.DARK_GREEN,
             center=True,
         )
+
+        if payment:
+            hint = "* 使用虛擬健保卡請稍後"
+            color = self.parent.RED
+        else:
+            hint = "請勿取出您的健保卡"
+            color = self.parent.DARK_GREEN
+
         system_utils.set_label(
             self,
-            "請勿取出您的健保卡",
+            hint,
             0,
             self.LINE4_Y,
             self.parent.TEXT_FONT,
             self.parent.FONT_SIZE,
-            self.parent.DARK_GREEN,
+            color,
             center=True,
         )
 

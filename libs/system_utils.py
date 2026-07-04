@@ -1221,6 +1221,7 @@ def set_label(
     font_color,
     center=False,
     font_weight="normal",
+    shadow=False,
 ):
     label_text = QtWidgets.QLabel(parent)
     label_text.setText(text)
@@ -1234,7 +1235,9 @@ def set_label(
         label_width = label_text.width()
         x = (parent_width - label_width) // 2
 
-    shadow_widget(parent, label_text)
+    if shadow:
+        shadow_widget(parent, label_text)
+
     label_text.move(x, y)
 
     return label_text
@@ -1254,6 +1257,7 @@ def set_button(
     event,
     center=False,
     font_weight="normal",
+    shadow=False,
 ):
     push_button = QtWidgets.QPushButton(parent)
     push_button.resize(width, height)
@@ -1274,7 +1278,9 @@ def set_button(
         button_width = push_button.width()
         x = (parent_width - button_width) // 2
 
-    shadow_widget(parent, push_button)
+    if shadow:
+        shadow_widget(parent, push_button)
+
     push_button.move(x, y)
     push_button.clicked.connect(event)
 

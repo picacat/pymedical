@@ -340,7 +340,7 @@ class KioskPayment(QtWidgets.QMainWindow):
         self.clear_all_widgets()
         self._set_bottom_image()
 
-        dialog = self.parent.show_in_progress()
+        dialog = self.parent.show_in_progress(payment=True)
         QCoreApplication.processEvents()
 
         ic_card_read = self.ic_card.read_register_basic_data(show_warning=False)
