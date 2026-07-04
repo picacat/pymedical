@@ -5,6 +5,17 @@ from PyQt5.QtCore import QObject, QTimer
 from PyQt5.QtWidgets import QLineEdit
 
 
+def read_vhc_basic_data(ic_card, qr_data):
+    """設定虛擬健保卡並讀取基本資料, 成功回傳 True"""
+    if not qr_data:
+        return False
+
+    ic_card.ic_card_type = "虛擬健保卡"
+    ic_card.qrcode = qr_data
+
+    return ic_card.read_register_basic_data(show_warning=False)
+
+
 class QrCodeScanner(QObject):
     """
     虛擬健保卡 QR Code 掃描器。

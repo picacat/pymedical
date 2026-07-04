@@ -6,9 +6,8 @@ import importlib
 import os
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QCoreApplication, QTimer
+from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QLineEdit
 
 from libs import (
     class_utils,
@@ -16,6 +15,7 @@ from libs import (
     date_utils,
     number_utils,
     printer_utils,
+    qrcode_scanner_utils,
     registration_utils,
     string_utils,
     system_utils,
@@ -50,9 +50,6 @@ class KioskPayment(QtWidgets.QMainWindow):
         self.home_image = None
 
         self.current_date = datetime.datetime.today().strftime("%Y-%m-%d")
-
-        self._qr_input = None  # 隱藏輸入框
-        self._qr_waiting = False  # 是否正在等待掃描
 
         self._set_ui()
         self._set_signal()
@@ -346,8 +343,11 @@ class KioskPayment(QtWidgets.QMainWindow):
 
         if not ic_card_read:
             self._set_home_image()
-            self._show_no_iccard()
-            self._back_to_home()
+            if self._show_no_iccard():  # 對話框已關閉，此時才啟動掃描
+                self.set_vhc_payment_data()
+            else:
+                self._back_to_home()
+
             return
 
         available_date, available_count = self.ic_card.get_card_status()
@@ -435,9 +435,12 @@ class KioskPayment(QtWidgets.QMainWindow):
         dialog = module.DialogMessageBox(
             self.parent, self.database, self.system_settings
         )
-        dialog.set_no_iccard_for_payment(procedure=self.set_vhc_payment_data)
-        dialog.exec_()
+        dialog.set_no_iccard_for_payment()
+        dialog.exec_()  # 阻塞到對話框完全關閉
+        use_vhc = dialog.get_use_vhc()
         del dialog
+
+        return use_vhc
 
     def _show_no_patient(self):
         from joytcm_kiosk.dialog import dialog_message_box
@@ -627,88 +630,26 @@ class KioskPayment(QtWidgets.QMainWindow):
         self.ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
         dialog.close()
 
-    def _create_qr_input(self):
-        self._qr_input = QLineEdit(self)
-        self._qr_input.setGeometry(0, 0, 1, 1)
-        self._qr_input.setStyleSheet("opacity: 0;")
-        self._qr_input.hide()
-        self._qr_input.returnPressed.connect(self._on_qr_scanned)
+    def _process_data(self):
+        print("Processing data from virtual health card...")
 
     def set_vhc_payment_data(self):
-        self._create_qr_input()
-
         dialog = self.parent.show_vhc_in_progress()
-        # 強制刷新事件循環，確保對話框立即顯示
         QCoreApplication.processEvents()
 
-        # 清空輸入框，顯示並 focus，等待掃描器輸入
-        self._qr_input.clear()
-        self._qr_input.show()
-        self._qr_input.setFocus()
-        self._qr_waiting = True
+        self._scanner = qrcode_scanner_utils.QrCodeScanner(self)
+        self._scanner.start(
+            dialog=dialog,
+            on_scanned=self._on_vhc_scanned,
+            on_cancelled=self._back_to_home,
+        )
 
-        # 可選：設定逾時（例如 30 秒沒掃就取消）
-        self._qr_timer = QTimer(self)
-        self._qr_timer.setSingleShot(True)
-        self._qr_timer.timeout.connect(self._on_qr_timeout)
-        self._qr_timer.start(30000)  # 30 秒
-
-        # 儲存 dialog 供之後關閉
-        self._vhc_dialog = dialog
-
-        # 監聽 dialog 被關閉（按取消或直接關閉視窗）
-        dialog.finished.connect(self._on_qr_cancelled)
-
-    def _on_qr_cancelled(self):
-        if not self._qr_waiting:
-            return  # 已經掃描成功或已逾時，不重複處理
-
-        self._qr_waiting = False
-        self._qr_timer.stop()
-        self._qr_input.hide()
-        self._back_to_home()
-
-    # ----------------------------------------------------------------
-    # 掃描成功 callback
-    # ----------------------------------------------------------------
-    def _on_qr_scanned(self):
-        if not self._qr_waiting:
-            return
-
-        self._qr_waiting = False
-        self._qr_timer.stop()
-        self._qr_input.hide()
-
-        qr_data = self._qr_input.text().strip()
-        self._vhc_dialog.close()
-        print(f"Scanned QR data: {qr_data}")
-
-        if not qr_data:
-            self._show_no_iccard()  # 空資料視同讀取失敗
-            self._back_to_home()
-            return
-
-        self.ic_card.ic_card_type = "虛擬健保卡"
-        self.ic_card.qrcode = qr_data
-        if not self.ic_card.read_register_basic_data(show_warning=False):
-            self._show_no_iccard()
-            self._back_to_home()
+    def _on_vhc_scanned(self, qr_data):
+        if not qrcode_scanner_utils.read_vhc_basic_data(self.ic_card, qr_data):
+            if self._show_no_iccard():  # 讀取失敗也給重掃的機會
+                self.set_vhc_payment_data()
+            else:
+                self._back_to_home()
             return
 
         self._process_data()
-
-    # ----------------------------------------------------------------
-    # 逾時 callback
-    # ----------------------------------------------------------------
-    def _on_qr_timeout(self):
-        if not self._qr_waiting:
-            return
-
-        self._qr_waiting = False
-        self._qr_input.hide()
-        self._vhc_dialog.close()
-
-        self._back_to_home()
-
-    def _process_data(self):
-        print("Processing data from virtual health card...")

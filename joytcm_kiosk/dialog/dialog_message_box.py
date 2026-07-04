@@ -199,7 +199,16 @@ class DialogMessageBox(QtWidgets.QDialog):
             center=True,
         )
         self._set_back_home_button("返回首頁", align="left")
-        self._set_button("使用虛擬卡", procedure=procedure, align="right")
+        self._set_button(
+            "使用虛擬卡", procedure=lambda: self._set_use_vhc(True), align="right"
+        )
+
+    def _set_use_vhc(self, use_vhc):
+        self.use_vhc = use_vhc
+        self.close()
+
+    def get_use_vhc(self):
+        return getattr(self, "use_vhc", False)
 
     def set_not_on_time(self):
         png_filename = self._get_png_file_name("cancel.png")
