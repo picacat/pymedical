@@ -62,7 +62,7 @@ class DialogMessageBox(QtWidgets.QDialog):
     def _set_signal(self):
         pass
 
-    def _set_back_home_button(self, button_text, wait_seconds=10):
+    def _set_back_home_button(self, button_text, wait_seconds=10, align="center"):
         color = self.parent.DARK_GREEN
         x, y = 0, self.BUTTON_Y
         push_button = QtWidgets.QPushButton(self)
@@ -80,6 +80,10 @@ class DialogMessageBox(QtWidgets.QDialog):
         parent_width = self.width()
         button_width = push_button.width()
         x = (parent_width - button_width) // 2
+        if align == "left":
+            x = 100
+        elif align == "right":
+            x = parent_width - button_width - 100
 
         push_button.move(x, y)
         push_button.clicked.connect(self.close)
@@ -96,6 +100,39 @@ class DialogMessageBox(QtWidgets.QDialog):
                 self.close()
 
         timer.timeout.connect(_timeout)
+
+    def _set_button(self, button_text, procedure=None, align="center"):
+        color = self.parent.LIGHT_GREEN
+        x, y = 0, self.BUTTON_Y
+        push_button = QtWidgets.QPushButton(self)
+        push_button.resize(340, self.parent.BUTTON_HEIGHT)
+        push_button.setText(button_text)
+        push_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {color};  /* 正常狀態背景顏色 */
+                border: 2px solid {color};  /* 邊框顏色 */
+                border-radius: 10px;        /* 圓角 */
+                color: white;               /* 字體顏色 */
+                font: 75 {self.parent.BUTTON_FONT_SIZE}pt "{self.parent.BUTTON_FONT}";
+            }}
+        """)
+        parent_width = self.width()
+        button_width = push_button.width()
+        x = (parent_width - button_width) // 2
+        if align == "left":
+            x = 100
+        elif align == "right":
+            x = parent_width - button_width - 100
+
+        push_button.move(x, y)
+
+        def _on_click():
+            if procedure is not None:
+                procedure()
+
+            self.close()
+
+        push_button.clicked.connect(_on_click)
 
     def set_no_iccard(self):
         system_utils.set_label(
@@ -129,6 +166,40 @@ class DialogMessageBox(QtWidgets.QDialog):
             center=True,
         )
         self._set_back_home_button("返回首頁")
+
+    def set_no_iccard_for_payment(self, procedure=None):
+        system_utils.set_label(
+            self,
+            "系統未偵測到健保卡！",
+            0,
+            self.TITLE_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.RED,
+            center=True,
+        )
+        system_utils.set_label(
+            self,
+            "請重新插入健保卡進行現金繳費",
+            0,
+            self.LINE1_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.DARK_GREEN,
+            center=True,
+        )
+        system_utils.set_label(
+            self,
+            "（未帶健保卡請至櫃檯進行現金繳費）",
+            0,
+            self.LINE2_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.LIGHT_GREEN,
+            center=True,
+        )
+        self._set_back_home_button("返回首頁", align="left")
+        self._set_button("使用虛擬卡", procedure=procedure, align="right")
 
     def set_not_on_time(self):
         png_filename = self._get_png_file_name("cancel.png")

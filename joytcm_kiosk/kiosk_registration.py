@@ -5,7 +5,7 @@ import importlib
 import os
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QCoreApplication, QTimer
+from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtWidgets import QLineEdit
 
 from libs import (
@@ -16,6 +16,7 @@ from libs import (
     nhi_utils,
     number_utils,
     patient_utils,
+    qrcode_scanner_utils,
     registration_utils,
     string_utils,
     system_utils,
@@ -74,26 +75,45 @@ class KioskRegistration(QtWidgets.QMainWindow):
 
     def set_vhc_registration_data(self):
         dialog = self.parent.show_vhc_in_progress()
-        # 強制刷新事件循環，確保對話框立即顯示
         QCoreApplication.processEvents()
 
-        # 清空輸入框，顯示並 focus，等待掃描器輸入
-        self._qr_input.clear()
-        self._qr_input.show()
-        self._qr_input.setFocus()
-        self._qr_waiting = True
+        self._scanner = qrcode_scanner_utils.QrCodeScanner(self)
+        self._scanner.start(
+            dialog=dialog,
+            on_scanned=self._on_vhc_scanned,
+            on_cancelled=self._back_to_home,
+        )
 
-        # 可選：設定逾時（例如 30 秒沒掃就取消）
-        self._qr_timer = QTimer(self)
-        self._qr_timer.setSingleShot(True)
-        self._qr_timer.timeout.connect(self._on_qr_timeout)
-        self._qr_timer.start(30000)  # 30 秒
+    def _on_vhc_scanned(self, qr_data):
+        if not qrcode_scanner_utils.read_vhc_basic_data(self.ic_card, qr_data):
+            self._show_no_iccard()
+            self._back_to_home()
+            return
 
-        # 儲存 dialog 供之後關閉
-        self._vhc_dialog = dialog
+        self._process_data()
 
-        # 監聽 dialog 被關閉（按取消或直接關閉視窗）
-        dialog.finished.connect(self._on_qr_cancelled)
+    # def set_vhc_registration_data(self):
+    #     dialog = self.parent.show_vhc_in_progress()
+    #     # 強制刷新事件循環，確保對話框立即顯示
+    #     QCoreApplication.processEvents()
+
+    #     # 清空輸入框，顯示並 focus，等待掃描器輸入
+    #     self._qr_input.clear()
+    #     self._qr_input.show()
+    #     self._qr_input.setFocus()
+    #     self._qr_waiting = True
+
+    #     # 可選：設定逾時（例如 30 秒沒掃就取消）
+    #     self._qr_timer = QTimer(self)
+    #     self._qr_timer.setSingleShot(True)
+    #     self._qr_timer.timeout.connect(self._on_qr_timeout)
+    #     self._qr_timer.start(30000)  # 30 秒
+
+    #     # 儲存 dialog 供之後關閉
+    #     self._vhc_dialog = dialog
+
+    #     # 監聽 dialog 被關閉（按取消或直接關閉視窗）
+    #     dialog.finished.connect(self._on_qr_cancelled)
 
     def _on_qr_cancelled(self):
         if not self._qr_waiting:

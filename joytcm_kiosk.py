@@ -502,7 +502,6 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         return dialog
 
     def send_socket_data(self, doctor, room, call_from):
-        print(doctor, room, call_from)
         self.socket_client.send_data(
             ",".join(
                 [

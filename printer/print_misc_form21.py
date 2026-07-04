@@ -1,15 +1,9 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
-from PyQt5.QtWidgets import QInputDialog
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
 
-from libs import printer_utils
-from libs import system_utils
-from libs import dialog_utils
-from libs import case_utils
-from libs import class_utils
+from libs import class_utils, printer_utils, system_utils
 
 
 # 其他收據格式21 二維條碼處方箋
@@ -54,7 +48,9 @@ class PrintMiscForm21:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
@@ -70,31 +66,30 @@ class PrintMiscForm21:
             document.print(self.printer)
 
     def _html(self):
-        case_record = printer_utils.get_case_html_8(self.database, self.case_key, '全部', mask_name=True)
-        clinic_name = self.system_settings.field('院所名稱')
-        clinic_id = self.system_settings.field('院所代號')
-        clinic_telephone = self.system_settings.field('院所電話')
-        clinic_address = self.system_settings.field('院所地址')
+        case_record = printer_utils.get_case_html_8(
+            self.database, self.case_key, "全部", mask_name=True
+        )
+        clinic_name = self.system_settings.field("院所名稱")
+        clinic_id = self.system_settings.field("院所代號")
+        clinic_telephone = self.system_settings.field("院所電話")
+        clinic_address = self.system_settings.field("院所地址")
 
         hca_api = class_utils.get_hca_api(self.database, self.system_settings)
         doctor_cert, prescript_cert = hca_api.get_cert(self.case_key)
 
         del hca_api
-        
+
         try:
             doctor_qr_code = system_utils.get_qrcode_b64png(doctor_cert)
         except Exception:
-            doctor_qr_code = ''
+            doctor_qr_code = ""
 
         try:
             prescript_qr_code = system_utils.get_qrcode_b64png(prescript_cert)
         except Exception:
-            prescript_qr_code = ''
+            prescript_qr_code = ""
 
-        print(doctor_cert)
-        print(prescript_cert)
-
-        html = f'''
+        html = f"""
             <html>
               <body>
                 <table width="95%" cellspacing="0">
@@ -117,6 +112,6 @@ class PrintMiscForm21:
                 <p>院址:{clinic_address} 電話:{clinic_telephone}</p>
               </body>
             </html>
-        '''
+        """
 
         return html
