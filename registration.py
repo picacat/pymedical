@@ -5592,6 +5592,7 @@ class Registration(QtWidgets.QMainWindow):
             self._read_wait_completed()
             return
 
+        ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
         ic_card_type = case_utils.get_ic_card_type(self.database, case_key)
         if ic_card_type == "虛擬健保卡":
             qrcode = None
@@ -5619,9 +5620,6 @@ class Registration(QtWidgets.QMainWindow):
                 if not get_response:
                     return
 
-                ic_card = class_utils.get_cshis(
-                    self, self.database, self.system_settings
-                )
                 qrcode = ic_card.get_response_token(vhc_req_code)
                 if qrcode is None:
                     system_utils.show_message_box(
@@ -5631,13 +5629,7 @@ class Registration(QtWidgets.QMainWindow):
                         "請重新取得授權.",
                     )
                     return
-
-            ic_card = class_utils.get_vhccshis(
-                self, self.database, self.system_settings, qrcode
-            )
         else:
-            ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
-
             if not ic_card.insert_correct_ic_card(patient_key):
                 return
 

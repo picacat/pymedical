@@ -369,6 +369,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
 
     def _save_files(self, reserve_row, ins_type):
         case_row = self._insert_medical_record(reserve_row, ins_type)
+
         self._insert_wait(case_row)
         self._update_reservation(reserve_row)
 
@@ -555,6 +556,16 @@ class KioskRegistration(QtWidgets.QMainWindow):
         case_utils.set_case_extend(
             self.database, case_key, "實際就醫日期", registered_date
         )
+
+        try:
+            ic_card_type = self.ic_card.ic_card_type
+        except Exception:
+            ic_card_type = None
+
+        if ic_card_type == "虛擬健保卡":
+            case_utils.set_case_extend(
+                self.database, case_key, "健保卡種類", ic_card_type
+            )
 
         now = date_utils.now_to_str()
         log = f"{patient_name}於{now}完成{ins_type}掛號, 卡序:{card}, 主治醫師: {room}診{doctor}醫師"

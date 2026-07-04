@@ -305,7 +305,12 @@ class KioskPayment(QtWidgets.QMainWindow):
         pass
 
     def _back_to_home(self):
+        self._reset_ic_card()
         self.parent.open_kiosk_home()
+
+    def _reset_ic_card(self):
+        self.ic_card.ic_card_type = "健保卡"  # 恢復健保卡模式
+        self.ic_card.qrcode = None  # 清除 QR code
 
     def _set_home_image(self):
         self.home_image = system_utils.set_image(
@@ -353,6 +358,12 @@ class KioskPayment(QtWidgets.QMainWindow):
         available_date, available_count = self.ic_card.get_card_status()
         self.ic_card.basic_data["card_valid_date"] = available_date
         self.ic_card.basic_data["card_available_count"] = available_count
+
+        self._process_data()
+
+    def _process_data(self):
+        self.clear_all_widgets()
+        self._set_bottom_image()
 
         patient_id = self.ic_card.basic_data["patient_id"]
         sql = f'''
@@ -629,9 +640,6 @@ class KioskPayment(QtWidgets.QMainWindow):
         QCoreApplication.processEvents()
         self.ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
         dialog.close()
-
-    def _process_data(self):
-        print("Processing data from virtual health card...")
 
     def set_vhc_payment_data(self):
         dialog = self.parent.show_vhc_in_progress()
