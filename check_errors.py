@@ -543,9 +543,9 @@ class CheckErrors(QtWidgets.QMainWindow):
                 self.check_chronic_pres_days == "Y"
                 and special_code != ""
                 and treat_type == "內科"
-                and 1 <= pres_days <= 7
+                and 1 <= pres_days < 7
             ):
-                error_messages.append("診斷碼為慢性病但內科開藥少於八日")
+                error_messages.append("診斷碼為慢性病但內科開藥少於七日")
 
             for i in range(1, nhi_utils.MAX_DISEASE_CODE + 1):
                 disease_code = string_utils.xstr(row[f"DiseaseCode{i}"])
