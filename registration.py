@@ -34,7 +34,7 @@ from libs import (
 )
 
 
-# 門診掛號 2026-06-10
+# 門診掛號 2026-07-06
 class Registration(QtWidgets.QMainWindow):
     """門診掛號 2018.01.22."""
 
