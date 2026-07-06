@@ -2523,8 +2523,8 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         check_ok = True
         error_message = []
 
-        if self.special_code != "" and 1 <= self.pres_days <= 7:
-            error_message.append("慢性病開藥至少要八天以上")
+        if self.special_code != "" and 1 <= self.pres_days < 7:
+            error_message.append("慢性病開藥至少要七天以上")
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Warning)
             msg_box.setWindowTitle("診斷碼檢查錯誤")
