@@ -2590,7 +2590,7 @@ def get_treat_code(database, case_key):
     treat_code = None
 
     if treatment in ACUPUNCTURE_TREAT:
-        if treatment in MERGE_TREAT:
+        if treatment in MERGE_TREAT and "合併中度傷科" in treatment:
             if string_utils.xstr(row["RegistType"]) in LONG_TERM_CARE + TOUR_TYPE:
                 treatment += "不分療程"
             elif number_utils.get_integer(row["Continuance"]) >= 2:  # 起始次可不用處理
@@ -2609,7 +2609,10 @@ def get_treat_code(database, case_key):
         else:
             treat_code = ACUPUNCTURE_DICT[treatment]
     elif treatment in MASSAGE_TREAT:
-        if string_utils.xstr(row["RegistType"]) in LONG_TERM_CARE + TOUR_TYPE:
+        if (
+            string_utils.xstr(row["RegistType"]) in LONG_TERM_CARE + TOUR_TYPE
+            and "中度" in treatment
+        ):
             treatment += "不分療程"
 
         if pres_days > 0:
