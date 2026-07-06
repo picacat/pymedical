@@ -2590,7 +2590,7 @@ def get_treat_code(database, case_key):
     treat_code = None
 
     if treatment in ACUPUNCTURE_TREAT:
-        if treatment in MERGE_TREAT:
+        if treatment in MERGE_TREAT and "合併中度傷科" in treatment:
             if string_utils.xstr(row["RegistType"]) in LONG_TERM_CARE + TOUR_TYPE:
                 treatment += "不分療程"
             elif number_utils.get_integer(row["Continuance"]) >= 2:  # 起始次可不用處理
