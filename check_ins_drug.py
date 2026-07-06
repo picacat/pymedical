@@ -26,6 +26,7 @@ class CheckInsDrug(QtWidgets.QMainWindow):
         self.apply_year = int(args[2])
         self.apply_month = int(args[3])
         self.apply_type = args[4]
+        self.auto_correct_count = 0
         self.ui = None
 
         self.start_date = date_utils.get_start_date_by_year_month(
@@ -275,6 +276,13 @@ class CheckInsDrug(QtWidgets.QMainWindow):
             self.ui.toolButton_find_error.setEnabled(True)
 
         self.ui.tableWidget_prescript.resizeRowsToContents()
+
+        if self.errors > 0 and self.auto_correct_count <= 0:
+            self.errors = 0
+            self._update_ins_code()
+            self.auto_correct_count += 1
+
+            self.start_check()
 
     def _check_valid_date(self, row, drug_rows):
         error_message = []
