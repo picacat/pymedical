@@ -3182,9 +3182,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self.record_saved = True
         self._set_necessary_fields()
 
-        doctor_done = False
         if self.call_from == "醫師看診作業":
             doctor_done = True
+        else:
+            doctor_done = False
 
         if force_save:
             check_prescript = False
@@ -3743,11 +3744,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if self.tab_pregnant is not None:
             self.tab_pregnant.save_pregnant_data()
 
-        if not self.save_prescript(check_prescript=check_prescript):
-            return False
-
-        self.tab_medical_record_fees.save_record()
-
         if set_doctor_done:  # 還沒有完成醫師診療作業
             self._set_doctor_done()
             self._set_charge_done()
@@ -3758,6 +3754,11 @@ class MedicalRecord(QtWidgets.QMainWindow):
             # self._set_charge_done(charge_done='False')
             # self._set_wait_done(wait_done='False')
             self._set_ins_upload_status()
+
+        if not self.save_prescript(check_prescript=check_prescript):
+            return False
+
+        self.tab_medical_record_fees.save_record()
 
         if self.medical_record["InsType"] == "健保":
             if self.check_box_integrate_care.isChecked():
