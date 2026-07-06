@@ -37,6 +37,7 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
 
         self._set_ui()
         self._set_signal()
+        print("xxx")
 
         self.item_list = [
             "科中藥品",
@@ -255,6 +256,10 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
 
         return rows
 
+    # 修正版 _get_item_type
+    # 1. 第二迴圈內重新取得每一列的 medicine_type / medicine_name（原本用到最後一列的舊值）
+    # 2. "埋線減肥" 改回傳 "減肥"（item_list 內的名稱），金額才不會被 _get_row_no 丟掉
+    # 3. 改為逐列判斷、比到就 return；全部比不到才歸 "保健食品"
     def _get_item_type(self, case_key, medicine_set):
         sql = f'''
             SELECT
@@ -267,7 +272,7 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
         '''
         rows = self.database.select_record(sql)
 
-        item_type = None
+        # 第一優先: 名稱或類別直接含有 item_list 的關鍵字
         for row in rows:
             medicine_type = string_utils.xstr(row["MedicineType"])
             medicine_name = string_utils.xstr(row["MedicineName"])
@@ -275,39 +280,43 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
                 if item_name in medicine_name or item_name in medicine_type:
                     return item_name
 
-        if item_type is None:
-            for row in rows:
-                if medicine_type in ["穴道"] or "針灸" in medicine_name:
-                    item_type = "針灸"
-                    break
-                elif "埋線" in medicine_type or "埋線" in medicine_name:
-                    item_type = "埋線減肥"
-                    break
-                elif "丸" in medicine_type and "丸" in medicine_name:
-                    item_type = "丸散"
-                    break
-                elif "散" in medicine_type and "散" in medicine_name:
-                    item_type = "丸散"
-                    break
-                elif "OTC" in medicine_type:
-                    item_type = "保健食品"
-                    break
-                elif medicine_type in ["器材"]:
-                    item_type = "護具"
-                    break
-                elif medicine_type in ["外用"]:
-                    item_type = "膏藥"
-                    break
-                elif medicine_type in ["處置"]:
-                    item_type = "推拿"
-                    break
-                elif medicine_type in ["單方", "複方"]:
-                    item_type = "科中藥品"
-                    break
-                else:
-                    item_type = "保健食品"
+        # 第二優先: 依 MedicineType 推斷 (每列都要重新取值)
+        for row in rows:
+            medicine_type = string_utils.xstr(row["MedicineType"])
+            medicine_name = string_utils.xstr(row["MedicineName"])
 
-        return item_type
+            if medicine_type == "穴道" or "針灸" in medicine_name:
+                return "針灸"
+
+            if "埋線" in medicine_type or "埋線" in medicine_name:
+                return "減肥"  # 原本回傳 "埋線減肥"，不在 item_list 內，金額會消失
+
+            if "丸" in medicine_type and "丸" in medicine_name:
+                return "丸散"
+
+            if "散" in medicine_type and "散" in medicine_name:
+                return "丸散"
+
+            if "OTC" in medicine_type:
+                return "保健食品"
+
+            if medicine_type == "器材":
+                return "護具"
+
+            if medicine_type == "外用":
+                return "膏藥"
+
+            if medicine_type == "處置":
+                return "推拿"
+
+            if medicine_type in ["單方", "複方"]:
+                return "科中藥品"
+
+        # 全部比不到才歸為保健食品; 沒有任何處方列則回 None
+        if rows:
+            return "保健食品"
+
+        return None
 
     def _calculate_table_widget_total(self, tableWidget):
         row_count = tableWidget.rowCount()
