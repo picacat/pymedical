@@ -1189,6 +1189,8 @@ ACUPUNCTURE_DRUG_DICT = {
     "中度針灸合併中度傷科開藥": "F37",
     "中度針灸合併中度傷科療程2-6次": "F38",
     "中度針灸合併中度傷科療程2-6次開藥": "F38",
+    "中度針灸合併中度傷科不分療程": "F77",
+    "中度針灸合併中度傷科不分療程開藥": "F77",
     "中度針灸合併高度傷科": "F40",
     "中度針灸合併高度傷科起始次": "F40",
     "中度針灸合併高度傷科起始次開藥": "F40",
@@ -1215,6 +1217,8 @@ ACUPUNCTURE_DRUG_DICT = {
     "高度針灸合併中度傷科開藥": "F54",
     "高度針灸合併中度傷科療程2-6次": "F55",
     "高度針灸合併中度傷科療程2-6次開藥": "F55",
+    "高度針灸合併中度傷科不分療程": "F81",
+    "高度針灸合併中度傷科不分療程開藥": "F81",
     "高度針灸合併高度傷科": "F57",
     "高度針灸合併高度傷科起始次": "F57",
     "高度針灸合併高度傷科起始次開藥": "F57",
@@ -1372,6 +1376,7 @@ MASSAGE_DRUG_DICT = {
     "複雜傷科": "B55",
     "一般傷科": "E01",
     "中度複雜性傷科": "E03",
+    "中度複雜性傷科不分療程": "E13",
     "高度複雜性傷科": "E05",
     # "中度複雜性傷科合併特殊疾病": "F60",  # 2025-08-25 禾豐 (原為E07)
     "中度複雜性傷科合併特殊疾病": "E07",
@@ -1381,6 +1386,7 @@ MASSAGE_DICT = {
     "複雜傷科": "B56",
     "一般傷科": "E02",
     "中度複雜性傷科": "E04",
+    "中度複雜性傷科不分療程": "E14",
     "高度複雜性傷科": "E06",
     # "中度複雜性傷科合併特殊疾病": "F60",  # 2025-08-25 禾豐 (原為E08)
     "中度複雜性傷科合併特殊疾病": "E08",
@@ -1486,6 +1492,8 @@ TREAT_NAME_DICT = {
     "E10": "脫臼整復復位",
     "E11": "骨折復位",
     "E12": "骨折復位",
+    "E13": "中度複雜性傷科-不分療程開藥",
+    "E14": "中度複雜性傷科-不分療程未開藥",
     "F01": "一般針灸合併一般傷科-開藥",
     "F02": "一般針灸合併一般傷科-未開藥",
     "F03": "一般針灸合併中度傷科-療程首次",
@@ -2571,7 +2579,7 @@ def get_treat_code(database, case_key):
         pres_days = 0
 
     sql = f"""
-        SELECT TreatType, Treatment, Continuance FROM cases
+        SELECT RegistType, TreatType, Treatment, Continuance FROM cases
         WHERE
             CaseKey = {case_key}
     """
@@ -2582,25 +2590,28 @@ def get_treat_code(database, case_key):
     treat_code = None
 
     if treatment in ACUPUNCTURE_TREAT:
-        if (
-            number_utils.get_integer(row["Continuance"]) >= 2
-            and treatment in MERGE_TREAT
-        ):  # 起始次可不用處理
-            if "中度傷科" in treatment:
-                treatment += "療程2-6次"
-            elif "高度傷科" in treatment:
-                treatment += "後續治療"
+        if treatment in MERGE_TREAT:
+            if string_utils.xstr(row["RegistType"]) in LONG_TERM_CARE + TOUR_TYPE:
+                treatment += "不分療程"
+            elif number_utils.get_integer(row["Continuance"]) >= 2:  # 起始次可不用處理
+                if "中度傷科" in treatment:
+                    treatment += "療程2-6次"
+                elif "高度傷科" in treatment:
+                    treatment += "後續治療"
 
-            if pres_days > 0:
-                treatment += "開藥"
-            else:
-                treatment += "未開藥"
+                if pres_days > 0:
+                    treatment += "開藥"
+                else:
+                    treatment += "未開藥"
 
         if pres_days > 0:
             treat_code = ACUPUNCTURE_DRUG_DICT[treatment]
         else:
             treat_code = ACUPUNCTURE_DICT[treatment]
     elif treatment in MASSAGE_TREAT:
+        if string_utils.xstr(row["RegistType"]) in LONG_TERM_CARE + TOUR_TYPE:
+            treatment += "不分療程"
+
         if pres_days > 0:
             treat_code = MASSAGE_DRUG_DICT[treatment]
         else:

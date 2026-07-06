@@ -1136,12 +1136,20 @@ def get_ins_code_from_infectious_drug(database, medicine_name):
 
 # 取得健保針灸費
 def get_ins_acupuncture_fee(
-    database, treatment, ins_drug_fee, course=None, case_date=None
+    database,
+    treatment,
+    ins_drug_fee,
+    course=None,
+    case_date=None,
+    long_term_care=False,
 ):
     ins_acupuncture_fee = 0
 
     if treatment not in nhi_utils.ACUPUNCTURE_DRUG_DICT:
         return ins_acupuncture_fee
+
+    if long_term_care and "合併中度傷科" in treatment:  # 針灸合併中度傷科才分不分療程
+        treatment += "不分療程"
 
     if ins_drug_fee > 0:
         acupuncture_code = nhi_utils.ACUPUNCTURE_DRUG_DICT[treatment]
@@ -1242,11 +1250,13 @@ def get_ins_acupuncture_fee(
 
 
 # 取得健保傷科治療費
-def get_ins_massage_fee(database, treatment, ins_drug_fee):
+def get_ins_massage_fee(database, treatment, ins_drug_fee, long_term_care=False):
     ins_massage_fee = 0
-
     if treatment not in nhi_utils.MASSAGE_TREAT:
         return ins_massage_fee
+
+    if long_term_care:
+        treatment += "不分療程"
 
     if ins_drug_fee > 0:
         massage_code = nhi_utils.MASSAGE_DRUG_DICT[treatment]
@@ -1483,16 +1493,27 @@ def get_ins_fee(database, system_settings, table_widget_ins_care=None, **kwargs)
         kwargs["reg_type"],
     )
 
+    if kwargs["reg_type"] in nhi_utils.LONG_TERM_CARE + nhi_utils.TOUR_TYPE:
+        long_term_care = True
+    else:
+        long_term_care = False
+
     ins_fee["acupuncture_fee"] = get_ins_acupuncture_fee(
         database,
         kwargs["treatment"],
         ins_fee["drug_fee"],
         kwargs["course"],
         case_date=case_date.date(),
+        long_term_care=long_term_care,
     )
+
     ins_fee["massage_fee"] = get_ins_massage_fee(
-        database, kwargs["treatment"], ins_fee["drug_fee"]
+        database,
+        kwargs["treatment"],
+        ins_fee["drug_fee"],
+        long_term_care=long_term_care,
     )
+
     ins_fee["dislocate_fee"] = get_ins_dislocate_fee(
         database, kwargs["treatment"], ins_fee["drug_fee"]
     )
