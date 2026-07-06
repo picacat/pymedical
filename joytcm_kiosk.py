@@ -481,12 +481,12 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         if error_code != 0:
             sys.exit(0)
 
-    def show_in_progress(self):
+    def show_in_progress(self, payment=False):
         from joytcm_kiosk.dialog import dialog_message_box
 
         module = importlib.reload(dialog_message_box)
         dialog = module.DialogMessageBox(self, self.database, self.system_settings)
-        dialog.set_in_progress()
+        dialog.set_in_progress(payment=payment)
         dialog.show()
 
         return dialog
@@ -502,7 +502,6 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         return dialog
 
     def send_socket_data(self, doctor, room, call_from):
-        print(doctor, room, call_from)
         self.socket_client.send_data(
             ",".join(
                 [

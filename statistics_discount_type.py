@@ -153,11 +153,12 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             SELECT
                 patient.DiscountType,
                 COUNT(DISTINCT cases.PatientKey) AS count,
-                COUNT(*) AS case_count
+                COUNT(DISTINCT cases.PatientKey, DATE(cases.CaseDate)) AS case_count
             FROM cases
                 LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
             WHERE
                 DATE(cases.CaseDate) BETWEEN "{start_date.toString("yyyy-MM-dd")}" AND "{end_date.toString("yyyy-MM-dd")}" AND
+                cases.InsType = "健保" AND
                 patient.DiscountType IS NOT NULL AND LENGTH(patient.DiscountType) > 0
             GROUP BY patient.DiscountType
         '''
@@ -171,9 +172,11 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             SELECT
                 patient.DiscountType,
                 COUNT(DISTINCT patient.PatientKey) AS count,
-                COUNT(cases.CaseKey) AS case_count
+                COUNT(DISTINCT cases.PatientKey, DATE(cases.CaseDate)) AS case_count
             FROM patient
-                LEFT JOIN cases ON cases.PatientKey = patient.PatientKey
+                LEFT JOIN cases ON
+                    cases.PatientKey = patient.PatientKey AND
+                    cases.InsType = "健保"
             WHERE
                 patient.DiscountType IS NOT NULL AND LENGTH(patient.DiscountType) > 0
             GROUP BY patient.DiscountType
@@ -271,13 +274,17 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
             '''
 
         sql = f'''
-            SELECT patient.PatientKey, patient.Name, cases.CaseDate
+            SELECT
+                patient.PatientKey, patient.Name,
+                DATE(cases.CaseDate) AS CaseDate
             FROM cases
                 LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
             WHERE
-                patient.DiscountType = "{discount_type}"
+                patient.DiscountType = "{discount_type}" AND
+                cases.InsType = "健保"
                 {date_condition}
-            ORDER BY patient.PatientKey, cases.CaseDate
+            GROUP BY patient.PatientKey, DATE(cases.CaseDate)
+            ORDER BY patient.PatientKey, DATE(cases.CaseDate)
         '''
         rows = self.database.select_record(sql)
         self.ui.tableWidget_patient_list.setRowCount(len(rows))
@@ -326,6 +333,7 @@ class StatisticsDiscountType(QtWidgets.QMainWindow):
         patient_key = self.table_widget_patient_list.field_value(0)
         self.parent.open_patient_record(patient_key, "病患查詢")
 
+    # 匯出資料到 Excel
     def _export_to_excel(self):
         options = QtWidgets.QFileDialog.Options()
         excel_file_name, _ = QtWidgets.QFileDialog.getSaveFileName(

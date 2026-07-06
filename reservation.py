@@ -1599,7 +1599,7 @@ class Reservation(QtWidgets.QMainWindow):
 
     def _cancel_reservation_by_list(self):
         reserve_key = self.table_widget_reservation_list.field_value(0)
-        name = self.table_widget_reservation_list.field_value(4)
+        name = self.table_widget_reservation_list.field_value(5)
         if self._delete_reserve_record(reserve_key, name):
             self._read_reservation_list()
 

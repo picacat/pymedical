@@ -5,8 +5,7 @@ import importlib
 import os
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QCoreApplication, QTimer
-from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtCore import QCoreApplication
 
 from libs import (
     case_utils,
@@ -16,6 +15,7 @@ from libs import (
     nhi_utils,
     number_utils,
     patient_utils,
+    qrcode_scanner_utils,
     registration_utils,
     string_utils,
     system_utils,
@@ -36,9 +36,6 @@ class KioskRegistration(QtWidgets.QMainWindow):
         self.ui = None
         self.clinic_name = self.system_settings.field("院所名稱")
 
-        self._qr_input = None  # 隱藏輸入框
-        self._qr_waiting = False  # 是否正在等待掃描
-
         self._set_ui()
         self._set_signal()
 
@@ -56,15 +53,9 @@ class KioskRegistration(QtWidgets.QMainWindow):
             self, os.path.join(self.parent.IMAGE_DIR, "home.png"), 0, 0
         )
 
-        # 建立隱藏的 QLineEdit 接收掃描器輸入
-        self._qr_input = QLineEdit(self)
-        self._qr_input.setGeometry(0, 0, 1, 1)  # 縮到最小、不可見
-        self._qr_input.setStyleSheet("opacity: 0;")
-        self._qr_input.hide()
-
     # 設定信號
     def _set_signal(self):
-        self._qr_input.returnPressed.connect(self._on_qr_scanned)
+        pass
 
     def _back_to_home(self):
         self.ic_card.ic_card_type = "健保卡"  # 恢復健保卡模式
@@ -74,76 +65,22 @@ class KioskRegistration(QtWidgets.QMainWindow):
 
     def set_vhc_registration_data(self):
         dialog = self.parent.show_vhc_in_progress()
-        # 強制刷新事件循環，確保對話框立即顯示
         QCoreApplication.processEvents()
 
-        # 清空輸入框，顯示並 focus，等待掃描器輸入
-        self._qr_input.clear()
-        self._qr_input.show()
-        self._qr_input.setFocus()
-        self._qr_waiting = True
+        self._scanner = qrcode_scanner_utils.QrCodeScanner(self)
+        self._scanner.start(
+            dialog=dialog,
+            on_scanned=self._on_vhc_scanned,
+            on_cancelled=self._back_to_home,
+        )
 
-        # 可選：設定逾時（例如 30 秒沒掃就取消）
-        self._qr_timer = QTimer(self)
-        self._qr_timer.setSingleShot(True)
-        self._qr_timer.timeout.connect(self._on_qr_timeout)
-        self._qr_timer.start(30000)  # 30 秒
-
-        # 儲存 dialog 供之後關閉
-        self._vhc_dialog = dialog
-
-        # 監聽 dialog 被關閉（按取消或直接關閉視窗）
-        dialog.finished.connect(self._on_qr_cancelled)
-
-    def _on_qr_cancelled(self):
-        if not self._qr_waiting:
-            return  # 已經掃描成功或已逾時，不重複處理
-
-        self._qr_waiting = False
-        self._qr_timer.stop()
-        self._qr_input.hide()
-        self._back_to_home()
-
-    # ----------------------------------------------------------------
-    # 掃描成功 callback
-    # ----------------------------------------------------------------
-    def _on_qr_scanned(self):
-        if not self._qr_waiting:
-            return
-
-        self._qr_waiting = False
-        self._qr_timer.stop()
-        self._qr_input.hide()
-
-        qr_data = self._qr_input.text().strip()
-        self._vhc_dialog.close()
-
-        if not qr_data:
-            self._show_no_iccard()  # 空資料視同讀取失敗
-            self._back_to_home()
-            return
-
-        self.ic_card.ic_card_type = "虛擬健保卡"
-        self.ic_card.qrcode = qr_data
-        if not self.ic_card.read_register_basic_data(show_warning=False):
+    def _on_vhc_scanned(self, qr_data):
+        if not qrcode_scanner_utils.read_vhc_basic_data(self.ic_card, qr_data):
             self._show_no_iccard()
             self._back_to_home()
             return
 
         self._process_data()
-
-    # ----------------------------------------------------------------
-    # 逾時 callback
-    # ----------------------------------------------------------------
-    def _on_qr_timeout(self):
-        if not self._qr_waiting:
-            return
-
-        self._qr_waiting = False
-        self._qr_input.hide()
-        self._vhc_dialog.close()
-
-        self._back_to_home()
 
     def set_registration_data(self):
         dialog = self.parent.show_in_progress()
@@ -432,6 +369,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
 
     def _save_files(self, reserve_row, ins_type):
         case_row = self._insert_medical_record(reserve_row, ins_type)
+
         self._insert_wait(case_row)
         self._update_reservation(reserve_row)
 
@@ -618,6 +556,16 @@ class KioskRegistration(QtWidgets.QMainWindow):
         case_utils.set_case_extend(
             self.database, case_key, "實際就醫日期", registered_date
         )
+
+        try:
+            ic_card_type = self.ic_card.ic_card_type
+        except Exception:
+            ic_card_type = None
+
+        if ic_card_type == "虛擬健保卡":
+            case_utils.set_case_extend(
+                self.database, case_key, "健保卡種類", ic_card_type
+            )
 
         now = date_utils.now_to_str()
         log = f"{patient_name}於{now}完成{ins_type}掛號, 卡序:{card}, 主治醫師: {room}診{doctor}醫師"
