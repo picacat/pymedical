@@ -199,6 +199,7 @@ class CheckInsDrug(QtWidgets.QMainWindow):
     #     self.ui.tableWidget_prescript.resizeRowsToContents()
 
     def start_check(self):
+        self.errors = 0
         self.read_data()
         total_count = self.row_count()
         if total_count <= 0:
@@ -277,10 +278,9 @@ class CheckInsDrug(QtWidgets.QMainWindow):
 
         self.ui.tableWidget_prescript.resizeRowsToContents()
 
-        if self.errors > 0 and self.auto_correct_count <= 0:
-            self.errors = 0
-            self._update_ins_code()
+        if self.errors > 0 and self.auto_correct_count == 0:
             self.auto_correct_count += 1
+            self._update_ins_code(recheck=False)
 
             self.start_check()
 
@@ -448,7 +448,7 @@ class CheckInsDrug(QtWidgets.QMainWindow):
                     color
                 )
 
-    def _update_ins_code(self):
+    def _update_ins_code(self, recheck=True):
         record_count = self.ui.tableWidget_prescript.rowCount()
         progress_dialog = QtWidgets.QProgressDialog(
             "自動更新健保碼中, 請稍後...", "取消", 0, record_count, self
@@ -505,7 +505,8 @@ class CheckInsDrug(QtWidgets.QMainWindow):
 
         progress_dialog.setValue(record_count)
         progress_dialog.deleteLater()
-        self.start_check()
+        if recheck:
+            self.start_check()
 
     # def _update_ins_code_by_name(self, prescript_key, medicine_type, medicine_name):
     #     medicine_rows = self._get_medicine_row(medicine_type, medicine_name)
