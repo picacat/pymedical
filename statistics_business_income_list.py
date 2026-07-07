@@ -17,8 +17,6 @@ from libs import (
 
 # 執行業務所得統計 2024.07.19
 class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
-    FALLBACK_ITEM = "保健食品"
-
     # 初始化
     def __init__(self, parent=None, *args):
         super(StatisticsBusinessIncomeList, self).__init__(parent)
@@ -129,46 +127,6 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
             if item_name == item_type:
                 return row_no
 
-    # def _calculate_case_amount(self):
-    #     rows = self._get_case_rows()
-    #     grand_total_case = 0  # cases.TotalFee 的加總
-
-    #     for row in rows:
-    #         case_key = row["CaseKey"]
-    #         case_total_fee = number_utils.get_integer(row["TotalFee"])
-    #         grand_total_case += case_total_fee
-
-    #         medicine_sets = self._get_medicine_sets(case_key)
-
-    #         dosage_totals = {}
-    #         dosage_sum = 0
-    #         for medicine_set in medicine_sets:
-    #             ms = number_utils.get_integer(medicine_set["MedicineSet"])
-    #             amount = self._get_dosage_total_fee(case_key, ms)
-    #             dosage_totals[ms] = amount
-    #             dosage_sum += amount
-
-    #         remaining = case_total_fee
-    #         ms_list = list(dosage_totals.items())
-
-    #         for i, (ms, amount) in enumerate(ms_list):
-    #             if i == len(ms_list) - 1:
-    #                 # 最後一個 medicine_set 用剩餘金額，確保加總等於 case_total_fee
-    #                 adjusted_amount = remaining
-    #             else:
-    #                 if dosage_sum > 0:
-    #                     adjusted_amount = round(amount * case_total_fee / dosage_sum)
-    #                 else:
-    #                     adjusted_amount = 0
-    #                 remaining -= adjusted_amount
-
-    #             item_type = self._get_item_type(case_key, ms)
-    #             row_no = self._get_row_no(item_type)
-    #             if row_no is None:
-    #                 continue
-
-    #             self._set_data(row_no, adjusted_amount)
-
     def _get_medicine_sets(self, case_key):
         sql = f'''
             SELECT
@@ -254,7 +212,10 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
         return net
 
     # _calculate_case_amount 簡化: 各 set 金額已是最終實收, 不再分攤縮放
+
     def _calculate_case_amount(self):
+        FALLBACK_ITEM = "保健食品"
+
         rows = self._get_case_rows()
         grand_total_case = 0  # cases.TotalFee 加總, 供驗算
 
@@ -425,7 +386,8 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
                 prescript
             WHERE
                 CaseKey = "{case_key}" AND
-                MedicineSet = {medicine_set}
+                MedicineSet = {medicine_set} AND
+                Amount > 0
         '''
         rows = self.database.select_record(sql)
 
@@ -435,6 +397,7 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
             medicine_name = string_utils.xstr(row["MedicineName"])
             for item_name in self.item_list:
                 if item_name in medicine_name or item_name in medicine_type:
+                    print(item_name, medicine_name)
                     return item_name
 
         # 第二優先: 依 MedicineType 推斷 (每列都要重新取值)
