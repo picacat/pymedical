@@ -5,6 +5,7 @@ from PyQt5 import QtCore, QtWidgets
 from libs import (
     case_utils,
     charge_utils,
+    date_utils,
     nhi_utils,
     number_utils,
     personnel_utils,
@@ -355,11 +356,11 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
         rows = self.database.select_record(sql)
 
         for row in rows:
-            # age_year, _ = date_utils.get_age(row['Birthday'], row['CaseDate'])
-            # if age_year is None or age_year >= 4:  # 已滿4歲
-            #     continue
-            if string_utils.xstr(row["ShareCode"]) != "902":  # 非三歲兒童不計算加成
+            age_year, _ = date_utils.get_age(row["Birthday"], row["CaseDate"])
+            if age_year is None or age_year >= 4:  # 已滿4歲
                 continue
+            # if string_utils.xstr(row["ShareCode"]) != "902":  # 非三歲兒童不計算加成
+            #     continue
 
             ins_apply_key = row["InsApplyKey"]
             extra_diag_fee = int(row["DiagFee"] * 20 / 100)
