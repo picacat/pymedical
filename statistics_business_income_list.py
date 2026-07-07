@@ -17,6 +17,8 @@ from libs import (
 
 # 執行業務所得統計 2024.07.19
 class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
+    FALLBACK_ITEM = "保健食品"
+
     # 初始化
     def __init__(self, parent=None, *args):
         super(StatisticsBusinessIncomeList, self).__init__(parent)
@@ -37,7 +39,6 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
 
         self._set_ui()
         self._set_signal()
-        print("xxx")
 
         self.item_list = [
             "科中藥品",
@@ -128,45 +129,45 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
             if item_name == item_type:
                 return row_no
 
-    def _calculate_case_amount(self):
-        rows = self._get_case_rows()
-        grand_total_case = 0  # cases.TotalFee 的加總
+    # def _calculate_case_amount(self):
+    #     rows = self._get_case_rows()
+    #     grand_total_case = 0  # cases.TotalFee 的加總
 
-        for row in rows:
-            case_key = row["CaseKey"]
-            case_total_fee = number_utils.get_integer(row["TotalFee"])
-            grand_total_case += case_total_fee
+    #     for row in rows:
+    #         case_key = row["CaseKey"]
+    #         case_total_fee = number_utils.get_integer(row["TotalFee"])
+    #         grand_total_case += case_total_fee
 
-            medicine_sets = self._get_medicine_sets(case_key)
+    #         medicine_sets = self._get_medicine_sets(case_key)
 
-            dosage_totals = {}
-            dosage_sum = 0
-            for medicine_set in medicine_sets:
-                ms = number_utils.get_integer(medicine_set["MedicineSet"])
-                amount = self._get_dosage_total_fee(case_key, ms)
-                dosage_totals[ms] = amount
-                dosage_sum += amount
+    #         dosage_totals = {}
+    #         dosage_sum = 0
+    #         for medicine_set in medicine_sets:
+    #             ms = number_utils.get_integer(medicine_set["MedicineSet"])
+    #             amount = self._get_dosage_total_fee(case_key, ms)
+    #             dosage_totals[ms] = amount
+    #             dosage_sum += amount
 
-            remaining = case_total_fee
-            ms_list = list(dosage_totals.items())
+    #         remaining = case_total_fee
+    #         ms_list = list(dosage_totals.items())
 
-            for i, (ms, amount) in enumerate(ms_list):
-                if i == len(ms_list) - 1:
-                    # 最後一個 medicine_set 用剩餘金額，確保加總等於 case_total_fee
-                    adjusted_amount = remaining
-                else:
-                    if dosage_sum > 0:
-                        adjusted_amount = round(amount * case_total_fee / dosage_sum)
-                    else:
-                        adjusted_amount = 0
-                    remaining -= adjusted_amount
+    #         for i, (ms, amount) in enumerate(ms_list):
+    #             if i == len(ms_list) - 1:
+    #                 # 最後一個 medicine_set 用剩餘金額，確保加總等於 case_total_fee
+    #                 adjusted_amount = remaining
+    #             else:
+    #                 if dosage_sum > 0:
+    #                     adjusted_amount = round(amount * case_total_fee / dosage_sum)
+    #                 else:
+    #                     adjusted_amount = 0
+    #                 remaining -= adjusted_amount
 
-                item_type = self._get_item_type(case_key, ms)
-                row_no = self._get_row_no(item_type)
-                if row_no is None:
-                    continue
+    #             item_type = self._get_item_type(case_key, ms)
+    #             row_no = self._get_row_no(item_type)
+    #             if row_no is None:
+    #                 continue
 
-                self._set_data(row_no, adjusted_amount)
+    #             self._set_data(row_no, adjusted_amount)
 
     def _get_medicine_sets(self, case_key):
         sql = f'''
@@ -186,7 +187,7 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
     def _get_dosage_total_fee(self, case_key, medicine_set):
         sql = f'''
             SELECT
-                TotalFee
+                SUM(TotalFee) AS TotalFee
             FROM
                 dosage
             WHERE
@@ -194,27 +195,183 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
                 MedicineSet = {medicine_set}
         '''
         rows = self.database.select_record(sql)
-        if rows:
+        if rows and rows[0]["TotalFee"] is not None:
             return number_utils.get_integer(rows[0]["TotalFee"])
 
         return 0
 
-    def _set_data(self, row_no, total_fee):
+    # 修正: 折讓為 set 層級, 各 set 扣自己的 dosage.DiscountFee
+    #
+    # set 實收 = 登錄金額 - 該 set 的 DiscountFee
+    #   登錄金額: dosage.TotalFee 有值優先, 否則加總 prescript.Amount
+    #
+    # 注意 (口徑確認點):
+    #   此寫法假設 dosage.TotalFee 是「折讓前」的登錄金額。
+    #   如果實際上 dosage.TotalFee 已經是折讓後實收, 則第一層不可再扣
+    #   DiscountFee (會扣兩次), 只有 fallback 到 prescript.Amount 時才需要扣。
+
+    def _get_set_total_fee(self, case_key, medicine_set):
+        sql = f'''
+            SELECT
+                SUM(TotalFee) AS TotalFee,
+                SUM(DiscountFee) AS DiscountFee
+            FROM
+                dosage
+            WHERE
+                CaseKey = "{case_key}" AND
+                MedicineSet = {medicine_set}
+        '''
+        rows = self.database.select_record(sql)
+
+        dosage_total = 0
+        discount_fee = 0
+        if rows:
+            dosage_total = number_utils.get_integer(rows[0]["TotalFee"])
+            discount_fee = number_utils.get_integer(rows[0]["DiscountFee"])
+
+        if dosage_total > 0:
+            base = dosage_total
+        else:
+            # 處置類等沒有 dosage 金額的 set: 用 prescript 明細加總
+            sql = f'''
+                SELECT
+                    SUM(Amount) AS Amount
+                FROM
+                    prescript
+                WHERE
+                    CaseKey = "{case_key}" AND
+                    MedicineSet = {medicine_set}
+            '''
+            prescript_rows = self.database.select_record(sql)
+            base = 0
+            if prescript_rows and prescript_rows[0]["Amount"] is not None:
+                base = number_utils.get_integer(prescript_rows[0]["Amount"])
+
+        net = base - discount_fee
+        if net < 0:
+            net = 0  # 折讓大於登錄金額屬資料異常, 不讓負數污染統計
+
+        return net
+
+    # _calculate_case_amount 簡化: 各 set 金額已是最終實收, 不再分攤縮放
+    def _calculate_case_amount(self):
+        rows = self._get_case_rows()
+        grand_total_case = 0  # cases.TotalFee 加總, 供驗算
+
+        for row in rows:
+            case_key = row["CaseKey"]
+            case_total_fee = number_utils.get_integer(row["TotalFee"])
+            grand_total_case += case_total_fee
+
+            medicine_sets = self._get_medicine_sets(case_key)
+            counted_items = set()
+            set_total = 0
+
+            for medicine_set in medicine_sets:
+                ms = number_utils.get_integer(medicine_set["MedicineSet"])
+                amount = self._get_set_total_fee(case_key, ms)
+
+                item_type = self._get_item_type(case_key, ms)
+                row_no = self._get_row_no(item_type)
+                if row_no is None:
+                    item_type = FALLBACK_ITEM
+                    row_no = self._get_row_no(FALLBACK_ITEM)
+
+                add_person = item_type not in counted_items
+                counted_items.add(item_type)
+
+                self._set_data(row_no, amount, add_person)
+                set_total += amount
+
+            # 偷懶病歷: 各 set 都算不出金額但 TotalFee 有值
+            # -> 差額歸給第一個 set 的項目 (只有一個 set 時即整筆歸該項)
+            diff = case_total_fee - set_total
+            if diff != 0 and medicine_sets:
+                if set_total == 0:
+                    # 偷懶病歷: 全部 set 都沒金額, 整筆歸第一個 set 的項目
+                    ms = number_utils.get_integer(medicine_sets[0]["MedicineSet"])
+                    item_type = self._get_item_type(case_key, ms)
+                    row_no = self._get_row_no(item_type)
+                    if row_no is None:
+                        row_no = self._get_row_no(FALLBACK_ITEM)
+                    self._set_data(row_no, diff, add_person=False)
+                else:
+                    # 明細合計與 TotalFee 有差額: 差額歸科中藥品
+                    row_no = self._get_row_no("科中藥品")
+                    self._set_data(row_no, diff, add_person=False)
+
+        return grand_total_case
+
+    def _allocate_case_fee(self, case_total_fee, dosage_totals):
+        # 將 case_total_fee 分攤到各 medicine_set
+        # 回傳 [(medicine_set, 分攤金額), ...], 分攤金額加總必等於 case_total_fee
+        priced = [(ms, amount) for ms, amount in dosage_totals if amount > 0]
+        unpriced = [ms for ms, amount in dosage_totals if amount <= 0]
+        priced_sum = sum(amount for _, amount in priced)
+
+        allocations = []
+
+        if not priced:
+            # 情境 C: 全部沒填價, 平均分攤
+            remaining = case_total_fee
+            for i, ms in enumerate(unpriced):
+                if i == len(unpriced) - 1:
+                    amount = remaining
+                else:
+                    amount = round(case_total_fee / len(unpriced))
+                    remaining -= amount
+                allocations.append((ms, amount))
+        elif unpriced and case_total_fee >= priced_sum:
+            # 情境 B: 有價的照登錄金額, 差額平均分給沒填價的 set
+            for ms, amount in priced:
+                allocations.append((ms, amount))
+
+            diff = case_total_fee - priced_sum
+            remaining = diff
+            for i, ms in enumerate(unpriced):
+                if i == len(unpriced) - 1:
+                    amount = remaining
+                else:
+                    amount = round(diff / len(unpriced))
+                    remaining -= amount
+                allocations.append((ms, amount))
+        else:
+            # 情境 A: 全部有價 (或整單折讓致 TotalFee < 有價合計),
+            # 依比例分攤, 最後一個吸收進位誤差
+            remaining = case_total_fee
+            for i, (ms, amount) in enumerate(priced):
+                if i == len(priced) - 1:
+                    adjusted = remaining
+                else:
+                    adjusted = round(amount * case_total_fee / priced_sum)
+                    remaining -= adjusted
+                allocations.append((ms, adjusted))
+
+            # 折讓情境下沒填價的 set 分不到錢, 但仍回傳 0 額以利除錯
+            for ms in unpriced:
+                allocations.append((ms, 0))
+
+        return allocations
+
+    def _set_data(self, row_no, total_fee, add_person=True):
         person_item = self.ui.tableWidget_case_amount.item(row_no, 1)
         if person_item is None:
-            person_item = 0
+            person_count = 0
         else:
-            person_item = number_utils.get_integer(person_item.text())
+            person_count = number_utils.get_integer(person_item.text())
 
         total_fee_item = self.ui.tableWidget_case_amount.item(row_no, 2)
         if total_fee_item is None:
-            total_fee_item = 0
+            total_fee_sum = 0
         else:
-            total_fee_item = number_utils.get_integer(total_fee_item.text())
+            total_fee_sum = number_utils.get_integer(total_fee_item.text())
 
-        self._set_item_data(self.ui.tableWidget_case_amount, row_no, 1, person_item + 1)
+        if add_person:
+            person_count += 1
+
+        self._set_item_data(self.ui.tableWidget_case_amount, row_no, 1, person_count)
         self._set_item_data(
-            self.ui.tableWidget_case_amount, row_no, 2, total_fee_item + total_fee
+            self.ui.tableWidget_case_amount, row_no, 2, total_fee_sum + total_fee
         )
 
     def _get_case_rows(self):
