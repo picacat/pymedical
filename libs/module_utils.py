@@ -1465,6 +1465,18 @@ def get_patient_new_care(parent, database, system_settings, patient_key):
     return widget
 
 
+# 病患資料-初診照護
+
+
+def get_patient_3H(parent, database, system_settings, patient_key):
+    import patient_3H
+
+    module = importlib.reload(patient_3H)
+    widget = module.Patient3H(parent, database, system_settings, patient_key)
+
+    return widget
+
+
 # 病患資料-設定
 def get_patient_settings(parent, database, system_settings, patient_key):
     import patient_settings

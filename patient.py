@@ -36,20 +36,41 @@ class Patient(QtWidgets.QMainWindow):
         system_utils.center_window(self)
 
         self.tab_patient_data = module_utils.get_patient_data(
-            self, self.database, self.system_settings, self.patient_key, self.call_from, self.ic_card
+            self,
+            self.database,
+            self.system_settings,
+            self.patient_key,
+            self.call_from,
+            self.ic_card,
         )
-        self.ui.tabWidget_patient.addTab(self.tab_patient_data, '病患資料')
+        self.ui.tabWidget_patient.addTab(self.tab_patient_data, "病患資料")
 
-        if self.patient_key is not None:  # 初診病患建檔時不能輸入初診照護資料 2025-08-07 陳立德青花瓷
+        if (
+            self.patient_key is not None
+        ):  # 初診病患建檔時不能輸入初診照護資料 2025-08-07 陳立德青花瓷
             self.tab_patient_new_care = module_utils.get_patient_new_care(
-                self, self.database, self.system_settings, self.patient_key,
+                self,
+                self.database,
+                self.system_settings,
+                self.patient_key,
             )
-            self.ui.tabWidget_patient.addTab(self.tab_patient_new_care, '初診照護病歷')
+            self.ui.tabWidget_patient.addTab(self.tab_patient_new_care, "初診照護病歷")
+
+            self.tab_patient_3H = module_utils.get_patient_3H(
+                self,
+                self.database,
+                self.system_settings,
+                self.patient_key,
+            )
+            self.ui.tabWidget_patient.addTab(self.tab_patient_3H, "三高加強照護")
 
             self.tab_patient_settings = module_utils.get_patient_settings(
-                self, self.database, self.system_settings, self.patient_key,
+                self,
+                self.database,
+                self.system_settings,
+                self.patient_key,
             )
-            self.ui.tabWidget_patient.addTab(self.tab_patient_settings, '病患設定')
+            self.ui.tabWidget_patient.addTab(self.tab_patient_settings, "病患設定")
 
     # 設定信號
     def _set_signal(self):
@@ -77,7 +98,7 @@ class Patient(QtWidgets.QMainWindow):
             self.tab_patient_settings.save_patient_settings(patient_key)
         except Exception:
             pass
-        
+
         self.close_patient()
 
     def _copy_remote_patient(self):
