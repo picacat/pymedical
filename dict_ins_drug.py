@@ -681,6 +681,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 continue
 
             progress_bar.setValue(row_no + 1)
+            if row_no % 50 == 0:
+                QtWidgets.QApplication.processEvents()
+
             if row_no == 0:  # data heading 不轉檔
                 continue
 
@@ -791,6 +794,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 continue
 
             progress_bar.setValue(row_no + 1)
+            if row_no % 50 == 0:
+                QtWidgets.QApplication.processEvents()
+
             if row_no == 0:  # data heading 不轉檔
                 continue
 
