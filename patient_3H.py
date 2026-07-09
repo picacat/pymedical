@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import datetime
 
 from PyQt5 import QtWidgets
 
@@ -35,7 +34,8 @@ class Patient3H(QtWidgets.QMainWindow):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_PATIENT_3H, self)
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
-        self.ui.dateEdit_case_date.setDate(datetime.date.today())
+        system_utils.set_date_edit(self.ui.dateEdit_case_date, "未收案")
+        system_utils.set_date_edit(self.ui.dateEdit_close_date, "尚未結案")
 
     # 設定信號
     def _set_signal(self):

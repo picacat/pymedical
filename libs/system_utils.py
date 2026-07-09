@@ -21,7 +21,7 @@ from pathlib import Path
 import pygame
 import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QSettings, QStandardPaths
+from PyQt5.QtCore import QDate, QSettings, QStandardPaths
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
     QFileDialog,
@@ -1578,17 +1578,20 @@ def ping_ip(ip):
 
 def download_file_from_github(url, local_filename):
     try:
-        response = requests.get(url)
-        # 檢查請求是否成功 (200 OK)
+        response = requests.get(
+            url,
+            timeout=30,
+            headers={"User-Agent": "pymedical"},
+        )
         response.raise_for_status()
-
-        # 以二進制寫入模式 (wb) 存檔
         with open(local_filename, "wb") as f:
             f.write(response.content)
-
-        print(f"下載成功！檔案已存為: {local_filename}")
-        return True
-
+        return True, None
     except Exception as e:
-        print(f"下載失敗，錯誤原因: {e}")
-        return False
+        return False, f"{type(e).__name__}: {e}"
+
+
+def set_date_edit(date_edit, text):
+    date_edit.setMinimumDate(QDate(1900, 1, 1))  # 定一個「哨兵值」
+    date_edit.setSpecialValueText(text)  # 等於最小日期時顯示這個
+    date_edit.setDate(QDate(1900, 1, 1))  # 預設顯示「未收案」
