@@ -55,7 +55,7 @@
               <x>0</x>
               <y>0</y>
               <width>747</width>
-              <height>1833</height>
+              <height>1835</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -97,13 +97,6 @@
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
-                 <widget class="QLabel" name="label_birthday">
-                  <property name="text">
-                   <string>出生日期</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="1" column="0">
                  <widget class="QLabel" name="label_telephone">
                   <property name="text">
@@ -118,7 +111,14 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0" colspan="2">
+                <item row="0" column="1">
+                 <widget class="QLabel" name="label_birthday">
+                  <property name="text">
+                   <string>出生日期</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0" colspan="3">
                  <layout class="QHBoxLayout" name="horizontalLayout_2">
                   <property name="spacing">
                    <number>12</number>
@@ -180,6 +180,23 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QLabel" name="label_76">
+                    <property name="text">
+                     <string>醫師身份證號</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="lineEdit_doctor_id">
+                    <property name="maximumSize">
+                     <size>
+                      <width>150</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <spacer name="horizontalSpacer">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
@@ -222,10 +239,66 @@
                  <number>2</number>
                 </property>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                 <layout class="QHBoxLayout" name="horizontalLayout_72">
                   <property name="spacing">
                    <number>12</number>
                   </property>
+                  <item>
+                   <widget class="QLabel" name="label_75">
+                    <property name="text">
+                     <string>就醫日期</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QDateEdit" name="dateEdit_visit_date">
+                    <property name="minimumSize">
+                     <size>
+                      <width>150</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="buttonSymbols">
+                     <enum>QAbstractSpinBox::NoButtons</enum>
+                    </property>
+                    <property name="specialValueText">
+                     <string>未收案</string>
+                    </property>
+                    <property name="maximumDateTime">
+                     <datetime>
+                      <hour>23</hour>
+                      <minute>59</minute>
+                      <second>59</second>
+                      <year>9999</year>
+                      <month>12</month>
+                      <day>31</day>
+                     </datetime>
+                    </property>
+                    <property name="minimumDateTime">
+                     <datetime>
+                      <hour>0</hour>
+                      <minute>0</minute>
+                      <second>0</second>
+                      <year>1900</year>
+                      <month>1</month>
+                      <day>1</day>
+                     </datetime>
+                    </property>
+                    <property name="minimumDate">
+                     <date>
+                      <year>1900</year>
+                      <month>1</month>
+                      <day>1</day>
+                     </date>
+                    </property>
+                    <property name="displayFormat">
+                     <string>yyyy/MM/dd</string>
+                    </property>
+                    <property name="calendarPopup">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <widget class="QLabel" name="label_2">
                     <property name="text">
@@ -283,7 +356,7 @@
                    </widget>
                   </item>
                   <item>
-                   <spacer name="horizontalSpacer_2">
+                   <spacer name="horizontalSpacer_55">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -298,7 +371,7 @@
                  </layout>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="">
+                 <widget class="QGroupBox" name="groupBox">
                   <layout class="QHBoxLayout" name="horizontalLayout_5">
                    <property name="spacing">
                     <number>12</number>
@@ -311,28 +384,28 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton">
+                    <widget class="QRadioButton" name="radioButton_close1">
                      <property name="text">
                       <string>死亡</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_2">
+                    <widget class="QRadioButton" name="radioButton_close2">
                      <property name="text">
                       <string>遷徙</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_3">
+                    <widget class="QRadioButton" name="radioButton_close3">
                      <property name="text">
                       <string>不同意收案</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_4">
+                    <widget class="QRadioButton" name="radioButton_close4">
                      <property name="text">
                       <string>其他</string>
                      </property>
@@ -401,7 +474,7 @@
                  </layout>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="">
+                 <widget class="QGroupBox" name="groupBox">
                   <layout class="QHBoxLayout" name="horizontalLayout_9">
                    <property name="spacing">
                     <number>12</number>
@@ -414,7 +487,7 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_5">
+                    <widget class="QRadioButton" name="radioButton_job1">
                      <property name="text">
                       <string>退休</string>
                      </property>
@@ -424,56 +497,56 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_6">
+                    <widget class="QRadioButton" name="radioButton_job2">
                      <property name="text">
                       <string>農</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_7">
+                    <widget class="QRadioButton" name="radioButton_job3">
                      <property name="text">
                       <string>軍公教</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_8">
+                    <widget class="QRadioButton" name="radioButton_job4">
                      <property name="text">
                       <string>工</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_9">
+                    <widget class="QRadioButton" name="radioButton_job5">
                      <property name="text">
                       <string>商</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_10">
+                    <widget class="QRadioButton" name="radioButton_job6">
                      <property name="text">
                       <string>服務業</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_12">
+                    <widget class="QRadioButton" name="radioButton_job7">
                      <property name="text">
                       <string>家管</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_11">
+                    <widget class="QRadioButton" name="radioButton_job9">
                      <property name="text">
                       <string>其他</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QLineEdit" name="lineEdit_2">
+                    <widget class="QLineEdit" name="lineEdit_job_other">
                      <property name="placeholderText">
                       <string>其他必填</string>
                      </property>
@@ -498,7 +571,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QLineEdit" name="lineEdit_3">
+                   <widget class="QLineEdit" name="lineEdit_zip_code">
                     <property name="maximumSize">
                      <size>
                       <width>120</width>
@@ -531,49 +604,49 @@
                 <item>
                  <layout class="QGridLayout" name="gridLayout_2">
                   <item row="1" column="2">
-                   <widget class="QCheckBox" name="checkBox_3">
+                   <widget class="QCheckBox" name="checkBox_family3">
                     <property name="text">
                      <string>有學齡兒童</string>
                     </property>
                    </widget>
                   </item>
                   <item row="1" column="4">
-                   <widget class="QCheckBox" name="checkBox_5">
+                   <widget class="QCheckBox" name="checkBox_family5">
                     <property name="text">
                      <string>子女外出創業</string>
                     </property>
                    </widget>
                   </item>
                   <item row="1" column="3">
-                   <widget class="QCheckBox" name="checkBox_4">
+                   <widget class="QCheckBox" name="checkBox_family4">
                     <property name="text">
                      <string>有青少年子與</string>
                     </property>
                    </widget>
                   </item>
                   <item row="1" column="1">
-                   <widget class="QCheckBox" name="checkBox_2">
+                   <widget class="QCheckBox" name="checkBox_family2">
                     <property name="text">
                      <string>第一個小孩誕生</string>
                     </property>
                    </widget>
                   </item>
                   <item row="1" column="0">
-                   <widget class="QCheckBox" name="checkBox">
+                   <widget class="QCheckBox" name="checkBox_family1">
                     <property name="text">
                      <string>新婚夫婦</string>
                     </property>
                    </widget>
                   </item>
                   <item row="2" column="0">
-                   <widget class="QCheckBox" name="checkBox_6">
+                   <widget class="QCheckBox" name="checkBox_family6">
                     <property name="text">
                      <string>空巢</string>
                     </property>
                    </widget>
                   </item>
                   <item row="2" column="1">
-                   <widget class="QCheckBox" name="checkBox_7">
+                   <widget class="QCheckBox" name="checkBox_family7">
                     <property name="text">
                      <string>老化的家庭</string>
                     </property>
@@ -589,14 +662,14 @@
                   <item row="2" column="2" colspan="3">
                    <layout class="QHBoxLayout" name="horizontalLayout_11">
                     <item>
-                     <widget class="QCheckBox" name="checkBox_8">
+                     <widget class="QCheckBox" name="checkBox_family99">
                       <property name="text">
                        <string>其他</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="lineEdit">
+                     <widget class="QLineEdit" name="lineEdit_family_other">
                       <property name="placeholderText">
                        <string>勾選「其他」時必填</string>
                       </property>
@@ -606,113 +679,99 @@
                   </item>
                  </layout>
                 </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="groupBox_3">
+               <property name="title">
+                <string>生活型態-正向社會連結</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_10">
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_6">
+                 <widget class="QLabel" name="label_10">
+                  <property name="font">
+                   <font>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>總分10分，目前0分</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_17">
                   <property name="spacing">
                    <number>12</number>
                   </property>
                   <item>
-                   <widget class="QLabel" name="label_4">
+                   <widget class="QCheckBox" name="checkBox_social1">
                     <property name="text">
-                     <string/>
+                     <string>我感覺生活有目標 (2分)</string>
                     </property>
                    </widget>
                   </item>
                  </layout>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="groupBox_3">
-                  <property name="title">
-                   <string>生活型態-正向社會連結</string>
+                 <layout class="QHBoxLayout" name="horizontalLayout_18">
+                  <property name="spacing">
+                   <number>12</number>
                   </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_10">
-                   <item>
-                    <widget class="QLabel" name="label_10">
-                     <property name="font">
-                      <font>
-                       <weight>75</weight>
-                       <bold>true</bold>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>總分10分，目前0分</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_17">
-                     <property name="spacing">
-                      <number>12</number>
-                     </property>
-                     <item>
-                      <widget class="QCheckBox" name="checkBox_14">
-                       <property name="text">
-                        <string>我感覺生活有目標 (2分)</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_18">
-                     <property name="spacing">
-                      <number>12</number>
-                     </property>
-                     <item>
-                      <widget class="QCheckBox" name="checkBox_15">
-                       <property name="text">
-                        <string>我有進行了兩次以上(含兩次)的靈性、宗教或民俗信仰活動
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_social2">
+                    <property name="text">
+                     <string>我有進行了兩次以上(含兩次)的靈性、宗教或民俗信仰活動
 (例如冥想、靜坐、祈禱、拜拜、參加宗教活動、祭拜家中神明或祖先等) (2分)</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_19">
-                     <property name="spacing">
-                      <number>12</number>
-                     </property>
-                     <item>
-                      <widget class="QCheckBox" name="checkBox_16">
-                       <property name="text">
-                        <string>我有參加團體聚會或活動 (例如運動、社區、社團、學校團體等) (2分)</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_20">
-                     <property name="spacing">
-                      <number>12</number>
-                     </property>
-                     <item>
-                      <widget class="QCheckBox" name="checkBox_17">
-                       <property name="text">
-                        <string>我有和家人或朋友相聚或聊天三次以上 (2分)</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_21">
-                     <property name="spacing">
-                      <number>12</number>
-                     </property>
-                     <item>
-                      <widget class="QCheckBox" name="checkBox_18">
-                       <property name="text">
-                        <string>我總共花了兩小時以上的時間待在大自然中
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_19">
+                  <property name="spacing">
+                   <number>12</number>
+                  </property>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_social3">
+                    <property name="text">
+                     <string>我有參加團體聚會或活動 (例如運動、社區、社團、學校團體等) (2分)</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_20">
+                  <property name="spacing">
+                   <number>12</number>
+                  </property>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_social4">
+                    <property name="text">
+                     <string>我有和家人或朋友相聚或聊天三次以上 (2分)</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_21">
+                  <property name="spacing">
+                   <number>12</number>
+                  </property>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_social5">
+                    <property name="text">
+                     <string>我總共花了兩小時以上的時間待在大自然中
 (例如:城市內外開放空間:公園、森林、海邊等) (2分)</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                  </layout>
-                 </widget>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </widget>
@@ -765,7 +824,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QSpinBox" name="spinBox">
+                   <widget class="QSpinBox" name="spinBox_ls13">
                     <property name="maximum">
                      <number>7</number>
                     </property>
@@ -809,7 +868,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox">
+                   <widget class="QComboBox" name="comboBox_ls19">
                     <property name="maxVisibleItems">
                      <number>12</number>
                     </property>
@@ -908,7 +967,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox_2">
+                   <widget class="QComboBox" name="comboBox_ls22">
                     <property name="maxVisibleItems">
                      <number>15</number>
                     </property>
@@ -1029,7 +1088,7 @@
                    <number>12</number>
                   </property>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_24">
+                   <widget class="QCheckBox" name="checkBox_ls06">
                     <property name="text">
                      <string>我有抽菸、使用電子煙或其他菸品 (5分)</string>
                     </property>
@@ -1043,7 +1102,7 @@
                    <number>12</number>
                   </property>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_25">
+                   <widget class="QCheckBox" name="checkBox_ls11">
                     <property name="text">
                      <string>我有嚼檳榔 1分</string>
                     </property>
@@ -1064,7 +1123,7 @@
                    </widget>
                   </item>
                   <item row="0" column="1">
-                   <widget class="QComboBox" name="comboBox_3">
+                   <widget class="QComboBox" name="comboBox_ls15">
                     <property name="maxVisibleItems">
                      <number>12</number>
                     </property>
@@ -1167,7 +1226,7 @@
                    </widget>
                   </item>
                   <item row="0" column="1">
-                   <widget class="QComboBox" name="comboBox_5">
+                   <widget class="QComboBox" name="comboBox_ls16">
                     <property name="maxVisibleItems">
                      <number>12</number>
                     </property>
@@ -1255,6 +1314,19 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="1" column="1" colspan="3">
+                   <spacer name="horizontalSpacer_48">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
                  </layout>
                 </item>
                </layout>
@@ -1285,7 +1357,7 @@
                    <number>12</number>
                   </property>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_26">
+                   <widget class="QCheckBox" name="checkBox_ls04">
                     <property name="text">
                      <string>我大部分時間都覺得能夠處理生活的各種壓力 (2分)</string>
                     </property>
@@ -1299,7 +1371,7 @@
                    <number>12</number>
                   </property>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_27">
+                   <widget class="QCheckBox" name="checkBox_ls08">
                     <property name="text">
                      <string>大部分時間,我睡醒後覺得精神很好,有休息夠了 (2分)</string>
                     </property>
@@ -1313,7 +1385,7 @@
                    <number>12</number>
                   </property>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_28">
+                   <widget class="QCheckBox" name="checkBox_ls10">
                     <property name="text">
                      <string>大部分時間,我覺得有足夠的時間照顧自己 (1分)</string>
                     </property>
@@ -1337,7 +1409,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox_4">
+                   <widget class="QComboBox" name="comboBox_ls17">
                     <property name="maxVisibleItems">
                      <number>15</number>
                     </property>
@@ -1443,7 +1515,7 @@
                    <number>12</number>
                   </property>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_29">
+                   <widget class="QCheckBox" name="checkBox_ls02">
                     <property name="text">
                      <string>日常飲食我會避免油炸的食物,多以清蒸、水煮、涼拌等烹調方式為主 (1分)</string>
                     </property>
@@ -1457,7 +1529,7 @@
                    <number>12</number>
                   </property>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_30">
+                   <widget class="QCheckBox" name="checkBox_ls12">
                     <property name="text">
                      <string>我的飲食大多以原型食物(如新鮮蔬果、全穀、未加工肉類)為主 (1分)</string>
                     </property>
@@ -1481,7 +1553,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox_7">
+                   <widget class="QComboBox" name="comboBox_ls14">
                     <property name="maxVisibleItems">
                      <number>15</number>
                     </property>
@@ -1540,7 +1612,8 @@
                   <item>
                    <widget class="QLabel" name="label_33">
                     <property name="text">
-                     <string>杯含糖飲料 (例如果汁、含糖咖啡或茶、汽水、運動飲料) (2分)</string>
+                     <string>杯含糖飲料
+(例如果汁、含糖咖啡或茶、汽水、運動飲料) (2分)</string>
                     </property>
                    </widget>
                   </item>
@@ -1575,7 +1648,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox_8">
+                   <widget class="QComboBox" name="comboBox_ls18">
                     <property name="maxVisibleItems">
                      <number>15</number>
                     </property>
@@ -1670,7 +1743,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox_9">
+                   <widget class="QComboBox" name="comboBox_ls20">
                     <property name="maxVisibleItems">
                      <number>15</number>
                     </property>
@@ -1764,7 +1837,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox_10">
+                   <widget class="QComboBox" name="comboBox_ls21">
                     <property name="maxVisibleItems">
                      <number>15</number>
                     </property>
@@ -1895,11 +1968,287 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>759</width>
-                <height>833</height>
+                <width>738</width>
+                <height>1162</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_6">
+               <item>
+                <widget class="QGroupBox" name="groupBox_16">
+                 <property name="title">
+                  <string>身體基本數據</string>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_7">
+                  <property name="topMargin">
+                   <number>2</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>2</number>
+                  </property>
+                  <item row="0" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_67">
+                    <item>
+                     <widget class="QLabel" name="label_70">
+                      <property name="minimumSize">
+                       <size>
+                        <width>80</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>體重</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_weight">
+                      <property name="minimum">
+                       <number>20</number>
+                      </property>
+                      <property name="maximum">
+                       <number>300</number>
+                      </property>
+                      <property name="value">
+                       <number>60</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_50">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="0" column="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_68">
+                    <item>
+                     <widget class="QLabel" name="label_71">
+                      <property name="minimumSize">
+                       <size>
+                        <width>80</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>腰圍</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_waist">
+                      <property name="minimum">
+                       <number>20</number>
+                      </property>
+                      <property name="maximum">
+                       <number>200</number>
+                      </property>
+                      <property name="value">
+                       <number>30</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_51">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="0" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_6">
+                    <item>
+                     <widget class="QLabel" name="label_4">
+                      <property name="minimumSize">
+                       <size>
+                        <width>80</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>身高</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_height">
+                      <property name="minimum">
+                       <number>80</number>
+                      </property>
+                      <property name="maximum">
+                       <number>250</number>
+                      </property>
+                      <property name="value">
+                       <number>160</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_49">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_69">
+                    <item>
+                     <widget class="QLabel" name="label_72">
+                      <property name="minimumSize">
+                       <size>
+                        <width>80</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>收縮壓</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_systolic">
+                      <property name="minimum">
+                       <number>50</number>
+                      </property>
+                      <property name="maximum">
+                       <number>300</number>
+                      </property>
+                      <property name="value">
+                       <number>120</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_52">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_70">
+                    <item>
+                     <widget class="QLabel" name="label_73">
+                      <property name="minimumSize">
+                       <size>
+                        <width>80</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>舒張壓</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_diastolic">
+                      <property name="minimum">
+                       <number>20</number>
+                      </property>
+                      <property name="maximum">
+                       <number>250</number>
+                      </property>
+                      <property name="value">
+                       <number>90</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_53">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_71">
+                    <item>
+                     <widget class="QLabel" name="label_74">
+                      <property name="minimumSize">
+                       <size>
+                        <width>80</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>脈搏</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_pulse">
+                      <property name="minimum">
+                       <number>30</number>
+                      </property>
+                      <property name="maximum">
+                       <number>200</number>
+                      </property>
+                      <property name="value">
+                       <number>80</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_54">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
                <item>
                 <widget class="QGroupBox" name="groupBox_11">
                  <property name="title">
@@ -1919,20 +2268,26 @@
                    <number>2</number>
                   </property>
                   <item>
-                   <widget class="QGroupBox" name="">
+                   <widget class="QGroupBox" name="groupBox">
                     <layout class="QHBoxLayout" name="horizontalLayout_4">
                      <property name="spacing">
                       <number>12</number>
                      </property>
                      <item>
                       <widget class="QLabel" name="label_18">
+                       <property name="minimumSize">
+                        <size>
+                         <width>80</width>
+                         <height>0</height>
+                        </size>
+                       </property>
                        <property name="text">
                         <string>抽菸</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_13">
+                      <widget class="QRadioButton" name="radioButton_smoking1">
                        <property name="text">
                         <string>無</string>
                        </property>
@@ -1942,21 +2297,21 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_14">
+                      <widget class="QRadioButton" name="radioButton_smoking2">
                        <property name="text">
                         <string>偶爾交際應酬</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_15">
+                      <widget class="QRadioButton" name="radioButton_smoking3">
                        <property name="text">
                         <string>平均一天約吸 10 支菸以下</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_16">
+                      <widget class="QRadioButton" name="radioButton_smoking4">
                        <property name="text">
                         <string>平均一天約吸 10 支菸(含)以上</string>
                        </property>
@@ -1986,13 +2341,19 @@
                      </property>
                      <item>
                       <widget class="QLabel" name="label_40">
+                       <property name="minimumSize">
+                        <size>
+                         <width>80</width>
+                         <height>0</height>
+                        </size>
+                       </property>
                        <property name="text">
                         <string>喝酒</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_25">
+                      <widget class="QRadioButton" name="radioButton_drinking1">
                        <property name="text">
                         <string>無</string>
                        </property>
@@ -2002,14 +2363,14 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_26">
+                      <widget class="QRadioButton" name="radioButton_drinking2">
                        <property name="text">
                         <string>偶爾交際應酬(每週 1-2 天)</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_27">
+                      <widget class="QRadioButton" name="radioButton_drinking3">
                        <property name="text">
                         <string>經常喝 (每週&gt;2 天)</string>
                        </property>
@@ -2039,13 +2400,19 @@
                      </property>
                      <item>
                       <widget class="QLabel" name="label_41">
+                       <property name="minimumSize">
+                        <size>
+                         <width>80</width>
+                         <height>0</height>
+                        </size>
+                       </property>
                        <property name="text">
                         <string>嚼檳榔</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_28">
+                      <widget class="QRadioButton" name="radioButton_betel_nut1">
                        <property name="text">
                         <string>無</string>
                        </property>
@@ -2055,14 +2422,14 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_29">
+                      <widget class="QRadioButton" name="radioButton_betel_nut2">
                        <property name="text">
                         <string>偶爾交際應酬(每週 1-2 天)</string>
                        </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_30">
+                      <widget class="QRadioButton" name="radioButton_betel_nut3">
                        <property name="text">
                         <string>經常嚼或習慣在嚼(每週&gt;2 天)</string>
                        </property>
@@ -2103,119 +2470,119 @@
                    <number>2</number>
                   </property>
                   <item row="1" column="1">
-                   <widget class="QCheckBox" name="checkBox_20">
+                   <widget class="QCheckBox" name="checkBox_chronic7">
                     <property name="text">
                      <string>腦血管疾病</string>
                     </property>
                    </widget>
                   </item>
                   <item row="1" column="4">
-                   <widget class="QCheckBox" name="checkBox_23">
+                   <widget class="QCheckBox" name="checkBox_chronic10">
                     <property name="text">
                      <string>關節炎</string>
                     </property>
                    </widget>
                   </item>
                   <item row="1" column="0">
-                   <widget class="QCheckBox" name="checkBox_19">
+                   <widget class="QCheckBox" name="checkBox_chronic6">
                     <property name="text">
                      <string>心臟衰竭</string>
                     </property>
                    </widget>
                   </item>
                   <item row="2" column="1">
-                   <widget class="QCheckBox" name="checkBox_32">
+                   <widget class="QCheckBox" name="checkBox_chronic12">
                     <property name="text">
                      <string>痛風或高尿酸血症</string>
                     </property>
                    </widget>
                   </item>
                   <item row="2" column="3">
-                   <widget class="QCheckBox" name="checkBox_34">
+                   <widget class="QCheckBox" name="checkBox_chronic14">
                     <property name="text">
                      <string>氣喘</string>
                     </property>
                    </widget>
                   </item>
                   <item row="2" column="4">
-                   <widget class="QCheckBox" name="checkBox_35">
+                   <widget class="QCheckBox" name="checkBox_chronic15">
                     <property name="text">
                      <string>慢性肺疾病</string>
                     </property>
                    </widget>
                   </item>
                   <item row="0" column="2">
-                   <widget class="QCheckBox" name="checkBox_11">
+                   <widget class="QCheckBox" name="checkBox_chronic3">
                     <property name="text">
                      <string>腎臟病</string>
                     </property>
                    </widget>
                   </item>
                   <item row="0" column="4">
-                   <widget class="QCheckBox" name="checkBox_13">
+                   <widget class="QCheckBox" name="checkBox_chronic5">
                     <property name="text">
-                     <string>5.心律不整</string>
+                     <string>心律不整</string>
                     </property>
                    </widget>
                   </item>
                   <item row="2" column="0">
-                   <widget class="QCheckBox" name="checkBox_31">
+                   <widget class="QCheckBox" name="checkBox_chronic11">
                     <property name="text">
                      <string>高膽固醇血症</string>
                     </property>
                    </widget>
                   </item>
                   <item row="0" column="1">
-                   <widget class="QCheckBox" name="checkBox_10">
+                   <widget class="QCheckBox" name="checkBox_chronic2">
                     <property name="text">
                      <string>糖尿病</string>
                     </property>
                    </widget>
                   </item>
                   <item row="1" column="3">
-                   <widget class="QCheckBox" name="checkBox_22">
+                   <widget class="QCheckBox" name="checkBox_chronic9">
                     <property name="text">
                      <string>貧血</string>
                     </property>
                    </widget>
                   </item>
                   <item row="0" column="0">
-                   <widget class="QCheckBox" name="checkBox_9">
+                   <widget class="QCheckBox" name="checkBox_chronic1">
                     <property name="text">
                      <string>高血壓</string>
                     </property>
                    </widget>
                   </item>
                   <item row="2" column="2">
-                   <widget class="QCheckBox" name="checkBox_33">
+                   <widget class="QCheckBox" name="checkBox_chronic13">
                     <property name="text">
                      <string>過敏性鼻炎</string>
                     </property>
                    </widget>
                   </item>
                   <item row="0" column="3">
-                   <widget class="QCheckBox" name="checkBox_12">
+                   <widget class="QCheckBox" name="checkBox_chronic4">
                     <property name="text">
                      <string>缺血性心臟病</string>
                     </property>
                    </widget>
                   </item>
                   <item row="1" column="2">
-                   <widget class="QCheckBox" name="checkBox_21">
+                   <widget class="QCheckBox" name="checkBox_chronic8">
                     <property name="text">
                      <string>腫瘤</string>
                     </property>
                    </widget>
                   </item>
                   <item row="3" column="0">
-                   <widget class="QCheckBox" name="checkBox_36">
+                   <widget class="QCheckBox" name="checkBox_chronic16">
                     <property name="text">
-                     <string>.消化性潰瘍</string>
+                     <string>消化性潰瘍</string>
                     </property>
                    </widget>
                   </item>
                   <item row="3" column="1">
-                   <widget class="QCheckBox" name="checkBox_37">
+                   <widget class="QCheckBox" name="checkBox_chronic17">
                     <property name="text">
                      <string>功能性腸胃問題</string>
                     </property>
@@ -2224,14 +2591,14 @@
                   <item row="3" column="2" colspan="3">
                    <layout class="QHBoxLayout" name="horizontalLayout_16">
                     <item>
-                     <widget class="QCheckBox" name="checkBox_38">
+                     <widget class="QCheckBox" name="checkBox_chronic99">
                       <property name="text">
                        <string>其他</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="lineEdit_4">
+                     <widget class="QLineEdit" name="lineEdit_chronic_other">
                       <property name="placeholderText">
                        <string>其他必填</string>
                       </property>
@@ -2254,7 +2621,7 @@
                   <bool>true</bool>
                  </property>
                  <property name="checkable">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="checked">
                   <bool>false</bool>
@@ -2271,57 +2638,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_42">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>糖尿病</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_57">
+                     <widget class="QCheckBox" name="checkBox_dm_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_58">
+                     <widget class="QCheckBox" name="checkBox_dm_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_59">
+                     <widget class="QCheckBox" name="checkBox_dm_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_61">
+                     <widget class="QCheckBox" name="checkBox_dm_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_60">
+                     <widget class="QCheckBox" name="checkBox_dm_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_62">
+                     <widget class="QCheckBox" name="checkBox_dm_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_63">
+                     <widget class="QCheckBox" name="checkBox_dm_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -2347,57 +2723,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_44">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>高血壓</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_71">
+                     <widget class="QCheckBox" name="checkBox_hbp_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_72">
+                     <widget class="QCheckBox" name="checkBox_hbp_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_73">
+                     <widget class="QCheckBox" name="checkBox_hbp_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_74">
+                     <widget class="QCheckBox" name="checkBox_hbp_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_75">
+                     <widget class="QCheckBox" name="checkBox_hbp_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_76">
+                     <widget class="QCheckBox" name="checkBox_hbp_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_77">
+                     <widget class="QCheckBox" name="checkBox_hbp_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -2423,57 +2808,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_45">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>心臟病</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_78">
+                     <widget class="QCheckBox" name="checkBox_heart_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_79">
+                     <widget class="QCheckBox" name="checkBox_heart_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_80">
+                     <widget class="QCheckBox" name="checkBox_heart_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_81">
+                     <widget class="QCheckBox" name="checkBox_heart_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_82">
+                     <widget class="QCheckBox" name="checkBox_heart_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_83">
+                     <widget class="QCheckBox" name="checkBox_heart_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_84">
+                     <widget class="QCheckBox" name="checkBox_heart_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -2499,57 +2893,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_46">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>腦血管病變</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_85">
+                     <widget class="QCheckBox" name="checkBox_stroke_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_86">
+                     <widget class="QCheckBox" name="checkBox_stroke_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_87">
+                     <widget class="QCheckBox" name="checkBox_stroke_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_88">
+                     <widget class="QCheckBox" name="checkBox_stroke_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_89">
+                     <widget class="QCheckBox" name="checkBox_stroke_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_90">
+                     <widget class="QCheckBox" name="checkBox_stroke_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_91">
+                     <widget class="QCheckBox" name="checkBox_stroke_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -2575,57 +2978,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_47">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>高血脂</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_92">
+                     <widget class="QCheckBox" name="checkBox_lipid_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_93">
+                     <widget class="QCheckBox" name="checkBox_lipid_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_94">
+                     <widget class="QCheckBox" name="checkBox_lipid_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_95">
+                     <widget class="QCheckBox" name="checkBox_lipid_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_96">
+                     <widget class="QCheckBox" name="checkBox_lipid_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_97">
+                     <widget class="QCheckBox" name="checkBox_lipid_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_98">
+                     <widget class="QCheckBox" name="checkBox_lipid_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -2651,57 +3063,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_48">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>腎臟病或尿毒症</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_99">
+                     <widget class="QCheckBox" name="checkBox_kidney_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_100">
+                     <widget class="QCheckBox" name="checkBox_kidney_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_101">
+                     <widget class="QCheckBox" name="checkBox_kidney_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_102">
+                     <widget class="QCheckBox" name="checkBox_kidney_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_103">
+                     <widget class="QCheckBox" name="checkBox_kidney_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_104">
+                     <widget class="QCheckBox" name="checkBox_kidney_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_105">
+                     <widget class="QCheckBox" name="checkBox_kidney_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -2727,57 +3148,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_49">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>惡性腫瘤</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_106">
+                     <widget class="QCheckBox" name="checkBox_cancer_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_107">
+                     <widget class="QCheckBox" name="checkBox_cancer_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_108">
+                     <widget class="QCheckBox" name="checkBox_cancer_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_109">
+                     <widget class="QCheckBox" name="checkBox_cancer_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_110">
+                     <widget class="QCheckBox" name="checkBox_cancer_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_111">
+                     <widget class="QCheckBox" name="checkBox_cancer_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_112">
+                     <widget class="QCheckBox" name="checkBox_cancer_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -2803,57 +3233,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_50">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>遺傳性腎臟疾病</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_113">
+                     <widget class="QCheckBox" name="checkBox_hereditary_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_114">
+                     <widget class="QCheckBox" name="checkBox_hereditary_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_115">
+                     <widget class="QCheckBox" name="checkBox_hereditary_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_116">
+                     <widget class="QCheckBox" name="checkBox_hereditary_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_117">
+                     <widget class="QCheckBox" name="checkBox_hereditary_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_118">
+                     <widget class="QCheckBox" name="checkBox_hereditary_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_119">
+                     <widget class="QCheckBox" name="checkBox_hereditary_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -2879,57 +3318,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_51">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>多囊腎</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_120">
+                     <widget class="QCheckBox" name="checkBox_polycystic_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_121">
+                     <widget class="QCheckBox" name="checkBox_polycystic_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_122">
+                     <widget class="QCheckBox" name="checkBox_polycystic_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_123">
+                     <widget class="QCheckBox" name="checkBox_polycystic_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_124">
+                     <widget class="QCheckBox" name="checkBox_polycystic_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_125">
+                     <widget class="QCheckBox" name="checkBox_polycystic_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_126">
+                     <widget class="QCheckBox" name="checkBox_polycystic_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -2955,57 +3403,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_52">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>痛風</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_127">
+                     <widget class="QCheckBox" name="checkBox_gout_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_128">
+                     <widget class="QCheckBox" name="checkBox_gout_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_129">
+                     <widget class="QCheckBox" name="checkBox_gout_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_130">
+                     <widget class="QCheckBox" name="checkBox_gout_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_131">
+                     <widget class="QCheckBox" name="checkBox_gout_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_132">
+                     <widget class="QCheckBox" name="checkBox_gout_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_133">
+                     <widget class="QCheckBox" name="checkBox_gout_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -3031,57 +3488,66 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_53">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>自體免疫性疾病</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_134">
+                     <widget class="QCheckBox" name="checkBox_autoimmune_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_135">
+                     <widget class="QCheckBox" name="checkBox_autoimmune_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_136">
+                     <widget class="QCheckBox" name="checkBox_autoimmune_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_137">
+                     <widget class="QCheckBox" name="checkBox_autoimmune_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_138">
+                     <widget class="QCheckBox" name="checkBox_autoimmune_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_139">
+                     <widget class="QCheckBox" name="checkBox_autoimmune_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_140">
+                     <widget class="QCheckBox" name="checkBox_autoimmune_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
@@ -3107,6 +3573,9 @@
                     <property name="spacing">
                      <number>12</number>
                     </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
                     <item>
                      <widget class="QLabel" name="label_54">
                       <property name="text">
@@ -3115,56 +3584,56 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_141">
+                     <widget class="QCheckBox" name="checkBox_other_a">
                       <property name="text">
                        <string>父</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_142">
+                     <widget class="QCheckBox" name="checkBox_other_b">
                       <property name="text">
                        <string>母</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_143">
+                     <widget class="QCheckBox" name="checkBox_other_c">
                       <property name="text">
                        <string>兒女</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_144">
+                     <widget class="QCheckBox" name="checkBox_other_d">
                       <property name="text">
                        <string>兄弟姊妹</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_145">
+                     <widget class="QCheckBox" name="checkBox_other_e">
                       <property name="text">
                        <string>父系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_146">
+                     <widget class="QCheckBox" name="checkBox_other_f">
                       <property name="text">
                        <string>母系親戚</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="checkBox_147">
+                     <widget class="QCheckBox" name="checkBox_other_g">
                       <property name="text">
                        <string>其他</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="lineEdit_5"/>
+                     <widget class="QLineEdit" name="lineEdit_family_history_other"/>
                     </item>
                     <item>
                      <spacer name="horizontalSpacer_33">
@@ -3182,11 +3651,122 @@
                    </layout>
                   </item>
                   <item>
-                   <widget class="QLabel" name="label_55">
+                   <layout class="QHBoxLayout" name="horizontalLayout_50">
+                    <property name="spacing">
+                     <number>12</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>20</number>
+                    </property>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_family_history_unknown">
+                      <property name="text">
+                       <string>不知</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_34">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="groupBox_14">
+                 <property name="title">
+                  <string>長期藥物使用</string>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_6">
+                  <property name="topMargin">
+                   <number>2</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>2</number>
+                  </property>
+                  <item row="0" column="4">
+                   <widget class="QCheckBox" name="checkBox_medicine5">
                     <property name="text">
-                     <string>不知</string>
+                     <string>降尿酸藥</string>
                     </property>
                    </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="checkBox_medicine1">
+                    <property name="text">
+                     <string>降血壓藥</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QCheckBox" name="checkBox_medicine3">
+                    <property name="text">
+                     <string>降血糖藥</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QCheckBox" name="checkBox_medicine7">
+                    <property name="text">
+                     <string>中草藥</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="3">
+                   <widget class="QCheckBox" name="checkBox_medicine4">
+                    <property name="text">
+                     <string>降血脂藥</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QCheckBox" name="checkBox_medicine2">
+                    <property name="text">
+                     <string>胰島素</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="checkBox_medicine6">
+                    <property name="text">
+                     <string>NSAID</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2" colspan="3">
+                   <layout class="QHBoxLayout" name="horizontalLayout_24">
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_medicine99">
+                      <property name="text">
+                       <string>其他</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_medicine_other">
+                      <property name="placeholderText">
+                       <string>其他必填</string>
+                      </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
                  </layout>
                 </widget>
@@ -3204,6 +3784,52 @@
                  </property>
                 </spacer>
                </item>
+               <item>
+                <widget class="QGroupBox" name="groupBox_15">
+                 <property name="title">
+                  <string>過敏史</string>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_17">
+                  <property name="topMargin">
+                   <number>2</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>2</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_65">
+                    <item>
+                     <widget class="QLabel" name="label_67">
+                      <property name="text">
+                       <string>食物過敏食物名稱</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_food_allergy"/>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_66">
+                    <item>
+                     <widget class="QLabel" name="label_68">
+                      <property name="text">
+                       <string>藥物過敏藥物名稱</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_drug_allergy"/>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
               </layout>
              </widget>
             </widget>
@@ -3220,7 +3846,7 @@
   <action name="action_save">
    <property name="icon">
     <iconset>
-     <normaloff>../icons/document-save.svg</normaloff>../icons/document-save.svg</iconset>
+     <normaloff>../../../.designer/icons/document-save.svg</normaloff>../../../.designer/icons/document-save.svg</iconset>
    </property>
    <property name="text">
     <string>資料存檔</string>
@@ -3232,7 +3858,7 @@
   <action name="action_close">
    <property name="icon">
     <iconset>
-     <normaloff>../icons/application-exit.svg</normaloff>../icons/application-exit.svg</iconset>
+     <normaloff>../../../.designer/icons/application-exit.svg</normaloff>../../../.designer/icons/application-exit.svg</iconset>
    </property>
    <property name="text">
     <string>關閉視窗</string>
@@ -3241,7 +3867,7 @@
   <action name="action_copy_remote_patient">
    <property name="icon">
     <iconset>
-     <normaloff>../icons/network-server.png</normaloff>../icons/network-server.png</iconset>
+     <normaloff>../../../.designer/icons/network-server.png</normaloff>../../../.designer/icons/network-server.png</iconset>
    </property>
    <property name="text">
     <string>拷貝分院病患資料</string>
@@ -3256,7 +3882,7 @@
   <action name="action_capture_image">
    <property name="icon">
     <iconset>
-     <normaloff>../icons/camera-photo.png</normaloff>../icons/camera-photo.png</iconset>
+     <normaloff>../../../.designer/icons/camera-photo.png</normaloff>../../../.designer/icons/camera-photo.png</iconset>
    </property>
    <property name="text">
     <string>拍攝照片</string>
@@ -3268,7 +3894,7 @@
   <action name="action_remove_image">
    <property name="icon">
     <iconset>
-     <normaloff>../icons/button_cancel.svg</normaloff>../icons/button_cancel.svg</iconset>
+     <normaloff>../../../.designer/icons/button_cancel.svg</normaloff>../../../.designer/icons/button_cancel.svg</iconset>
    </property>
    <property name="text">
     <string>刪除照片</string>

@@ -21,7 +21,7 @@ from pathlib import Path
 import pygame
 import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QDate, QSettings, QStandardPaths
+from PyQt5.QtCore import QDate, QEvent, QObject, QSettings, QStandardPaths
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
     QFileDialog,
@@ -42,6 +42,24 @@ from libs import dialog_utils, nhi_utils, number_utils, ui_utils
 
 PY_MEDICAL_JSON_FILE = "pymedical.json"
 COMPLICATED_TREATMENT_DISEASE_FILE = "complicated_treatment_disease.json"
+
+
+class CalendarPopupFixer(QObject):
+    """QDateEdit 值為哨兵日期(1900/1/1)時，月曆彈窗改顯示今天的月份"""
+
+    def __init__(self, date_edit, empty_date=QDate(1900, 1, 1)):
+        super().__init__(date_edit)  # parent 設為 date_edit，生命週期跟著它
+        self.date_edit = date_edit
+        self.empty_date = empty_date
+        date_edit.calendarWidget().installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Show:
+            if self.date_edit.date() == self.empty_date:
+                today = QDate.currentDate()
+                calendar = self.date_edit.calendarWidget()
+                calendar.setCurrentPage(today.year(), today.month())
+        return False  # 事件照常傳遞，只是順手撥頁面
 
 
 def install_pycaw():
@@ -1595,3 +1613,63 @@ def set_date_edit(date_edit, text):
     date_edit.setMinimumDate(QDate(1900, 1, 1))  # 定一個「哨兵值」
     date_edit.setSpecialValueText(text)  # 等於最小日期時顯示這個
     date_edit.setDate(QDate(1900, 1, 1))  # 預設顯示「未收案」
+
+
+def date_edit_to_db(date_edit):
+    """QDateEdit -> 'yyyy-MM-dd' 字串或 None（1900/1/1 視為空值）"""
+    qdate = date_edit.date()
+    if qdate == QDate(1900, 1, 1):
+        return None
+
+    return qdate.toString("yyyy-MM-dd")
+
+
+def db_to_date_edit(date_edit, value):
+    """DB 的 date/None -> QDateEdit（None 顯示為 1900/1/1）"""
+    if value is None:
+        date_edit.setDate(QDate(1900, 1, 1))
+    else:
+        # value 可能是 datetime.date 或字串，看你們 db 層回傳什麼
+        date_edit.setDate(QDate(value.year, value.month, value.day))
+
+
+def get_radio_value(radio_dict):
+    """掃 radio 群組，回傳選中的代碼，都沒選回傳 None"""
+    for radio_button, value in radio_dict.items():
+        if radio_button.isChecked():
+            return value
+
+    return None
+
+
+def set_radio_value(radio_dict, value):
+    """依代碼設定 radioButton 群組（get_radio_value 的反向）"""
+    if value is None:
+        return
+    for radio_button, code in radio_dict.items():
+        if code == str(value):
+            radio_button.setChecked(True)
+            return
+
+
+def get_check_values(check_dict):
+    """掃 checkbox 群組，回傳底線分隔字串如 '01_11'，都沒勾回傳 None"""
+    values = [value for check_box, value in check_dict.items() if check_box.isChecked()]
+    return "_".join(values) if values else None
+
+
+def set_check_values(check_dict, value):
+    """依底線分隔字串勾選 checkBox 群組（get_check_values 的反向）"""
+    codes = str(value).split("_") if value else []
+    for check_box, code in check_dict.items():
+        check_box.setChecked(code in codes)
+
+
+def set_combo_box_text(combo_box, value):
+    """依顯示文字設定 comboBox，找不到或 None 則回到第一個選項"""
+    if value is None:
+        combo_box.setCurrentIndex(0)
+        return
+
+    index = combo_box.findText(str(value))
+    combo_box.setCurrentIndex(index if index >= 0 else 0)

@@ -95,6 +95,17 @@ class Patient(QtWidgets.QMainWindow):
 
         try:
             self.tab_patient_new_care.save_patient_new_care(patient_key)
+        except Exception:
+            pass
+
+        # try:
+        #     self.tab_patient_3H.save_assessment(patient_key)
+        # except Exception:
+        #     pass
+
+        self.tab_patient_3H.save_assessment(patient_key)
+
+        try:
             self.tab_patient_settings.save_patient_settings(patient_key)
         except Exception:
             pass
