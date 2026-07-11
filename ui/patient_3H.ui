@@ -45,6 +45,55 @@
           <number>6</number>
          </property>
          <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="label_upload_status">
+             <property name="text">
+              <string>上傳狀態</string>
+             </property>
+             <property name="indent">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_export_xml">
+             <property name="text">
+              <string>匯出XML檔</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/document-import.svg</normaloff>../icons/document-import.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_upload_success">
+             <property name="text">
+              <string>上傳確認成功</string>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/gtk-ok.svg</normaloff>../icons/gtk-ok.svg</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
           <widget class="QScrollArea" name="scrollArea">
            <property name="widgetResizable">
             <bool>true</bool>

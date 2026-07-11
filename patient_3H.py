@@ -2,11 +2,12 @@
 
 
 import json
+import os
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from libs import string_utils, system_utils, ui_utils
+from libs import fb_xml_utils, nhi_utils, string_utils, system_utils, ui_utils
 
 
 # 三高加強照護 202
@@ -167,11 +168,99 @@ class Patient3H(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        pass
+        self.ui.pushButton_export_xml.clicked.connect(self._export_xml)
+        self.ui.pushButton_upload_success.clicked.connect(self._confirm_upload_success)
+
+    def _update_upload_status(self):
+        """更新上傳狀態顯示與按鈕狀態"""
+        if self.assessment_key is None:
+            self.ui.label_upload_status.setText("尚未建立三高資料")
+            self.ui.pushButton_export_xml.setEnabled(False)
+            self.ui.pushButton_upload_success.setEnabled(False)
+            return
+
+        sql = """
+            SELECT UploadFileName, UploadDate FROM patient_assessment
+            WHERE AssessmentKey = %s
+        """
+        rows = self.database.select_record(sql, (self.assessment_key,))
+        if not rows:
+            self.ui.label_upload_status.setText("尚未建立三高資料")
+            self.ui.pushButton_export_xml.setEnabled(False)
+            self.ui.pushButton_upload_success.setEnabled(False)
+            return
+
+        row = rows[0]
+        self.ui.pushButton_export_xml.setEnabled(True)
+
+        if row["UploadDate"] is not None:
+            self.ui.label_upload_status.setText(
+                f"xml檔案上傳已成功，上傳日期: {row['UploadDate'].strftime('%Y-%m-%d')}"
+            )
+            self.ui.pushButton_upload_success.setEnabled(False)  # 已成功，不用再按
+        elif row["UploadFileName"] is not None:
+            self.ui.label_upload_status.setText("xml檔案尚未上傳")
+            self.ui.pushButton_upload_success.setEnabled(True)  # 產過檔，等確認
+        else:
+            self.ui.label_upload_status.setText("xml檔案尚未上傳")
+            self.ui.pushButton_upload_success.setEnabled(
+                False
+            )  # 沒產過檔，沒東西可確認
+
+    def _confirm_upload_success(self):
+        # 防呆1: 還沒產過檔就不該按這顆
+        sql = """
+            SELECT UploadFileName, UploadDate FROM patient_assessment
+            WHERE AssessmentKey = %s
+        """
+        rows = self.database.select_record(sql, (self.assessment_key,))
+        if not rows or rows[0]["UploadFileName"] is None:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "錯誤",
+                '<font size="5" color="red"><b>尚未匯出XML檔案.</b></font>',
+                "請先匯出XML並至健保VPN上傳後，再執行本作業.",
+            )
+            return
+
+        upload_file_name = rows[0]["UploadFileName"]
+
+        # 詢問確認
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setWindowTitle("確認上傳成功")
+        msg_box.setText(
+            f"""<font size="5"><b>
+               請確認檔案 {upload_file_name}<br>
+               已於健保VPN上傳，且查詢驗核結果為錯誤0筆？
+               </b></font>""",
+        )
+        msg_box.setInformativeText("確認後將標記本筆資料為已上傳.")
+        cancel_button = msg_box.addButton("取消", QMessageBox.RejectRole)
+        msg_box.addButton("確定，上傳已成功", QMessageBox.AcceptRole)
+        msg_box.exec_()
+        if msg_box.clickedButton() == cancel_button:
+            return
+
+        sql = """
+            UPDATE patient_assessment SET
+                UploadDate = CURDATE()
+            WHERE AssessmentKey = %s
+        """
+        self.database.exec_sql(sql, (self.assessment_key,))
+        self._update_upload_status()
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "完成",
+            '<font size="5"><b>已標記為上傳成功.</b></font>',
+            "",
+        )
 
     def _read_3H_data(self):
         self._read_patient_data()
         self._read_assessment_data()
+        self._update_upload_status()
 
     def _read_patient_data(self):
         sql = """
@@ -396,6 +485,7 @@ class Patient3H(QtWidgets.QMainWindow):
             self.database.exec_sql(sql, params)
 
         self.save_content()  # 主檔存完接著存明細
+        self._update_upload_status()
 
         return True
 
@@ -588,3 +678,81 @@ class Patient3H(QtWidgets.QMainWindow):
             errors.append("長期藥物勾選其他時，說明必填")
 
         return errors
+
+    def _export_xml(self):
+        errors = self._validate_for_upload()
+        if errors:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "資料有誤",
+                f"""<font size="5" color="red"><b>
+                   找到以下的錯誤:<br>
+                   {"<br>".join(errors)}
+                   </b></font>""",
+                "請修正完錯誤後再匯出XML.",
+            )
+            return
+
+        if not self._save_assessment(self.patient_key):
+            return
+
+        file_path = self._generate_fb_xml()
+        if file_path is None:
+            return
+
+        # 記錄檔名，並將上傳確認狀態歸零
+        sql = """
+            UPDATE patient_assessment SET
+                UploadFileName = %s, UploadDate = NULL
+            WHERE AssessmentKey = %s
+        """
+        self.database.exec_sql(sql, (os.path.basename(file_path), self.assessment_key))
+        self._update_upload_status()
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "匯出完成",
+            f'<font size="5"><b>XML已匯出至:<br>{file_path}</b></font>',
+            "請至健保VPN上傳此檔案.",
+        )
+
+    def _generate_fb_xml(self):
+        sql = """
+                SELECT pa.*, p.ID, p.Name, p.Birthday, p.Gender, p.Address,
+                    p.Cellphone, p.Telephone
+                FROM patient_assessment pa
+                    JOIN patient p ON p.PatientKey = pa.PatientKey
+                WHERE pa.AssessmentKey = %s
+            """
+        rows = self.database.select_record(sql, (self.assessment_key,))
+        if not rows:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "錯誤",
+                '<font size="5" color="red"><b>資料尚未存檔, 請存檔後再匯出XML.</b></font>',
+                "請輸入資料存檔後再匯出.",
+            )
+            return
+
+        division = nhi_utils.get_division_code(self.system_settings.field("健保業務"))
+        if division is None:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "錯誤",
+                '<font size="5" color="red"><b>找不到健保業務組, 請至系統設定中設定.</b></font>',
+                "請重新檢查設定.",
+            )
+            return None
+
+        clinic_id = self.system_settings.field("院所代號")
+
+        default_folder = nhi_utils.get_dir(self.system_settings, "申報路徑")
+        upload_folder = QFileDialog.getExistingDirectory(
+            self, "選擇上傳檔存放位置", default_folder
+        )
+        if not upload_folder:
+            return None  # 使用者按取消
+
+        return fb_xml_utils.generate_fb_xml(
+            self.database, division, clinic_id, rows, upload_folder
+        )
