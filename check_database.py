@@ -121,6 +121,12 @@ class CheckDatabase(QtWidgets.QDialog):
                 self.database.check_field_exists(
                     "patient", "add", "BloodType", "varchar(10) AFTER Gender"
                 ),
+                self.database.check_field_exists(
+                    "patient_assessment",
+                    "add",
+                    "UploadFileName",
+                    "varchar(30) AFTER UploadDate",
+                ),
             ]
         else:
             process_list = [

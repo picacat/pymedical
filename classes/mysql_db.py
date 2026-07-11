@@ -395,38 +395,6 @@ class MySQLDatabase(DatabaseInterface):
             except Exception:
                 pass
 
-    # def exec_sql(self, sql, auto_commit=True):
-    #     """執行任意 SQL 語句（非查詢類），例如 INSERT、UPDATE、DELETE。
-
-    #     Args:
-    #         sql (str): 要執行的 SQL 語句。
-    #         auto_commit (bool): 是否自動提交變更。
-    #     """
-    #     cursor = self.get_cursor(dictionary=True)
-    #     try:
-    #         cursor.execute(sql)
-    #         if auto_commit:
-    #             self.cnx.commit()
-    #     except Exception as e:
-    #         # 失敗時主動清空交易狀態，避免連線殘留未提交/未回復的異動。
-    #         # 注意：若 sql 是 DDL（如 ALTER TABLE），MySQL 在執行前已隱性
-    #         # commit，這裡的 rollback 多半是 no-op；主要是為了保護未來
-    #         # exec_sql 被用於 DML 語句的情境。
-    #         if auto_commit and self.cnx:
-    #             try:
-    #                 self.cnx.rollback()
-    #             except Exception:
-    #                 pass
-    #         print(f"❌ exec_sql 執行失敗：{sql}\n錯誤資訊：{e}")
-    #         raise
-    #     finally:
-    #         if cursor is not None:
-    #             try:
-    #                 if self.cnx and self.cnx.is_connected():
-    #                     cursor.close()
-    #             except Exception:
-    #                 pass
-
     def exec_sql(self, sql, params=None, auto_commit=True):
         """執行任意 SQL 語句（非查詢類），例如 INSERT、UPDATE、DELETE。
         Args:

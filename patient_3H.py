@@ -4,6 +4,7 @@
 import json
 
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 from libs import string_utils, system_utils, ui_utils
 
@@ -310,10 +311,41 @@ class Patient3H(QtWidgets.QMainWindow):
         self.ui.spinBox_diastolic.setValue(content.get("h042") or 0)
         self.ui.spinBox_pulse.setValue(content.get("h043") or 0)
 
-    def save_assessment(self, patient_key):
+    def save_and_check(self, patient_key):
+        """存檔並檢查。回傳 True 表示流程可繼續（含未收案不需存檔），False 表示使用者選擇留下編輯"""
+
+        if system_utils.date_edit_to_db(self.ui.dateEdit_case_date) is None:
+            return True
+
+        errors = self._validate_for_upload()
+        if errors:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle("資料有誤")
+            msg_box.setText(
+                f"""<font size="5" color="red"><b>
+                   找到以下的錯誤:<br>
+                   {"<br>".join(errors)}<br>
+                   是否繼續存檔？
+                   </b></font>""",
+            )
+            msg_box.setInformativeText("注意！上傳資料前務必修正完錯誤")
+            cancel_button = msg_box.addButton(
+                "取消存檔，繼續編輯", QMessageBox.RejectRole
+            )
+            msg_box.addButton("確定存檔", QMessageBox.AcceptRole)
+            msg_box.exec_()
+            if msg_box.clickedButton() == cancel_button:
+                self.allow_refresh_wait_list = True
+                return False
+
+        return self._save_assessment(patient_key)
+
+    def _save_assessment(self, patient_key):
+        """回傳 True 表示資料已寫入資料庫"""
         case_date = system_utils.date_edit_to_db(self.ui.dateEdit_case_date)
         if case_date is None:
-            return
+            return False
 
         close_date = system_utils.date_edit_to_db(self.ui.dateEdit_close_date)
         visit_date = system_utils.date_edit_to_db(self.ui.dateEdit_visit_date)  # c003
@@ -364,6 +396,8 @@ class Patient3H(QtWidgets.QMainWindow):
             self.database.exec_sql(sql, params)
 
         self.save_content()  # 主檔存完接著存明細
+
+        return True
 
     def save_content(self):
         content = {}
@@ -487,3 +521,70 @@ class Patient3H(QtWidgets.QMainWindow):
             "h042": self.ui.spinBox_diastolic.value(),  # 舒張壓 20~250
             "h043": self.ui.spinBox_pulse.value(),  # 脈搏
         }
+
+    def _validate_for_upload(self):
+        """產生上傳檔前的完整驗證，回傳錯誤訊息 list，空 list = 通過"""
+        errors = []
+
+        # 主檔
+        if system_utils.date_edit_to_db(self.ui.dateEdit_case_date) is None:
+            errors.append("尚未收案，無法產生上傳檔")
+        if not self.ui.lineEdit_doctor_id.text():
+            errors.append("醫事人員身分證號未填")
+
+        # h003 主要照顧者（必填）
+        if not self.ui.lineEdit_caregiver.text():
+            errors.append("主要照顧者未填")
+
+        # h004/h005 職業別
+        job = system_utils.get_radio_value(self.job_radio_dict)
+        if job is None:
+            errors.append("職業別未選")
+        elif job == "9" and not self.ui.lineEdit_job_other.text():
+            errors.append("職業別選擇其他時，說明必填")
+
+        # h006 郵遞區號（必填，3碼數字）
+        zip_code = self.ui.lineEdit_zip_code.text()
+        if not (zip_code.isdigit() and len(zip_code) == 3):
+            errors.append("郵遞區號須為3碼數字")
+
+        # h007/h008 家庭生命週期
+        family_cycle = system_utils.get_check_values(self.family_check_dict)
+        if family_cycle is None:
+            errors.append("家庭生命週期未勾選")
+        elif (
+            "99" in family_cycle.split("_") and not self.ui.lineEdit_family_other.text()
+        ):
+            errors.append("家庭生命週期勾選其他時，說明必填")
+
+        # h017/h018 慢性病史（無勾選=無，合法；含99則說明必填）
+        chronic = system_utils.get_check_values(self.chronic_check_dict)
+        if (
+            chronic is not None
+            and "99" in chronic.split("_")
+            and not self.ui.lineEdit_chronic_other.text()
+        ):
+            errors.append("慢性病史勾選其他時，說明必填")
+
+        # h031/h032 家族病史-其他：病名與家屬代碼成對
+        other_name = self.ui.lineEdit_family_history_other.text()
+        other_codes = "".join(
+            code
+            for check_box, code in self.family_history_dict["h032"].items()
+            if check_box.isChecked()
+        )
+        if other_name and not other_codes:
+            errors.append("家族病史-其他已填病名，請勾選家屬")
+        if other_codes and not other_name:
+            errors.append("家族病史-其他已勾選家屬，請填病名")
+
+        # h034/h035 長期藥物
+        medicine = system_utils.get_check_values(self.medicine_check_dict)
+        if (
+            medicine is not None
+            and "99" in medicine.split("_")
+            and not self.ui.lineEdit_medicine_other.text()
+        ):
+            errors.append("長期藥物勾選其他時，說明必填")
+
+        return errors

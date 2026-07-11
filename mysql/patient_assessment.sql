@@ -11,6 +11,7 @@ CREATE TABLE patient_assessment (
     CloseReason     VARCHAR(1),         -- c005 結案原因 1/2/3/X
     Content         TEXT,               -- h001~h043 JSON，之後再做
     UploadDate      DATE,               -- 已上傳批次年月，NULL=未上傳
+    UploadFileName  VARCHAR(30),        -- 已上傳檔名 
     TimeStamp       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     ON UPDATE CURRENT_TIMESTAMP,
     KEY idx_patient (PatientKey, CaseDate)

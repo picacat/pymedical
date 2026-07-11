@@ -93,22 +93,15 @@ class Patient(QtWidgets.QMainWindow):
         if patient_key is None:
             return
 
-        try:
+        if hasattr(self, "tab_patient_new_care"):
             self.tab_patient_new_care.save_patient_new_care(patient_key)
-        except Exception:
-            pass
 
-        # try:
-        #     self.tab_patient_3H.save_assessment(patient_key)
-        # except Exception:
-        #     pass
+        if hasattr(self, "tab_patient_3H"):
+            if not self.tab_patient_3H.save_and_check(patient_key):
+                return
 
-        self.tab_patient_3H.save_assessment(patient_key)
-
-        try:
+        if hasattr(self, "tab_patient_settings"):
             self.tab_patient_settings.save_patient_settings(patient_key)
-        except Exception:
-            pass
 
         self.close_patient()
 
