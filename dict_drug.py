@@ -1219,7 +1219,7 @@ class DictDrug(QtWidgets.QMainWindow):
             return
 
         export_utils.export_table_widget_to_excel(
-            excel_file_name, self.ui.tableWidget_dict_drug, None, [12, 13, 14, 15, 16]
+            excel_file_name, self.ui.tableWidget_dict_drug, None, [12, 13, 14, 15]
         )
         system_utils.show_message_box(
             QMessageBox.Information,
