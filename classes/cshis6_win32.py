@@ -140,8 +140,12 @@ class CSHIS:
             if com_port is not None:
                 data = {"name": com_port}
 
-        response = self._get_requests_response(service_path, "POST", data)
-        return_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data)
+        if res_data is None:
+            return -1
+
+        return_code = res_data.get("statusCode", -1)
         if return_code == 1001:
             return_code = 0
 
@@ -151,8 +155,12 @@ class CSHIS:
         service_path = "/api/common/v1/Finalize"
         data = {}
 
-        response = self._get_requests_response(service_path, "POST", data)
-        return_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data)
+        if res_data is None:
+            return -1
+
+        return_code = res_data.get("statusCode", -1)
         if return_code == 1001:
             return_code = 0
 
@@ -167,8 +175,9 @@ class CSHIS:
         else:
             service_path = "/api/sam/v1/Verification"
             data = {}
-            response = self._get_requests_response(service_path, "POST", data)
-            error_code = response.json()["statusCode"]
+            # ✅ 改用 _get_json 統一防護
+            res_data = self._get_json(service_path, "POST", data)
+            error_code = res_data.get("statusCode", -1) if res_data else -1
 
         out_queue.put(error_code)
 
@@ -201,8 +210,9 @@ class CSHIS:
         pin = input_dialog.textValue()
         service_path = "/api/hc/v1/Pin"
         data = {"pin": pin}
-        response = self._get_requests_response(service_path, "POST", data)
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data)
+        error_code = res_data.get("statusCode", -1) if res_data else -1
         cshis_utils.show_ic_card_message(error_code, "健保IC卡密碼驗證")
 
     def input_hc_pin(self):
@@ -223,23 +233,26 @@ class CSHIS:
         pin = input_dialog.textValue()
         service_path = "/api/hc/v1/Pin"
         data = {"newPin": pin}
-        response = self._get_requests_response(service_path, "PUT", data)
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "PUT", data)
+        error_code = res_data.get("statusCode", -1) if res_data else -1
         cshis_utils.show_ic_card_message(error_code, "健保IC卡密碼設定")
 
     def disable_hc_pin(self):
         service_path = "/api/hc/v1/Pin"
         data = {}
-        response = self._get_requests_response(service_path, "DELETE", data)
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "DELETE", data)
+        error_code = res_data.get("statusCode", -1) if res_data else -1
 
         cshis_utils.show_ic_card_message(error_code, "健保IC卡密碼解除")
 
     def logout_hpc(self):
         service_path = "/api/hpc/v1/Logout"
         data = {}
-        response = self._get_requests_response(service_path, "DELETE", data)
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "DELETE", data)
+        error_code = res_data.get("statusCode", -1) if res_data else -1
 
         return error_code
 
@@ -337,8 +350,9 @@ class CSHIS:
         pin = input_dialog.textValue()
         service_path = "/api/hpc/v1/Pin"
         data = {"newPin": pin}
-        response = self._get_requests_response(service_path, "POST", data)
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data)
+        error_code = res_data.get("statusCode", -1) if res_data else -1
         cshis_utils.show_ic_card_message(error_code, "醫事人員卡密碼設定")
 
     def unlock_hpc(self):
@@ -379,8 +393,9 @@ class CSHIS:
             "puk": puk,
             "newPin": new_pin,
         }
-        response = self._get_requests_response(service_path, "PUT", data)
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "PUT", data)
+        error_code = res_data.get("statusCode", -1) if res_data else -1
         cshis_utils.show_ic_card_message(error_code, "醫事人員卡解鎖")
 
     def reset_reader(self, show_message=True):
@@ -426,12 +441,27 @@ class CSHIS:
         except Exception:
             return None
 
+    # ✅ 新增: 統一的 JSON 取得方法, 失敗時回傳 None, 呼叫端不會再遇到
+    #    'NoneType' object has no attribute 'json' 的問題
+    def _get_json(self, service_path, request_type, data, local_url=True):
+        response = self._get_requests_response(
+            service_path, request_type, data, local_url=local_url
+        )
+        if response is None:
+            print(f"❌ API 無回應 (Network Error or Timeout): {service_path}")
+            return None
+
+        try:
+            return response.json()
+        except ValueError as e:
+            print(f"❌ JSON 解析失敗: {service_path} - {e}")
+            return None
+
     def get_sam_signature(self, service_type):
         service_path = "/api/sam/v1/Signature"
         data = {"serviceType": service_type}
-        response = self._get_requests_response(service_path, "POST", data)
-
-        return response.json()
+        # ✅ 改用 _get_json 統一防護 (呼叫端須檢查回傳值是否為 None)
+        return self._get_json(service_path, "POST", data)
 
     def verify_vhc_card(self):
         service_path = "/api/hc/v1/Verification/VirtualHc"
@@ -492,7 +522,13 @@ class CSHIS:
             cshis_utils.show_ic_card_message(-1, "讀取醫事人員卡簽章")
             return None
 
-        res_data = response.json()
+        # ✅ 補上 JSON 解析防護
+        try:
+            res_data = response.json()
+        except ValueError:
+            cshis_utils.show_ic_card_message(-1, "讀取醫事人員卡簽章")
+            return None
+
         error_code = res_data.get("statusCode", -1)
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "讀取醫事人員卡簽章")
@@ -518,12 +554,13 @@ class CSHIS:
 
         service_path = "/api/hc/v1/Signature/HpcHc"
         data = {"serviceType": service_type}
-        response = self._get_requests_response(service_path, "POST", data)
-        if response is None:
+        # ✅ 改用 _get_json 統一防護 (原本只擋 response is None, JSON 解析失敗仍會炸)
+        res_data = self._get_json(service_path, "POST", data)
+        if res_data is None:
             cshis_utils.show_ic_card_message(4061, "讀取三卡簽章")
             return None
 
-        return response.json()
+        return res_data
 
     def read_basic_data(self, show_error=True):
         self.logout_hc()
@@ -544,10 +581,14 @@ class CSHIS:
             "hcId": hc_signature["hcId"],
             "hcIdNo": hc_signature["hcIdNo"],
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        self.basic_data = cshis_utils.decode_cshis6_basic_data(response.json())
+        # ✅ 改用 _get_json 統一防護 (遠端 API 逾時會回傳 None)
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            if show_error:
+                cshis_utils.show_ic_card_message(-1, "讀取健保卡基本資料")
+            return False
+
+        self.basic_data = cshis_utils.decode_cshis6_basic_data(res_data)
         self.basic_data["emg_phone"] = self.get_emergent_tel()
 
         return True
@@ -573,17 +614,22 @@ class CSHIS:
             "hcId": hc_signature["hcId"],
             "hcIdNo": hc_signature["hcIdNo"],
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        self.basic_data = cshis_utils.decode_cshis6_register_basic_data(response.json())
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            if show_warning:
+                cshis_utils.show_ic_card_message(-1, "讀取健保卡基本資料")
+            return False
+
+        self.basic_data = cshis_utils.decode_cshis6_register_basic_data(res_data)
         self.basic_data["emg_phone"] = self.get_emergent_tel()
 
         return True
 
     def apply_qr_code(self):
         sam_signature = self.get_sam_signature(service_type="06")
-        if sam_signature is None or sam_signature["clientRandom"] is None:
+        # ✅ get_sam_signature 現在可能回傳 None, 須先檢查
+        if sam_signature is None or sam_signature.get("clientRandom") is None:
             cshis_utils.show_ic_card_message(4050, "請求虛擬健保卡授權失敗")
             return False
 
@@ -597,10 +643,13 @@ class CSHIS:
             "birthday": "0661005",
             "isForeigner": False,
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        return response.json()
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            cshis_utils.show_ic_card_message(4050, "請求虛擬健保卡授權失敗")
+            return False
+
+        return res_data
 
     def _get_qrcode(self):
         qrcode = None
@@ -639,13 +688,14 @@ class CSHIS:
     # 登出健保卡狀態
     def logout_hc(self):
         service_path = "/api/hc/v1/Logout"  # 先登出健保卡狀態
-        response = self._get_requests_response(service_path, "DELETE", {})
-
-        try:
-            return response.json()
-        except Exception as e:
-            print(f"❌ 處理登出健保卡回應時發生異常: {e}")
+        # ✅ 改用 _get_json 統一防護 (原本 response 為 None 時 .json() 會在 try 內炸出
+        #    AttributeError, 雖有攔截但訊息誤導)
+        res_data = self._get_json(service_path, "DELETE", {})
+        if res_data is None:
+            print("❌ 處理登出健保卡回應時發生異常")
             return None
+
+        return res_data
 
     def read_register_basic_data_by_vhc(self):
         system_utils.set_keyboard_layout("英文")
@@ -710,18 +760,16 @@ class CSHIS:
             "hcId": hc_signature["hcId"],
             "hcIdNo": hc_signature["hcIdNo"],
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-
-        if response is None:
+        # ✅ 改用 _get_json 統一防護, 並攔截 key 不存在的情況
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
             return None, None
 
-        available_date = response.json()["cardValidity"]
-        available_date = date_utils.nhi_date_to_west_date(
-            response.json()["cardValidity"]
-        )
-        available_count = number_utils.get_integer(response.json()["treatmentCounter"])
+        try:
+            available_date = date_utils.nhi_date_to_west_date(res_data["cardValidity"])
+            available_count = number_utils.get_integer(res_data["treatmentCounter"])
+        except (KeyError, TypeError):
+            return None, None
 
         return available_date, available_count
 
@@ -765,10 +813,10 @@ class CSHIS:
             "hcId": hc_signature["hcId"],
             "hcIdNo": hc_signature["hcIdNo"],
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 修正本次回報的錯誤: 遠端 API 逾時回傳 None 時,
+        #    原本直接 response.json() 會炸出 AttributeError
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        error_code = res_data.get("statusCode", -1) if res_data else -1
 
         if show_message or error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "健保IC卡卡片內容更新")
@@ -793,11 +841,14 @@ class CSHIS:
             "hcIdNo": hpchc_signature["hcIdNo"],
             "format": "0",
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
-        illness_data = response.json()["criticalIllnesses"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            cshis_utils.show_ic_card_message(-1, "健保卡讀取重大傷病")
+            return False
+
+        error_code = res_data.get("statusCode", -1)
+        illness_data = res_data.get("criticalIllnesses", [])
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "健保卡讀取重大傷病")
@@ -857,17 +908,21 @@ class CSHIS:
             "hcId": hc_signature["hcId"],
             "hcIdNo": hc_signature["hcIdNo"],
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            cshis_utils.show_ic_card_message(-1, "健保卡讀取")
+            out_queue.put((-1, {}))
+            return False
+
+        error_code = res_data.get("statusCode", -1)
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
             out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
-        treatment_data = cshis_utils.decode_cshis6_treatment_data(response.json())
+        treatment_data = cshis_utils.decode_cshis6_treatment_data(res_data)
         out_queue.put((error_code, treatment_data))
 
     # 取得門診資料
@@ -892,9 +947,18 @@ class CSHIS:
     def get_api_status(self):
         service_path = "/api/common/v1/Status"
         data = {}
-        response = self._get_requests_response(service_path, "GET", data)
+        # ✅ 改用 _get_json 統一防護: 主控台元件離線時回傳安全的預設狀態,
+        #    讓呼叫端走「未初始化 / 未認證 / 未置卡」的流程, 而不是直接炸掉
+        res_data = self._get_json(service_path, "GET", data)
+        if res_data is None or "status" not in res_data:
+            return {
+                "initialized": False,
+                "sam": {"status": 0},
+                "hpc": {"status": 0},
+                "hc": {"status": 0},
+            }
 
-        return response.json()["status"]
+        return res_data["status"]
 
     def read_treatment_need_hpc_thread(self, out_queue):
         hpchc_signature = self.get_hpchc_signature(service_type="01")
@@ -914,17 +978,21 @@ class CSHIS:
             "hcIdNo": hpchc_signature["hcIdNo"],
             "format": "0",
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            cshis_utils.show_ic_card_message(-1, "健保卡讀取")
+            out_queue.put((-1, {}))
+            return False
+
+        error_code = res_data.get("statusCode", -1)
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
             out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
-        disease_data = cshis_utils.decode_cshis6_disease_data(response.json())
+        disease_data = cshis_utils.decode_cshis6_disease_data(res_data)
 
         out_queue.put((error_code, disease_data))
 
@@ -964,17 +1032,21 @@ class CSHIS:
             "hcId": hpchc_signature["hcId"],
             "hcIdNo": hpchc_signature["hcIdNo"],
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            cshis_utils.show_ic_card_message(-1, "健保卡讀取")
+            out_queue.put((-1, {}))
+            return False
+
+        error_code = res_data.get("statusCode", -1)
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
             out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
 
-        prescriptions = response.json()["outpatientPrescriptions"]
+        prescriptions = res_data.get("outpatientPrescriptions", [])
         prescript_data = []
         for prescript in prescriptions:
             prescript_row = {
@@ -994,9 +1066,8 @@ class CSHIS:
     def get_cshis6_status(self):
         service_path = "/api/common/v1/Status"
         data = {}
-        response = self._get_requests_response(service_path, "GET", data)
-
-        return response.json()
+        # ✅ 改用 _get_json 統一防護
+        return self._get_json(service_path, "GET", data)
 
     def get_seq_number_256_thread(
         self, out_queue, treat_item, baby_treat, treat_after_check
@@ -1018,12 +1089,15 @@ class CSHIS:
             "babyTreatment": baby_treat,
             "afterCheck": treat_after_check,
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            out_queue.put((-1, {}))
+            return False
 
-        out_queue.put((error_code, response.json()))
+        error_code = res_data.get("statusCode", -1)
+
+        out_queue.put((error_code, res_data))
 
     # 取得安全簽章
     def get_seq_number_256(self, treat_item, baby_treat, treat_after_check):
@@ -1092,10 +1166,9 @@ class CSHIS:
             "inpatient30Fee": 0,
             "inpatient180Fee": 0,
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        error_code = res_data.get("statusCode", -1) if res_data else -1
 
         out_queue.put((error_code))
 
@@ -1162,12 +1235,15 @@ class CSHIS:
             "treatmentDateTime": registration_datetime,
             "prescriptions": prescriptions,
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
-        signature_items = response.json()["signatureItems"]
-        hex_signature_items = response.json()["hexSignatureItems"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            out_queue.put((-1, [], []))
+            return False
+
+        error_code = res_data.get("statusCode", -1)
+        signature_items = res_data.get("signatureItems", [])
+        hex_signature_items = res_data.get("hexSignatureItems", [])
 
         out_queue.put((error_code, signature_items, hex_signature_items))
 
@@ -1213,10 +1289,9 @@ class CSHIS:
             "hcIdNo": hc_signature["hcIdNo"],
             "treatmentDateTime": treat_date,
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        error_code = res_data.get("statusCode", -1) if res_data else -1
 
         out_queue.put(error_code)
 
@@ -1255,7 +1330,8 @@ class CSHIS:
             self.verify_sam(show_message=False)
 
         sam_signature = self.get_sam_signature(service_type="30")
-        if sam_signature["clientRandom"] is None:
+        # ✅ get_sam_signature 現在可能回傳 None, 須先檢查
+        if sam_signature is None or sam_signature.get("clientRandom") is None:
             cshis_utils.show_ic_card_message(4050, "請求虛擬健保卡授權失敗")
             out_queue.put((-1, {}))  # ✅ 先 put 再 return
             return False
@@ -1355,7 +1431,8 @@ class CSHIS:
     # ic卡寫卡
     def write_ic_card_abnormal(self, patient_id):
         sam_signature = self.get_sam_signature(service_type="03")
-        if sam_signature["clientRandom"] is None:
+        # ✅ get_sam_signature 現在可能回傳 None, 須先檢查
+        if sam_signature is None or sam_signature.get("clientRandom") is None:
             cshis_utils.show_ic_card_message(4050, "請求虛擬健保卡授權失敗")
             return False
 
@@ -1367,10 +1444,13 @@ class CSHIS:
             "signature": sam_signature["signature"],
             "patientId": patient_id,
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            cshis_utils.show_ic_card_message(-1, "健保卡異常時取得就醫識別碼失敗")
+            return None
+
+        error_code = res_data.get("statusCode", -1)
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(
@@ -1378,9 +1458,7 @@ class CSHIS:
             )
             return None
 
-        self.treat_data = cshis_utils.decode_cshis6_no_ic_card_treat_data(
-            response.json()
-        )
+        self.treat_data = cshis_utils.decode_cshis6_no_ic_card_treat_data(res_data)
 
         return self
 
@@ -1400,16 +1478,19 @@ class CSHIS:
             "hcIdNo": hc_signature["hcIdNo"],
             "treatmentDateTime": registration_datetime,
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            cshis_utils.show_ic_card_message(-1, "健保卡取得就醫識別碼失敗")
+            return None
+
+        error_code = res_data.get("statusCode", -1)
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "健保卡取得就醫識別碼失敗")
             return None
 
-        identifier = response.json()["treatmentNumber"]
+        identifier = res_data.get("treatmentNumber")
 
         return identifier
 
@@ -1839,7 +1920,8 @@ class CSHIS:
 
     def request_token(self, patient_id):
         sam_signature = self.get_sam_signature(service_type="01")
-        if sam_signature["clientRandom"] is None:
+        # ✅ get_sam_signature 現在可能回傳 None, 須先檢查
+        if sam_signature is None or sam_signature.get("clientRandom") is None:
             cshis_utils.show_ic_card_message(4050, "請求虛擬健保卡授權失敗")
             return False
 
@@ -1851,22 +1933,26 @@ class CSHIS:
             "signature": sam_signature["signature"],
             "patientId": patient_id,
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            cshis_utils.show_ic_card_message(-1, "請求虛擬健保卡授權失敗")
+            return None
+
+        error_code = res_data.get("statusCode", -1)
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "請求虛擬健保卡授權失敗")
             return None
 
-        access_token = response.json()["accessToken"]
+        access_token = res_data.get("accessToken")
 
         return access_token
 
     def get_response_token(self, access_token):
         sam_signature = self.get_sam_signature(service_type="01")
-        if sam_signature["clientRandom"] is None:
+        # ✅ get_sam_signature 現在可能回傳 None, 須先檢查
+        if sam_signature is None or sam_signature.get("clientRandom") is None:
             cshis_utils.show_ic_card_message(4050, "請求虛擬健保卡授權失敗")
             return False
 
@@ -1878,15 +1964,18 @@ class CSHIS:
             "signature": sam_signature["signature"],
             "accessToken": access_token,
         }
-        response = self._get_requests_response(
-            service_path, "POST", data, local_url=False
-        )
-        error_code = response.json()["statusCode"]
+        # ✅ 改用 _get_json 統一防護
+        res_data = self._get_json(service_path, "POST", data, local_url=False)
+        if res_data is None:
+            cshis_utils.show_ic_card_message(-1, "請求虛擬健保卡序號失敗")
+            return None
+
+        error_code = res_data.get("statusCode", -1)
 
         if error_code != 0:
             cshis_utils.show_ic_card_message(error_code, "請求虛擬健保卡序號失敗")
             return None
 
-        qrcode = response.json()["virtualCardToken"]
+        qrcode = res_data.get("virtualCardToken")
 
         return qrcode
