@@ -4599,3 +4599,16 @@ def get_auxiliary_name_by_code(code):
             return name
 
     return None  # 找不到時回傳 None 或自訂訊息
+
+
+def get_division_code(division):
+    """健保業務組名稱轉代碼，未知名稱回傳 None"""
+    division_dict = {
+        "臺北業務組": "1",
+        "北區業務組": "2",
+        "中區業務組": "3",
+        "南區業務組": "4",
+        "高屏業務組": "5",
+        "東區業務組": "6",
+    }
+    return division_dict.get(division)

@@ -1,4 +1,5 @@
 """Pymedical主程式"""
+
 # -*- coding: utf-8 -*-
 
 import configparser
@@ -150,6 +151,7 @@ class PyMedical(QtWidgets.QMainWindow):
         self._deleted = False
         self.host = None
         self.base_path = os.path.dirname(os.path.abspath(__file__))
+        self._force_close = False
 
         try:
             config_file = self.args[0][1]
@@ -431,6 +433,11 @@ class PyMedical(QtWidgets.QMainWindow):
 
     def closeEvent(self, event: QtGui.QCloseEvent):
         """關閉主程式事件."""
+        if self._force_close:
+            self._shutdown()  # 一樣執行備份與清理,只是不問使用者
+            event.accept()
+            return
+
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
         msg_box.setWindowTitle("關閉醫療系統")
@@ -440,79 +447,78 @@ class PyMedical(QtWidgets.QMainWindow):
         msg_box.setInformativeText(
             "<font size='4'>注意！系統結束後, 會自動執行資料備份作業，請稍後...</font>"
         )
-        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)  # 0
-        msg_box.addButton(QPushButton("關閉醫療系統"), QMessageBox.AcceptRole)  # 1
+        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+        msg_box.addButton(QPushButton("關閉醫療系統"), QMessageBox.AcceptRole)
         quit_app = msg_box.exec_()
 
-        event.ignore()
-
-        if quit_app:
-            if self.user_name != "超級使用者":
-                dialog = dialog_utils.get_dialog_ic_record_upload(
-                    self, self.database, self.system_settings, "pymedical"
-                )
-                dialog.ui.dateEdit_start_date.setDate(datetime.datetime.now().date())
-                dialog.ui.dateEdit_end_date.setDate(datetime.datetime.now().date())
-                dialog.ui.comboBox_period.setCurrentText("全部")
-                sql = dialog.get_sql()
-                rows = self.database.select_record(sql)
-                if len(rows) > 0:
-                    msg_box = QMessageBox()
-                    msg_box.setIcon(QMessageBox.Warning)
-                    msg_box.setWindowTitle("IC卡資料尚有資料未上傳")
-                    msg_box.setText(
-                        "<font size='5' color='red'><b>IC卡資料尚有資料未上傳, 確定要繼續關閉醫療資訊管理系統?</b></font>"
-                    )
-                    msg_box.setInformativeText(
-                        "<font size='4'>注意！請確認IC卡資料上傳作業是否要執行</font>"
-                    )
-                    msg_box.addButton(
-                        QPushButton("不要關, 我要上傳"), QMessageBox.NoRole
-                    )  # 0
-                    msg_box.addButton(
-                        QPushButton("我知道了"), QMessageBox.AcceptRole
-                    )  # 1
-                    quit_app = msg_box.exec_()
-                    if not quit_app:
-                        event.ignore()
-                        return
-
-                backup_process = module_utils.get_backup(
-                    self, self.database, self.system_settings
-                )
-                backup_process.start_backup()
-
-            self._turn_off_led()
-            event.accept()
-            pygame.quit()
-            system_utils.remove_user_info(self.system_settings)
-
-            # self.database.close_database()
-            # --- 修改重點：安全關閉資料庫 ---
-            if hasattr(self, "database") and self.database:
-                try:
-                    self.database.close_database()
-                    print("✅ 資料庫連線已安全關閉")
-                except Exception as e:
-                    print(f"❌ 關閉資料庫時發生錯誤: {e}")
-                    system_utils.loggin_error(
-                        "system_errors.log", f"關閉資料庫時發生錯誤: {e}"
-                    )
-
-            if hasattr(self, "archive_db") and self.archive_db:
-                try:
-                    print("✅ 封存資料庫連線已安全關閉")
-                    self.archive_db.close_database()
-                except Exception as e:
-                    print(f"❌ 關閉封存資料庫時發生錯誤: {e}")
-                    system_utils.loggin_error(
-                        "system_errors.log", f"關閉封存資料庫時發生錯誤: {e}"
-                    )
-
-            self._close_socket()
-            self.deactivate_ic_card_reader()
-        else:
+        if not quit_app:
             event.ignore()
+            return
+
+        # IC卡未上傳檢查(只在互動關閉時檢查)
+        if self.user_name != "超級使用者":
+            dialog = dialog_utils.get_dialog_ic_record_upload(
+                self, self.database, self.system_settings, "pymedical"
+            )
+            dialog.ui.dateEdit_start_date.setDate(datetime.datetime.now().date())
+            dialog.ui.dateEdit_end_date.setDate(datetime.datetime.now().date())
+            dialog.ui.comboBox_period.setCurrentText("全部")
+            sql = dialog.get_sql()
+            rows = self.database.select_record(sql)
+            if len(rows) > 0:
+                msg_box = QMessageBox()
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setWindowTitle("IC卡資料尚有資料未上傳")
+                msg_box.setText(
+                    "<font size='5' color='red'><b>IC卡資料尚有資料未上傳, 確定要繼續關閉醫療資訊管理系統?</b></font>"
+                )
+                msg_box.setInformativeText(
+                    "<font size='4'>注意！請確認IC卡資料上傳作業是否要執行</font>"
+                )
+                msg_box.addButton(QPushButton("不要關, 我要上傳"), QMessageBox.NoRole)
+                msg_box.addButton(QPushButton("我知道了"), QMessageBox.AcceptRole)
+                quit_app = msg_box.exec_()
+                if not quit_app:
+                    event.ignore()
+                    return
+
+        self._shutdown()
+        event.accept()
+
+    def _shutdown(self, run_backup=True):
+        """關閉前的清理作業(備份、關資料庫、關socket等)"""
+        if run_backup and self.user_name != "超級使用者":
+            backup_process = module_utils.get_backup(
+                self, self.database, self.system_settings
+            )
+            backup_process.start_backup()
+
+        self._turn_off_led()
+        pygame.quit()
+        system_utils.remove_user_info(self.system_settings)
+
+        if hasattr(self, "database") and self.database:
+            try:
+                self.database.close_database()
+                print("✅ 資料庫連線已安全關閉")
+            except Exception as e:
+                print(f"❌ 關閉資料庫時發生錯誤: {e}")
+                system_utils.loggin_error(
+                    "system_errors.log", f"關閉資料庫時發生錯誤: {e}"
+                )
+
+        if hasattr(self, "archive_db") and self.archive_db:
+            try:
+                self.archive_db.close_database()
+                print("✅ 封存資料庫連線已安全關閉")
+            except Exception as e:
+                print(f"❌ 關閉封存資料庫時發生錯誤: {e}")
+                system_utils.loggin_error(
+                    "system_errors.log", f"關閉封存資料庫時發生錯誤: {e}"
+                )
+
+        self._close_socket()
+        self.deactivate_ic_card_reader()
 
     def _turn_off_led(self):
         led_port = self.system_settings.field("叫號燈連接埠")
@@ -2412,6 +2418,8 @@ class PyMedical(QtWidgets.QMainWindow):
         )
         login_dialog.exec_()
         if not login_dialog.login_ok:
+            self._force_close = True
+            self.close()
             return
 
         user_name = login_dialog.user_name

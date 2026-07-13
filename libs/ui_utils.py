@@ -82,6 +82,7 @@ UI_PATIENT_LIST = "patient_list.ui"
 UI_PATIENT = "patient.ui"
 UI_PATIENT_DATA = "patient_data.ui"
 UI_PATIENT_NEW_CARE = "patient_new_care.ui"
+UI_PATIENT_3H = "patient_3H.ui"
 UI_PATIENT_SETTINGS = "patient_settings.ui"
 
 UI_CERTIFICATE_DIAGNOSIS = "certificate_diagnosis.ui"

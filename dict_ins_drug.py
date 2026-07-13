@@ -630,24 +630,35 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 system_utils.show_message_box(
                     QMessageBox.Critical,
                     "線上更新健保碼失敗",
-                    '<font size="5" color="red"><b>無法下載最新版本的單方健保碼資料.</b></font>',
+                    f'<font size="5" color="red"><b>無法下載最新版本的{medicine_type}健保碼資料.</b></font>',
                     "請檢查是否可以連上網際網路",
                 )
                 return
 
         try:
             data_dict = get_data(drug_file)
-            # 取出字典裡所有的 values，並轉成 list 抓第一個 [0]
             rows = list(data_dict.values())[0]
         except Exception as e:
-            print(f"讀取分頁失敗: {e}")
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "讀取更新檔失敗",
+                f'<font size="5" color="red"><b>無法讀取{medicine_type}更新檔.</b></font>',
+                f"錯誤原因: {e}",
+            )
+            return  # ← 一定要 return
+
+        if not rows:
+            return
 
         progress_bar = QProgressBar()
         progress_bar.setMaximum(len(rows))
         progress_bar.setValue(0)
         self.ui.statusbar.addWidget(progress_bar)
-        self._write_ins_drug_file1(medicine_type, rows, progress_bar)
-        self.ui.statusbar.removeWidget(progress_bar)
+        try:
+            self._write_ins_drug_file1(medicine_type, rows, progress_bar)
+        finally:  # ← 無論成功失敗都會移除
+            self.ui.statusbar.removeWidget(progress_bar)
+            progress_bar.deleteLater()  # removeWidget 只是隱藏，記得回收
 
     def _write_ins_drug_file1(self, medicine_type, rows, progress_bar):
         ins_code_no = self._get_field_number(rows[0], "藥品代碼")
@@ -670,6 +681,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 continue
 
             progress_bar.setValue(row_no + 1)
+            if row_no % 50 == 0:
+                QtWidgets.QApplication.processEvents()
+
             if row_no == 0:  # data heading 不轉檔
                 continue
 
@@ -736,17 +750,28 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         try:
             data_dict = get_data(drug_file)
-            # 取出字典裡所有的 values，並轉成 list 抓第一個 [0]
             rows = list(data_dict.values())[0]
         except Exception as e:
-            print(f"讀取分頁失敗: {e}")
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "讀取更新檔失敗",
+                f'<font size="5" color="red"><b>無法讀取{medicine_type}更新檔.</b></font>',
+                f"錯誤原因: {e}",
+            )
+            return  # ← 一定要 return
+
+        if not rows:
+            return
 
         progress_bar = QProgressBar()
         progress_bar.setMaximum(len(rows))
         progress_bar.setValue(0)
         self.ui.statusbar.addWidget(progress_bar)
-        self._write_ins_drug_file2(medicine_type, rows, progress_bar)
-        self.ui.statusbar.removeWidget(progress_bar)
+        try:
+            self._write_ins_drug_file2(medicine_type, rows, progress_bar)
+        finally:  # ← 無論成功失敗都會移除
+            self.ui.statusbar.removeWidget(progress_bar)
+            progress_bar.deleteLater()  # removeWidget 只是隱藏，記得回收
 
     def _write_ins_drug_file2(self, medicine_type, rows, progress_bar):
         ins_code_no = self._get_field_number(rows[0], "藥品代碼")
@@ -769,6 +794,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 continue
 
             progress_bar.setValue(row_no + 1)
+            if row_no % 50 == 0:
+                QtWidgets.QApplication.processEvents()
+
             if row_no == 0:  # data heading 不轉檔
                 continue
 
