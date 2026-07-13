@@ -218,21 +218,24 @@ class StatisticsDoctorMedicinePercent(QtWidgets.QMainWindow):
         self.progress_dialog.deleteLater()
 
     def _get_medicine_type(self, medicine_name):
-        medicine_type = None
-        sql = f'''
+        medicine_types = tuple(self.medicine_type_dict.keys())
+        if not medicine_types:
+            return None
+
+        placeholders = ", ".join(["%s"] * len(medicine_types))
+        sql = f"""
             SELECT MedicineType FROM medicine
             WHERE
-                MedicineType IN {tuple(self.medicine_type_dict.keys())} AND
-                MedicineName LIKE "{medicine_name}%"
+                MedicineType IN ({placeholders}) AND
+                MedicineName LIKE %s
             LIMIT 1
-        
-        '''
-        rows = self.database.select_record(sql)
-        if rows:
-            row = rows[0]
-            medicine_type = string_utils.xstr(row["MedicineType"])
+        """
+        params = medicine_types + (f"{medicine_name}%",)
+        rows = self.database.select_record(sql, params)
+        if not rows:
+            return None
 
-        return medicine_type
+        return string_utils.xstr(rows[0]["MedicineType"])
 
     def _set_commission(self, combo_box_medicine_type, medicine_type):
         row_no = self.ui.tableWidget_doctor.currentRow()
