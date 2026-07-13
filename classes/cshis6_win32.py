@@ -37,7 +37,7 @@ HEADERS = {
 }
 
 
-# 健保ICD卡 2018.03.31
+# 健保ICD卡 讀卡機控制軟體6.0 2026-07-14
 class CSHIS:
     def __init__(
         self, parent, database, system_settings, ic_card_type="健保卡", qrcode=None
