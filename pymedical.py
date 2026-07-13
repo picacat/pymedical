@@ -430,24 +430,21 @@ class PyMedical(QtWidgets.QMainWindow):
         self.voice_server.stop_thread()
 
     def closeEvent(self, event: QtGui.QCloseEvent):
-        if self.user_name == "超級使用者":
-            quit_app = True
-        else:
-            """關閉主程式事件."""
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Warning)
-            msg_box.setWindowTitle("關閉醫療系統")
-            msg_box.setText(
-                "<font size='5' color='red'><b>確定要關閉醫療資訊管理系統?</b></font>"
-            )
-            msg_box.setInformativeText(
-                "<font size='4'>注意！系統結束後, 會自動執行資料備份作業，請稍後...</font>"
-            )
-            msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)  # 0
-            msg_box.addButton(QPushButton("關閉醫療系統"), QMessageBox.AcceptRole)  # 1
-            quit_app = msg_box.exec_()
+        """關閉主程式事件."""
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle("關閉醫療系統")
+        msg_box.setText(
+            "<font size='5' color='red'><b>確定要關閉醫療資訊管理系統?</b></font>"
+        )
+        msg_box.setInformativeText(
+            "<font size='4'>注意！系統結束後, 會自動執行資料備份作業，請稍後...</font>"
+        )
+        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)  # 0
+        msg_box.addButton(QPushButton("關閉醫療系統"), QMessageBox.AcceptRole)  # 1
+        quit_app = msg_box.exec_()
 
-            event.ignore()
+        event.ignore()
 
         if quit_app:
             if self.user_name != "超級使用者":
@@ -2410,14 +2407,11 @@ class PyMedical(QtWidgets.QMainWindow):
 
     # 登出
     def logout(self):
-        self.user_name = "超級使用者"
-        self.close()
         login_dialog = module_utils.get_login(
             self, self.database, self.system_settings, "pymedical"
         )
         login_dialog.exec_()
         if not login_dialog.login_ok:
-            self.close()
             return
 
         user_name = login_dialog.user_name
