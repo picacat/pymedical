@@ -125,7 +125,7 @@ class InsAppealXML(QtWidgets.QMainWindow):
         for row_no, row in enumerate(rows):
             progress_dialog.setValue(row_no)
             if progress_dialog.wasCanceled():
-                break
+                return
 
             self._add_ddata(root, row)
 
@@ -134,11 +134,7 @@ class InsAppealXML(QtWidgets.QMainWindow):
         progress_dialog.setValue(record_count)
         progress_dialog.deleteLater()
 
-        tree = ET.ElementTree(root)
-        tree.write(
-            xml_file_name, pretty_print=True, xml_declaration=True, encoding="Big5"
-        )
-        xml_utils.set_xml_file_to_big5(xml_file_name)
+        xml_utils.write_big5_xml(root, xml_file_name)
 
     def _get_ins_total_points(self):
         rows = self._get_ddata_rows()
