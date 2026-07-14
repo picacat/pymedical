@@ -278,7 +278,13 @@ class Patient3H(QtWidgets.QMainWindow):
         self.ui.label_name.setText(
             f"姓名: {string_utils.xstr(row['Name'])} ({string_utils.xstr(row['Gender'])})"
         )
-        self.ui.label_birthday.setText(f"生日: {row['Birthday'].strftime('%Y-%m-%d')}")
+        if row["Birthday"] is not None:
+            self.ui.label_birthday.setText(
+                f"生日: {row['Birthday'].strftime('%Y-%m-%d')}"
+            )
+        else:
+            self.ui.label_birthday.setText("生日: -")
+
         self.ui.label_ID.setText(f"身份證: {string_utils.xstr(row['ID'])}")
         phone = string_utils.xstr(row["Cellphone"]) or string_utils.xstr(
             row["Telephone"]
