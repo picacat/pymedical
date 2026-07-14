@@ -2279,43 +2279,67 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         if check_type == "input" and self.check_total_dosage_event == "存檔時檢查":
             return True
 
+        # 第一輪: 收集每列的 medicine_key, 藥名與劑量
+        check_list = []  # [(medicine_key, medicine_name, dosage), ...]
         for row_no in range(self.ui.tableWidget_prescript.rowCount()):
-            medicine_key = self.ui.tableWidget_prescript.item(
+            medicine_key_item = self.ui.tableWidget_prescript.item(
                 row_no, prescript_utils.INS_PRESCRIPT_COL_NO["MedicineKey"]
             )
-            if medicine_key is None:
+            if medicine_key_item is None:
                 continue
 
-            medicine_key = medicine_key.text()
+            medicine_key = medicine_key_item.text()
             if medicine_key == "":
                 continue
 
-            medicine_name = self.ui.tableWidget_prescript.item(
+            medicine_name_item = self.ui.tableWidget_prescript.item(
                 row_no, prescript_utils.INS_PRESCRIPT_COL_NO["MedicineName"]
             )
-            if medicine_name is None:
+            if medicine_name_item is None:
                 continue
 
-            dosage = self.ui.tableWidget_prescript.item(
+            dosage_item = self.ui.tableWidget_prescript.item(
                 row_no, prescript_utils.INS_PRESCRIPT_COL_NO["Dosage"]
             )
-            if dosage is None:
+            if dosage_item is None:
                 continue
 
-            sql = "SELECT MinDosage, MaxDosage FROM medicine WHERE MedicineKey = %s"
-            rows = self.database.select_record(sql, (medicine_key,))
+            check_list.append(
+                (
+                    medicine_key,
+                    medicine_name_item.text(),
+                    number_utils.get_float(dosage_item.text()),
+                )
+            )
 
-            if len(rows) <= 0:
+        if len(check_list) <= 0:
+            return True
+
+        # 一次查回所有藥品的劑量上下限, 建成 dict
+        medicine_keys = list({medicine_key for medicine_key, _, _ in check_list})
+        sql = f"""
+            SELECT MedicineKey, MinDosage, MaxDosage FROM medicine
+            WHERE
+                MedicineKey IN ({db_utils.in_placeholders(medicine_keys)})
+        """
+        rows = self.database.select_record(sql, tuple(medicine_keys))
+        dosage_limit_dict = {
+            string_utils.xstr(row["MedicineKey"]): (
+                number_utils.get_float(row["MinDosage"]),
+                number_utils.get_float(row["MaxDosage"]),
+            )
+            for row in rows
+        }
+
+        # 第二輪: 依序檢查, 遇到第一筆超標即警告並中止
+        for medicine_key, medicine_name, dosage in check_list:
+            limits = dosage_limit_dict.get(medicine_key)
+            if limits is None:  # 查無此藥, 比照原邏輯跳過
                 continue
 
-            min_dosage = number_utils.get_float(rows[0]["MinDosage"])
-            max_dosage = number_utils.get_float(rows[0]["MaxDosage"])
-
-            if min_dosage == 0 and max_dosage == 0:
+            min_dosage, max_dosage = limits
+            if min_dosage == 0 and max_dosage == 0:  # 未設定上下限, 不檢查
                 continue
-
-            medicine_name = medicine_name.text()
-            dosage = number_utils.get_float(dosage.text())
 
             error_message = None
             if min_dosage > 0 and dosage < min_dosage:
@@ -4593,6 +4617,9 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
 
     def _calculate_total_costs(self):
         total_costs = 0.0
+
+        # 第一輪: 收集每列的 medicine_key 與 dosage
+        dosage_list = []  # [(medicine_key, dosage), ...]
         for row_no in range(self.ui.tableWidget_prescript.rowCount()):
             dosage_item = self.ui.tableWidget_prescript.item(
                 row_no, prescript_utils.INS_PRESCRIPT_COL_NO["Dosage"]
@@ -4610,18 +4637,30 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             if medicine_key == "":
                 continue
 
-            sql = "SELECT InPrice FROM medicine WHERE MedicineKey = %s"
-            rows = self.database.select_record(sql, (medicine_key,))
+            dosage = number_utils.get_float(dosage_item.text())
+            dosage_list.append((medicine_key, dosage))
 
-            if len(rows) <= 0:
-                continue
+        if len(dosage_list) <= 0:
+            return total_costs
 
-            cost = number_utils.get_float(rows[0]["InPrice"])
-            try:
-                dosage = number_utils.get_float(dosage_item.text())
-            except ValueError:
-                dosage = 0
+        # 一次查回所有藥品的進價, 建成 dict
+        medicine_keys = list({medicine_key for medicine_key, _ in dosage_list})  # 去重
+        sql = f"""
+            SELECT MedicineKey, InPrice FROM medicine
+            WHERE
+                MedicineKey IN ({db_utils.in_placeholders(medicine_keys)})
+        """
+        rows = self.database.select_record(sql, tuple(medicine_keys))
+        in_price_dict = {
+            string_utils.xstr(row["MedicineKey"]): number_utils.get_float(
+                row["InPrice"]
+            )
+            for row in rows
+        }
 
+        # 第二輪: 計算總成本
+        for medicine_key, dosage in dosage_list:
+            cost = in_price_dict.get(medicine_key, 0)
             total_costs += dosage * cost
 
         return total_costs
