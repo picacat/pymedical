@@ -7,6 +7,7 @@ from libs import (
     case_utils,
     charge_utils,
     class_utils,
+    db_utils,
     dialog_utils,
     nhi_utils,
     number_utils,
@@ -184,13 +185,13 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
         self.ui.label_discount.setText(f"{discount_type[:4]}優待")
         if self.case_key is not None:
-            sql = f"""
+            sql = """
                 SELECT DiscountRate FROM dosage
                 WHERE
-                    CaseKey = {self.case_key} AND
-                    MedicineSet = {self.medicine_set}
+                    CaseKey = %s AND
+                    MedicineSet = %s
             """
-            row = self.database.select_record(sql)
+            row = self.database.select_record(sql, (self.case_key, self.medicine_set))
             if len(row) > 0:  # 已經設定過了
                 return
 
@@ -688,16 +689,17 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
             return
 
         keyword = item.text()
-        keyword = string_utils.replace_ascii_char(["\\", '"', "'"], keyword)
-        sql = f'''
+        # keyword = string_utils.replace_ascii_char(["\\", '"', "'"], keyword)
+        sql = """
             SELECT * FROM medicine
             WHERE
-                (MedicineName LIKE "%{keyword}%" OR
-                 InputCode LIKE "{keyword}%" OR
-                 MedicineCode = "{keyword}" OR
-                 InsCode = "{keyword}")
-        '''
-        rows = self.database.select_record(sql)
+                (MedicineName LIKE %s OR
+                 InputCode LIKE %s OR
+                 MedicineCode = %s OR
+                 InsCode = %s)
+        """
+        params = (f"%{keyword}%", f"{keyword}%", keyword, keyword)
+        rows = self.database.select_record(sql, params)
 
         if len(rows) <= 0:
             item.setText(previous_medicine_name)
@@ -1234,13 +1236,13 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         self.ui.comboBox_valuation.blockSignals(False)
 
     def _read_dosage(self):
-        sql = f"""
+        sql = """
             SELECT * FROM dosage
             WHERE
-                CaseKey = {self.case_key} AND
-                MedicineSet = {self.medicine_set}
+                CaseKey = %s AND
+                MedicineSet = %s
         """
-        row = self.database.select_record(sql)
+        row = self.database.select_record(sql, (self.case_key, self.medicine_set))
         if len(row) <= 0:
             return
 
@@ -1278,15 +1280,17 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
             self._print_receipt_clicked(True, prompt_warning=False)
 
     def _read_medicine(self):
-        sql = f"""
+        sql = """
             SELECT prescript.*, medicine.InPrice FROM prescript
                 LEFT JOIN medicine ON prescript.MedicineKey = medicine.MedicineKey
             WHERE
-                CaseKey = {self.case_key} AND
-                prescript.MedicineSet = {self.medicine_set}
+                CaseKey = %s AND
+                prescript.MedicineSet = %s
             ORDER BY PrescriptNo, PrescriptKey
         """
-        self.table_widget_prescript.set_db_data(sql, self._set_medicine_data)
+        self.table_widget_prescript.set_db_data(
+            sql, self._set_medicine_data, params=(self.case_key, self.medicine_set)
+        )
 
     def _set_medicine_data(self, row_no, row):
         medicine_key = row["MedicineKey"]
@@ -1562,14 +1566,16 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         if medicine_set >= 3:  # 有第三帖藥, 檢查前面的藥帖是否空白
             for i in range(medicine_set, 1, -1):
                 medicine_set = i
-                sql = f"""
+                sql = """
                     SELECT MedicineSet FROM prescript
                     WHERE
-                        CaseKey = {self.case_key} AND
-                        MedicineSet = {medicine_set - 1}
+                        CaseKey = %s AND
+                        MedicineSet = %s
                     LIMIT 1
                 """
-                rows = self.database.select_record(sql)
+                rows = self.database.select_record(
+                    sql, (self.case_key, medicine_set - 1)
+                )
                 if len(rows) > 0:
                     break
 
@@ -1590,13 +1596,13 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         return True
 
     def _save_dosage(self, medicine_set):
-        sql = f"""
+        sql = """
             DELETE FROM dosage
             WHERE
-                CaseKey = {self.case_key} AND
-                MedicineSet = {medicine_set}
+                CaseKey = %s AND
+                MedicineSet = %s
         """
-        self.database.exec_sql(sql)
+        self.database.exec_sql(sql, (self.case_key, medicine_set))
 
         fields = [
             "CaseKey",
@@ -1688,21 +1694,19 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 items[prescript_utils.SELF_PRESCRIPT_COL_NO["PrescriptKey"]]
             )
 
-        sql = f"""
+        sql = """
             SELECT * FROM prescript
             WHERE
-                CaseKey = {self.case_key} AND
-                MedicineSet = {self.medicine_set}
+                CaseKey = %s AND
+                MedicineSet = %s
         """
-        rows = self.database.select_record(sql)
+        rows = self.database.select_record(sql, (self.case_key, self.medicine_set))
         for row in rows:
             prescript_key = row["PrescriptKey"]
             if str(prescript_key) not in prescript_key_list:
-                self.database.exec_sql(f"""
-                    DELETE FROM prescript
-                    WHERE
-                        PrescriptKey = {prescript_key}
-                """)
+                self.database.exec_sql(
+                    "DELETE FROM prescript WHERE PrescriptKey = %s", (prescript_key,)
+                )
 
     # 插入處方資料至資料庫內
     def insert_prescript(self, items, medicine_set=None):
@@ -1869,19 +1873,22 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
         medicine_type_script = ""
         if medicine_set == 1:
-            medicine_type_script = ' AND prescript.MedicineType IN ("單方", "複方") '  # 拷貝健保至自費, 只讀取健保藥
+            medicine_type_script = ' AND prescript.MedicineType IN ("單方", "複方") '
 
         self.ui.tableWidget_prescript.blockSignals(True)
         sql = f"""
             SELECT prescript.*, medicine.InPrice, medicine.SalePrice FROM prescript
                 LEFT JOIN medicine ON prescript.MedicineKey = medicine.MedicineKey
             WHERE
-                CaseKey = {case_key} AND
-                prescript.MedicineSet = {medicine_set}
+                CaseKey = %s AND
+                prescript.MedicineSet = %s
                 {medicine_type_script}
             ORDER BY PrescriptNo, PrescriptKey
         """
-        self.table_widget_prescript.set_db_data(sql, self._set_past_prescript_data)
+        self.table_widget_prescript.set_db_data(
+            sql, self._set_past_prescript_data, params=(case_key, medicine_set)
+        )
+
         self.ui.tableWidget_prescript.blockSignals(False)
         self.parent.calculate_self_fees()
 
@@ -2289,7 +2296,6 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
     # 拷貝過去病歷的處方
     def copy_host_prescript(self, database, case_key, medicine_set=None):
         try:
-            # self.ui.tableWidget_prescript.itemChanged.disconnect()
             self.ui.tableWidget_prescript.blockSignals(True)
         except Exception:
             pass
@@ -2312,12 +2318,13 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         sql = f"""
             SELECT * FROM prescript
             WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = {medicine_set}
+                CaseKey = %s AND
+                MedicineSet = %s
                 {medicine_type_script}
             ORDER BY PrescriptKey
         """
-        rows = database.select_record(sql)
+        rows = database.select_record(sql, (case_key, medicine_set))
+
         for row_no, row in enumerate(rows):
             if row["MedicineName"] is None:
                 continue
@@ -2531,6 +2538,9 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
     def _calculate_total_costs(self):
         total_costs = 0.00
+
+        # 第一輪: 收集 medicine_key 與 dosage
+        dosage_list = []
         for row_no in range(self.ui.tableWidget_prescript.rowCount()):
             dosage_item = self.ui.tableWidget_prescript.item(
                 row_no, prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]
@@ -2548,18 +2558,31 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
             if medicine_key == "":
                 continue
 
-            sql = f"""
-                SELECT InPrice FROM medicine
-                WHERE
-                    MedicineKey = {medicine_key}
-            """
-            rows = self.database.select_record(sql)
-            if len(rows) <= 0:
-                continue
+            dosage_list.append(
+                (medicine_key, number_utils.get_float(dosage_item.text()))
+            )
 
-            cost = number_utils.get_float(rows[0]["InPrice"])
-            dosage = number_utils.get_float(dosage_item.text())
-            total_costs += dosage * cost
+        if len(dosage_list) <= 0:
+            self.ui.label_total_costs.setText(f"({total_costs:.1f})")
+            return
+
+        # 一次查回所有進價
+        medicine_keys = list({medicine_key for medicine_key, _ in dosage_list})
+        sql = f"""
+            SELECT MedicineKey, InPrice FROM medicine
+            WHERE
+                MedicineKey IN ({db_utils.in_placeholders(medicine_keys)})
+        """
+        rows = self.database.select_record(sql, tuple(medicine_keys))
+        in_price_dict = {
+            string_utils.xstr(row["MedicineKey"]): number_utils.get_float(
+                row["InPrice"]
+            )
+            for row in rows
+        }
+
+        for medicine_key, dosage in dosage_list:
+            total_costs += dosage * in_price_dict.get(medicine_key, 0)
 
         self.ui.label_total_costs.setText(f"({total_costs:.1f})")
 
@@ -3399,12 +3422,9 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         if medicine_key is None or medicine_key.text() == "":
             return
 
-        sql = f"""
-            SELECT SalePrice FROM medicine
-            WHERE
-                MedicineKey = {medicine_key.text()}
-        """
-        rows = self.database.select_record(sql)
+        sql = "SELECT SalePrice FROM medicine WHERE MedicineKey = %s"
+        rows = self.database.select_record(sql, (medicine_key.text(),))
+
         if len(rows) <= 0:
             return
 
@@ -3477,12 +3497,9 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
     # 拷貝過去病歷的處方
     def copy_past_treat(self, case_key):
-        sql = f"""
-            SELECT Treatment FROM cases
-            WHERE
-                CaseKey = {case_key}
-        """
-        row = self.database.select_record(sql)[0]
+        sql = "SELECT Treatment FROM cases WHERE CaseKey = %s"
+        row = self.database.select_record(sql, (case_key,))[0]
+
         treatment = string_utils.xstr(row["Treatment"])
         row = dict()
         row["MedicineKey"] = None
@@ -3495,15 +3512,15 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         row["MedicineName"] = treatment
         row["Unit"] = "次"
 
-        sql = f"""
+        sql = """
             SELECT * FROM prescript
             WHERE
-                CaseKey = {case_key} AND
+                CaseKey = %s AND
                 MedicineType IN ("穴道", "處置") AND
                 MedicineSet = 1
             ORDER BY PrescriptKey
         """
-        rows = self.database.select_record(sql)
+        rows = self.database.select_record(sql, (case_key,))
         rows.insert(0, row)
 
         for row in rows:
