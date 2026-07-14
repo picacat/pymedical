@@ -962,10 +962,15 @@ class IncomeList(QtWidgets.QMainWindow):
                     self.ui.tableWidget_income.removeRow(row_no)
 
     def _read_return_goods(self):
+        period_condition = ""
+        if self.period != "全部":
+            period_condition = f'AND Period = "{self.period}"'
+
         sql = f'''
             SELECT * FROM returngoods
             WHERE
                 DATE(ReturnGoodsDate) = "{self.start_date[:10]}"
+                {period_condition}
             ORDER BY ReturnGoodsKey
         '''
         rows = self.database.select_record(sql)
