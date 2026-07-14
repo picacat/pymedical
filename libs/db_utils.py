@@ -670,3 +670,8 @@ def with_transaction(func):
             raise e
 
     return wrapper
+
+
+def in_placeholders(values):
+    """產生 IN 子句的佔位符字串, 如 3 個值回傳 '%s, %s, %s'"""
+    return ", ".join(["%s"] * len(values))

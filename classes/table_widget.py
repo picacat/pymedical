@@ -1,7 +1,8 @@
-from libs import string_utils, system_utils
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox
+
+from libs import string_utils, system_utils
 
 
 # tableWidget 設定 2018.03.29
@@ -44,9 +45,11 @@ class TableWidget:
         record_count = self.table_widget.rowCount()
         record_index = self.table_widget.currentRow()
         if record_count > 0:
-            self.parent.set_record_index(f'記錄: 第{record_index+1}筆, 共{record_count}筆')
+            self.parent.set_record_index(
+                f"記錄: 第{record_index + 1}筆, 共{record_count}筆"
+            )
         else:
-            self.parent.set_record_index('')
+            self.parent.set_record_index("")
 
     def _table_widget_header_clicked(self, col_no):
         self.table_widget.sortItems(col_no, self.sort)
@@ -75,30 +78,35 @@ class TableWidget:
 
     # 設定資料庫資料
     def set_db_data(
-            self, sql=None, process_data=None, rows=None, start_index=0, set_focus=True,
-            archive_database=None, resize_rows=True):
+        self,
+        sql=None,
+        process_data=None,
+        rows=None,
+        start_index=0,
+        set_focus=True,
+        archive_database=None,
+        resize_rows=True,
+        params=None,
+    ):
         self.process_data = process_data
-
         if rows is None:
             if archive_database is None:
-                rows = self.database.select_record(sql)
+                rows = self.database.select_record(sql, params)
             else:
-                rows = archive_database.select_record(sql)
-
+                rows = archive_database.select_record(sql, params)
         self.db_row_count = len(list(rows)) + start_index
         self.table_widget.setRowCount(self.db_row_count)
         for i, row in zip(range(start_index, self.db_row_count), rows):
             self.process_data(i, row)
-
         if not self.is_set_heading:
-            self.table_widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+            self.table_widget.setSizeAdjustPolicy(
+                QtWidgets.QAbstractScrollArea.AdjustToContents
+            )
             self.table_widget.resizeColumnsToContents()
-
         self.table_widget.setAlternatingRowColors(True)
         self.table_widget.selectRow(0)
         if set_focus:
             self.table_widget.setFocus(True)
-
         if resize_rows:
             self.table_widget.resizeRowsToContents()
 
@@ -127,15 +135,14 @@ class TableWidget:
                     row_no, col_no, QtWidgets.QTableWidgetItem(rows[index][field])
                 )
                 if align is not None:
-                    self.table_widget.item(
-                        row_no, col_no).setTextAlignment(
+                    self.table_widget.item(row_no, col_no).setTextAlignment(
                         align | QtCore.Qt.AlignVCenter
                     )
 
         self.table_widget.resizeRowsToContents()
         self.table_widget.setCurrentCell(0, 0)
         # database.medical_record_rows.setFocus(True)
-        
+
     # 設定資料庫資料
     def set_db_data_by_list(self, data_list, align=None):
         row_count = len(data_list)
@@ -157,8 +164,7 @@ class TableWidget:
                     row_no, col_no, QtWidgets.QTableWidgetItem(data_list[index])
                 )
                 if align is not None:
-                    self.table_widget.item(
-                        row_no, col_no).setTextAlignment(
+                    self.table_widget.item(row_no, col_no).setTextAlignment(
                         align | QtCore.Qt.AlignVCenter
                     )
 
@@ -191,7 +197,9 @@ class TableWidget:
 
         return widget
 
-    def set_cell_text_format(self, row_index, column_index, text_format, variable_type=None):
+    def set_cell_text_format(
+        self, row_index, column_index, text_format, variable_type=None
+    ):
         item = self.table_widget.item(row_index, column_index)
         if item is None:
             return
@@ -200,7 +208,7 @@ class TableWidget:
         self.table_widget.setCurrentCell(row_index, column_index)
 
         try:
-            if variable_type == 'float':
+            if variable_type == "float":
                 value = float(item.text())
             else:
                 value = int(item.text())
@@ -208,19 +216,18 @@ class TableWidget:
             self.set_item_text(row_index, column_index, None)
             return
 
-        field_text = f'{value:{text_format}}'
+        field_text = f"{value:{text_format}}"
         self.set_item_text(row_index, column_index, field_text)
 
     def set_item_text(self, row_no, col_no, item_text, align=QtCore.Qt.AlignRight):
-        self.table_widget.setItem(
-            row_no, col_no, QtWidgets.QTableWidgetItem(item_text)
+        self.table_widget.setItem(row_no, col_no, QtWidgets.QTableWidgetItem(item_text))
+        self.table_widget.item(row_no, col_no).setTextAlignment(
+            align | QtCore.Qt.AlignVCenter
         )
-        self.table_widget.item(row_no, col_no).setTextAlignment(align | QtCore.Qt.AlignVCenter)
 
     def set_row_color(self, row_index, color):
         for column in range(self.table_widget.columnCount()):
-            self.table_widget.item(
-                row_index, column).setForeground(color)
+            self.table_widget.item(row_index, column).setForeground(color)
 
     def set_current_cell(self, row_no, col_no):
         self.table_widget.setCurrentCell(row_no, col_no)
@@ -231,21 +238,21 @@ class TableWidget:
     def find_error(self, field_no):
         self.table_widget.setFocus(True)
         for row_no in range(
-                self.table_widget.currentRow()+1, self.table_widget.rowCount()):
+            self.table_widget.currentRow() + 1, self.table_widget.rowCount()
+        ):
             self.table_widget.setCurrentCell(row_no, field_no)
             error_message = string_utils.xstr(
                 self.table_widget.item(row_no, field_no).text()
             )
-            if error_message != '':
+            if error_message != "":
                 break
 
-        if (self.table_widget.currentRow() ==
-                self.table_widget.rowCount() - 1):
+        if self.table_widget.currentRow() == self.table_widget.rowCount() - 1:
             system_utils.show_message_box(
                 QMessageBox.Information,
-                '尋找錯誤',
+                "尋找錯誤",
                 '<font size="5" color="red"><b>所有的錯誤資料均已瀏覽完畢.</b></font>',
-                '請按確定鍵繼續.'
+                "請按確定鍵繼續.",
             )
             self.table_widget.setCurrentCell(0, field_no)
 
@@ -262,16 +269,13 @@ class TableWidget:
 
         for row_no, field in enumerate(in_dict):
             self.table_widget.setItem(
-                row_no, 0,
-                QtWidgets.QTableWidgetItem(string_utils.xstr(field))
+                row_no, 0, QtWidgets.QTableWidgetItem(string_utils.xstr(field))
             )
             self.table_widget.setItem(
-                row_no, 1,
-                QtWidgets.QTableWidgetItem(string_utils.xstr(in_dict[field]))
+                row_no, 1, QtWidgets.QTableWidgetItem(string_utils.xstr(in_dict[field]))
             )
 
-            self.table_widget.item(
-                row_no, 1).setTextAlignment(
+            self.table_widget.item(row_no, 1).setTextAlignment(
                 QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
             )
 
@@ -280,7 +284,7 @@ class TableDragDropSorter(QtCore.QObject):
     def __init__(self, tableWidget):
         super().__init__(tableWidget)
         self.tableWidget = tableWidget
-        
+
         # --- 設定必要的屬性 ---
         self.tableWidget.setDragEnabled(True)
         self.tableWidget.setAcceptDrops(True)
@@ -296,9 +300,9 @@ class TableDragDropSorter(QtCore.QObject):
         self.viewport.installEventFilter(self)
 
     def eventFilter(self, source, event):
-        if (source == self.tableWidget or
-            source == self.viewport) and \
-                event.type() == QtCore.QEvent.Drop:
+        if (
+            source == self.tableWidget or source == self.viewport
+        ) and event.type() == QtCore.QEvent.Drop:
             self.handle_drop_logic(self.tableWidget, event)
             return True
 
