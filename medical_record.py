@@ -2097,11 +2097,11 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if self.wait_key is None:
             return
 
-        value = "Y" if in_progress != "NULL" else None
+        # in_progress 為 "Y" 或 None, 直接寫入 (None 會存成 SQL NULL)
         sql = "UPDATE wait SET InProgress = %s WHERE WaitKey = %s"
-        self.database.exec_sql(sql, (value, self.wait_key))
+        self.database.exec_sql(sql, (in_progress, self.wait_key))
 
-        if in_progress != "NULL" and self.system_settings.field("alleypin") == "Y":
+        if in_progress is not None and self.system_settings.field("alleypin") == "Y":
             alleypin_utils.update_progresses(
                 self.database, self.system_settings, self.case_key
             )
