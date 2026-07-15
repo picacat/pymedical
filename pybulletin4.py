@@ -381,15 +381,28 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
         stream_url = self._get_stream_url(self.stream_index)
         self.media = self.vlc_instance.media_new(stream_url)
-        self.media.get_mrl()
-
         self.vlc_player.set_media(self.media)
 
         events = self.vlc_player.event_manager()
         events.event_attach(vlc.EventType.MediaPlayerEndReached, self._on_end_reached)
 
         self.vlc_player.play()
+        self._start_volume_timer()
+
+    def _start_volume_timer(self):
+        self.volume_retry = 0
+        self.volume_timer = QtCore.QTimer(self)
+        self.volume_timer.timeout.connect(self._apply_volume)
+        self.volume_timer.start(300)
+
+    def _apply_volume(self):
+        self.volume_retry += 1
         self.vlc_player.audio_set_volume(self.volume)
+
+        if self.vlc_player.audio_get_volume() == self.volume:
+            self.volume_timer.stop()  # 設定成功
+        elif self.volume_retry > 30:
+            self.volume_timer.stop()  # 約 9 秒後放棄,避免無限輪詢
 
     def _get_stream_url(self, index):
         url = self.stream_list[index]
