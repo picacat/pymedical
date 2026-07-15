@@ -80,6 +80,7 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
     def start_calculate(self):
         self.ui.tableWidget_doctor_sale.setRowCount(0)
         self._read_data()
+        self._insert_return_goods()
 
         self._calculate_total()
         self._list_sales_summary()
@@ -141,6 +142,87 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         self._insert_balance()
         self.progress_dialog.setValue(row_count)
         self.progress_dialog.deleteLater()
+
+    def _read_return_goods_rows(self):
+        period_condition = ""
+        if self.period != "全部":
+            period_condition = f' AND Period = "{self.period}"'
+
+        weekday_condition = ""
+        if len(self.weekday_list) > 0:
+            weekday_condition = (
+                f" AND WEEKDAY(ReturnGoodsDate) IN({','.join(self.weekday_list)})"
+            )
+
+        sql = f"""
+            SELECT ReturnGoodsDate, PatientKey, Name, ItemName, Quantity, Amount
+            FROM returngoods
+            WHERE ReturnGoodsDate BETWEEN %s AND %s
+            {period_condition}
+            {weekday_condition}
+            ORDER BY ReturnGoodsDate DESC, ReturnGoodsKey DESC
+        """
+        params = (self.start_date, self.end_date)
+
+        return self.database.select_record(sql, params)
+
+    def _insert_return_goods(self):
+        if self.doctor != "全部":  # 退貨無醫師欄位, 個別醫師統計不列退貨
+            return
+
+        rows = self._read_return_goods_rows()
+
+        # SQL 已按日期由晚到早排序, 先插後面的列不會影響前面的插入位置
+        for row in rows:
+            return_date = row["ReturnGoodsDate"].strftime("%Y-%m-%d")
+            row_no = self._get_return_goods_row_no(return_date)
+            self._insert_return_goods_row(row_no, return_date, row)
+
+    def _insert_return_goods_row(self, row_no, return_date, row):
+        self.ui.tableWidget_doctor_sale.insertRow(row_no)
+
+        item_name = string_utils.xstr(row["ItemName"])
+        amount = number_utils.get_integer(row["Amount"])
+
+        row_data = [
+            "",
+            return_date,
+            string_utils.xstr(row["PatientKey"]),
+            string_utils.xstr(row["Name"]),
+            f"{item_name}(退貨)",
+            "",
+            number_utils.get_float(row["Quantity"]),
+            "",
+            "",
+            -amount,
+            "",
+            "",
+            "",
+        ]
+        for col_no in range(len(row_data)):
+            item = QtWidgets.QTableWidgetItem()
+            item.setData(QtCore.Qt.EditRole, row_data[col_no])
+            self.ui.tableWidget_doctor_sale.setItem(row_no, col_no, item)
+
+            if col_no in [2, 6, 9]:
+                align = QtCore.Qt.AlignRight
+            else:
+                align = QtCore.Qt.AlignLeft
+
+            item.setTextAlignment(align | QtCore.Qt.AlignVCenter)
+            item.setForeground(QtGui.QColor("red"))
+
+    def _get_return_goods_row_no(self, return_date):
+        # 找到第一筆日期大於退貨日的列, 退貨列插在該日所有銷售之後
+        for row_no in range(self.ui.tableWidget_doctor_sale.rowCount()):
+            case_date_item = self.ui.tableWidget_doctor_sale.item(row_no, 1)
+            if case_date_item is None:
+                continue
+
+            if case_date_item.text() > return_date:
+                return row_no
+
+        return self.ui.tableWidget_doctor_sale.rowCount()
 
     def _set_table_data(self, row_no, row):
         self.progress_dialog.setValue(row_no)
@@ -449,7 +531,9 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
                 continue
 
             medicine_name = medicine_name.text()
-            if medicine_name in ["折扣", "總計", "差額"]:
+            if medicine_name in ["折扣", "總計", "差額"] or medicine_name.endswith(
+                "(退貨)"
+            ):
                 continue
 
             quantity = self.ui.tableWidget_doctor_sale.item(row_no, 6)

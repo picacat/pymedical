@@ -179,6 +179,13 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
         self._calculate_repayment()
         self._calculate_doctor_repayment()
 
+        if self.doctor == "全部":
+            self.return_goods_dict = (
+                self._read_return_goods_dict()
+            )  # 一次撈完, 兩張表共用
+            self._calculate_return_goods()
+            self._calculate_doctor_return_goods()  # 新增, 一定要在 doctor_subtotal 之前
+
         self._calculate_subtotal()
         self._calculate_doctor_subtotal()
 
@@ -236,13 +243,13 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
         if group_by_doctor:
             group_condition = " GROUP BY Doctor, TreatType"
 
-        sql = f'''
+        sql = f"""
             SELECT
                 CaseKey, Name, CaseDate, TreatType, Doctor,
                 RegistFee, SDiagShareFee, SDrugShareFee, DepositFee, TotalFee
             FROM cases
             WHERE
-                CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}"
+                CaseDate BETWEEN %s AND %s
                 {period_condition}
                 {weekday_condition}
                 {ins_type_condition}
@@ -250,8 +257,9 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
                 {doctor_condition}
             {group_condition}
             ORDER BY CaseDate
-        '''
-        rows = self.database.select_record(sql)
+        """
+        params = (self.start_date, self.end_date)
+        rows = self.database.select_record(sql, params)
 
         return rows
 
@@ -641,6 +649,74 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
                 row_no, subtotal_field_no, string_utils.xstr(subtotal)
             )
 
+    def _read_return_goods_dict(self):
+        period_condition = ""
+        if self.period != "全部":
+            period_condition = f' AND Period = "{self.period}"'
+
+        weekday_condition = ""
+        if len(self.weekday_list) > 0:
+            weekday_condition = (
+                f" AND WEEKDAY(ReturnGoodsDate) IN({','.join(self.weekday_list)})"
+            )
+
+        sql = f"""
+            SELECT DATE(ReturnGoodsDate) AS ReturnDate, SUM(AMOUNT) AS Fee
+            FROM returngoods
+            WHERE ReturnGoodsDate BETWEEN %s AND %s
+            {period_condition}
+            {weekday_condition}
+            GROUP BY DATE(ReturnGoodsDate)
+        """
+        params = (self.start_date, self.end_date)
+        rows = self.database.select_record(sql, params)
+
+        return_goods_dict = {}
+        for row in rows:
+            fee = number_utils.get_integer(row["Fee"])
+            if fee == 0:
+                continue
+
+            return_goods_dict[row["ReturnDate"].strftime("%Y-%m-%d")] = fee
+
+        return return_goods_dict
+
+    def _calculate_return_goods(self):
+        col_no = self.ui.tableWidget_doctor_income.columnCount() - 2
+
+        for row_no in range(self.ui.tableWidget_doctor_income.rowCount()):
+            case_date = self.ui.tableWidget_doctor_income.item(row_no, 0).text()
+            if case_date == "總計":
+                break
+
+            return_goods_fee = self.return_goods_dict.get(case_date, 0)
+            if return_goods_fee == 0:
+                continue
+
+            total_fee = number_utils.get_integer(
+                self.ui.tableWidget_doctor_income.item(row_no, col_no).text()
+            )
+            total_fee -= return_goods_fee
+            self._set_item_data(row_no, col_no, string_utils.xstr(total_fee))
+
+    def _calculate_doctor_return_goods(self):
+        # returngoods 無醫師欄位, 退貨獨立一列, 不歸在任何醫師身上
+        return_goods_fee = sum(self.return_goods_dict.values())
+        if return_goods_fee == 0:
+            return
+
+        row_no = self.ui.tableWidget_doctor.rowCount() - 1  # 插在總計列之前
+        self.ui.tableWidget_doctor.insertRow(row_no)
+
+        self.ui.tableWidget_doctor.setItem(
+            row_no, 0, QtWidgets.QTableWidgetItem("退貨")
+        )
+        for col_no in range(1, self.ui.tableWidget_doctor.columnCount()):
+            self._set_doctor_item_data(row_no, col_no, "0")
+
+        col_no = self.ui.tableWidget_doctor.columnCount() - 2
+        self._set_doctor_item_data(row_no, col_no, string_utils.xstr(-return_goods_fee))
+
     def _calculate_total(self):
         total_list = [0 for i in range(self.ui.tableWidget_doctor_income.columnCount())]
         for row_no in range(self.ui.tableWidget_doctor_income.rowCount()):
@@ -761,17 +837,19 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
 
     def _plot_doctor_income_chart(self):
         series = QtChart.QPieSeries()
+
         for row_no in range(self.ui.tableWidget_doctor.rowCount() - 1):
             doctor_item = self.ui.tableWidget_doctor.item(row_no, 0)
             if doctor_item is None:
-                doctor_name = "空白"
-                total_fee = 0
-            else:
-                doctor_name = doctor_item.text()
-                total_fee = number_utils.get_integer(
-                    self.ui.tableWidget_doctor.item(row_no, 9).text()
-                )
+                continue
 
+            doctor_name = doctor_item.text()
+            if doctor_name == "退貨":
+                continue
+
+            total_fee = number_utils.get_integer(
+                self.ui.tableWidget_doctor.item(row_no, 9).text()
+            )
             series.append(doctor_name, total_fee)
 
             try:
