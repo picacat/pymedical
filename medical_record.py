@@ -101,7 +101,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             self.is_closed = False
 
         if self.call_from == "醫師看診作業":
-            self._set_in_progress('"Y"')
+            self._set_in_progress("Y")
             self._prompt_hint()
 
         if self.case_key is None:
@@ -254,15 +254,14 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if self.medical_record["Injury"] == "主訴職災":
             return
 
-        sql = f"""
+        sql = """
             SELECT Injury FROM cases
             WHERE
-                CaseKey != {self.case_key} AND
-                PatientKey = {self.patient_key} AND
-                InsType = "健保"
+                CaseKey != %s AND PatientKey = %s AND InsType = "健保"
             ORDER BY CaseDate DESC LIMIT 1
         """
-        rows = self.database.select_record(sql)
+        rows = self.database.select_record(sql, (self.case_key, self.patient_key))
+
         if len(rows) <= 0:
             return
 
@@ -312,40 +311,44 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if treat_type not in ["慢性腎病照護"]:
             return
 
-        sql = f"""
+        sql = """
             SELECT PrescriptKey FROM prescript
                 LEFT JOIN cases ON cases.CaseKey = prescript.CaseKey
             WHERE
                 InsCode BETWEEN "P64001" AND "P64010" AND
-                cases.PatientKey = {self.patient_key}
+                cases.PatientKey = %s
         """
-        rows = self.database.select_record(sql)
+        params = (self.patient_key,)
+        rows = self.database.select_record(sql, params)
         if len(rows) < 2:  # 至少看過兩次ckd照護
             return
 
-        sql = f"""
+        sql = """
             SELECT PrescriptKey FROM prescript
                 LEFT JOIN cases ON cases.CaseKey = prescript.CaseKey
             WHERE
                 InsCode = "P64011" AND
-                cases.PatientKey = {self.patient_key}
+                cases.PatientKey = %s
         """
-        rows = self.database.select_record(sql)
+        params = (self.patient_key,)
+        rows = self.database.select_record(sql, params)
         if len(rows) <= 0:  # 沒做過P64011
             return
 
         case_date = self.medical_record["CaseDate"].date()
-        sql = f"""
+        sql = """
             SELECT cases.CaseDate FROM prescript
                 LEFT JOIN cases on cases.CaseKey = prescript.CaseKey
             WHERE
-                prescript.CaseKey != {self.case_key} AND
-                DATE(prescript.CaseDate) <= "{case_date.strftime("%Y-%m-%d")}" AND
-                cases.PatientKey = {self.patient_key} AND
+                prescript.CaseKey != %s AND
+                DATE(prescript.CaseDate) <= %s AND
+                cases.PatientKey = %s AND
                 InsCode = "P64012"
             ORDER BY cases.CaseDate DESC LIMIT 1
         """
-        rows = self.database.select_record(sql)
+        params = (self.case_key, case_date.strftime("%Y-%m-%d"), self.patient_key)
+        rows = self.database.select_record(sql, params)
+
         if len(rows) > 0:
             last_case_date = rows[0]["CaseDate"].date()
             delta = case_date - last_case_date
@@ -446,7 +449,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
         self._deleted = True
         if self.call_from in ["醫師看診作業", "離開不存檔"]:
-            self._set_in_progress("NULL")
+            self._set_in_progress(None)
 
         if self.system_settings.field("不要自動切換輸入法") == "Y":
             pass
@@ -1564,9 +1567,9 @@ class MedicalRecord(QtWidgets.QMainWindow):
             icd_code = re.sub(r"[\\\"\']", "", icd_code)
 
             try:
-                rows = self.database.select_record(f'''
-                    SELECT SpecialCode FROM icd10 WHERE ICDCode = "{icd_code}"
-                ''')
+                rows = self.database.select_record(
+                    "SELECT SpecialCode FROM icd10 WHERE ICDCode = %s", (icd_code,)
+                )
             except Exception as e:
                 print(f"[資料庫查詢錯誤] {e}")
                 continue
@@ -1596,9 +1599,9 @@ class MedicalRecord(QtWidgets.QMainWindow):
             icd_code = re.sub(r"[\\\"\']", "", icd_code)
 
             try:
-                rows = self.database.select_record(f'''
-                    SELECT ICD10Key FROM icd10 WHERE ICDCode = "{icd_code}"
-                ''')
+                rows = self.database.select_record(
+                    "SELECT ICD10Key FROM icd10 WHERE ICDCode = %s", (icd_code,)
+                )
             except Exception as e:
                 print(f"[資料庫查詢錯誤] {e}")
                 rows = []
@@ -1614,54 +1617,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
                 code_field.blockSignals(False)
                 name_field.blockSignals(False)
-
-    # # 檢查診斷碼是否為2023最新版
-    # def check_disease_valid(self):
-    #     disease_list = [
-    #         [
-    #             self.ui.lineEdit_disease_code1,
-    #             self.ui.lineEdit_disease_name1,
-    #         ],
-    #         [
-    #             self.ui.lineEdit_disease_code2,
-    #             self.ui.lineEdit_disease_name2,
-    #         ],
-    #         [
-    #             self.ui.lineEdit_disease_code3,
-    #             self.ui.lineEdit_disease_name3,
-    #         ],
-    #         [
-    #             self.ui.lineEdit_disease_code4,
-    #             self.ui.lineEdit_disease_name4,
-    #         ],
-    #     ]
-
-    #     for i in range(len(disease_list)):
-    #         icd_code = disease_list[i][0].text()
-    #         if icd_code == '':
-    #             continue
-
-    #         icd_code = icd_code.replace('\\', '')
-    #         icd_code = icd_code.replace('"', '')
-    #         icd_code = icd_code.replace('\'', '')
-    #         sql = f'''
-    #             SELECT ICD10Key FROM icd10
-    #             WHERE
-    #                 ICDCode = "{icd_code}"
-    #         '''
-    #         rows = self.database.select_record(sql)
-    #         if len(rows) <= 0:
-    #             disease_list[i][0].blockSignals(True)
-    #             disease_list[i][1].blockSignals(True)
-
-    #             disease_list[i][0].setText(None)
-    #             disease_list[i][0].setToolTip(None)
-
-    #             disease_list[i][1].setText(None)
-    #             disease_list[i][1].setToolTip(None)
-
-    #             disease_list[i][0].blockSignals(False)
-    #             disease_list[i][1].blockSignals(False)
 
     # 檢查診斷碼是否可以執行複雜性處置
     def check_complicated_treat_disease(self, disease_code):
@@ -1726,13 +1681,16 @@ class MedicalRecord(QtWidgets.QMainWindow):
                 treat_type = "高度複雜性傷科"
 
         try:
-            rows = self.database.select_record(f'''
+            rows = self.database.select_record(
+                """
                 SELECT SpecialCode FROM icd10
                 WHERE
-                    ICDCode = "{disease_code}" AND
+                    ICDCode = %s AND
                     SpecialCode IS NOT NULL AND
                     LENGTH(SpecialCode) > 0
-            ''')
+                """,
+                (disease_code,),
+            )
             if len(rows) > 0:
                 hint_list.append(
                     '<font size="5" color="red"><b>此診斷碼為慢性病</b></font>'
@@ -1800,7 +1758,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
         # 組合 SQL 查詢
         if icd_code.isdigit():
-            sql = f'''
+            sql = """
                 SELECT
                     icd10.ICD10Key,
                     icd10.ICDCode,
@@ -1810,40 +1768,39 @@ class MedicalRecord(QtWidgets.QMainWindow):
                 FROM icdmap
                     LEFT JOIN icd10 ON icdmap.ICD10Code = icd10.ICDCode
                 WHERE
-                    ICD9Code LIKE "{icd_code}%"
+                    ICD9Code LIKE %s
                 ORDER BY icd10.ICDCode LIMIT 2
-            '''
+            """
+            params = (f"{icd_code}%",)
         else:
             keyword_list = icd_code.split()
+            params = [f"{icd_code}%", f"{icd_code}%"]
 
             chinese_name_script = " AND ".join(
-                [f'ChineseName LIKE "%{k}%"' for k in keyword_list]
+                ["ChineseName LIKE %s" for _ in keyword_list]
             )
+            english_keyword_list = [k for k in keyword_list if len(icd_code) >= 5]
             english_name_script = " AND ".join(
-                [
-                    f'UPPER(EnglishName) LIKE "%{k.upper()}%"'
-                    for k in keyword_list
-                    if len(icd_code) >= 5
-                ]
+                ["UPPER(EnglishName) LIKE %s" for _ in english_keyword_list]
             )
 
-            conditions = [
-                f'(ICDCode LIKE "{icd_code}%" OR InputCode LIKE "{icd_code}%")',
-            ]
+            conditions = ["(ICDCode LIKE %s OR InputCode LIKE %s)"]
             if chinese_name_script:
                 conditions.append(f"({chinese_name_script})")
+                params += [f"%{k}%" for k in keyword_list]
             if english_name_script:
                 conditions.append(f"({english_name_script})")
+                params += [f"%{k.upper()}%" for k in english_keyword_list]
 
             sql = f"""
                 SELECT * FROM icd10
                 WHERE {" OR ".join(conditions)}
                 LIMIT 2
             """
+            params = tuple(params)
 
-        # 執行查詢（加上例外防護）
         try:
-            rows = self.database.select_record(sql)
+            rows = self.database.select_record(sql, params)
         except Exception as e:
             print(f"[ICD 查詢錯誤] {e}")
             system_utils.show_message_box(
@@ -2140,14 +2097,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if self.wait_key is None:
             return
 
-        sql = f"""
-            UPDATE wait
-            SET
-                InProgress = {in_progress}
-            WHERE
-                WaitKey = {self.wait_key}
-        """
-        self.database.exec_sql(sql)
+        value = "Y" if in_progress != "NULL" else None
+        sql = "UPDATE wait SET InProgress = %s WHERE WaitKey = %s"
+        self.database.exec_sql(sql, (value, self.wait_key))
+
         if in_progress != "NULL" and self.system_settings.field("alleypin") == "Y":
             alleypin_utils.update_progresses(
                 self.database, self.system_settings, self.case_key
@@ -2987,13 +2940,9 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self.database.insert_record("wait", fields, data)
 
     def _get_disease_name(self, icd_code):
-        sql = f'''
-            SELECT ChineseName FROM icd10
-            WHERE
-                ICDCode = "{icd_code}"
-            LIMIT 1
-        '''
-        rows = self.database.select_record(sql)
+        sql = "SELECT ChineseName FROM icd10 WHERE ICDCode = %s LIMIT 1"
+        rows = self.database.select_record(sql, (icd_code,))
+
         if len(rows) <= 0:
             return None
         else:
@@ -3027,7 +2976,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if disease_code4 != "" and disease_name4 == "":
             disease_name4 = self._get_disease_name(disease_code4)
             if disease_name4 not in [None, ""]:
-                self.ui.lineEdit_disease_name3.setText(disease_name4)
+                self.ui.lineEdit_disease_name4.setText(disease_name4)
 
     # 病歷存檔
     def save_medical_record(self, print_form=False, force_save=False):
@@ -3643,13 +3592,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
         else:
             treat_type = "自費"
 
-        self.database.exec_sql(f'''
-            UPDATE cases
-            SET
-                TreatType = "{treat_type}"
-            WHERE
-                CaseKey = {self.case_key}
-        ''')
+        self.database.exec_sql(
+            "UPDATE cases SET TreatType = %s WHERE CaseKey = %s",
+            (treat_type, self.case_key),
+        )
 
     # 設定主治醫師姓名
     def _set_doctor(self):
@@ -3776,51 +3722,42 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if number_utils.get_integer(self.medical_record["DrugNo"]) > 0:  # 已經存在
             return
 
-        sql = f"""
-            SELECT * FROM dosage
-            WHERE
-                CaseKey = {self.case_key} AND
-                Days > 0
-        """
-        rows = self.database.select_record(sql)
+        sql = " SELECT * FROM dosage WHERE CaseKey = %s AND Days > 0"
+        params = (self.case_key,)
+        rows = self.database.select_record(sql, params)
         if len(rows) <= 0:
-            sql = f"""
+            sql = """
                 SELECT PrescriptKey FROM prescript
                 WHERE
-                    CaseKey = {self.case_key} AND
+                    CaseKey = %s AND
                     MedicineType NOT IN ("穴道", "處置")
             """
-            rows = self.database.select_record(sql)
+            params = (self.case_key,)
+            rows = self.database.select_record(sql, params)
             if len(rows) <= 0:  # 檢查是否有開藥
                 return
 
         drug_no = case_utils.get_drug_no(
             self.database, self.system_settings, self.medical_record["CaseDate"]
         )
-        sql = f"""
+        sql = """
             UPDATE cases
             SET
-                DrugNo = {drug_no}
+                DrugNo = %s
             WHERE
-                CaseKey = {self.case_key}
+                CaseKey = %s
         """
-        self.database.exec_sql(sql)
+        params = (drug_no, self.case_key)
+        self.database.exec_sql(sql, params)
 
     def update_patient_record(self):
         if not self.ui.textEdit_patient_remark.document().isModified():
             return
 
         remark = self.ui.textEdit_patient_remark.toPlainText()
-        remark = remark.replace('"', "'")
 
-        sql = f'''
-            UPDATE patient
-            SET
-                Remark = "{remark}"
-            WHERE
-                PatientKey = {self.patient_key}
-        '''
-        self.database.exec_sql(sql)
+        sql = "UPDATE patient SET Remark = %s WHERE PatientKey = %s"
+        self.database.exec_sql(sql, (remark, self.patient_key))
 
     def _set_ins_upload_status(self):
         sql = f"""
@@ -3857,13 +3794,12 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if case_key is None:
             case_key = self.case_key
 
-        self.database.exec_sql(f'''
-            UPDATE cases
-            SET
-                DoctorDone = "{doctor_done}", DoctorDate = "{date_utils.now_to_str()}"
-            WHERE
-                CaseKey = {case_key}
-        ''')
+        self.database.exec_sql(
+            """
+            UPDATE cases SET DoctorDone = %s, DoctorDate = %s WHERE CaseKey = %s
+        """,
+            (doctor_done, date_utils.now_to_str(), case_key),
+        )
 
     def _set_charge_done(self, case_key=None, charge_done="True"):
         if self.system_settings.field("自動完成批價作業") != "Y":
@@ -3890,40 +3826,40 @@ class MedicalRecord(QtWidgets.QMainWindow):
         charge_date = date_utils.now_to_str()
         charge_period = registration_utils.get_current_period(self.system_settings)
         cashier = self.system_settings.field("使用者")
-        sql = f'''
+        sql = f"""
             UPDATE cases
             SET
-                ChargeDone = "{charge_done}",
-                ChargeDate = "{charge_date}",
-                ChargePeriod = "{charge_period}",
-                Cashier = "{cashier}"
+                ChargeDone = %s, ChargeDate = %s, ChargePeriod = %s, Cashier = %s
             WHERE
                 CaseKey = {case_key}
-        '''
-        self.database.exec_sql(sql)
+        """
+        params = (charge_done, charge_date, charge_period, cashier, case_key)
+        self.database.exec_sql(sql, params)
 
     def _set_wait_done(self, case_key=None, wait_done="True"):
         if case_key is None:
             case_key = self.case_key
 
         if self.system_settings.field("自動完成批價作業") == "Y":
-            sql = f'''
+            sql = """
                 UPDATE wait
                 SET
-                    DoctorDone = "{wait_done}", ChargeDone = "{wait_done}"
+                    DoctorDone = %s, ChargeDone = %s
                 WHERE
-                    CaseKey = {case_key}
-            '''
+                    CaseKey = %s
+            """
+            params = (wait_done, wait_done, case_key)
         else:
-            sql = f'''
+            sql = """
                 UPDATE wait
                 SET
-                    DoctorDone = "{wait_done}"
+                    DoctorDone = %s
                 WHERE
-                    CaseKey = {case_key}
-            '''
+                    CaseKey = %s
+            """
+            params = (wait_done, case_key)
 
-        self.database.exec_sql(sql)
+        self.database.exec_sql(sql, params)
 
     # 診斷資料存檔
     def update_diagnosis_data(self, case_key=None):
@@ -4021,20 +3957,14 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if self.case_key is None:
             return
 
-        sql = f"""
-            DELETE FROM prescript
-            WHERE
-                CaseKey = {self.case_key} AND
-                MedicineSet = {medicine_set}
-        """
-        self.database.exec_sql(sql)
-        sql = f"""
-            DELETE FROM dosage
-            WHERE
-                CaseKey = {self.case_key} AND
-                MedicineSet = {medicine_set}
-        """
-        self.database.exec_sql(sql)
+        self.database.exec_sql(
+            "DELETE FROM prescript WHERE CaseKey = %s AND MedicineSet = %s",
+            (self.case_key, medicine_set),
+        )
+        self.database.exec_sql(
+            "DELETE FROM dosage WHERE CaseKey = %s AND MedicineSet = %s",
+            (self.case_key, medicine_set),
+        )
 
     # 健保重新批價
     def calculate_ins_fees(self):
@@ -4168,15 +4098,17 @@ class MedicalRecord(QtWidgets.QMainWindow):
         elif self.system_settings.field("詞庫排序") == "最後點擊時戳":
             order_type = "ORDER BY TimeStamp DESC"
 
-        sql = f'''
+        sql = f"""
             SELECT ClinicKey, ClinicName FROM clinic
             WHERE
-                ClinicType = "{diagnostic_type}" AND
-                InputCode LIKE "{clean_input_code}%"
+                ClinicType = %s AND
+                InputCode LIKE %s
             GROUP BY ClinicName
             {order_type}
-        '''
-        rows = self.database.select_record(sql)
+        """
+        rows = self.database.select_record(
+            sql, (diagnostic_type, f"{clean_input_code}%")
+        )
         row_count = len(rows)
 
         if row_count <= 0:
@@ -4344,9 +4276,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self.ui.textEdit_pulse.setText(None)
         self.ui.textEdit_remark.setText(None)
 
+        self.ui.lineEdit_disease_code4.setText(None)
+        self.ui.lineEdit_disease_code3.setText(None)
+        self.ui.lineEdit_disease_code2.setText(None)
         self.ui.lineEdit_disease_code1.setText(None)
-        self.ui.lineEdit_disease_code2.setText(None)
-        self.ui.lineEdit_disease_code2.setText(None)
         self.ui.lineEdit_distinguish.setText(None)
         self.ui.lineEdit_cure.setText(None)
 
@@ -4723,13 +4656,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
         except Exception:
             return
 
-        sql = f'''
-            SELECT WaitKey FROM wait
-            WHERE
-                Doctor = "{doctor}" AND
-                DoctorDone = "False"
-        '''
-        rows = self.database.select_record(sql)
+        rows = self.database.select_record(
+            'SELECT WaitKey FROM wait WHERE Doctor = %s AND DoctorDone = "False"',
+            (doctor,),
+        )
         if len(rows) >= 2:
             waiting_count = f", 目前尚有候診等待病患: {len(rows) - 1}人"
         else:
