@@ -352,7 +352,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if len(rows) > 0:
             last_case_date = rows[0]["CaseDate"].date()
             delta = case_date - last_case_date
-            print(last_case_date.strftime("%Y-%m-%d"), delta.days)
             if delta.days <= 180:  # 六個月內有申報過，本次不能申報
                 return
 
