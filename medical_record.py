@@ -3826,12 +3826,12 @@ class MedicalRecord(QtWidgets.QMainWindow):
         charge_date = date_utils.now_to_str()
         charge_period = registration_utils.get_current_period(self.system_settings)
         cashier = self.system_settings.field("使用者")
-        sql = f"""
+        sql = """
             UPDATE cases
             SET
                 ChargeDone = %s, ChargeDate = %s, ChargePeriod = %s, Cashier = %s
             WHERE
-                CaseKey = {case_key}
+                CaseKey = %s
         """
         params = (charge_done, charge_date, charge_period, cashier, case_key)
         self.database.exec_sql(sql, params)
