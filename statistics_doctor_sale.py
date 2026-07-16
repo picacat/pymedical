@@ -1,8 +1,11 @@
 # -*- coding: UTF-8 -*-
 
+import logging
+
 from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
+import mysql
 from libs import (
     case_utils,
     charge_utils,
@@ -164,13 +167,19 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         """
         params = (self.start_date, self.end_date)
 
-        return self.database.select_record(sql, params)
+        try:
+            return self.database.select_record(sql, params)
+        except mysql.connector.Error as e:
+            logging.error(f"讀取退貨資料失敗: {e.errno} {e.msg}")
+            return None
 
     def _insert_return_goods(self):
         if self.doctor != "全部":  # 退貨無醫師欄位, 個別醫師統計不列退貨
             return
 
         rows = self._read_return_goods_rows()
+        if rows is None:
+            return
 
         # SQL 已按日期由晚到早排序, 先插後面的列不會影響前面的插入位置
         for row in rows:

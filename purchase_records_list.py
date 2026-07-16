@@ -147,7 +147,7 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         self._set_agent_prescript_table(agent_rows)
 
     def _get_advance_sql(self):
-        sql = ""
+        conditions = []
         patient_key = self.dialog.lineEdit_patient_key.text().strip()
         doctor = self.dialog.comboBox_doctor.currentText()
         massage_referrer = self.dialog.comboBox_massage_referrer.currentText()
@@ -155,17 +155,21 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         medicine_name = self.dialog.lineEdit_medicine_name.text().strip()
 
         if patient_key != "":
-            sql += f"AND cases.PatientKey = {patient_key}"
+            conditions.append(f"cases.PatientKey = {patient_key}")
         if doctor != "":
-            sql += f'AND cases.Doctor = "{doctor}"'
+            conditions.append(f'cases.Doctor = "{doctor}"')
         if massage_referrer != "":
-            sql += f'AND cases.MassageReferrer = "{massage_referrer}"'
+            conditions.append(f'cases.MassageReferrer = "{massage_referrer}"')
         if nursing_assistant != "":
-            sql += f'AND cases.NursingAssistant = "{nursing_assistant}"'
+            conditions.append(f'cases.NursingAssistant = "{nursing_assistant}"')
         if medicine_name != "":
-            sql += f'AND MedicineName LIKE "%{medicine_name}%"'
+            safe_name = medicine_name.replace('"', '""')
+            conditions.append(f'MedicineName LIKE "%{safe_name}%"')
 
-        return sql
+        if not conditions:
+            return ""
+
+        return " AND " + " AND ".join(conditions)
 
     def _get_sql_condition(self):
         sql_condition = """
@@ -1438,7 +1442,6 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         else:
             max_discount_fee = 100000
 
-        print(max_discount_fee)
         input_dialog = QInputDialog()
         input_dialog.setOkButtonText("確定")
         input_dialog.setCancelButtonText("取消")

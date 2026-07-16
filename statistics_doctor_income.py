@@ -1,10 +1,12 @@
 # -*- coding: UTF-8 -*-
 
 import datetime
+import logging
 
 from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
+import mysql
 from libs import (
     case_utils,
     class_utils,
@@ -183,8 +185,11 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
             self.return_goods_dict = (
                 self._read_return_goods_dict()
             )  # 一次撈完, 兩張表共用
-            self._calculate_return_goods()
-            self._calculate_doctor_return_goods()  # 新增, 一定要在 doctor_subtotal 之前
+            if self.return_goods_dict is not None:
+                self._calculate_return_goods()
+                self._calculate_doctor_return_goods()  # 一定要在 doctor_subtotal 之前
+            else:
+                logging.warning("退貨資料無法讀取，本次統計不含退貨扣項")
 
         self._calculate_subtotal()
         self._calculate_doctor_subtotal()
@@ -653,13 +658,11 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
         period_condition = ""
         if self.period != "全部":
             period_condition = f' AND Period = "{self.period}"'
-
         weekday_condition = ""
         if len(self.weekday_list) > 0:
             weekday_condition = (
                 f" AND WEEKDAY(ReturnGoodsDate) IN({','.join(self.weekday_list)})"
             )
-
         sql = f"""
             SELECT DATE(ReturnGoodsDate) AS ReturnDate, SUM(AMOUNT) AS Fee
             FROM returngoods
@@ -669,16 +672,18 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
             GROUP BY DATE(ReturnGoodsDate)
         """
         params = (self.start_date, self.end_date)
-        rows = self.database.select_record(sql, params)
+        try:
+            rows = self.database.select_record(sql, params)
+        except mysql.connector.Error as e:
+            logging.error(f"讀取退貨資料失敗: {e.errno} {e.msg}")
+            return None  # 讀取失敗,與「無退貨」(空 dict) 區分
 
         return_goods_dict = {}
         for row in rows:
             fee = number_utils.get_integer(row["Fee"])
             if fee == 0:
                 continue
-
             return_goods_dict[row["ReturnDate"].strftime("%Y-%m-%d")] = fee
-
         return return_goods_dict
 
     def _calculate_return_goods(self):
