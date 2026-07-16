@@ -269,7 +269,8 @@ class InsUploadEMR(QtWidgets.QMainWindow):
         cdata = ET.SubElement(root, "cdata")
         chead = ET.SubElement(cdata, "chead")
         c1 = ET.SubElement(chead, "c1")
-        c1.text = "2"  # 1=當期送審 2=事後審查 3=補件
+        # c1.text = "2"  # 1=當期送審 2=事後審查 3=補件
+        c1.text = "1"  # 1=當期送審 2=事後審查 3=補件  2026-07-16 IDC建議
         c2 = ET.SubElement(chead, "c2")
         c2.text = self.system_settings.field("院所代號")
         c3 = ET.SubElement(chead, "c3")
