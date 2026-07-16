@@ -3,11 +3,12 @@
 import importlib
 import os
 
-from libs import (system_utils, ui_utils)
-from classes.smart_card import SmartCardObserver
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QPushButton
+
+from classes.smart_card import SmartCardObserver
+from libs import system_utils, ui_utils
 
 
 # 2024.06.24 掛號機辨識病人身分
@@ -23,8 +24,8 @@ class KioskIdentity(QtWidgets.QMainWindow):
         self.patient_key = None
         self.ui = None
 
-        self.smart_observer = None     # 目前的 SmartCardObserver
-        self.ic_card_data = None       # 目前讀到的健保卡資料（dict）
+        self.smart_observer = None  # 目前的 SmartCardObserver
+        self.ic_card_data = None  # 目前讀到的健保卡資料（dict）
 
         # ====== 回首頁計時器相關 ======
         self.wait_seconds = 30
@@ -32,8 +33,8 @@ class KioskIdentity(QtWidgets.QMainWindow):
         self.home_timer.timeout.connect(self._timeout)
 
         # ====== 條碼掃描器相關 ======
-        self.barcode_buffer = ""                       # 暫存條碼內容
-        self.barcode_timeout_ms = 150                  # 超過這段時間就當作不是條碼（依需求調整）
+        self.barcode_buffer = ""  # 暫存條碼內容
+        self.barcode_timeout_ms = 150  # 超過這段時間就當作不是條碼（依需求調整）
         self.barcode_timer = QtCore.QTimer(self)
         self.barcode_timer.setSingleShot(True)
         self.barcode_timer.timeout.connect(self._on_barcode_timeout)
@@ -52,7 +53,9 @@ class KioskIdentity(QtWidgets.QMainWindow):
 
     # 設定GUI
     def _set_ui(self):
-        self.ui = ui_utils.load_ui_file(os.path.join(self.parent.UI_DIR, 'kiosk_home.ui'), self)
+        self.ui = ui_utils.load_ui_file(
+            os.path.join(self.parent.UI_DIR, "kiosk_home.ui"), self
+        )
         self.set_background()
 
     # 設定信號
@@ -72,54 +75,103 @@ class KioskIdentity(QtWidgets.QMainWindow):
 
     def set_background(self):
         label_background = system_utils.set_image(
-            self, os.path.join(self.parent.IMAGE_DIR, 'background.png'), 0, 0)
+            self, os.path.join(self.parent.IMAGE_DIR, "background.png"), 0, 0
+        )
         self._bring_to_front(label_background)
 
         label_header = system_utils.set_label(
-            self, self.parent.clinic_name, 50, 35, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            self.parent.clinic_name,
+            50,
+            35,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
         label_header = system_utils.set_label(
-            self, '掛號繳費系統', 210, 300, self.parent.TEXT_FONT, 84, self.parent.TEXT_COLOR)
+            self,
+            "掛號繳費系統",
+            210,
+            300,
+            self.parent.TEXT_FONT,
+            84,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
         label_header = system_utils.set_label(
-            self, '請選擇確認身分的方式', 310, 1770, self.parent.TEXT_FONT, 42, self.parent.TEXT_COLOR)
+            self,
+            "請選擇確認身分的方式",
+            310,
+            1770,
+            self.parent.TEXT_FONT,
+            42,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
         label_title = system_utils.set_label(
-            self, '請選擇身份識別的方式:',
-            120, 550, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            "請選擇身份識別的方式:",
+            120,
+            550,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_title)
 
-        png_filename1 = self._get_png_file_name('barcode.png')
+        png_filename1 = self._get_png_file_name("barcode.png")
         label1 = system_utils.set_image(
-            self, png_filename1, 120, 680, width=160, height=160)
+            self, png_filename1, 120, 680, width=160, height=160
+        )
         self._bring_to_front(label1)
 
         label_hint1 = system_utils.set_label(
-            self, '掃描手機二維條碼',
-            320, 710, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            "掃描手機二維條碼",
+            320,
+            710,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_hint1)
 
-        png_filename2 = self._get_png_file_name('id.png')
+        png_filename2 = self._get_png_file_name("id.png")
         label2 = system_utils.set_image(
-            self, png_filename2, 120, 880, width=160, height=160)
+            self, png_filename2, 120, 880, width=160, height=160
+        )
         self._bring_to_front(label2)
 
         label_hint2 = system_utils.set_label(
-            self, '掃描身份證背面條碼',
-            320, 910, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            "掃描身份證背面條碼",
+            320,
+            910,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_hint2)
 
-        png_filename3 = self._get_png_file_name('iccard.png')
+        png_filename3 = self._get_png_file_name("iccard.png")
         label3 = system_utils.set_image(
-            self, png_filename3, 120, 1080, width=160, height=160)
+            self, png_filename3, 120, 1080, width=160, height=160
+        )
         self._bring_to_front(label3)
 
         label_hint3 = system_utils.set_label(
-            self, '插入健保卡至讀卡機',
-            320, 1110, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            "插入健保卡至讀卡機",
+            320,
+            1110,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_hint3)
 
         # png_filename4 = self._get_png_file_name('keypad.png')
@@ -128,17 +180,24 @@ class KioskIdentity(QtWidgets.QMainWindow):
         # self._bring_to_front(label4)
 
         label_hint4 = system_utils.set_label(
-            self, '手動輸入身份證ID',
-            320, 1310, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            "手動輸入身份證ID",
+            320,
+            1310,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_hint4)
 
         self.pushButton_get_id = self._get_push_button(
-            'keypad.png', 'keypad.png', 120, 1280, set_fixed_size=False)
+            "keypad.png", "keypad.png", 120, 1280, set_fixed_size=False
+        )
         self._bring_to_front(self.pushButton_get_id)
         self.pushButton_get_id.clicked.connect(self._manual_input_id)
 
         self._set_manual_input_button()
-        self._set_back_home_button('回首頁')
+        self._set_back_home_button("回首頁")
 
     def _bring_to_front(self, widget):
         widget.raise_()
@@ -180,11 +239,9 @@ class KioskIdentity(QtWidgets.QMainWindow):
 
     def _on_barcode_scanned(self, barcode_text: str):
         id_number = barcode_text.strip()
-        self.ic_card_data = {
-            'patient_id': id_number
-        }
+        self.ic_card_data = {"patient_id": id_number}
 
-        self._do_identity(identity_type='掃描身分證')
+        self._do_identity(identity_type="掃描身分證")
 
     def _stop_thread(self):
         if self.barcode_timer.isActive():
@@ -209,7 +266,7 @@ class KioskIdentity(QtWidgets.QMainWindow):
             self._back_to_home()
             return
 
-        self._do_identity(identity_type='讀取健保卡')
+        self._do_identity(identity_type="讀取健保卡")
 
     def _on_card_removed(self):
         pass
@@ -237,6 +294,7 @@ class KioskIdentity(QtWidgets.QMainWindow):
         self._release_keyboard()
 
         from kiosk2.dialog import dialog_input_id
+
         module = importlib.reload(dialog_input_id)
         dialog = module.DialogInputID(self.parent, self.database, self.system_settings)
 
@@ -244,19 +302,21 @@ class KioskIdentity(QtWidgets.QMainWindow):
             digits = dialog.get_id_digits()
             if digits:
                 # 仍然沿用現有 ic_card_data 機制
-                self.ic_card_data = {'patient_id': digits}
-                self._do_identity(identity_type='手動輸入')
+                self.ic_card_data = {"patient_id": digits}
+                self._do_identity(identity_type="手動輸入")
         else:
             # 手動輸入被取消，你可以選擇回首頁或是再進入等待卡片狀態
             # 現在先簡單回首頁：
             # self._back_to_home()
             self.wait_seconds = 30
-            self.push_button_home.setText(f'{self.button_text_home}({self.wait_seconds}s)')
+            self.push_button_home.setText(
+                f"{self.button_text_home}({self.wait_seconds}s)"
+            )
             self.home_timer.start(1000)
 
         del dialog
 
-    def set_identity_data(self, op_type='預約報到'):
+    def set_identity_data(self, op_type="預約報到"):
         self._op_type = op_type  # 從kiosk_home確認是哪一個按鈕被按下
 
         self.clear_all_widgets()
@@ -270,20 +330,21 @@ class KioskIdentity(QtWidgets.QMainWindow):
         self._start_card_observer()
 
     def _do_identity(self, identity_type=None):
-        patient_id = self.ic_card_data['patient_id']
+        patient_id = self.ic_card_data["patient_id"]
 
         if len(patient_id) == 9 and patient_id.isdigit():
             # 手動輸入的 9 碼數字
             where_clause = f'RIGHT(ID, 9) = "{patient_id}"'
         else:
             # 原本流程：完整身分證字號
-            where_clause = f'ID = "{patient_id}"'
+            # where_clause = f'ID = "{patient_id}"'
+            where_clause = f'RIGHT(ID, {len(patient_id)}) = "{patient_id}"'
 
-        sql = f'''
+        sql = f"""
             SELECT PatientKey FROM patient
             WHERE
                 {where_clause}
-        '''
+        """
         rows = self.database.select_record(sql)
 
         self._stop_thread()
@@ -294,18 +355,24 @@ class KioskIdentity(QtWidgets.QMainWindow):
             return
 
         row = rows[0]
-        patient_key = row['PatientKey']
+        patient_key = row["PatientKey"]
 
-        if self._op_type == '預約報到':
-            self.parent.open_kiosk_registration(patient_key=patient_key, identity_type=identity_type)
-        elif self._op_type == '批價繳費':
-            self.parent.open_kiosk_payment(patient_key=patient_key, identity_type=identity_type)
+        if self._op_type == "預約報到":
+            self.parent.open_kiosk_registration(
+                patient_key=patient_key, identity_type=identity_type
+            )
+        elif self._op_type == "批價繳費":
+            self.parent.open_kiosk_payment(
+                patient_key=patient_key, identity_type=identity_type
+            )
 
     def _show_no_iccard(self):
         from kiosk2.dialog import dialog_message_box
 
         module = importlib.reload(dialog_message_box)
-        dialog = module.DialogMessageBox(self.parent, self.database, self.system_settings)
+        dialog = module.DialogMessageBox(
+            self.parent, self.database, self.system_settings
+        )
         dialog.set_no_iccard()
         dialog.exec_()
         del dialog
@@ -314,7 +381,9 @@ class KioskIdentity(QtWidgets.QMainWindow):
         from kiosk2.dialog import dialog_message_box
 
         module = importlib.reload(dialog_message_box)
-        dialog = module.DialogMessageBox(self.parent, self.database, self.system_settings)
+        dialog = module.DialogMessageBox(
+            self.parent, self.database, self.system_settings
+        )
         dialog.set_no_patient()
         dialog.exec_()
         del dialog
@@ -325,7 +394,7 @@ class KioskIdentity(QtWidgets.QMainWindow):
 
         btn = QtWidgets.QPushButton(self)
         btn.resize(280, 80)
-        btn.setText('輸入ID')
+        btn.setText("輸入ID")
         btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {color};
@@ -347,9 +416,9 @@ class KioskIdentity(QtWidgets.QMainWindow):
 
         # 再由 kiosk_identity 開啟手動輸入流程
         # parent 是 Kiosk，widget_identity 是 KioskIdentity 實例
-        if hasattr(self.parent, 'widget_identity'):
+        if hasattr(self.parent, "widget_identity"):
             identity = self.parent.widget_identity
-            if hasattr(identity, 'manual_input_id_from_dialog'):
+            if hasattr(identity, "manual_input_id_from_dialog"):
                 identity.manual_input_id_from_dialog()
 
     def _set_back_home_button(self, button_text, x=580, y=1500):
@@ -359,7 +428,7 @@ class KioskIdentity(QtWidgets.QMainWindow):
 
         self.push_button_home = QtWidgets.QPushButton(self)
         self.push_button_home.resize(320, 80)
-        self.push_button_home.setText(f'{self.button_text_home}({self.wait_seconds}s)')
+        self.push_button_home.setText(f"{self.button_text_home}({self.wait_seconds}s)")
         self.push_button_home.setStyleSheet(f"""
             QPushButton {{
                 background-color: {color};  /* 正常狀態背景顏色 */
@@ -378,7 +447,7 @@ class KioskIdentity(QtWidgets.QMainWindow):
 
     def _timeout(self):
         self.wait_seconds -= 1
-        self.push_button_home.setText(f'{self.button_text_home}({self.wait_seconds}s)')
+        self.push_button_home.setText(f"{self.button_text_home}({self.wait_seconds}s)")
         if self.wait_seconds == 0:
             self._back_to_home()
 
@@ -392,7 +461,7 @@ class KioskIdentity(QtWidgets.QMainWindow):
         png_name = self._get_image_file(png_name)
         pressed_png = self._get_image_file(pressed_png)
 
-        style = f'''
+        style = f"""
             QPushButton{{
                 border: none;
                 background: transparent;
@@ -401,7 +470,7 @@ class KioskIdentity(QtWidgets.QMainWindow):
             QPushButton:pressed {{
                 image: url({pressed_png});
             }}
-        '''
+        """
         btn.setStyleSheet(style)
         btn.setAttribute(QtCore.Qt.WA_AcceptTouchEvents, True)
         system_utils.shadow_widget(self, btn)
@@ -418,6 +487,6 @@ class KioskIdentity(QtWidgets.QMainWindow):
 
     def _get_image_file(self, filename):
         image_file = os.path.join(self.parent.IMAGE_DIR, filename)
-        image_file = image_file.replace('\\', '/')
+        image_file = image_file.replace("\\", "/")
 
         return image_file
