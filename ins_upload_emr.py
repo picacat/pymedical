@@ -78,15 +78,6 @@ class InsUploadEMR(QtWidgets.QMainWindow):
                 LogName = "{apply_date}"
         '''
         rows = self.database.select_record(sql)
-        if len(rows) >= 2:
-            system_utils.show_message_box(
-                QtWidgets.QMessageBox.Critical,
-                "抽審資料錯誤",
-                '<font size="5" color="red"><b>抽審Log檔內容重複, 請電腦公司手動刪除.</b></font>',
-                "請處理完畢後再執行抽審上傳作業.",
-            )
-            return
-
         self.start_no += len(rows) * 1000
 
         if not self._generate_emr_files():
