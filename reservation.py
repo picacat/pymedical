@@ -29,7 +29,7 @@ from libs import (
 
 
 class Reservation(QtWidgets.QMainWindow):
-    """預約掛號."""
+    """預約掛號"""
 
     program_name = "預約掛號"
 
