@@ -582,13 +582,17 @@ def get_patient_key_by_id(database, pid):
 
 
 def get_patient_extension_settings(database, patient_key, extension_type):
-    sql = f'''
+    if patient_key in ["", None]:
+        return None
+
+    sql = """
         SELECT * FROM patient_extension
         WHERE
-            PatientKey = {patient_key} AND
-            ExtensionType = "{extension_type}"
-    '''
-    rows = database.select_record(sql)
+            PatientKey = %s AND
+            ExtensionType = %s
+    """
+    params = (patient_key, extension_type)
+    rows = database.select_record(sql, params)
 
     if len(rows) <= 0:
         return None
