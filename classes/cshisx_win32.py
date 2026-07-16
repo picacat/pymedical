@@ -11,8 +11,8 @@ import win32com.client
 
 from libs import date_utils
 
-# CURRENT_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+CURRENT_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
+# CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # 健保ICD卡 2018.03.31
