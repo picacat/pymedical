@@ -1353,6 +1353,8 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         if self.is_vegetarian and prescript_utils.is_animal_derived(
             self.database, medicine_key
         ):
+            self.vegetarian_warned = True
+
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Warning)
             msg_box.setWindowTitle("含動物性成份藥品")
@@ -1363,11 +1365,10 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
                     </h3></font>"""
             )
             msg_box.setInformativeText("請確定是否繼續給藥.")
-            msg_box.addButton(QPushButton("繼續給藥"), QMessageBox.YesRole)
-            msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
-            append_medicine = msg_box.exec_()
-            self.vegetarian_warned = True
-            if append_medicine == QMessageBox.RejectRole:
+            cancel_button = msg_box.addButton("取消", QMessageBox.NoRole)
+            msg_box.addButton("繼續給藥", QMessageBox.YesRole)
+            msg_box.exec_()
+            if msg_box.clickedButton() == cancel_button:
                 return False
 
         deactivate = prescript_utils.get_medicine_deactivate(

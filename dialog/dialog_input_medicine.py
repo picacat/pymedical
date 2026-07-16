@@ -7,7 +7,6 @@ from PyQt5.QtWidgets import QMessageBox
 
 from libs import (
     class_utils,
-    db_utils,
     nhi_utils,
     number_utils,
     prescript_utils,
@@ -56,9 +55,9 @@ class DialogInputMedicine(QtWidgets.QDialog):
         super().done(r)
 
         if self.medicine_key is None:
-            self.table_widget_prescript.currentItem().setText(
-                self.previous_medicine_name
-            )
+            current_item = self.table_widget_prescript.currentItem()
+            if current_item is not None:
+                current_item.setText(self.previous_medicine_name)
         else:
             if self.dict_type == "健保處置":
                 self._add_treat()
@@ -117,6 +116,18 @@ class DialogInputMedicine(QtWidgets.QDialog):
                         """,
                         "請盡速補貨",
                     )
+            elif deactivate == "僅用於自費":
+                system_utils.show_message_box(
+                    QMessageBox.Critical,
+                    "僅限自費使用",
+                    f"""
+                        <font color="red">
+                            <h3>{medicine_name}為自費藥品, 不可用於健保處方</h3>
+                        </font>
+                    """,
+                    "請開立其他藥品或改為自費處方",
+                )
+                return
             else:
                 system_utils.show_message_box(
                     QMessageBox.Critical,
@@ -131,14 +142,6 @@ class DialogInputMedicine(QtWidgets.QDialog):
                 return
 
         self.medicine_key = self.table_widget_medicine.field_value(0)
-        db_utils.increment_hit_rate(
-            self.database, "medicine", "MedicineKey", self.medicine_key
-        )
-
-        try:
-            self.ui.lineEdit_input_code.setText(None)
-        except Exception:
-            pass
 
         self.accept()
 
@@ -163,6 +166,7 @@ class DialogInputMedicine(QtWidgets.QDialog):
         return other_medicine_type_list
 
     def read_dictionary(self, medicine_type=None):
+        order_params = ()
         herb_type = None
         unit_type = None
         if self.system_settings.field("處方詞庫僅列出水藥") == "Y":
@@ -228,15 +232,14 @@ class DialogInputMedicine(QtWidgets.QDialog):
 
             other_medicine_type_list = self._get_other_medicine_type_list()
             if len(other_medicine_type_list) > 0:
-                other_medicine_type = ", ".join(
-                    f'"{w}"' for w in other_medicine_type_list
-                )
+                placeholders = ", ".join(["%s"] * len(other_medicine_type_list))
                 order_type = f"""
                     ORDER BY FIELD(
                         MedicineType, "水藥", "複方", "單方", "高貴", "外用",
-                        "穴道", "處置", "器材", "成方", {other_medicine_type}
+                        "穴道", "處置", "器材", "成方", {placeholders}
                     )
                 """
+                order_params = tuple(other_medicine_type_list)
         elif self.dict_type == "健保處置":
             if (
                 self.parent.comboBox_treatment.currentText()
@@ -264,20 +267,32 @@ class DialogInputMedicine(QtWidgets.QDialog):
             pass
         elif self.system_settings.field("詞庫排序") == "點擊率":
             order_type = "ORDER BY HitRate DESC"
+            order_params = ()
         elif self.system_settings.field("詞庫排序") == "最後點擊時戳":
             order_type = "ORDER BY TimeStamp DESC"
+            order_params = ()
 
-        sql = f'''
+        sql = f"""
             SELECT * FROM medicine
             WHERE
-                (MedicineName LIKE "%{self.input_code}%" OR
-                 InputCode LIKE "{self.input_code}%" OR
-                 MedicineCode = "{self.input_code}" OR
-                 InsCode = "{self.input_code}")
+                (MedicineName LIKE %s OR
+                InputCode LIKE %s OR
+                MedicineCode = %s OR
+                InsCode = %s)
             {medicine_type}
             {order_type}
-        '''
-        self.table_widget_medicine.set_db_data(sql, self._set_medicine_data)
+        """
+        params = (
+            f"%{self.input_code}%",
+            f"{self.input_code}%",
+            self.input_code,
+            self.input_code,
+        ) + order_params
+
+        self.table_widget_medicine.set_db_data(
+            sql, self._set_medicine_data, params=params
+        )
+
         if self.no_deactivate_medicine == "Y":
             prescript_utils.filter_deactivate_medicine(self.ui.tableWidget_medicine)
 

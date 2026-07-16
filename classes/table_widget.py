@@ -94,7 +94,9 @@ class TableWidget:
                 rows = self.database.select_record(sql, params)
             else:
                 rows = archive_database.select_record(sql, params)
-        self.db_row_count = len(list(rows)) + start_index
+
+        rows = list(rows)
+        self.db_row_count = len(rows) + start_index
         self.table_widget.setRowCount(self.db_row_count)
         for i, row in zip(range(start_index, self.db_row_count), rows):
             self.process_data(i, row)
@@ -106,7 +108,7 @@ class TableWidget:
         self.table_widget.setAlternatingRowColors(True)
         self.table_widget.selectRow(0)
         if set_focus:
-            self.table_widget.setFocus(True)
+            self.table_widget.setFocus()
         if resize_rows:
             self.table_widget.resizeRowsToContents()
 

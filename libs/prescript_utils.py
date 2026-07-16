@@ -396,7 +396,7 @@ def add_medicine(prescript_tab, table_widget_medicine, row=None, dosage=None):
             quantity = None
 
     if not prescript_tab.append_prescript(row, quantity):
-        return
+        return False
 
     current_row = prescript_tab.tableWidget_prescript.currentRow()
     if current_row == prescript_tab.tableWidget_prescript.rowCount() - 1:
@@ -406,6 +406,8 @@ def add_medicine(prescript_tab, table_widget_medicine, row=None, dosage=None):
             current_row + 1,
             INS_PRESCRIPT_COL_NO["MedicineName"],
         )
+
+    return True
 
 
 # 輸入藥品

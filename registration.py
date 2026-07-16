@@ -5151,10 +5151,21 @@ class Registration(QtWidgets.QMainWindow):
 
         sql = f"""
             SELECT
-                wait.WaitKey, cases.*, patient.Gender
+                wait.WaitKey,
+                cases.CaseKey, cases.PatientKey, cases.Name,
+                cases.InsType, cases.Share, cases.TreatType,
+                cases.Visit, cases.Card, cases.XCard, cases.Continuance,
+                cases.Security,
+                cases.Room, cases.RegistNo, cases.Doctor, cases.DrugNo,
+                cases.RegistFee, cases.SDiagShareFee, cases.SDrugShareFee,
+                cases.DepositFee, cases.TotalFee,
+                cases.Remark,
+                patient.Gender,
+                dosage.Days AS PresDays
             FROM wait
                 LEFT JOIN patient ON wait.PatientKey = patient.PatientKey
                 LEFT JOIN cases ON wait.CaseKey = cases.CaseKey
+                LEFT JOIN dosage ON dosage.CaseKey = cases.CaseKey AND dosage.MedicineSet = 1
             WHERE
                 cases.DoctorDone = "True"
                 {purchase_script}
@@ -5174,7 +5185,7 @@ class Registration(QtWidgets.QMainWindow):
 
     def _set_wait_completed_data(self, row_no, row):
         case_key = row["CaseKey"]
-        pres_days = case_utils.get_pres_days(self.database, case_key)
+        pres_days = number_utils.get_integer(row["PresDays"])
         if pres_days <= 0:
             pres_days = ""
 
