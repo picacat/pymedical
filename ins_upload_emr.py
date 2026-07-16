@@ -246,7 +246,7 @@ class InsUploadEMR(QtWidgets.QMainWindow):
         return filename
 
     def _get_sequence(self, row_no):
-        self.start_no = 8000  # 測試用, 用完要comment
+        # self.start_no = 8000  # 測試用, 用完要comment
         sequence = row_no + self.start_no  # 應該是 +1, 暫時的，for 抽審測試
 
         return sequence
