@@ -129,6 +129,11 @@
           <string>備註</string>
          </property>
         </column>
+        <column>
+         <property name="text">
+          <string>何處得知本診所</string>
+         </property>
+        </column>
        </widget>
       </item>
       <item>
@@ -254,7 +259,7 @@
      <x>0</x>
      <y>0</y>
      <width>1187</width>
-     <height>26</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
