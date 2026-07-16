@@ -1232,12 +1232,15 @@ class Reservation(QtWidgets.QMainWindow):
             return
 
         reserve_key = reserve_key_item.text()
-        sql = f"""
+        if reserve_key in [None, ""]:
+            return
+
+        sql = """
             SELECT PatientKey FROM reserve
             WHERE
-                ReserveKey = {reserve_key}
+                ReserveKey = %s
         """
-        rows = self.database.select_record(sql)
+        rows = self.database.select_record(sql, (reserve_key,))
         if len(rows) <= 0:
             return
 
