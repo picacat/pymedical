@@ -14,6 +14,7 @@ from PyQt5.QtGui import QPainter
 from libs import (
     class_utils,
     dialog_utils,
+    export_utils,
     personnel_utils,
     string_utils,
     system_utils,
@@ -62,6 +63,7 @@ class StatisticsTrace(QtWidgets.QMainWindow):
     # 設定信號
     def _set_signal(self):
         self.ui.action_requery.triggered.connect(self.open_dialog)
+        self.ui.action_export_to_excel.triggered.connect(self._export_to_excel)
         self.ui.action_close.triggered.connect(self.close_form)
         self.ui.tableWidget_patient_list.doubleClicked.connect(self.open_patient_record)
 
@@ -320,3 +322,27 @@ class StatisticsTrace(QtWidgets.QMainWindow):
 
         patient_key = self.table_widget_patient_list.field_value(0)
         self.parent.open_patient_record(patient_key, "病患查詢")
+
+    def _export_to_excel(self):
+        options = QtWidgets.QFileDialog.Options()
+        excel_file_name, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self.parent,
+            "資料匯出",
+            "何處得知本診所統計.xlsx",
+            "excel檔案 (*.xlsx)",
+            options=options,
+        )
+        if not excel_file_name:
+            return
+
+        export_utils.export_table_widget_to_excel(
+            excel_file_name,
+            self.ui.tableWidget_patient_list,
+        )
+
+        system_utils.show_message_box(
+            QtWidgets.QMessageBox.Information,
+            "資料匯出完成",
+            f"<h3>{excel_file_name}匯出完成.</h3>",
+            "Microsoft Excel 格式.",
+        )
