@@ -5149,6 +5149,29 @@ class Registration(QtWidgets.QMainWindow):
         else:
             purchase_script = ' AND wait.TreatType NOT IN ("自購")'
 
+        # sql = f"""
+        #     SELECT
+        #         wait.WaitKey,
+        #         cases.CaseKey, cases.PatientKey, cases.Name,
+        #         cases.InsType, cases.Share, cases.TreatType,
+        #         cases.Visit, cases.Card, cases.XCard, cases.Continuance,
+        #         cases.Security,
+        #         cases.Room, cases.RegistNo, cases.Doctor, cases.DrugNo,
+        #         cases.RegistFee, cases.SDiagShareFee, cases.SDrugShareFee,
+        #         cases.DepositFee, cases.TotalFee,
+        #         cases.Remark,
+        #         patient.Gender,
+        #         dosage.Days AS PresDays
+        #     FROM wait
+        #         LEFT JOIN patient ON wait.PatientKey = patient.PatientKey
+        #         LEFT JOIN cases ON wait.CaseKey = cases.CaseKey
+        #         LEFT JOIN dosage ON dosage.CaseKey = cases.CaseKey AND dosage.MedicineSet = 1
+        #     WHERE
+        #         cases.DoctorDone = "True"
+        #         {purchase_script}
+        #         {period_script}
+        #     ORDER BY FIELD(cases.Period, "晚班", "午班", "早班"), cases.RegistNo DESC
+        # """
         sql = f"""
             SELECT
                 wait.WaitKey,
@@ -5161,13 +5184,26 @@ class Registration(QtWidgets.QMainWindow):
                 cases.DepositFee, cases.TotalFee,
                 cases.Remark,
                 patient.Gender,
-                dosage.Days AS PresDays
+                dosage.Days AS PresDays,
+                thc.THCFee
             FROM wait
                 LEFT JOIN patient ON wait.PatientKey = patient.PatientKey
                 LEFT JOIN cases ON wait.CaseKey = cases.CaseKey
                 LEFT JOIN dosage ON dosage.CaseKey = cases.CaseKey AND dosage.MedicineSet = 1
+                LEFT JOIN (
+                    SELECT Position1, MAX(TotalFee) AS THCFee
+                    FROM cases
+                    WHERE
+                        TreatType = "民俗調理" AND
+                        IFNULL(Position1, "") != ""
+                    GROUP BY Position1
+                ) thc ON thc.Position1 = cases.CaseKey
             WHERE
                 cases.DoctorDone = "True"
+                AND NOT (
+                    cases.TreatType = "民俗調理"
+                    AND IFNULL(cases.Position1, "") != ""
+                )
                 {purchase_script}
                 {period_script}
             ORDER BY FIELD(cases.Period, "晚班", "午班", "早班"), cases.RegistNo DESC
@@ -5220,12 +5256,28 @@ class Registration(QtWidgets.QMainWindow):
         ins_type = string_utils.xstr(row["InsType"])
         total_fee = number_utils.get_integer(row["TotalFee"])
 
-        if self.system_settings.field("掛號名單顯示民俗調理費") == "Y":  # 顯示速度太慢
-            traditional_health_care_fee = (
-                charge_utils.get_traditional_health_care_fee_from_case(
-                    self.database, case_key, ins_type=ins_type
-                )
-            )
+        # if self.system_settings.field("掛號名單顯示民俗調理費") == "Y":  # 顯示速度太慢
+        #     traditional_health_care_fee = (
+        #         charge_utils.get_traditional_health_care_fee_from_case(
+        #             self.database, case_key, ins_type=ins_type
+        #         )
+        #     )
+        # else:
+        #     traditional_health_care_fee = 0
+
+        if self.system_settings.field("掛號名單顯示民俗調理費") == "Y":
+            if ins_type == "自費":
+                if string_utils.xstr(row["TreatType"]) == "民俗調理":
+                    traditional_health_care_fee = total_fee
+                else:
+                    traditional_health_care_fee = 0
+            else:
+                traditional_health_care_fee = number_utils.get_integer(row["THCFee"])
+                if (
+                    traditional_health_care_fee <= 0
+                    and string_utils.xstr(row["TreatType"]) == "民俗調理"
+                ):
+                    traditional_health_care_fee = total_fee
         else:
             traditional_health_care_fee = 0
 
