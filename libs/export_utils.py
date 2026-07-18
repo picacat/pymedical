@@ -3142,13 +3142,13 @@ def export_income_list(system_settings, excel_file_name, tableWidget_income, col
     ]
     sheet.append(header_row)
     sheet.column_dimensions["A"].width = 6
-    sheet.column_dimensions["B"].width = 14
+    sheet.column_dimensions["B"].width = 17
     sheet.column_dimensions["C"].width = 7
     sheet.column_dimensions["D"].width = 10
     sheet.column_dimensions["E"].width = 12
     sheet.column_dimensions["F"].width = 7
     sheet.column_dimensions["G"].width = 20
-    sheet.column_dimensions["H"].width = 20
+    sheet.column_dimensions["H"].width = 22
     sheet.column_dimensions["I"].width = 20
     sheet.column_dimensions["J"].width = 12
     sheet.column_dimensions["K"].width = 7
@@ -3167,23 +3167,23 @@ def export_income_list(system_settings, excel_file_name, tableWidget_income, col
     sheet.column_dimensions["W"].width = 12
     sheet.column_dimensions["X"].width = 12
 
-    cell_no = 0
+    cell_no = 2  # 資料從第 3 列開始,2 表示目前還沒有資料列
+    serial_no = 0
     for row_no in range(tableWidget_income.rowCount()):
         case_key_item = tableWidget_income.item(row_no, columns["case_key"])
         if case_key_item is None:
             continue
 
-        if tableWidget_income.item(row_no, columns["name"]).text() == "合計":
+        name_item = tableWidget_income.item(row_no, columns["name"])
+        if name_item is not None and name_item.text() == "合計":
             continue
 
-        row = [row_no + 1]
-        cell_no = row_no + 3
+        serial_no += 1
+        cell_no += 1  # 這一列實際寫入 Excel 的列號
+        row = [serial_no]
         for col_no in range(2, columns["cashier"] + 1):
             item = tableWidget_income.item(row_no, col_no)
-            if item is None:
-                value = None
-            else:
-                value = item.text()
+            value = None if item is None else item.text()
 
             if col_no in [4, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]:
                 value = number_utils.get_integer(value)
@@ -3195,31 +3195,22 @@ def export_income_list(system_settings, excel_file_name, tableWidget_income, col
 
         sheet.append(row)
 
-    row = [
-        None,
-        None,
-        None,
-        None,
-        "合計",
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        f"=SUM(L3:L{cell_no})",
-        f"=SUM(M3:M{cell_no})",
-        f"=SUM(N3:N{cell_no})",
-        f"=SUM(O3:O{cell_no})",
-        f"=SUM(P3:P{cell_no})",
-        f"=SUM(Q3:Q{cell_no})",
-        f"=SUM(R3:R{cell_no})",
-        f"=SUM(S3:S{cell_no})",
-        f"=SUM(T3:T{cell_no})",
-        f"=SUM(U3:U{cell_no})",
-        f"=SUM(V3:V{cell_no})",
-    ]
-    sheet.append(row)
+    if cell_no > 2:  # 有資料才寫合計列
+        row = [
+            None,
+            None,
+            None,
+            None,
+            "合計",
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        ] + [f"=SUM({col}3:{col}{cell_no})" for col in "LMNOPQRSTUV"]
+        sheet.append(row)
+
     sheet.freeze_panes = sheet["L2"]
 
     workbook.save(excel_file_name)
