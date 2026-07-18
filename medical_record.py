@@ -1436,32 +1436,39 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
     # 設定診斷碼輸入狀態
     def disease_code_changed(self):
-        disease_list = [
-            [
-                self.ui.lineEdit_disease_code1,
-                self.ui.lineEdit_disease_name1,
-                self.ui.toolButton_disease1,
-                self.ui.pushButton_disease1,
-            ],
-            [
-                self.ui.lineEdit_disease_code2,
-                self.ui.lineEdit_disease_name2,
-                self.ui.toolButton_disease2,
-                self.ui.pushButton_disease2,
-            ],
-            [
-                self.ui.lineEdit_disease_code3,
-                self.ui.lineEdit_disease_name3,
-                self.ui.toolButton_disease3,
-                self.ui.pushButton_disease3,
-            ],
-            [
-                self.ui.lineEdit_disease_code4,
-                self.ui.lineEdit_disease_name4,
-                self.ui.toolButton_disease4,
-                self.ui.pushButton_disease4,
-            ],
-        ]
+        if getattr(self, "_in_disease_code_changed", False):
+            return
+
+        self._in_disease_code_changed = True
+        try:
+            disease_list = [
+                [
+                    self.ui.lineEdit_disease_code1,
+                    self.ui.lineEdit_disease_name1,
+                    self.ui.toolButton_disease1,
+                    self.ui.pushButton_disease1,
+                ],
+                [
+                    self.ui.lineEdit_disease_code2,
+                    self.ui.lineEdit_disease_name2,
+                    self.ui.toolButton_disease2,
+                    self.ui.pushButton_disease2,
+                ],
+                [
+                    self.ui.lineEdit_disease_code3,
+                    self.ui.lineEdit_disease_name3,
+                    self.ui.toolButton_disease3,
+                    self.ui.pushButton_disease3,
+                ],
+                [
+                    self.ui.lineEdit_disease_code4,
+                    self.ui.lineEdit_disease_name4,
+                    self.ui.toolButton_disease4,
+                    self.ui.pushButton_disease4,
+                ],
+            ]
+        finally:
+            self._in_disease_code_changed = False
 
         for row_no in reversed(range(len(disease_list))):
             icd_code = str(disease_list[row_no][0].text()).strip().upper()
@@ -1916,16 +1923,18 @@ class MedicalRecord(QtWidgets.QMainWindow):
         read_result = True
 
         if self.patient_key is not None:
-            sql = f"""
+            sql = """
                 SELECT * FROM patient
                 WHERE
-                    PatientKey = {self.patient_key}
+                    PatientKey = %s
             """
+            params = (self.patient_key,)
             try:
-                self.patient_record: dict = self.database.select_record(sql)[0]
+                self.patient_record: dict = self.database.select_record(
+                    sql, params=params
+                )[0]
             except Exception:
                 self.patient_record = None
-
                 if self.call_from == "參考病歷":
                     self._insert_template_patient()
                 else:
@@ -1935,13 +1944,15 @@ class MedicalRecord(QtWidgets.QMainWindow):
             return read_result
 
         try:
-            sql = f"""
+            sql = """
                 SELECT * FROM cases
                 WHERE
-                    CaseKey = {self.case_key}
+                    CaseKey = %s
             """
-            self.medical_record: dict = self.database.select_record(sql)[0]
-
+            params = (self.case_key,)
+            self.medical_record: dict = self.database.select_record(sql, params=params)[
+                0
+            ]
             self.ins_type = string_utils.xstr(self.medical_record["InsType"])
         except Exception:
             self.medical_record = None
@@ -1956,13 +1967,21 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if self.medical_record is None:
             return read_result
 
+        # 同一個人，不必重讀
+        if (
+            self.patient_record is not None
+            and self.patient_record["PatientKey"] == self.medical_record["PatientKey"]
+        ):
+            return read_result
+
         try:
-            sql = f"""
+            sql = """
                 SELECT * FROM patient
                 WHERE
-                    PatientKey = {self.medical_record["PatientKey"]}
+                    PatientKey = %s
             """
-            self.patient_record = self.database.select_record(sql)[0]
+            params = (self.medical_record["PatientKey"],)
+            self.patient_record = self.database.select_record(sql, params=params)[0]
             self.patient_key = self.patient_record["PatientKey"]
         except IndexError:
             if self.patient_record is not None:
@@ -1972,7 +1991,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
                     '<font size="5" color="red"><b>找不到病患資料, 請更新病歷內的病歷號碼.</b></font>',
                     "資料不明原因遺失.",
                 )
-            # read_result = False
 
         return read_result
 
@@ -2507,6 +2525,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             [self.ui.lineEdit_disease_code3, self.ui.lineEdit_disease_name3],
             [self.ui.lineEdit_disease_code4, self.ui.lineEdit_disease_name4],
         ]
+
         for i, disease_field in enumerate(disease_field_list):
             try:
                 disease_code = string_utils.get_str(row[f"DiseaseCode{i + 1}"], "utf8")
@@ -2514,7 +2533,11 @@ class MedicalRecord(QtWidgets.QMainWindow):
                 continue
 
             disease_name = string_utils.get_str(row[f"DiseaseName{i + 1}"], "utf8")
+
+            disease_field[0].blockSignals(True)  # 新增
             disease_field[0].setText(disease_code)
+            disease_field[0].blockSignals(False)  # 新增
+
             disease_field[1].setText(disease_name)
             case_utils.set_disease_tool_tip(
                 self.database,
@@ -2527,6 +2550,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             string_utils.get_str(row["Distincts"], "utf8")
         )
         self.ui.lineEdit_cure.setText(string_utils.get_str(row["Cure"], "utf8"))
+        self.disease_code_changed()
 
     def _set_reference(self, row):
         if row["Reference"] == "True":
