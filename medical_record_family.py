@@ -1,15 +1,19 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore
 import datetime
 
-from libs import class_utils
-from libs import ui_utils
-from libs import string_utils
-from libs import personnel_utils
-from libs import case_utils
-from libs import system_utils
-from libs import date_utils
+from PyQt5 import QtCore, QtWidgets
+
+from libs import (
+    case_utils,
+    class_utils,
+    date_utils,
+    number_utils,
+    personnel_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 病歷資料 2018.01.31
@@ -44,7 +48,9 @@ class MedicalRecordFamily(QtWidgets.QMainWindow):
     def _set_ui(self):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_MEDICAL_RECORD_FAMILY, self)
         system_utils.set_css(self, self.system_settings)
-        self.table_widget_patient = class_utils.get_table_widget(self.ui.tableWidget_patient, self.database)
+        self.table_widget_patient = class_utils.get_table_widget(
+            self.ui.tableWidget_patient, self.database
+        )
         self.table_widget_medical_record = class_utils.get_table_widget(
             self.ui.tableWidget_medical_record, self.database
         )
@@ -54,24 +60,31 @@ class MedicalRecordFamily(QtWidgets.QMainWindow):
     # 設定信號
     def _set_signal(self):
         self.ui.tableWidget_patient.itemSelectionChanged.connect(self._patient_changed)
-        self.ui.tableWidget_medical_record.itemSelectionChanged.connect(self._medical_record_changed)
+        self.ui.tableWidget_medical_record.itemSelectionChanged.connect(
+            self._medical_record_changed
+        )
         self.ui.pushButton_copy.clicked.connect(self._copy_medical_record)
 
     def _set_permission(self):
-        if self.call_from == '醫師看診作業':
+        if self.call_from == "醫師看診作業":
             return
 
-        if self.user_name == '超級使用者':
+        if self.user_name == "超級使用者":
             return
 
-        if personnel_utils.get_permission(self.database, '病歷資料', '病歷修正', self.user_name) == 'Y':
+        if (
+            personnel_utils.get_permission(
+                self.database, "病歷資料", "病歷修正", self.user_name
+            )
+            == "Y"
+        ):
             return
 
         self.ui.groupBox_copy_option.setEnabled(False)
         self.ui.pushButton_copy.setEnabled(False)
 
     def _set_table_width(self):
-        width = [90, 90, 50, 110, 50, 120]
+        width = [90, 90, 50, 130, 50, 120]
         self.table_widget_patient.set_table_heading_width(width)
 
         width = [90, 125, 50, 200, 50, 90]
@@ -83,21 +96,22 @@ class MedicalRecordFamily(QtWidgets.QMainWindow):
         self._read_family_members()
 
     def _read_cases(self):
-        sql = f'''
+        sql = """
             SELECT * FROM cases
             WHERE
-                CaseKey = {self.case_key}
-        '''
-        self.medical_record_row = self.database.select_record(sql)[0]
+                CaseKey = %s
+            LIMIT 1
+        """
+        self.medical_record_row = self.database.select_record(sql, (self.case_key,))[0]
 
     def _read_patient(self):
-        patient_key = self.medical_record_row['PatientKey']
-        sql = f'''
+        patient_key = self.medical_record_row["PatientKey"]
+        sql = """
             SELECT * FROM patient
             WHERE
-                PatientKey = {patient_key}
-        '''
-        rows = self.database.select_record(sql)
+                PatientKey = %s
+        """
+        rows = self.database.select_record(sql, (patient_key,))
         if len(rows) > 0:
             self.patient_row = rows[0]
         else:
@@ -107,21 +121,21 @@ class MedicalRecordFamily(QtWidgets.QMainWindow):
         if self.patient_row is None:
             return
 
-        patient_key = self.patient_row['PatientKey']
-        patient_name = self.patient_row['Name']
+        patient_key = self.patient_row["PatientKey"]
+        patient_name = self.patient_row["Name"]
         script = f'''
             FamilyPatientKey = {patient_key} OR
             FamilyPatientKey = "{patient_name}"
         '''
         condition = [script]
 
-        family_patient_key = string_utils.xstr(self.patient_row['FamilyPatientKey'])
-        if family_patient_key != '':
+        family_patient_key = string_utils.xstr(self.patient_row["FamilyPatientKey"])
+        if family_patient_key != "":
             if family_patient_key.isdigit():
-                script = f'''
+                script = f"""
                     PatientKey = {family_patient_key} OR
                     FamilyPatientKey IN ({patient_key}, {family_patient_key})
-                '''
+                """
             else:
                 script = f'''
                     Name = "{family_patient_key}" OR
@@ -129,48 +143,52 @@ class MedicalRecordFamily(QtWidgets.QMainWindow):
                 '''
             condition.append(script)
 
-        telephone = string_utils.xstr(self.patient_row['Telephone'])
-        if telephone != '' and len(telephone) >= 7:
-            condition.append(f'(Telephone LIKE "%{telephone}%" OR Cellphone LIKE "%{telephone}%")')
-        cellphone = string_utils.xstr(self.patient_row['Cellphone'])
-        if cellphone != '' and len(cellphone) >= 10:
-            condition.append(f'(Cellphone LIKE "%{cellphone}%" OR Telephone LIKE "%{cellphone}%")')
-        address = string_utils.xstr(self.patient_row['Address'])
+        telephone = string_utils.xstr(self.patient_row["Telephone"])
+        if telephone != "" and len(telephone) >= 7:
+            condition.append(
+                f'(Telephone LIKE "%{telephone}%" OR Cellphone LIKE "%{telephone}%")'
+            )
+        cellphone = string_utils.xstr(self.patient_row["Cellphone"])
+        if cellphone != "" and len(cellphone) >= 10:
+            condition.append(
+                f'(Cellphone LIKE "%{cellphone}%" OR Telephone LIKE "%{cellphone}%")'
+            )
+        address = string_utils.xstr(self.patient_row["Address"])
         address = string_utils.remove_illegal_characters(address)
 
-        if address != '' and len(address) > 6:
+        if address != "" and len(address) > 6:
             condition.append(f'(Address = "{address}")')
 
         if len(condition) <= 0:
             return
 
-        patient_key = self.patient_row['PatientKey']
-        condition = ' OR '.join(condition)
-        sql = f'''
+        patient_key = self.patient_row["PatientKey"]
+        condition = " OR ".join(condition)
+        sql = f"""
             SELECT * FROM patient
             WHERE
                 PatientKey != {patient_key} AND
                 ({condition})
             ORDER BY PatientKey
-        '''
+        """
         self.table_widget_patient.set_db_data(sql, self._set_patient_data)
         self._patient_changed()
 
     def _set_patient_data(self, row_no, row):
-        birthday = row['Birthday']
+        birthday = row["Birthday"]
         if birthday is not None:
             age_year, _ = date_utils.get_age(birthday, datetime.datetime.now())
         else:
             age_year = None
 
-        init_date = row['InitDate']
+        init_date = row["InitDate"]
         if init_date is not None:
             init_date = init_date.date()
 
         patient_row = [
-            string_utils.xstr(row['PatientKey']),
-            string_utils.xstr(row['Name']),
-            string_utils.xstr(row['Gender']),
+            string_utils.xstr(row["PatientKey"]),
+            string_utils.xstr(row["Name"]),
+            string_utils.xstr(row["Gender"]),
             string_utils.xstr(birthday),
             string_utils.xstr(age_year),
             string_utils.xstr(init_date),
@@ -178,17 +196,14 @@ class MedicalRecordFamily(QtWidgets.QMainWindow):
 
         for col_no in range(len(patient_row)):
             self.ui.tableWidget_patient.setItem(
-                row_no, col_no,
-                QtWidgets.QTableWidgetItem(patient_row[col_no])
+                row_no, col_no, QtWidgets.QTableWidgetItem(patient_row[col_no])
             )
             if col_no in [0, 4]:
-                self.ui.tableWidget_patient.item(
-                    row_no, col_no).setTextAlignment(
+                self.ui.tableWidget_patient.item(row_no, col_no).setTextAlignment(
                     QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
                 )
             elif col_no in [2]:
-                self.ui.tableWidget_patient.item(
-                    row_no, col_no).setTextAlignment(
+                self.ui.tableWidget_patient.item(row_no, col_no).setTextAlignment(
                     QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
                 )
 
@@ -199,59 +214,67 @@ class MedicalRecordFamily(QtWidgets.QMainWindow):
             self.ui.pushButton_copy.setEnabled(False)
             return
 
-        sql = f'''
-            SELECT * FROM cases
+        sql = """
+            SELECT cases.CaseKey, cases.CaseDate, cases.InsType, cases.DiseaseName1, cases.Doctor,
+                   dosage.Days AS PresDays FROM cases
+                LEFT JOIN dosage ON
+                    dosage.CaseKey = cases.CaseKey AND
+                    dosage.MedicineSet = IF(cases.InsType = "自費", 2, 1)
             WHERE
-                PatientKey = {patient_key}
-            ORDER BY CaseDate DESC
-        '''
-        self.table_widget_medical_record.set_db_data(sql, self._set_medical_record_data)
+                cases.PatientKey = %s
+            ORDER BY cases.CaseDate DESC
+            LIMIT 30
+        """
+        self.table_widget_medical_record.set_db_data(
+            sql, self._set_medical_record_data, params=(patient_key,)
+        )
         self._medical_record_changed()
         self.ui.tableWidget_patient.setFocus()
 
     def _set_medical_record_data(self, row_no, row):
-        case_key = row['CaseKey']
-        ins_type = string_utils.xstr(row['InsType'])
+        case_key = row["CaseKey"]
+        ins_type = string_utils.xstr(row["InsType"])
 
-        medicine_set = 1
-        if ins_type == '自費':
-            medicine_set = 2
+        # medicine_set = 1
+        # if ins_type == "自費":
+        #     medicine_set = 2
 
-        pres_days = case_utils.get_pres_days(self.database, case_key, medicine_set)
+        # pres_days = case_utils.get_pres_days(self.database, case_key, medicine_set)
+
+        pres_days = number_utils.get_integer(row["PresDays"])
         if pres_days <= 0:
             pres_days = None
 
         medical_record_row = [
             string_utils.xstr(case_key),
-            string_utils.xstr(row['CaseDate'].date()),
+            string_utils.xstr(row["CaseDate"].date()),
             ins_type,
-            string_utils.xstr(row['DiseaseName1']),
+            string_utils.xstr(row["DiseaseName1"]),
             string_utils.xstr(pres_days),
-            string_utils.xstr(row['Doctor']),
+            string_utils.xstr(row["Doctor"]),
         ]
 
         for col_no in range(len(medical_record_row)):
             self.ui.tableWidget_medical_record.setItem(
-                row_no, col_no,
-                QtWidgets.QTableWidgetItem(medical_record_row[col_no])
+                row_no, col_no, QtWidgets.QTableWidgetItem(medical_record_row[col_no])
             )
             if col_no in [4]:
                 self.ui.tableWidget_medical_record.item(
-                    row_no, col_no).setTextAlignment(
-                    QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                )
+                    row_no, col_no
+                ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             elif col_no in [2]:
                 self.ui.tableWidget_medical_record.item(
-                    row_no, col_no).setTextAlignment(
-                    QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
-                )
+                    row_no, col_no
+                ).setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
 
     def _medical_record_changed(self):
         case_key = self.table_widget_medical_record.field_value(0)
         if case_key is None:
             return
 
-        html = case_utils.get_medical_record_html(self.database, self.system_settings, case_key)
+        html = case_utils.get_medical_record_html(
+            self.database, self.system_settings, case_key
+        )
         self.ui.textEdit_medical_record.setHtml(html)
         self._set_copy_prescript_check_box()
 
@@ -268,39 +291,41 @@ class MedicalRecordFamily(QtWidgets.QMainWindow):
         self.ui.checkBox_ins_treat.setChecked(False)
         self.ui.checkBox_ins_treat.setEnabled(False)
 
-        if ins_type == '健保':
-            sql = f'''
+        if ins_type == "健保":
+            sql = f"""
                 SELECT Treatment FROM cases
                 WHERE
                     CaseKey = {case_key}
-            '''
+            """
             rows = self.database.select_record(sql)
-            treatment = string_utils.xstr(rows[0]['Treatment'])
+            treatment = string_utils.xstr(rows[0]["Treatment"])
 
-            if treatment != '':
+            if treatment != "":
                 self.ui.checkBox_ins_treat.setEnabled(True)
                 self.ui.checkBox_ins_treat.setChecked(True)
 
-            sql = f'''
+            sql = f"""
                 SELECT PrescriptKey FROM prescript
                 WHERE
                     CaseKey = {case_key} AND
                     MedicineSet = 1 AND
                     MedicineType IN ("單方", "複方")
-            '''
+            """
             rows = self.database.select_record(sql)
             if len(rows) > 0:
                 self.ui.checkBox_ins_prescript.setEnabled(True)
                 self.ui.radioButton_ins_prescript.setEnabled(True)
                 self.ui.radioButton_self_prescript.setEnabled(True)
-                if treatment == '':
-                    self.ui.checkBox_ins_prescript.setChecked(True)  # 預設非療程才拷貝藥品
+                if treatment == "":
+                    self.ui.checkBox_ins_prescript.setChecked(
+                        True
+                    )  # 預設非療程才拷貝藥品
 
-        sql = f'''SELECT MedicineSet FROM prescript
+        sql = f"""SELECT MedicineSet FROM prescript
             WHERE
                 CaseKey = {case_key} AND
                 MedicineSet >= 2
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) > 0:
             copy_self_prescript = True
@@ -312,19 +337,22 @@ class MedicalRecordFamily(QtWidgets.QMainWindow):
         if copy_self_prescript:
             self.ui.checkBox_self_prescript.setChecked(False)  # 預設不要拷貝
 
-        if self.parent.ins_type == '自費':
+        if self.parent.ins_type == "自費":
             self.ui.radioButton_self_prescript.setChecked(True)
 
     def _copy_medical_record(self):
         case_key = self.table_widget_medical_record.field_value(0)
 
         if self.ui.radioButton_ins_prescript.isChecked():
-            copy_ins_prescript_to = '健保處方'
+            copy_ins_prescript_to = "健保處方"
         else:
-            copy_ins_prescript_to = '自費處方'
+            copy_ins_prescript_to = "自費處方"
 
         case_utils.copy_past_medical_record(
-            self.database, self.system_settings, self.parent, case_key,
+            self.database,
+            self.system_settings,
+            self.parent,
+            case_key,
             self.ui.checkBox_diagnostic.isChecked(),
             self.ui.checkBox_remark.isChecked(),
             self.ui.checkBox_disease.isChecked(),
