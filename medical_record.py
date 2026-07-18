@@ -34,7 +34,7 @@ from libs import (
 )
 
 
-# 病歷資料 2018.01.31
+# 病歷資料 2026-07-18
 class MedicalRecord(QtWidgets.QMainWindow):
     program_name = "醫師看診作業"
 
