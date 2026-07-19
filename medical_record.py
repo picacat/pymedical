@@ -125,6 +125,82 @@ class MedicalRecord(QtWidgets.QMainWindow):
         )
         self._set_case_closed()
 
+    # def _set_case_closed(self):
+    #     if self.medical_record is None:
+    #         return
+
+    #     if not self.is_closed:
+    #         return
+
+    #     for widget in self.findChildren(
+    #         (
+    #             QtWidgets.QLineEdit,
+    #             QtWidgets.QTextEdit,
+    #         )
+    #     ):
+    #         widget.setReadOnly(self.is_closed)
+
+    #     for widget in self.findChildren((QtWidgets.QTableWidget,)):
+    #         widget.horizontalHeader().setSectionsMovable(False)
+    #         widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+    #         widget.setAcceptDrops(False)
+    #         widget.setDragEnabled(False)
+    #         widget.blockSignals(True)
+
+    #     # 2. 處理選擇控制項 (ComboBox 沒有 setReadOnly，通常用 setEnabled)
+    #     for widget in self.findChildren(
+    #         (
+    #             QtWidgets.QComboBox,
+    #             QtWidgets.QCheckBox,
+    #             QtWidgets.QAction,
+    #             QtWidgets.QToolButton,
+    #             QtWidgets.QRadioButton,
+    #             QtWidgets.QPushButton,
+    #             QtWidgets.QSpinBox,
+    #         )
+    #     ):
+    #         widget.setEnabled(not self.is_closed)
+
+    #     self.ui.action_save.triggered.connect(self.save_medical_record)
+    #     self.ui.action_save_and_pdf.triggered.connect(self.save_medical_record)
+    #     self.ui.action_force_save.triggered.connect(
+    #         lambda: self.save_medical_record(force_save=True)
+    #     )
+
+    #     self.ui.action_save_and_print.triggered.connect(self.save_medical_record)
+    #     self.ui.action_save_and_print_prescript.triggered.connect(
+    #         self.save_medical_record
+    #     )
+    #     self.ui.action_save_and_print_receipt.triggered.connect(
+    #         self.save_medical_record
+    #     )
+    #     self.ui.action_save_and_print_misc.triggered.connect(self.save_medical_record)
+
+    #     for action in self.findChildren(QtWidgets.QAction):
+    #         if action in [
+    #             self.ui.action_close,
+    #             self.ui.action_save,
+    #             self.ui.action_save_and_pdf,
+    #             self.ui.action_force_save,
+    #             self.ui.action_save_and_print,
+    #             self.ui.action_save_and_print_prescript,
+    #             self.ui.action_save_and_print_receipt,
+    #             self.ui.action_save_and_print_misc,
+    #         ]:
+    #             action.setEnabled(True)
+    #             continue
+
+    #         action.setEnabled(not self.is_closed)
+
+    #     exception_widgets = [
+    #         self.ui.textEdit_symptom,
+    #         self.ui.textEdit_tongue,
+    #         self.ui.textEdit_pulse,
+    #         self.ui.textEdit_remark,
+    #     ]
+    #     for widget in exception_widgets:
+    #         widget.setEnabled(self.is_closed)
+    #         widget.setReadOnly(not self.is_closed)
     def _set_case_closed(self):
         if self.medical_record is None:
             return
@@ -132,14 +208,16 @@ class MedicalRecord(QtWidgets.QMainWindow):
         if not self.is_closed:
             return
 
+        # 1. 文字輸入控制項設為唯讀
         for widget in self.findChildren(
             (
                 QtWidgets.QLineEdit,
                 QtWidgets.QTextEdit,
             )
         ):
-            widget.setReadOnly(self.is_closed)
+            widget.setReadOnly(True)
 
+        # 2. 表格控制項禁止編輯與拖曳
         for widget in self.findChildren((QtWidgets.QTableWidget,)):
             widget.horizontalHeader().setSectionsMovable(False)
             widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -147,51 +225,36 @@ class MedicalRecord(QtWidgets.QMainWindow):
             widget.setDragEnabled(False)
             widget.blockSignals(True)
 
-        # 2. 處理選擇控制項 (ComboBox 沒有 setReadOnly，通常用 setEnabled)
+        # 3. 選擇控制項 (ComboBox 沒有 setReadOnly，改用 setEnabled)
         for widget in self.findChildren(
             (
                 QtWidgets.QComboBox,
                 QtWidgets.QCheckBox,
-                QtWidgets.QAction,
                 QtWidgets.QToolButton,
                 QtWidgets.QRadioButton,
                 QtWidgets.QPushButton,
                 QtWidgets.QSpinBox,
             )
         ):
-            widget.setEnabled(not self.is_closed)
+            widget.setEnabled(False)
 
-        self.ui.action_save.triggered.connect(self.save_medical_record)
-        self.ui.action_save_and_pdf.triggered.connect(self.save_medical_record)
-        self.ui.action_force_save.triggered.connect(
-            lambda: self.save_medical_record(force_save=True)
-        )
-
-        self.ui.action_save_and_print.triggered.connect(self.save_medical_record)
-        self.ui.action_save_and_print_prescript.triggered.connect(
-            self.save_medical_record
-        )
-        self.ui.action_save_and_print_receipt.triggered.connect(
-            self.save_medical_record
-        )
-        self.ui.action_save_and_print_misc.triggered.connect(self.save_medical_record)
-
+        # 4. Action: 除了存檔與關閉相關的以外全部停用
+        #    (這些 action 在 _set_signal 已連接過, 這裡絕對不可再 connect,
+        #     否則存檔會被執行兩次)
+        allowed_actions = [
+            self.ui.action_close,
+            self.ui.action_save,
+            self.ui.action_save_and_pdf,
+            self.ui.action_force_save,
+            self.ui.action_save_and_print,
+            self.ui.action_save_and_print_prescript,
+            self.ui.action_save_and_print_receipt,
+            self.ui.action_save_and_print_misc,
+        ]
         for action in self.findChildren(QtWidgets.QAction):
-            if action in [
-                self.ui.action_close,
-                self.ui.action_save,
-                self.ui.action_save_and_pdf,
-                self.ui.action_force_save,
-                self.ui.action_save_and_print,
-                self.ui.action_save_and_print_prescript,
-                self.ui.action_save_and_print_receipt,
-                self.ui.action_save_and_print_misc,
-            ]:
-                action.setEnabled(True)
-                continue
+            action.setEnabled(action in allowed_actions)
 
-            action.setEnabled(not self.is_closed)
-
+        # 5. 望聞問切: 保持可捲動/選取/複製, 但不可編輯
         exception_widgets = [
             self.ui.textEdit_symptom,
             self.ui.textEdit_tongue,
@@ -199,8 +262,8 @@ class MedicalRecord(QtWidgets.QMainWindow):
             self.ui.textEdit_remark,
         ]
         for widget in exception_widgets:
-            widget.setEnabled(self.is_closed)
-            widget.setReadOnly(not self.is_closed)
+            widget.setEnabled(True)
+            widget.setReadOnly(True)
 
     def _read_case_extend(self):
         if (
@@ -1297,7 +1360,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
         tab_no = 0
         for tab_index in range(self.ui.tabWidget_prescript.count()):
             tab_name = self.ui.tabWidget_prescript.tabText(tab_index)
-            if tab_name == "健保":
+            if tab_name in ["健保", "加強照護"]:
                 continue
 
             tab_no += 1
@@ -1436,6 +1499,8 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
                 if i == 0 and self.tab_registration:
                     self.tab_registration.ui.lineEdit_special_code.setText("")
+
+        self.disease_code_changed()
 
     # # 設定診斷碼輸入狀態
     # def disease_code_changed(self):
@@ -1860,7 +1925,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             chinese_name_script = " AND ".join(
                 ["ChineseName LIKE %s" for _ in keyword_list]
             )
-            english_keyword_list = [k for k in keyword_list if len(icd_code) >= 5]
+            english_keyword_list = [k for k in keyword_list if len(k) >= 5]
             english_name_script = " AND ".join(
                 ["UPPER(EnglishName) LIKE %s" for _ in english_keyword_list]
             )
@@ -4171,6 +4236,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
                                 event, sender, input_code, diagnostic_type
                             ),
                         )
+
                 else:
                     return QtWidgets.QTextEdit.keyPressEvent(sender, event)
 
