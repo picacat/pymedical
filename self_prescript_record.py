@@ -1430,6 +1430,24 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         current_row_no = self.ui.tableWidget_prescript.currentRow()
         self.append_null_medicine(insert_row_no=current_row_no)
 
+    # def _insert_medicine_row(self, index):
+    #     self.ui.tableWidget_prescript.setFocus(True)
+    #     self.ui.tableWidget_prescript.insertRow(index)
+    #     self.ui.tableWidget_prescript.setCurrentCell(
+    #         index, prescript_utils.SELF_PRESCRIPT_COL_NO["MedicineName"]
+    #     )
+
+    #     self.ui.tableWidget_prescript.setItem(
+    #         index,
+    #         prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"],
+    #         QtWidgets.QTableWidgetItem(""),
+    #     )
+    #     self.ui.tableWidget_prescript.item(
+    #         index, prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]
+    #     ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
+    #     self.ui.tableWidget_prescript.setFocus()
+
     def _insert_medicine_row(self, index):
         self.ui.tableWidget_prescript.setFocus(True)
         self.ui.tableWidget_prescript.insertRow(index)
@@ -1437,15 +1455,13 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
             index, prescript_utils.SELF_PRESCRIPT_COL_NO["MedicineName"]
         )
 
+        dosage_item = QtWidgets.QTableWidgetItem("")
+        dosage_item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.ui.tableWidget_prescript.setItem(
             index,
             prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"],
-            QtWidgets.QTableWidgetItem(""),
+            dosage_item,
         )
-        self.ui.tableWidget_prescript.item(
-            index, prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]
-        ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-
         self.ui.tableWidget_prescript.setFocus()
 
     # 刪除處方

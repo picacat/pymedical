@@ -2298,11 +2298,9 @@ class Reservation(QtWidgets.QMainWindow):
             patient_id = string_utils.xstr(temp_patient_row["ID"])
             patient_birthday = string_utils.xstr(temp_patient_row["Birthday"])
 
-        if patient_id != "":
-            gender_code = patient_id[1]
-            gender = patient_utils.get_gender(gender_code)
-        else:
-            gender = None
+        gender = None
+        if len(patient_id) >= 2:
+            gender = patient_utils.get_gender(patient_id[1])
 
         remark = string_utils.get_str(temp_patient_row["Remark"], "utf8")
         if "json" in remark:
@@ -2340,22 +2338,41 @@ class Reservation(QtWidgets.QMainWindow):
             occupation = remark["occupation"]
             history = remark["history"]
             allergy = remark["allergy"]
-            if email not in [None, ""]:
-                self.database.exec_sql(
-                    f'UPDATE patient SET Email = "{email}" WHERE PatientKey = {new_patient_key}'
-                )
-            if occupation not in [None, ""]:
-                self.database.exec_sql(
-                    f'UPDATE patient SET Occupation = "{occupation}" WHERE PatientKey = {new_patient_key}'
-                )
-            if history not in [None, ""]:
-                self.database.exec_sql(
-                    f'UPDATE patient SET History = "{history}" WHERE PatientKey = {new_patient_key}'
-                )
-            if allergy not in [None, ""]:
-                self.database.exec_sql(
-                    f'UPDATE patient SET Allergy = "{allergy}" WHERE PatientKey = {new_patient_key}'
-                )
+
+            # if email not in [None, ""]:
+            #     self.database.exec_sql(
+            #         f'UPDATE patient SET Email = "{email}" WHERE PatientKey = {new_patient_key}'
+            #     )
+            # if occupation not in [None, ""]:
+            #     self.database.exec_sql(
+            #         f'UPDATE patient SET Occupation = "{occupation}" WHERE PatientKey = {new_patient_key}'
+            #     )
+            # if history not in [None, ""]:
+            #     self.database.exec_sql(
+            #         f'UPDATE patient SET History = "{history}" WHERE PatientKey = {new_patient_key}'
+            #     )
+            # if allergy not in [None, ""]:
+            #     self.database.exec_sql(
+            #         f'UPDATE patient SET Allergy = "{allergy}" WHERE PatientKey = {new_patient_key}'
+            #     )
+
+            update_fields = []
+            update_values = []
+
+            for field_name, value in [
+                ("Email", email),
+                ("Occupation", occupation),
+                ("History", history),
+                ("Allergy", allergy),
+            ]:
+                if value not in [None, ""]:
+                    update_fields.append(f"{field_name} = %s")
+                    update_values.append(value)
+
+            if update_fields:
+                sql = f"UPDATE patient SET {', '.join(update_fields)} WHERE PatientKey = %s"
+                update_values.append(new_patient_key)
+                self.database.exec_sql(sql, params=update_values)
 
         return new_patient_key
 

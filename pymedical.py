@@ -107,8 +107,13 @@ def collect_traceback(exctype, value, tb):
         with open(system_utils.PY_MEDICAL_JSON_FILE, "r") as json_file:
             json_data = json.load(json_file)
     except Exception:
-        # 如果 JSON 讀取失敗 (例如檔案不存在或損壞)，設定預設值
         json_data = {"院所名稱": "未知院所", "使用者": "未知使用者"}
+
+    # 取得目前版本 (加 try 保險, 避免錯誤處理器本身又出錯)
+    try:
+        version = system_utils.get_system_version()
+    except Exception:
+        version = "未知版本"
 
     # 2. 格式化堆疊追蹤
     tb_list = traceback.extract_tb(tb)
@@ -116,7 +121,10 @@ def collect_traceback(exctype, value, tb):
 
     # 3. 組合通知內容
     mail_content = (
-        f"**異常類型:** {exctype.__name__}\n**異常值:** {value}\n**追蹤:**\n{stack}"
+        f"**程式版本:** {version}\n"
+        f"**異常類型:** {exctype.__name__}\n"
+        f"**異常值:** {value}\n"
+        f"**追蹤:**\n{stack}"
     )
 
     # 4. 記錄到本地日誌 (Logging)
@@ -1188,7 +1196,18 @@ class PyMedical(QtWidgets.QMainWindow):
             else:
                 return
 
-        module = module_utils.get_module(tab_name)(self, *args)
+        module_class = module_utils.get_module(tab_name)
+        if module_class is None:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "模組載入失敗",
+                f'<font color="red"><h3>無法載入「{tab_name}」模組!</h3></font>',
+                "程式檔案可能不完整, 請執行醫療軟體更新後重新啟動系統.",
+            )
+            return None
+
+        module = module_class(self, *args)
+
         self.ui.tabWidget_window.addTab(module, tab_name)
         self.ui.tabWidget_window.setCurrentWidget(module)
         if tab_name == "病歷查詢" and args[2] is not None:  # args[2] = patient_key
@@ -2860,8 +2879,36 @@ def set_dark_style(app):
     app.setPalette(palette)
 
 
+def check_smart_app_control():
+    """檢查 Windows 11 Smart App Control 是否啟用 (0=關閉, 1=強制, 2=評估)"""
+    if sys.platform != "win32":
+        return
+
+    try:
+        import winreg
+
+        key = winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\CI\Policy"
+        )
+        state, _ = winreg.QueryValueEx(key, "VerifiedAndReputablePolicyState")
+        winreg.CloseKey(key)
+    except Exception:
+        return  # 讀不到就當作沒有此功能 (Win10 或舊版 Win11)
+
+    if state != 0:
+        system_utils.show_message_box(
+            QMessageBox.Warning,
+            "系統設定提醒",
+            '<font color="red"><h3>偵測到「智慧型應用程式控制」已啟用!</h3></font>',
+            "此功能會封鎖醫療系統部分模組, 造成無法預期的錯誤.<br>"
+            "請至 Windows 安全性 → 應用程式與瀏覽器控制 → 智慧型應用程式控制, 將其關閉後重新啟動電腦.",
+        )
+
+
 # 主程式
 def main(config):
+    check_smart_app_control()
+
     set_high_dpi_attributes()
     if sys.platform == "win32":
         set_windows_scale_factor()
