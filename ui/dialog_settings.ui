@@ -3887,7 +3887,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-338</y>
+              <y>0</y>
               <width>1301</width>
               <height>1478</height>
              </rect>
@@ -3902,96 +3902,6 @@
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_29">
-                <item row="7" column="1">
-                 <widget class="QCheckBox" name="checkBox_show_all_statistics">
-                  <property name="text">
-                   <string>候診名單病歷統計顯示全院統計</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_17">
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_show_massage">
-                    <property name="text">
-                     <string>過去病歷顯示民俗調理</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_show_massager">
-                    <property name="text">
-                     <string>過去病歷顯示推拿師父</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="1" column="0">
-                 <layout class="QHBoxLayout" name="horizontalLayout_31">
-                  <item>
-                   <widget class="QLabel" name="label_87">
-                    <property name="text">
-                     <string>過去病歷一頁顯示</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QSpinBox" name="spinBox_count_per_page">
-                    <property name="minimum">
-                     <number>5</number>
-                    </property>
-                    <property name="maximum">
-                     <number>1000</number>
-                    </property>
-                    <property name="singleStep">
-                     <number>10</number>
-                    </property>
-                    <property name="value">
-                     <number>30</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_88">
-                    <property name="text">
-                     <string>筆</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_23">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item row="6" column="0">
-                 <widget class="QCheckBox" name="checkBox_no_ins_prescript">
-                  <property name="text">
-                   <string>健保處方預設不調劑</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="6" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_52">
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_no_switch_ime">
-                    <property name="text">
-                     <string>不要自動切換輸入法</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
                 <item row="2" column="0">
                  <layout class="QGridLayout" name="gridLayout_5">
                   <item row="0" column="1">
@@ -4073,31 +3983,149 @@
                   </item>
                  </layout>
                 </item>
-                <item row="1" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_22">
+                <item row="10" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_94"/>
+                </item>
+                <item row="6" column="0">
+                 <widget class="QCheckBox" name="checkBox_no_ins_prescript">
+                  <property name="text">
+                   <string>健保處方預設不調劑</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <layout class="QHBoxLayout" name="horizontalLayout_31">
                   <item>
-                   <widget class="QCheckBox" name="checkBox_diag_timer">
+                   <widget class="QLabel" name="label_87">
                     <property name="text">
-                     <string>顯示看診計時器</string>
+                     <string>過去病歷一頁顯示</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_copy_remark">
+                   <widget class="QSpinBox" name="spinBox_count_per_page">
+                    <property name="minimum">
+                     <number>5</number>
+                    </property>
+                    <property name="maximum">
+                     <number>1000</number>
+                    </property>
+                    <property name="singleStep">
+                     <number>10</number>
+                    </property>
+                    <property name="value">
+                     <number>30</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_88">
                     <property name="text">
-                     <string>預設拷貝備註</string>
+                     <string>筆</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_23">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item row="4" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_17">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_show_massage">
+                    <property name="text">
+                     <string>過去病歷顯示民俗調理</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_show_massager">
+                    <property name="text">
+                     <string>過去病歷顯示推拿師父</string>
                     </property>
                    </widget>
                   </item>
                  </layout>
                 </item>
-                <item row="9" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_94"/>
+                <item row="3" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_34">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_round">
+                    <property name="text">
+                     <string>折扣後金額四捨五入</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_doctor_treat">
+                    <property name="text">
+                     <string>傷骨科醫師親自處置</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
-                <item row="7" column="0">
-                 <widget class="QCheckBox" name="checkBox_show_simple">
+                <item row="2" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_33">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_copy_self_prescript">
+                    <property name="text">
+                     <string>預設拷貝自費處方</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_copy_ins_past_medicine">
+                    <property name="text">
+                     <string>預設拷貝健保針傷科處方用藥</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="7" column="1">
+                 <widget class="QCheckBox" name="checkBox_show_all_statistics">
                   <property name="text">
-                   <string>過去病歷顯示精簡顯示頁</string>
+                   <string>候診名單病歷統計顯示全院統計</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_52">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_no_switch_ime">
+                    <property name="text">
+                     <string>不要自動切換輸入法</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="5" column="0">
+                 <widget class="QCheckBox" name="checkBox_auto_cashier">
+                  <property name="text">
+                   <string>存檔後自動完成批價作業</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QCheckBox" name="checkBox_only_symptom">
+                  <property name="text">
+                   <string>過去病歷診察資料只顯示主訴</string>
                   </property>
                  </widget>
                 </item>
@@ -4151,40 +4179,26 @@
                   </item>
                  </layout>
                 </item>
-                <item row="3" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_34">
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_round">
-                    <property name="text">
-                     <string>折扣後金額四捨五入</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="checkBox_doctor_treat">
-                    <property name="text">
-                     <string>傷骨科醫師親自處置</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
+                <item row="7" column="0">
+                 <widget class="QCheckBox" name="checkBox_show_simple">
+                  <property name="text">
+                   <string>過去病歷顯示精簡顯示頁</string>
+                  </property>
+                 </widget>
                 </item>
-                <item row="2" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_33">
+                <item row="1" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_22">
                   <item>
-                   <widget class="QCheckBox" name="checkBox_copy_self_prescript">
+                   <widget class="QCheckBox" name="checkBox_diag_timer">
                     <property name="text">
-                     <string>預設拷貝自費處方</string>
+                     <string>顯示看診計時器</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="checkBox_copy_ins_past_medicine">
+                   <widget class="QCheckBox" name="checkBox_copy_remark">
                     <property name="text">
-                     <string>預設拷貝健保針傷科處方用藥</string>
+                     <string>預設拷貝備註</string>
                     </property>
                    </widget>
                   </item>
@@ -4228,17 +4242,10 @@
                   </item>
                  </layout>
                 </item>
-                <item row="5" column="0">
-                 <widget class="QCheckBox" name="checkBox_auto_cashier">
+                <item row="3" column="0">
+                 <widget class="QCheckBox" name="checkBox_copy_past">
                   <property name="text">
-                   <string>存檔後自動完成批價作業</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="0">
-                 <widget class="QCheckBox" name="checkBox_only_symptom">
-                  <property name="text">
-                   <string>過去病歷診察資料只顯示主訴</string>
+                   <string>登錄病歷時自動顯示過去病歷</string>
                   </property>
                  </widget>
                 </item>
@@ -4260,10 +4267,10 @@
                   </item>
                  </layout>
                 </item>
-                <item row="3" column="0">
-                 <widget class="QCheckBox" name="checkBox_copy_past">
+                <item row="8" column="0">
+                 <widget class="QCheckBox" name="checkBox_show_family">
                   <property name="text">
-                   <string>登錄病歷時自動顯示過去病歷</string>
+                   <string>顯示家族病歷</string>
                   </property>
                  </widget>
                 </item>

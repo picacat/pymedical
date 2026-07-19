@@ -534,7 +534,10 @@ class MedicalRecord(QtWidgets.QMainWindow):
             self.ui.action_append_self_medical_record.setEnabled(False)
             return
 
-        if self.call_from not in ["病歷查詢健保病歷"]:
+        if (
+            self.call_from not in ["病歷查詢健保病歷"]
+            and self.system_settings.field("顯示家族病歷") == "Y"
+        ):
             self.tab_family = module_utils.get_medical_record_family(
                 self, self.database, self.system_settings, self.case_key, self.call_from
             )

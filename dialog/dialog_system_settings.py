@@ -1044,6 +1044,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self._set_check_box(self.ui.checkBox_no_ins_prescript, "健保處方預設不調劑")
         self._set_check_box(self.ui.checkBox_show_simple, "過去病歷顯示精簡顯示頁")
+        self._set_check_box(self.ui.checkBox_show_family, "顯示家族病歷")
 
         self._set_check_box(self.ui.checkBox_ime_en, "望聞問切輸入法預設英數")
         self._set_check_box(self.ui.checkBox_ime_zh, "診斷碼輸入法預設中文")
@@ -2230,6 +2231,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self._save_check_box(self.ui.checkBox_no_ins_prescript, "健保處方預設不調劑")
         self._save_check_box(self.ui.checkBox_show_simple, "過去病歷顯示精簡顯示頁")
+        self._save_check_box(self.ui.checkBox_show_family, "顯示家族病歷")
 
         self._save_check_box(self.ui.checkBox_ime_en, "望聞問切輸入法預設英數")
         self._save_check_box(self.ui.checkBox_ime_zh, "診斷碼輸入法預設中文")
