@@ -322,8 +322,12 @@ class DialogReservationModify(QtWidgets.QDialog):
         sorted_times = sorted(self.time_dict.keys())
         ui_utils.set_combo_box(self.ui.comboBox_time, sorted_times)
 
+        # sorted_numbers = sorted(
+        #     self.number_dict.keys(), key=lambda x: int(x) if x.isdigit() else x
+        # )
         sorted_numbers = sorted(
-            self.number_dict.keys(), key=lambda x: int(x) if x.isdigit() else x
+            self.number_dict.keys(),
+            key=lambda x: (0, int(x)) if x.isdigit() else (1, x),
         )
         ui_utils.set_combo_box(self.ui.comboBox_reserve_no, sorted_numbers)
 

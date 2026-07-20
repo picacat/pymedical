@@ -1688,20 +1688,22 @@ class CheckMedicalRecordCount(QtWidgets.QMainWindow):
     def _set_complicated_massage(self, treat_type):
         table_widget_case = self._get_table_widget(self.sender().objectName())
         case_key = table_widget_case.field_value(0)
+        if case_key is None:
+            return
+
         case_date = table_widget_case.field_value(2)
         patient_key = table_widget_case.field_value(3)
         name = table_widget_case.field_value(4)
-        # treat_type = table_widget_case.field_value(5)
 
-        sql = f'''
+        sql = """
             UPDATE cases
             SET
-                Treatment = "{treat_type}",
-                TreatType = "{treat_type}"
+                Treatment = %s, TreatType = %s
             WHERE
-                CaseKey = {case_key}
-        '''
-        self.database.exec_sql(sql)
+                CaseKey = %s
+        """
+        params = (treat_type, treat_type, case_key)
+        self.database.exec_sql(sql, params=params)
 
         charge_utils.calculate_ins_fee(self.database, self.system_settings, case_key)
         log_utils.write_event_log(
