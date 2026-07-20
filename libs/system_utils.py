@@ -4,7 +4,6 @@
 import base64
 import configparser
 import datetime
-import hashlib
 import os
 import platform
 import random
@@ -21,7 +20,6 @@ from pathlib import Path
 
 import pygame
 import requests
-from gtts import gTTS, gTTSError
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QDate, QEvent, QObject, QSettings, QStandardPaths
 from PyQt5.QtGui import QPixmap
@@ -44,8 +42,6 @@ from libs import dialog_utils, nhi_utils, number_utils, ui_utils
 
 PY_MEDICAL_JSON_FILE = "pymedical.json"
 COMPLICATED_TREATMENT_DISEASE_FILE = "complicated_treatment_disease.json"
-
-CACHE_DIR = os.path.join(os.path.dirname(__file__), "tts_cache")
 
 
 class CalendarPopupFixer(QObject):
@@ -758,61 +754,28 @@ def speak_linux_thread(sentence):
 # gTTS 的音量通常是固定的，如果需要正規化，則需要額外的步驟。
 
 
-# def speak_win32(sentence):
-#     # original_volume = save_volume()  # 保存原始音量
-
-#     with tempfile.NamedTemporaryFile(delete=True) as fp:
-#         filename = f"{fp.name}.mp3"
-
-#         tts = gTTS(text=sentence, lang="zh-tw", slow=False)
-#         tts.save(filename)
-
-#         # set_volume(0.1)
-#         try:
-#             mixer.init()
-#             mixer.music.load(filename)
-#             mixer.music.play()
-
-#             while mixer.music.get_busy():
-#                 time.sleep(0.1)
-
-#         except pygame.error:
-#             pass
-
-#     # restore_volume(original_volume)  # 恢復到原始音量
-
-
 def speak_win32(sentence):
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    key = hashlib.md5(sentence.encode("utf-8")).hexdigest()
-    filename = os.path.join(CACHE_DIR, f"{key}.mp3")
+    # original_volume = save_volume()  # 保存原始音量
 
-    if not os.path.exists(filename):
+    with tempfile.NamedTemporaryFile(delete=True) as fp:
+        filename = f"{fp.name}.mp3"
+
+        tts = gTTS(text=sentence, lang="zh-tw", slow=False)
+        tts.save(filename)
+
+        # set_volume(0.1)
         try:
-            tts = gTTS(text=sentence, lang="zh-tw", slow=False)
-            tts.save(filename)
-        except gTTSError:
-            speak_offline(sentence)  # 連不上 Google 時的備援
-            return
+            mixer.init()
+            mixer.music.load(filename)
+            mixer.music.play()
 
-    try:
-        mixer.init()
-        mixer.music.load(filename)
-        mixer.music.play()
-        while mixer.music.get_busy():
-            time.sleep(0.1)
-        mixer.music.unload()
-    except pygame.error:
-        pass
+            while mixer.music.get_busy():
+                time.sleep(0.1)
 
+        except pygame.error:
+            pass
 
-def speak_offline(sentence):
-    """Windows 內建 SAPI5,完全離線;中文版 Windows 通常有 Hanhan 語音"""
-    import pyttsx3
-
-    engine = pyttsx3.init()
-    engine.say(sentence)
-    engine.runAndWait()
+    # restore_volume(original_volume)  # 恢復到原始音量
 
 
 def speak_win32_thread(sentence):
