@@ -2907,8 +2907,6 @@ def check_smart_app_control():
 
 # 主程式
 def main(config):
-    check_smart_app_control()
-
     set_high_dpi_attributes()
     if sys.platform == "win32":
         set_windows_scale_factor()
@@ -2920,6 +2918,8 @@ def main(config):
     app.installTranslator(translator)
 
     splash = show_splash_screen()
+    check_smart_app_control()
+
     py_medical = initialize_app(splash)
     user_name, position = handle_login(py_medical)
     if not user_name:

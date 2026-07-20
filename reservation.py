@@ -1672,6 +1672,21 @@ class Reservation(QtWidgets.QMainWindow):
         if not cancel_reservation:
             return False
 
+        # 先確認這筆預約還存在 (可能已被其他工作站取消)
+        sql = f"SELECT * FROM reserve WHERE ReserveKey = {reserve_key}"
+        rows = self.database.select_record(sql)
+        if len(rows) <= 0:
+            system_utils.show_message_box(
+                QMessageBox.Warning,
+                "預約資料不存在",
+                '<font size="5" color="red"><b>此筆預約已被取消或不存在!</b></font>',
+                "可能已由其他工作站取消, 請重新整理預約名單.",
+            )
+            return True  # 回傳True讓呼叫端刷新名單
+
+        row = rows[0]
+        backup_json = db_utils.mysql_to_json(row)
+
         if self.system_settings.field("alleypin") == "Y":
             alleypin_utils.cancel_reservation_alleypin_appointments(
                 self.database, self.system_settings, reserve_key
@@ -1693,14 +1708,6 @@ class Reservation(QtWidgets.QMainWindow):
                 WHERE
                     TempPatientKey = {patient_key}
             """)
-
-        sql = f"SELECT * FROM reserve WHERE ReserveKey = {reserve_key}"
-        rows = self.database.select_record(sql)
-        if len(rows) > 0:
-            row = rows[0]
-            backup_json = db_utils.mysql_to_json(row)
-        else:
-            backup_json = None
 
         fields = [
             "CancelDate",
@@ -2216,7 +2223,17 @@ class Reservation(QtWidgets.QMainWindow):
         temp_patient_row = temp_patient_rows[0]
 
         name = string_utils.xstr(temp_patient_row["Name"])
-        patient_id = string_utils.xstr(temp_patient_row["ID"])
+
+        patient_id = string_utils.xstr(temp_patient_row["ID"]).strip()
+        if len(patient_id) > 10:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "身分證號格式錯誤",
+                f'<font color="red"><h3>初診預約填寫的身分證號格式不正確(超過10碼):<br>{patient_id}</h3></font>',
+                "系統先改為10碼, 請預約報到後再至病患基本資料修改.",
+            )
+            patient_id = patient_id[:10]
+
         birthday = string_utils.xstr(temp_patient_row["Birthday"])
         phone_no = string_utils.xstr(temp_patient_row["PhoneNo"])
         cellphone = string_utils.xstr(temp_patient_row["Cellphone"])
