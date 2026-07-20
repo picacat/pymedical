@@ -36,10 +36,10 @@ class PrintIncome2:
                 self.income_date = self.tab_income_cash_flow.label_income_date.text()
             except AttributeError:
                 # 如果頁籤存在，但裡面沒有 label_income_date 欄位
-                self.income_date = datetime.now().strftime("%Y-%m-%d")
+                self.income_date = datetime.datetime.now().strftime("%Y-%m-%d")
         else:
             # 狀況 A：如果允許在沒有該頁籤的情況下預覽，就自動帶入今天日期
-            self.income_date = datetime.now().strftime("%Y-%m-%d")
+            self.income_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
         self.income_period = self.tab_income_cash_flow.period
         self.income_doctor = self.tab_income_cash_flow.doctor
