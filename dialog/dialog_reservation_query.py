@@ -1,19 +1,21 @@
-
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QMessageBox
 import re
 
-from libs import ui_utils
-from libs import system_utils
-from libs import string_utils
-from libs import class_utils
-from libs import validator_utils
-from libs import date_utils
-from libs import patient_utils
-from libs import dialog_utils
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
+
+from libs import (
+    class_utils,
+    date_utils,
+    dialog_utils,
+    patient_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+    validator_utils,
+)
 
 
 # 主視窗
@@ -43,8 +45,10 @@ class DialogReservationQuery(QtWidgets.QDialog):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_DIALOG_RESERVATION_QUERY, self)
         self.setFixedSize(self.size())  # non resizable dialog
         system_utils.set_css(self, self.system_settings)
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('關閉')
-        self.table_widget_reservation = class_utils.get_table_widget(self.ui.tableWidget_reservation, self.database)
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("關閉")
+        self.table_widget_reservation = class_utils.get_table_widget(
+            self.ui.tableWidget_reservation, self.database
+        )
         self._set_table_width()
 
     # 設定信號
@@ -62,7 +66,7 @@ class DialogReservationQuery(QtWidgets.QDialog):
 
     def _query_reservation(self):
         keyword = self.ui.lineEdit_keyword.text()
-        if keyword == '':
+        if keyword == "":
             self.ui.tableWidget_reservation.setRowCount(0)
             return
 
@@ -71,67 +75,71 @@ class DialogReservationQuery(QtWidgets.QDialog):
         elif self.ui.radioButton_arrival.isChecked():
             condition = ' AND Arrival = "True" '
         else:
-            condition = ''
+            condition = ""
 
         if keyword.isdigit():
-            patient_condition = f'PatientKey = {keyword}'
+            patient_condition = f"PatientKey = {keyword}"
         else:
             patient_condition = f'Name LIKE "%{keyword}%"'
 
-        sql = f'''
+        sql = f"""
             SELECT * FROM reserve
             WHERE
                 {patient_condition}
                 {condition}
             ORDER BY PatientKey, ReserveDate DESC
-        '''
+        """
         self.table_widget_reservation.set_db_data(sql, self._set_reservation_data)
 
         self.ui.lineEdit_keyword.setFocus(True)
         self.ui.lineEdit_keyword.setCursorPosition(len(keyword))
 
     def _set_reservation_data(self, row_no, row):
-        if string_utils.xstr(row['Arrival']) == 'True':
-            status = '已報到'
+        if string_utils.xstr(row["Arrival"]) == "True":
+            status = "已報到"
         else:
-            status = '未報到'
+            status = "未報到"
 
-        if row['ReserveDate'] is None:
+        if row["ReserveDate"] is None:
             reserve_date = None
         else:
-            reserve_date = string_utils.xstr(row['ReserveDate'].strftime('%Y-%m-%d %H:%M'))
+            reserve_date = string_utils.xstr(
+                row["ReserveDate"].strftime("%Y-%m-%d %H:%M")
+            )
+
+        patient_key = string_utils.xstr(row["PatientKey"])
+        source = string_utils.xstr(row["Source"])
+        if source in ["初診預約", "網路初診預約"]:
+            patient_key = "初診"
 
         reservation_data = [
-            string_utils.xstr(row['PatientKey']),
-            string_utils.xstr(row['Name']),
+            patient_key,
+            string_utils.xstr(row["Name"]),
             reserve_date,
-            string_utils.xstr(row['Period']),
-            string_utils.xstr(row['ReserveNo']),
-            string_utils.xstr(row['Doctor']),
-            string_utils.xstr(row['Source']),
+            string_utils.xstr(row["Period"]),
+            string_utils.xstr(row["ReserveNo"]),
+            string_utils.xstr(row["Doctor"]),
+            source,
             status,
         ]
 
         for col_no in range(len(reservation_data)):
             self.ui.tableWidget_reservation.setItem(
-                row_no, col_no,
-                QtWidgets.QTableWidgetItem(reservation_data[col_no])
+                row_no, col_no, QtWidgets.QTableWidgetItem(reservation_data[col_no])
             )
 
             if col_no in [0, 4]:
-                self.ui.tableWidget_reservation.item(
-                    row_no, col_no).setTextAlignment(
+                self.ui.tableWidget_reservation.item(row_no, col_no).setTextAlignment(
                     QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
                 )
             elif col_no in [3]:
-                self.ui.tableWidget_reservation.item(
-                    row_no, col_no).setTextAlignment(
+                self.ui.tableWidget_reservation.item(row_no, col_no).setTextAlignment(
                     QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
                 )
 
     def _query_patient(self):
         keyword = string_utils.xstr(self.ui.lineEdit_keyword.text())
-        if keyword == '':
+        if keyword == "":
             return
 
         pattern = re.compile(validator_utils.DATE_REGEXP)
@@ -141,18 +149,24 @@ class DialogReservationQuery(QtWidgets.QDialog):
         self._get_patient(keyword)
 
     def _get_patient(self, keyword=None):
-        row = patient_utils.search_patient(self.ui, self.database, self.system_settings, keyword)
+        row = patient_utils.search_patient(
+            self.ui, self.database, self.system_settings, keyword
+        )
         if row is None:  # 找不到資料
             dialog = dialog_utils.get_dialog_select_patient(
-                self, self.database, self.system_settings,
-                'patient', 'PatientKey', keyword
+                self,
+                self.database,
+                self.system_settings,
+                "patient",
+                "PatientKey",
+                keyword,
             )
             if dialog.table_widget_patient_list.row_count() <= 0:
                 system_utils.show_message_box(
                     QMessageBox.Critical,
-                    '查無資料',
+                    "查無資料",
                     '<font size="5" color="red"><b>找不到有關的病患資料, 請檢查關鍵字是否有誤.</b></font>',
-                    '請確定輸入資料的正確性, 生日請輸入YYYY-MM-DD.'
+                    "請確定輸入資料的正確性, 生日請輸入YYYY-MM-DD.",
                 )
                 self.ui.lineEdit_keyword.setFocus()
                 return
@@ -165,5 +179,5 @@ class DialogReservationQuery(QtWidgets.QDialog):
         elif row == -1:  # 取消查詢
             self.ui.lineEdit_keyword.setFocus()
         else:  # 已選取病患
-            patient_key = string_utils.xstr(row[0]['PatientKey'])
+            patient_key = string_utils.xstr(row[0]["PatientKey"])
             self.ui.lineEdit_keyword.setText(patient_key)
