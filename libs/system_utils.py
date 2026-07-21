@@ -1,9 +1,11 @@
 # 元件設定 2017.09.26
 
 # -*- coding: UTF-8 -*-
+import asyncio
 import base64
 import configparser
 import datetime
+import hashlib
 import os
 import platform
 import random
@@ -211,10 +213,6 @@ def import_database(database, restore_filename):
     return err_no
 
 
-import os
-import sys
-
-
 def dump_table(
     database, version, backup_path, in_filename, where_script=None, use_docker=False
 ):
@@ -332,6 +330,13 @@ if sys.platform == "win32":
     import win32api
     import win32gui
     from win32con import WM_INPUTLANGCHANGEREQUEST
+
+try:
+    import edge_tts
+
+    USE_EDGE_TTS = True
+except ModuleNotFoundError:
+    USE_EDGE_TTS = False
 
 try:
     from gtts import gTTS
@@ -693,7 +698,95 @@ def set_volume(volume_level=0.2):
         print("不支援的作業系統")
 
 
+EDGE_TTS_VOICE = "zh-TW-HsiaoChenNeural"  # 曉臻(女) / zh-TW-HsiaoYuNeural 曉雨(女) / zh-TW-YunJheNeural 雲哲(男)
+EDGE_TTS_RATE = "-20%"  # 語速: '+0%' 原速, '-20%' 放慢
+TTS_CACHE_DIR = os.path.join(BASE_DIR, "tts_cache")
+
+
+def _get_tts_cache_filename(sentence):
+    """快取檔名把語音與語速一起算進 hash, 改設定不會播到舊快取"""
+    key_source = f"{sentence}|{EDGE_TTS_VOICE}|{EDGE_TTS_RATE}"
+    key = hashlib.md5(key_source.encode("utf-8")).hexdigest()
+
+    return os.path.join(TTS_CACHE_DIR, f"{key}.mp3")
+
+
+def _edge_tts_save(sentence, filename):
+    async def _run():
+        communicate = edge_tts.Communicate(
+            sentence,
+            EDGE_TTS_VOICE,
+            rate=EDGE_TTS_RATE,
+        )
+        await communicate.save(filename)
+
+    asyncio.run(_run())
+
+
+def _make_tts_mp3(sentence):
+    """
+    回傳 mp3 檔案路徑, 失敗回傳 None
+    順序: 快取 -> edge-tts -> gTTS (備援)
+    """
+    os.makedirs(TTS_CACHE_DIR, exist_ok=True)
+    filename = _get_tts_cache_filename(sentence)
+    if os.path.exists(filename):
+        return filename
+
+    # 先寫 .tmp 再改名, 避免產生到一半的壞檔留在快取
+    tmp_filename = f"{filename}.tmp"
+    try:
+        _edge_tts_save(sentence, tmp_filename)
+    except Exception as e:
+        print(f"edge-tts 產生語音失敗, 改用 gTTS: {e}")
+        try:
+            tts = gTTS(text=sentence, lang="zh-tw", slow=False)
+            tts.save(tmp_filename)
+        except Exception as e2:
+            print(f"gTTS 也失敗, 放棄本次播報: {e2}")
+            if os.path.exists(tmp_filename):
+                os.remove(tmp_filename)
+            return None
+
+    os.replace(tmp_filename, filename)
+
+    return filename
+
+
+def _play_mp3(filename):
+    try:
+        if not mixer.get_init():
+            mixer.init()
+
+        mixer.music.load(filename)
+        mixer.music.play()
+
+        while mixer.music.get_busy():
+            time.sleep(0.1)
+
+        mixer.music.unload()  # 釋放檔案, 避免 Windows 檔案被鎖住
+    except pygame.error:
+        pass
+
+
+def speak_edge(sentence, threaded=False):
+    """edge-tts 語音播報, Windows / Linux 通用"""
+    if threaded:
+        thread = threading.Thread(target=speak_edge, args=(sentence,), daemon=True)
+        thread.start()
+        return
+
+    filename = _make_tts_mp3(sentence)
+    if filename:
+        _play_mp3(filename)
+
+
 def speak(sentence, threading=False):
+    if USE_EDGE_TTS:
+        speak_edge(sentence, threaded=threading)
+        return
+
+    # 沒裝 edge-tts 的客戶, 維持原本 gTTS 路徑
     if sys.platform == "linux":
         if threading:
             speak_linux_thread(sentence)

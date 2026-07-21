@@ -12,6 +12,7 @@
 *.sqlite
 *.zip
 *診所*.json
+tts_cache/
 bq.conf
 mingi.conf
 pybulletin.bat
