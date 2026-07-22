@@ -671,39 +671,42 @@ class Reservation(QtWidgets.QMainWindow):
         period = self._get_period()
         weekday_name = self._get_week_day_name()
 
-        sql = f'''
+        sql = """
             SELECT * FROM reservation_table
             WHERE
-                (Doctor="{doctor}") AND
-                (Period = "{period}") AND
-                (Weekday = "{weekday_name}")
+                Doctor=%s AND
+                Period = %s AND
+                Weekday = %s
             ORDER BY RowNo, ColumnNo
-        '''
-        rows = self.database.select_record(sql)
+        """
+        params = (doctor, period, weekday_name)
+        rows = self.database.select_record(sql, params=params)
 
         if len(rows) <= 0:
-            sql = f'''
+            sql = """
                 SELECT * FROM reservation_table
                 WHERE
-                    (Doctor="{doctor}") AND
-                    (Period = "{period}") AND
-                    (ReserveNo IS NOT NULL) AND
-                    (Weekday IS NULL)
+                    Doctor = %s AND
+                    Period = %s AND
+                    ReserveNo IS NOT NULL AND
+                    Weekday IS NULL
                 ORDER BY RowNo, ColumnNo
-            '''
-            rows = self.database.select_record(sql)
+            """
+            params = (doctor, period)
+            rows = self.database.select_record(sql, params=params)
 
         return rows
 
     def _get_reserve_table_rows(self, start_date, end_date, period, doctor):
-        sql = f'''
+        sql = """
             SELECT * FROM reserve
             WHERE
-                ReserveDate BETWEEN "{start_date}" AND "{end_date}" AND
-                Period = "{period}" AND
-                Doctor = "{doctor}"
-        '''
-        rows = self.database.select_record(sql)
+                ReserveDate BETWEEN %s AND %s AND
+                Period = %s AND
+                Doctor = %s
+        """
+        params = (start_date, end_date, period, doctor)
+        rows = self.database.select_record(sql, params=params)
 
         return rows
 
@@ -733,15 +736,16 @@ class Reservation(QtWidgets.QMainWindow):
     def _set_reservation_allow_table(
         self, reservation_date, period, doctor, reserve_no, row_no, col_no
     ):
-        sql = f'''
+        sql = """
             SELECT * FROM reservation_allow_table
             WHERE
-                ReserveDate = "{reservation_date}" AND
-                Period = "{period}" AND
-                Doctor = "{doctor}" AND
-                ReserveNo = "{reserve_no}"
-        '''
-        rows = self.database.select_record(sql)
+                ReserveDate = %s AND
+                Period = %s AND
+                Doctor = %s AND
+                ReserveNo = %s
+        """
+        params = (reservation_date, period, doctor, reserve_no)
+        rows = self.database.select_record(sql, params=params)
         if len(rows) > 0:
             if self.ui.verticalFrame.isVisible():
                 col_count = 3
@@ -896,15 +900,16 @@ class Reservation(QtWidgets.QMainWindow):
                 elif name is not None and name.text() != "":
                     continue
 
-                sql = f'''
+                sql = """
                     SELECT * FROM wait
                     WHERE
-                        DATE(CaseDate) BETWEEN "{start_date}" AND "{end_date}" AND
-                        Period = "{period}" AND
-                        Doctor = "{doctor}" AND
-                        RegistNo = {reserve_no.text()}
-                '''
-                rows = self.database.select_record(sql)
+                        DATE(CaseDate) BETWEEN %s AND %s AND
+                        Period = %s AND
+                        Doctor = %s AND
+                        RegistNo = %s
+                """
+                params = (start_date, end_date, period, doctor, reserve_no.text())
+                rows = self.database.select_record(sql, params=params)
                 if len(rows) <= 0:
                     continue
 
@@ -1070,14 +1075,15 @@ class Reservation(QtWidgets.QMainWindow):
         else:
             weekday_condition = f'AND Weekday = "{weekday}"'
 
-        sql = f'''
+        sql = f"""
             DELETE FROM reservation_table
             WHERE
-                Doctor = "{doctor}" AND
-                Period = "{period}"
+                Doctor = %s AND
+                Period = %s
                 {weekday_condition}
-        '''
-        self.database.exec_sql(sql)
+        """
+        params = (doctor, period)
+        self.database.exec_sql(sql, params=params)
 
     def _insert_reservation_table(
         self, period, weekday, doctor, row_no, col_no, time, reserve_no
@@ -1514,13 +1520,14 @@ class Reservation(QtWidgets.QMainWindow):
         if patient_key in ["網路初診", "初診預約", "視訊初診", "視訊初診預約"]:
             return None
 
-        sql = f"""
+        sql = """
             SELECT Remark FROM cases
             WHERE
-                PatientKey = {patient_key}
+                PatientKey = %s
             ORDER BY CaseDate DESC LIMIT 1
         """
-        rows = self.database.select_record(sql)
+        params = (patient_key,)
+        rows = self.database.select_record(sql, params=params)
         if len(rows) <= 0:
             return None
 
@@ -1673,8 +1680,9 @@ class Reservation(QtWidgets.QMainWindow):
             return False
 
         # 先確認這筆預約還存在 (可能已被其他工作站取消)
-        sql = f"SELECT * FROM reserve WHERE ReserveKey = {reserve_key}"
-        rows = self.database.select_record(sql)
+        sql = "SELECT * FROM reserve WHERE ReserveKey = %s"
+        params = (reserve_key,)
+        rows = self.database.select_record(sql, params=params)
         if len(rows) <= 0:
             system_utils.show_message_box(
                 QMessageBox.Warning,
@@ -1830,22 +1838,25 @@ class Reservation(QtWidgets.QMainWindow):
 
         reserve_key = reserve_key_time.text()
         if remark == "":
-            sql = f"""
+            sql = """
                 UPDATE reserve
                 SET
                     Remark = NULL
                 WHERE
-                    ReserveKey = {reserve_key}
+                    ReserveKey = %s
             """
+            params = (reserve_key,)
         else:
-            sql = f'''
+            sql = """
                 UPDATE reserve
                 SET
-                    Remark = "{remark}"
+                    Remark = %s
                 WHERE
-                    ReserveKey = {reserve_key}
-            '''
-        self.database.exec_sql(sql)
+                    ReserveKey = %s
+            """
+            params = (remark, reserve_key)
+
+        self.database.exec_sql(sql, params=params)
 
     def _write_temp_remark(self, row_no, col_no, remark):
         reservation_date = self.ui.dateEdit_reservation_date.date().toString(
@@ -1953,12 +1964,13 @@ class Reservation(QtWidgets.QMainWindow):
         self._ready_to_arrival(reserve_key, name)
 
     def _get_patient_key(self, reserve_key):
-        sql = f"""
+        sql = """
             SELECT PatientKey FROM reserve
             WHERE
-                ReserveKey = {reserve_key}
+                ReserveKey = %s
         """
-        rows = self.database.select_record(sql)
+        params = (reserve_key,)
+        rows = self.database.select_record(sql, params=params)
         if len(rows) <= 0:
             return None
 
@@ -1981,23 +1993,25 @@ class Reservation(QtWidgets.QMainWindow):
             self._normal_arrival(reserve_key, name)
 
     def _is_first_visit(self, patient_key, name):
-        sql = f'''
+        sql = """
             SELECT * FROM patient
             WHERE
-                PatientKey = {patient_key} AND
-                Name = "{name}"
-        '''
-        rows = self.database.select_record(sql)
+                PatientKey = %s AND
+                Name = %s
+        """
+        params = (patient_key, name)
+        rows = self.database.select_record(sql, params=params)
         if rows:
             return False
 
-        sql = f'''
+        sql = """
             SELECT * FROM temp_patient
             WHERE
-                TempPatientKey = {patient_key} AND
-                Name = "{name}"
-        '''
-        rows = self.database.select_record(sql)
+                TempPatientKey = %s AND
+                Name = %s
+        """
+        params = (patient_key, name)
+        rows = self.database.select_record(sql, params=params)
         if rows:
             return True
         else:
@@ -2007,12 +2021,13 @@ class Reservation(QtWidgets.QMainWindow):
         if reserve_key is None:
             return None
 
-        sql = f"""
+        sql = """
             SELECT * FROM reserve
             WHERE
-                ReserveKey = {reserve_key}
+                ReserveKey = %s
         """
-        rows = self.database.select_record(sql)
+        params = (reserve_key,)
+        rows = self.database.select_record(sql, params=params)
         if len(rows) <= 0:
             return None
 
@@ -2022,32 +2037,35 @@ class Reservation(QtWidgets.QMainWindow):
         name = string_utils.xstr(row["Name"])
 
         if self._is_first_visit(patient_key, name):
-            sql = f"""
+            sql = """
                 SELECT ID FROM temp_patient
                 WHERE
-                    TempPatientKey = {row["PatientKey"]}
+                    TempPatientKey = %s
             """
-            rows = self.database.select_record(sql)
+            params = (row["PatientKey"],)
+            rows = self.database.select_record(sql, params=params)
             if len(rows) <= 0:
                 return None
 
             temp_patient_row = rows[0]
             temp_patient_id = string_utils.xstr(temp_patient_row["ID"])
             if temp_patient_id != "":
-                sql = f'''
+                sql = """
                     SELECT PatientKey FROM patient
                     WHERE
-                        ID = "{temp_patient_id}"
-                '''
-                rows = self.database.select_record(sql)
+                        ID = %s
+                """
+                params = (temp_patient_id,)
+                rows = self.database.select_record(sql, params=params)
                 if len(rows) > 0:  # 已經有病患資料了
                     patient_row = rows[0]
-                    sql = f"""
-                        UPDATE reserve SET PatientKey = {patient_row["PatientKey"]}
+                    sql = """
+                        UPDATE reserve SET PatientKey = %s
                         WHERE
-                            ReserveKey = {reserve_key}
+                            ReserveKey = %s
                     """
-                    self.database.exec_sql(sql)
+                    params = (patient_row["PatientKey"], reserve_key)
+                    self.database.exec_sql(sql, params=params)
                     return None
 
             return row
@@ -2055,12 +2073,13 @@ class Reservation(QtWidgets.QMainWindow):
             return None
 
     def _check_arrival_late(self, reserve_key):
-        sql = f"""
+        sql = """
             SELECT Doctor, ReserveNo FROM reserve
             WHERE
-                ReserveKey = {reserve_key}
+                ReserveKey = %s
         """
-        rows = self.database.select_record(sql)
+        params = (reserve_key,)
+        rows = self.database.select_record(sql, params=params)
         if len(rows) <= 0:
             return None
 
@@ -2071,16 +2090,17 @@ class Reservation(QtWidgets.QMainWindow):
         period = registration_utils.get_current_period(self.system_settings)
 
         # DoctorDone = True 只查已經看完診的，還在候診的不算過號
-        sql = f'''
+        sql = """
             SELECT RegistNo FROM wait
             WHERE
-                Period = "{period}" AND
-                Doctor = "{doctor}" AND
+                Period = %s AND
+                Doctor = %s AND
                 RegistNo > 0 AND
                 DoctorDone = "True"
             ORDER BY RegistNo DESC LIMIT 1
-        '''
-        rows = self.database.select_record(sql)
+        """
+        params = (period, doctor)
+        rows = self.database.select_record(sql, params=params)
         if len(rows) <= 0:
             return False
 
