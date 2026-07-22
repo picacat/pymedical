@@ -2310,6 +2310,8 @@ class PyMedical(QtWidgets.QMainWindow):
 
         index = self.ui.tabWidget_window.currentIndex()
         current_tab_text = self.ui.tabWidget_window.tabText(index)
+        self._notify_wait_arrive()
+
         if (
             current_tab_text not in ["門診掛號", "醫師看診作業", "批價作業", "藥局作業"]
             and "病歷資料" not in current_tab_text
@@ -2340,10 +2342,10 @@ class PyMedical(QtWidgets.QMainWindow):
                         or (refresh_wait_option == "所有診別")
                     ):
                         tab.read_wait()
-                        self._notify_wait_arrive()  # 只在醫師看診作業發出提醒聲音
+                        # self._notify_wait_arrive()  # 只在醫師看診作業發出提醒聲音
                 else:
                     tab.read_wait()
-                    self._notify_wait_arrive()  # 只在醫師看診作業發出提醒聲音
+                    # self._notify_wait_arrive()  # 只在醫師看診作業發出提醒聲音
 
                 self.start_flash()
             elif "病歷資料" in current_tab_text:  # 在病歷登錄頁面顯示目前看診人數
@@ -2351,15 +2353,15 @@ class PyMedical(QtWidgets.QMainWindow):
         elif call_from in ["醫師看診作業"]:
             if current_tab_text in ["門診掛號", "批價作業", "藥局作業"]:
                 tab.refresh_wait()
-                if current_tab_text in ["批價作業"]:
-                    self._notify_wait_arrive()
+                # if current_tab_text in ["批價作業"]:
+                #     self._notify_wait_arrive()
             elif current_tab_text in ["醫師看診作業"]:
                 tab.read_wait()
         elif call_from in ["批價作業", "藥局作業"]:
             if current_tab_text in ["批價作業", "藥局作業"]:
                 tab.refresh_wait()
-                if current_tab_text in ["藥局作業"]:
-                    self._notify_wait_arrive()
+                # if current_tab_text in ["藥局作業"]:
+                #     self._notify_wait_arrive()
         else:
             pass
 
