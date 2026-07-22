@@ -118,7 +118,6 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             WHERE
                 prescript.MedicineSet >= 2 AND
                 prescript.MedicineSet != 11 AND
-                Amount > 0 AND
                 MedicineName IS NOT NULL AND
                 cases.CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}"
                 {period_condition}
