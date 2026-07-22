@@ -307,7 +307,10 @@ def dump_table(
 
 def pip3_install(package):
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", package],
+            timeout=120,  # 避免網路異常時無限卡住
+        )
         return True
     except Exception as e:
         print(f"【警告】自動安裝套件 {package} 失敗：{e}")
@@ -936,7 +939,13 @@ def get_blood_measure_data(parent, system_settings, patient_id):
 
 
 def get_qrcode_b64png(data):
-    import qrcode
+    try:
+        import qrcode
+    except ImportError:
+        if not pip3_install("qrcode"):
+            return None
+
+        import qrcode
 
     qr = qrcode.QRCode(
         version=1,

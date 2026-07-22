@@ -4036,6 +4036,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
         symptom = self.ui.textEdit_symptom.toPlainText()
         symptom = string_utils.remove_bom(symptom)
+        # symptom = string_utils.remove_mb4(symptom)
 
         try:
             regist_typex = self.combo_box_regist_typex.currentText()

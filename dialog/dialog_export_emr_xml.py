@@ -472,7 +472,7 @@ class DialogExportEMRXml(QtWidgets.QDialog):
             zip_code.text = zip_area_code
 
             location = ET.SubElement(contact, "Location")
-            location.text = patient_address
+            location.text = string_utils.xml_safe(patient_address)
 
         patient_email = string_utils.xstr(row["Email"])
         if patient_email != "":
@@ -482,7 +482,7 @@ class DialogExportEMRXml(QtWidgets.QDialog):
         patient_history = string_utils.get_str(row["History"], "utf-8")
         if patient_history != "":
             history = ET.SubElement(patient_info, "History")
-            history.text = patient_history
+            history.text = string_utils.xml_safe(patient_history)
 
         patient_allergy = string_utils.get_str(row["Allergy"], "utf-8")
         if patient_allergy != "":
@@ -540,6 +540,7 @@ class DialogExportEMRXml(QtWidgets.QDialog):
 
     def _add_diagnosis_data(self, encounter, row):
         symptom = string_utils.get_str(row["Symptom"], "utf-8")
+        symptom = string_utils.xml_safe(symptom)
 
         chief_complain = ET.SubElement(encounter, "ChiefComplain")
         if chief_complain in [None, ""]:
@@ -555,6 +556,8 @@ class DialogExportEMRXml(QtWidgets.QDialog):
             chief_complain.text = "　"
 
         tongue = string_utils.get_str(row["Tongue"], "utf-8")
+        tongue = string_utils.xml_safe(tongue)
+
         if tongue in [None, ""]:
             tongue = "N/A"
 
@@ -567,6 +570,8 @@ class DialogExportEMRXml(QtWidgets.QDialog):
                 tongue_condition.text = tongue
 
         pulse = string_utils.get_str(row["Pulse"], "utf-8")
+        pulse = string_utils.xml_safe(pulse)
+
         if pulse in [None, ""]:
             pulse = "N/A"
 
@@ -579,6 +584,8 @@ class DialogExportEMRXml(QtWidgets.QDialog):
                 pulse_condition.text = pulse
 
         distinct = string_utils.get_str(row["Distincts"], "utf-8")
+        distinct = string_utils.xml_safe(distinct)
+
         if distinct in [None, ""]:
             distinct = "N/A"
 
@@ -591,6 +598,8 @@ class DialogExportEMRXml(QtWidgets.QDialog):
                 manifestation.text = distinct
 
         cure = string_utils.get_str(row["Cure"], "utf-8")
+        cure = string_utils.xml_safe(cure)
+
         if cure in [None, ""]:
             cure = "N/A"
 

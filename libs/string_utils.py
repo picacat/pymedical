@@ -12,6 +12,14 @@ except Exception:
 import itertools
 from string import ascii_uppercase
 
+# XML 1.0 合法字元以外的全部移除
+_ILLEGAL_XML_CHARS_RE = re.compile(
+    "[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x84\x86-\x9f"
+    "\ud800-\udfff\ufdd0-\ufddf\ufffe\uffff]"
+)
+_MB4_RE = re.compile("[\U00010000-\U0010ffff]")
+
+
 phonetic_list = [
     "ㄅ",
     "ㄆ",
@@ -280,6 +288,11 @@ def remove_bom(string):
     return string
 
 
+def remove_mb4(text):
+    """移除 utf8mb3 存不了的 4-byte 字元（emoji 等）"""
+    return _MB4_RE.sub("", text)
+
+
 def str_to_none(in_list):
     for i in range(len(in_list)):
         if str(in_list[i]) == "":
@@ -515,3 +528,10 @@ def shorten_middle(text, max_length=10):
 
     half_length = (max_length - 3) // 2  # 3 is for "..."
     return text[:half_length] + "..." + text[-half_length:]
+
+
+def xml_safe(text):
+    if text is None:
+        return ""
+
+    return _ILLEGAL_XML_CHARS_RE.sub("", str(text))

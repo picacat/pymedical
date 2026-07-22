@@ -1177,9 +1177,13 @@ class MedicalRecordList(QtWidgets.QMainWindow):
         case_key = self.table_widget_medical_record_list.field_value(
             self.column["CaseKey"]
         )
-        row = self.database.select_record(
-            f"SELECT IsClosed FROM cases WHERE CaseKey = {case_key}"
-        )[0]
+        rows = self.database.select_record(
+            "SELECT IsClosed FROM cases WHERE CaseKey = %s", params=(case_key,)
+        )
+        if not rows:
+            return
+
+        row = rows[0]
         if bool(row["IsClosed"]) is True:
             system_utils.show_message_box(
                 QMessageBox.Critical,
