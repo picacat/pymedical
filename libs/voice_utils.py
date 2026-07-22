@@ -151,7 +151,7 @@ def set_volume(volume_level=0.2):
 
 
 EDGE_TTS_VOICE = "zh-TW-HsiaoChenNeural"  # 曉臻(女) / zh-TW-HsiaoYuNeural 曉雨(女) / zh-TW-YunJheNeural 雲哲(男)
-EDGE_TTS_RATE = "-20%"  # 語速: '+0%' 原速, '-20%' 放慢
+EDGE_TTS_RATE = "-30%"  # 語速: '+0%' 原速, '-20%' 放慢
 TTS_CACHE_DIR = os.path.join(BASE_DIR, "tts_cache")
 
 
