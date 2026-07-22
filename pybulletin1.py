@@ -1,30 +1,34 @@
 # -*- coding: UTF-8 -*-
 
-import sys
-import pygame
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QDesktopWidget
-from PyQt5.QtCore import Qt
-from pygame import mixer
-import os
 import datetime
 import json
+import os
+import sys
 
-if sys.platform == 'win32':
-    os.environ["PYTHON_VLC_MODULE_PATH"] = './vlc'
+import pygame
+from pygame import mixer
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QDesktopWidget
 
-import vlc
-import yt_dlp
+if sys.platform == "win32":
+    os.environ["PYTHON_VLC_MODULE_PATH"] = "./vlc"
 
 import configparser
 
-from libs import class_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import registration_utils
-from libs import date_utils
-from libs import string_utils
-from libs import number_utils
+import yt_dlp
+
+import vlc
+from libs import (
+    class_utils,
+    date_utils,
+    number_utils,
+    registration_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+    voice_utils,
+)
 
 
 # 主程式
@@ -38,17 +42,21 @@ class PyBulletin1(QtWidgets.QMainWindow):
         if not self.database.connected():
             sys.exit(0)
 
-        self.system_settings = class_utils.get_system_settings(self.database, self.config_file)
+        self.system_settings = class_utils.get_system_settings(
+            self.database, self.config_file
+        )
         self.ui = None
 
         self.waiting_number = [0 for x in range(100)]
         self.audio_timer = QtCore.QTimer(self)
-        self.volume = number_utils.get_integer(self.system_settings.field('媒體播放音量'))
-        self.url = self.system_settings.field('媒體播放位址')
+        self.volume = number_utils.get_integer(
+            self.system_settings.field("媒體播放音量")
+        )
+        self.url = self.system_settings.field("媒體播放位址")
 
-        self.period1 = self.system_settings.field('早班時間')
-        self.period2 = self.system_settings.field('午班時間')
-        self.period3 = self.system_settings.field('晚班時間')
+        self.period1 = self.system_settings.field("早班時間")
+        self.period2 = self.system_settings.field("午班時間")
+        self.period3 = self.system_settings.field("晚班時間")
 
         self._set_ui()
         self._set_udp_server()
@@ -65,7 +73,9 @@ class PyBulletin1(QtWidgets.QMainWindow):
         self.voice_server = class_utils.get_voice_server(self, 9990)
 
     def get_monitor_number(self):
-        return number_utils.get_integer(self.system_settings.field('候診系統顯示器編號'))
+        return number_utils.get_integer(
+            self.system_settings.field("候診系統顯示器編號")
+        )
 
     def _set_db(self):
         self.host = None
@@ -77,16 +87,16 @@ class PyBulletin1(QtWidgets.QMainWindow):
         if config_file is not None:
             self.config_file = config_file
             config_dict = self._parse_config_file(self.config_file)
-            self.host = config_dict['host']
+            self.host = config_dict["host"]
             self.database = class_utils.get_db(
                 host=self.host,
-                user=config_dict['user'],
-                database=config_dict['database'],
-                password=config_dict['password'],
-                charset=config_dict['charset'],
-                buffered=config_dict['buffered'],
+                user=config_dict["user"],
+                database=config_dict["database"],
+                password=config_dict["password"],
+                charset=config_dict["charset"],
+                buffered=config_dict["buffered"],
             )
-            self.server_ip = config_dict['host']
+            self.server_ip = config_dict["host"]
         else:
             self.database = class_utils.get_db()
             self.config_file = self.database.CONFIG_FILE
@@ -99,21 +109,21 @@ class PyBulletin1(QtWidgets.QMainWindow):
         self._show_waiting_list()
 
     def _show_title(self):
-        title = self.system_settings.field('院所名稱') + ' 候診資訊系統'
+        title = self.system_settings.field("院所名稱") + " 候診資訊系統"
         self.ui.label_title.setText(title)
 
     @staticmethod
-    def _parse_config_file(config_file, db_section='db'):
+    def _parse_config_file(config_file, db_section="db"):
         config = configparser.ConfigParser()
         config.read(config_file)
 
         config_dict = {
-            'host': config[db_section]['host'],
-            'user': config[db_section]['user'],
-            'database': config[db_section]['database'],
-            'password': config[db_section]['password'],
-            'charset': config[db_section]['charset'],
-            'buffered': True
+            "host": config[db_section]["host"],
+            "user": config[db_section]["user"],
+            "database": config[db_section]["database"],
+            "password": config[db_section]["password"],
+            "charset": config[db_section]["charset"],
+            "buffered": True,
         }
 
         return config_dict
@@ -142,8 +152,7 @@ class PyBulletin1(QtWidgets.QMainWindow):
 
     # 設定 css style
     def _set_style(self):
-        system_utils.set_background_image(
-            self.ui.tab_home, self.system_settings)
+        system_utils.set_background_image(self.ui.tab_home, self.system_settings)
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         system_utils.set_theme(self.ui, self.system_settings)
@@ -156,13 +165,13 @@ class PyBulletin1(QtWidgets.QMainWindow):
     def _notify_wait_arrive():
         try:
             mixer.init()
-            mixer.music.load('./icq.mp3')
+            mixer.music.load("./icq.mp3")
             mixer.music.play()
         except pygame.error:
             pass
 
     def _set_lower_audio(self):
-        if self.url in ['', None]:
+        if self.url in ["", None]:
             return
 
         self.mediaplayer.audio_set_volume(5)
@@ -178,37 +187,37 @@ class PyBulletin1(QtWidgets.QMainWindow):
     def _broadcast_speech(self, json_data):
         voice_dict = json.loads(json_data)
 
-        regist_no = number_utils.get_integer(voice_dict['regist_no'])
-        room = number_utils.get_integer(voice_dict['room'])
-        sentence = voice_dict['sentence']
+        regist_no = number_utils.get_integer(voice_dict["regist_no"])
+        room = number_utils.get_integer(voice_dict["room"])
+        sentence = voice_dict["sentence"]
 
         self.waiting_number[room] = regist_no
 
         self._show_waiting_list()
         QtWidgets.qApp.processEvents()
         self._set_lower_audio()
-        system_utils.speak(sentence)
+        voice_utils.speak(sentence, threading=True)
 
     def _play_media(self):
-        if self.url in ['', None]:
+        if self.url in ["", None]:
             return
 
         self.vlc_instance = vlc.Instance()
         self.mediaplayer = self.vlc_instance.media_player_new()
 
         win_id = int(self.ui.frame_youtube.winId())
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             self.mediaplayer.set_hwnd(win_id)
-        elif sys.platform == 'linux':
+        elif sys.platform == "linux":
             self.mediaplayer.set_xwindow(win_id)
-        elif sys.platform == 'darwin':
+        elif sys.platform == "darwin":
             self.mediaplayer.set_nsobject(win_id)
 
         # 獲取視頻的播放地址
-        ydl_opts = {'format': 'best'}
+        ydl_opts = {"format": "best"}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(self.url, download=False)
-            video_url = info['url']
+            video_url = info["url"]
 
         self.media = self.vlc_instance.media_new(video_url)
         self.media.get_mrl()
@@ -216,13 +225,15 @@ class PyBulletin1(QtWidgets.QMainWindow):
         self.mediaplayer.set_media(self.media)
 
         # 添加事件監聽器以在播放完成時重新播放
-        self.mediaplayer.event_manager().event_attach(vlc.EventType.MediaPlayerEndReached, self._on_end_reached)
+        self.mediaplayer.event_manager().event_attach(
+            vlc.EventType.MediaPlayerEndReached, self._on_end_reached
+        )
 
         self.mediaplayer.play()
         self.mediaplayer.audio_set_volume(self.volume)
-    
+
     def _on_end_reached(self, event):
-        print('到底了')
+        print("到底了")
         # 重新播放媒體
         self.mediaplayer.stop()
         self.mediaplayer.play()
@@ -261,20 +272,20 @@ class PyBulletin1(QtWidgets.QMainWindow):
 
     def _set_marquee_list(self):
         self.marquee_list = []
-        sql = '''
+        sql = """
             SELECT * FROM system_settings
             WHERE
                 Field LIKE "跑馬燈訊息-%"
             ORDER BY Field
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
-            marquee = self.system_settings.field('院所名稱') + ' 關心您的健康'
+            marquee = self.system_settings.field("院所名稱") + " 關心您的健康"
             self.marquee_list.append(marquee)
             return
 
         for row in rows:
-            self.marquee_list.append(string_utils.xstr(row['Value']))
+            self.marquee_list.append(string_utils.xstr(row["Value"]))
 
     def _play_marquee(self):
         self._set_marquee_list()
@@ -293,7 +304,7 @@ class PyBulletin1(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self._timeout)
 
     def _timeout(self):
-        current_time = datetime.datetime.now().strftime('%H:%M')
+        current_time = datetime.datetime.now().strftime("%H:%M")
         if current_time in [self.period1, self.period2, self.period3]:
             self._show_waiting_list()
 
@@ -334,11 +345,11 @@ class PyBulletin1(QtWidgets.QMainWindow):
         rows = self._get_current_room_rows()
         weekday = date_utils.WEEK_DAY_LIST[datetime.datetime.now().weekday()]
 
-        html = ''
+        html = ""
         for row in rows:
-            room = number_utils.get_integer(row['Room'])
+            room = number_utils.get_integer(row["Room"])
             doctor = string_utils.xstr(row[weekday])
-            html += f'''
+            html += f"""
                 <tr>
                     <td>
                         <table width="98%" style="font-weight:bold; font-family:Microsoft JhengHei">
@@ -360,14 +371,14 @@ class PyBulletin1(QtWidgets.QMainWindow):
                         </table>
                     </td>
                 </tr>
-            '''
+            """
 
         return html
 
     def _show_waiting_list(self):
         waiting_html = self._get_waiting_html()
 
-        html = f'''
+        html = f"""
             <table align=center cellpadding="2" cellspacing="2" width="98%"
                 style=" background-color: #ccc;
                         -moz-border-radius: 5px;
@@ -378,7 +389,7 @@ class PyBulletin1(QtWidgets.QMainWindow):
                     {waiting_html}
                 </tbody>
             </table>
-        '''
+        """
         self.ui.textBrowser_waiting_list.setHtml(html)
 
 
@@ -392,5 +403,5 @@ def main():
 
 
 # 程式開始
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,19 +1,21 @@
 # -*- coding: UTF-8 -*-
 
-import sys
-import pygame
-from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QDesktopWidget
-from PyQt5.QtCore import Qt
-from pygame import mixer
-import os
 import datetime
 import json
+import os
+import sys
 
-if sys.platform == 'win32':
-    os.environ["PYTHON_VLC_MODULE_PATH"] = './vlc'
+import pygame
+from pygame import mixer
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QDesktopWidget
+
+if sys.platform == "win32":
+    os.environ["PYTHON_VLC_MODULE_PATH"] = "./vlc"
 
 import vlc
+
 try:
     import yt_dlp
 except Exception:
@@ -21,21 +23,24 @@ except Exception:
 
 import configparser
 
-from libs import class_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import registration_utils
-from libs import date_utils
-from libs import string_utils
-from libs import number_utils
+from libs import (
+    class_utils,
+    date_utils,
+    number_utils,
+    registration_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+    voice_utils,
+)
 
 MAX_WAITING_ROWS = 12
 ROTATION_SECONDS = 10000
-BG_COLOR = '#DAE7C1'
-BORDER_COLOR = '#1D3609'
-TEXT_COLOR = '#315415'
-LATE_COLOR = '#C0392B'
-HEADER_COLOR = '#DAE6BF'
+BG_COLOR = "#DAE7C1"
+BORDER_COLOR = "#1D3609"
+TEXT_COLOR = "#315415"
+LATE_COLOR = "#C0392B"
+HEADER_COLOR = "#DAE6BF"
 
 
 # 悅兒親子系列診所專用
@@ -49,18 +54,22 @@ class PyBulletin3(QtWidgets.QMainWindow):
         if not self.database.connected():
             sys.exit(0)
 
-        self.system_settings = class_utils.get_system_settings(self.database, self.config_file)
+        self.system_settings = class_utils.get_system_settings(
+            self.database, self.config_file
+        )
         self.ui = None
 
         self.waiting_number = [0 for x in range(100)]
         self.audio_timer = QtCore.QTimer(self)
-        self.volume = number_utils.get_integer(self.system_settings.field('媒體播放音量'))
-        self.url = self.system_settings.field('媒體播放位址')
-        self.schedule_file = self.system_settings.field('門診表圖檔名')
+        self.volume = number_utils.get_integer(
+            self.system_settings.field("媒體播放音量")
+        )
+        self.url = self.system_settings.field("媒體播放位址")
+        self.schedule_file = self.system_settings.field("門診表圖檔名")
 
-        self.period1 = self.system_settings.field('早班時間')
-        self.period2 = self.system_settings.field('午班時間')
-        self.period3 = self.system_settings.field('晚班時間')
+        self.period1 = self.system_settings.field("早班時間")
+        self.period2 = self.system_settings.field("午班時間")
+        self.period3 = self.system_settings.field("晚班時間")
 
         self.rotation_timer1 = QtCore.QTimer(self)
         self.rotation_timer1.timeout.connect(self._rotation_wait_list1)
@@ -87,7 +96,9 @@ class PyBulletin3(QtWidgets.QMainWindow):
         self.voice_server = class_utils.get_voice_server(self, 9990)
 
     def get_monitor_number(self):
-        return number_utils.get_integer(self.system_settings.field('候診系統顯示器編號'))
+        return number_utils.get_integer(
+            self.system_settings.field("候診系統顯示器編號")
+        )
 
     def _set_db(self):
         self.host = None
@@ -101,16 +112,16 @@ class PyBulletin3(QtWidgets.QMainWindow):
         if config_file is not None:
             self.config_file = config_file
             config_dict = self._parse_config_file(self.config_file)
-            self.host = config_dict['host']
+            self.host = config_dict["host"]
             self.database = class_utils.get_db(
                 host=self.host,
-                user=config_dict['user'],
-                database=config_dict['database'],
-                password=config_dict['password'],
-                charset=config_dict['charset'],
-                buffered=config_dict['buffered'],
+                user=config_dict["user"],
+                database=config_dict["database"],
+                password=config_dict["password"],
+                charset=config_dict["charset"],
+                buffered=config_dict["buffered"],
             )
-            self.server_ip = config_dict['host']
+            self.server_ip = config_dict["host"]
         else:
             self.database = class_utils.get_db()
             self.config_file = self.database.CONFIG_FILE
@@ -126,27 +137,27 @@ class PyBulletin3(QtWidgets.QMainWindow):
 
     def _show_title(self):
         # title = self.system_settings.field('院所名稱') + ' 候診資訊'
-        title = self.system_settings.field('院所名稱')
+        title = self.system_settings.field("院所名稱")
         self.ui.label_title.setText(title)
 
     def _play_media(self):
-        if self.system_settings.field('媒體播放來源') == '輪播影片':
+        if self.system_settings.field("媒體播放來源") == "輪播影片":
             self._play_video_file()
         else:
             self._play_url_stream()
 
     @staticmethod
-    def _parse_config_file(config_file, db_section='db'):
+    def _parse_config_file(config_file, db_section="db"):
         config = configparser.ConfigParser()
         config.read(config_file)
 
         config_dict = {
-            'host': config[db_section]['host'],
-            'user': config[db_section]['user'],
-            'database': config[db_section]['database'],
-            'password': config[db_section]['password'],
-            'charset': config[db_section]['charset'],
-            'buffered': True
+            "host": config[db_section]["host"],
+            "user": config[db_section]["user"],
+            "database": config[db_section]["database"],
+            "password": config[db_section]["password"],
+            "charset": config[db_section]["charset"],
+            "buffered": True,
         }
 
         return config_dict
@@ -176,8 +187,7 @@ class PyBulletin3(QtWidgets.QMainWindow):
 
     # 設定 css style
     def _set_style(self):
-        system_utils.set_background_image(
-            self.ui.tab_home, self.system_settings)
+        system_utils.set_background_image(self.ui.tab_home, self.system_settings)
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         system_utils.set_theme(self.ui, self.system_settings)
@@ -190,13 +200,13 @@ class PyBulletin3(QtWidgets.QMainWindow):
     def _notify_wait_arrive():
         try:
             mixer.init()
-            mixer.music.load('./icq.mp3')
+            mixer.music.load("./icq.mp3")
             mixer.music.play()
         except pygame.error:
             pass
 
     def _set_lower_audio(self):
-        if self.url in ['', None]:
+        if self.url in ["", None]:
             return
 
         self.mediaplayer.audio_set_volume(5)
@@ -210,37 +220,37 @@ class PyBulletin3(QtWidgets.QMainWindow):
 
     # 廣播叫號
     def _broadcast_speech(self, json_data):
-        if json_data == 'refresh_wait':
+        if json_data == "refresh_wait":
             self._show_waiting_list()
             return
 
         voice_dict = json.loads(json_data)
 
-        regist_no = number_utils.get_integer(voice_dict['regist_no'])
-        room = number_utils.get_integer(voice_dict['room'])
-        sentence = voice_dict['sentence']
+        regist_no = number_utils.get_integer(voice_dict["regist_no"])
+        room = number_utils.get_integer(voice_dict["room"])
+        sentence = voice_dict["sentence"]
 
         self.waiting_number[room] = regist_no
 
         self._show_waiting_list()
         QtWidgets.qApp.processEvents()
         self._set_lower_audio()
-        system_utils.speak(sentence)
+        voice_utils.speak(sentence)
 
     def _get_video_list(self):
-        sql = '''
+        sql = """
             SELECT * FROM system_settings
             WHERE
                 Field LIKE "輪播影片檔-%"
             ORDER BY Field
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             return []
 
         video_list = []
         for row in rows:
-            video_list.append(string_utils.xstr(row['Value']))
+            video_list.append(string_utils.xstr(row["Value"]))
 
         return video_list
 
@@ -252,11 +262,11 @@ class PyBulletin3(QtWidgets.QMainWindow):
         # events.event_attach(vlc.EventType.MediaPlayerEndReached, self.video_finished)
 
         win_id = int(self.ui.frame_youtube.winId())
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             self.mediaplayer.set_hwnd(win_id)
-        elif sys.platform == 'linux':
+        elif sys.platform == "linux":
             self.mediaplayer.set_xwindow(win_id)
-        elif sys.platform == 'darwin':
+        elif sys.platform == "darwin":
             self.mediaplayer.set_nsobject(win_id)
 
         media_list = self.vlc_instance.media_list_new()
@@ -279,25 +289,25 @@ class PyBulletin3(QtWidgets.QMainWindow):
         self._play_video(filename)
 
     def _play_url_stream(self):
-        if self.url in ['', None]:
+        if self.url in ["", None]:
             return
 
         self.vlc_instance = vlc.Instance()
         self.mediaplayer = self.vlc_instance.media_player_new()
 
         win_id = int(self.ui.frame_youtube.winId())
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             self.mediaplayer.set_hwnd(win_id)
-        elif sys.platform == 'linux':
+        elif sys.platform == "linux":
             self.mediaplayer.set_xwindow(win_id)
-        elif sys.platform == 'darwin':
+        elif sys.platform == "darwin":
             self.mediaplayer.set_nsobject(win_id)
 
         # 獲取視頻的播放地址
-        ydl_opts = {'format': 'best'}
+        ydl_opts = {"format": "best"}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(self.url, download=False)
-            video_url = info['url']
+            video_url = info["url"]
 
         self.media = self.vlc_instance.media_new(video_url)
 
@@ -340,20 +350,20 @@ class PyBulletin3(QtWidgets.QMainWindow):
 
     def _set_marquee_list(self):
         self.marquee_list = []
-        sql = '''
+        sql = """
             SELECT * FROM system_settings
             WHERE
                 Field LIKE "跑馬燈訊息-%"
             ORDER BY Field
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
-            marquee = self.system_settings.field('院所名稱') + ' 關心您的健康'
+            marquee = self.system_settings.field("院所名稱") + " 關心您的健康"
             self.marquee_list.append(marquee)
             return
 
         for row in rows:
-            self.marquee_list.append(string_utils.xstr(row['Value']))
+            self.marquee_list.append(string_utils.xstr(row["Value"]))
 
     def _play_marquee(self):
         self._set_marquee_list()
@@ -372,7 +382,7 @@ class PyBulletin3(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self._timeout)
 
     def _timeout(self):
-        current_time = datetime.datetime.now().strftime('%H:%M')
+        current_time = datetime.datetime.now().strftime("%H:%M")
         if current_time in [self.period1, self.period2, self.period3]:
             self._show_waiting_list()
 
@@ -409,14 +419,14 @@ class PyBulletin3(QtWidgets.QMainWindow):
         rows = self.database.select_record(sql)
 
         if len(rows) <= 0:
-            sql = f'''
+            sql = f"""
                 SELECT * FROM doctor_schedule
                 WHERE
                     {weekday} IS NOT NULL AND
                     LENGTH({weekday}) > 0
                 GROUP BY Room
                 ORDER BY Room
-            '''
+            """
             rows = self.database.select_record(sql)
 
         return rows
@@ -425,28 +435,28 @@ class PyBulletin3(QtWidgets.QMainWindow):
     def _get_waiting_rows(self, room, late=False):
         called_regist_no = self._get_called_regist_no(room)
 
-        condition = f'RegistNo >= {called_regist_no}'
+        condition = f"RegistNo >= {called_regist_no}"
         if late:
-            condition = f'RegistNo < {called_regist_no}'
+            condition = f"RegistNo < {called_regist_no}"
 
         if self.current_page[room] == 1 or late:
-            sql = f'''
+            sql = f"""
                 SELECT RegistNo, Name FROM wait
                 WHERE
                     Room = {room} AND
                     {condition} AND
                     DoctorDone = "False"
                 ORDER BY RegistNo LIMIT 12
-            '''
+            """
         else:
-            sql = f'''
+            sql = f"""
                 SELECT RegistNo, Name FROM wait
                 WHERE
                     Room = {room} AND
                     {condition} AND
                     DoctorDone = "False"
                 ORDER BY RegistNo LIMIT 12, 12
-            '''
+            """
         rows = self.database.select_record(sql)
 
         return rows
@@ -466,21 +476,21 @@ class PyBulletin3(QtWidgets.QMainWindow):
         self._show_waiting_list()
 
     def _mask_name(self, name):
-        mask_name = name[0] + '〇' + name[2:6]
+        mask_name = name[0] + "〇" + name[2:6]
 
         return mask_name
 
     def _get_total_waiting_count(self, room):
         called_regist_no = self._get_called_regist_no(room)
 
-        sql = f'''
+        sql = f"""
             SELECT RegistNo, Name FROM wait
             WHERE
                 Room = {room} AND
                 RegistNo >= {called_regist_no} AND
                 DoctorDone = "False"
             ORDER BY RegistNo
-        '''
+        """
         rows = self.database.select_record(sql)
 
         return len(rows)
@@ -488,13 +498,13 @@ class PyBulletin3(QtWidgets.QMainWindow):
     def _get_waiting_html(self):
         rows = self._get_current_room_rows()
         if len(rows) <= 0:
-            return ''
+            return ""
 
-        html = ''
+        html = ""
         for row in rows:
             html += self._get_room_html(row, len(rows))
 
-            room = row['Room']
+            room = row["Room"]
             total_row_count = self._get_total_waiting_count(room)
             if total_row_count > MAX_WAITING_ROWS:
                 if not self.rotation_timer[room].isActive():
@@ -530,39 +540,43 @@ class PyBulletin3(QtWidgets.QMainWindow):
                 break
 
             name = self._mask_name(string_utils.xstr(row["Name"]))
-            regist_no = f'{number_utils.get_integer(row["RegistNo"]):0>3}'
+            regist_no = f"{number_utils.get_integer(row['RegistNo']):0>3}"
 
-            name_width = '60px'
+            name_width = "60px"
             if len(name) == 4:
-                name_width = '50px'
+                name_width = "50px"
             elif len(name) == 5:
-                name_width = '40px'
+                name_width = "40px"
 
             if regist_no == called_regist_no:
                 color = LATE_COLOR
             else:
                 color = TEXT_COLOR
 
-            waiting_list.append({
-                'name': name,
-                'regist_no': regist_no,
-                'name_width': name_width,
-                'color': color,
-            })
+            waiting_list.append(
+                {
+                    "name": name,
+                    "regist_no": regist_no,
+                    "name_width": name_width,
+                    "color": color,
+                }
+            )
 
         if len(waiting_list) < MAX_WAITING_ROWS:
             for row_no in range(MAX_WAITING_ROWS - len(waiting_list)):
-                waiting_list.append({
-                    'name': '',
-                    'regist_no': '',
-                    'name_width': '60px',
-                    'color': TEXT_COLOR,
-                })
+                waiting_list.append(
+                    {
+                        "name": "",
+                        "regist_no": "",
+                        "name_width": "60px",
+                        "color": TEXT_COLOR,
+                    }
+                )
 
         block_list1 = [0, 1, 2, 3, 4, 5]
         block_list2 = [6, 7, 8, 9, 10, 11]
 
-        waiting_html = ''
+        waiting_html = ""
         for i in range(len(block_list1)):
             block1 = block_list1[i]
             block2 = block_list2[i]
@@ -580,14 +594,14 @@ class PyBulletin3(QtWidgets.QMainWindow):
                 </tr>
             '''
 
-        html = f'''
+        html = f"""
             <table width="100%" cellspacing="0" cellpadding="0"
              style="font-weight:bold; font-family:Microsoft JhengHei">
                 <tbody>
                     {waiting_html}
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
@@ -599,34 +613,38 @@ class PyBulletin3(QtWidgets.QMainWindow):
                 break
 
             name = self._mask_name(string_utils.xstr(row["Name"]))
-            regist_no = f'{number_utils.get_integer(row["RegistNo"]):0>3}'
+            regist_no = f"{number_utils.get_integer(row['RegistNo']):0>3}"
 
-            name_width = '60px'
+            name_width = "60px"
             if len(name) == 4:
-                name_width = '50px'
+                name_width = "50px"
             elif len(name) == 5:
-                name_width = '40px'
+                name_width = "40px"
 
             color = LATE_COLOR
-            waiting_list.append({
-                'name': name,
-                'regist_no': regist_no,
-                'name_width': name_width,
-                'color': color,
-            })
+            waiting_list.append(
+                {
+                    "name": name,
+                    "regist_no": regist_no,
+                    "name_width": name_width,
+                    "color": color,
+                }
+            )
 
         if len(waiting_list) < MAX_WAITING_ROWS / 2:
             for row_no in range(MAX_WAITING_ROWS - len(waiting_list)):
-                waiting_list.append({
-                    'name': '',
-                    'regist_no': '',
-                    'name_width': '60px',
-                    'color': TEXT_COLOR,
-                })
+                waiting_list.append(
+                    {
+                        "name": "",
+                        "regist_no": "",
+                        "name_width": "60px",
+                        "color": TEXT_COLOR,
+                    }
+                )
 
         block_list1 = [0, 1, 2, 3, 4, 5]
 
-        waiting_html = ''
+        waiting_html = ""
         for i in range(len(block_list1)):
             block1 = block_list1[i]
 
@@ -639,19 +657,19 @@ class PyBulletin3(QtWidgets.QMainWindow):
                 </tr>
             '''
 
-        html = f'''
+        html = f"""
             <table width="100%" cellspacing="0" cellpadding="0"
              style="font-weight:bold; font-family:Microsoft JhengHei">
                 <tbody>
                     {waiting_html}
                 </tbody>
             </table>
-        '''
+        """
 
         return html
 
     def _get_called_regist_no(self, room):
-        today = datetime.datetime.today().strftime('%Y-%m-%d')
+        today = datetime.datetime.today().strftime("%Y-%m-%d")
 
         sql = f'''
             SELECT SeqNumber FROM seq_number
@@ -663,12 +681,12 @@ class PyBulletin3(QtWidgets.QMainWindow):
         if len(rows) <= 0:
             called_regist_no = 0
         else:
-            called_regist_no = number_utils.get_integer(rows[0]['SeqNumber'])
+            called_regist_no = number_utils.get_integer(rows[0]["SeqNumber"])
 
         return called_regist_no
 
     def _get_doctor(self, row, weekday, room):
-        today = datetime.datetime.now().strftime('%Y-%m-%d')
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
         period = registration_utils.get_current_period(self.system_settings)
 
         sql = f'''
@@ -683,7 +701,7 @@ class PyBulletin3(QtWidgets.QMainWindow):
         rows = self.database.select_record(sql)
         if len(rows) >= 1:
             row = rows[0]
-            doctor = string_utils.xstr(row['Name'])
+            doctor = string_utils.xstr(row["Name"])
             return doctor
 
         sql = f'''
@@ -704,7 +722,7 @@ class PyBulletin3(QtWidgets.QMainWindow):
         return doctor
 
     def _get_agent_doctor(self, doctor):
-        today = datetime.datetime.today().strftime('%Y-%m-%d')
+        today = datetime.datetime.today().strftime("%Y-%m-%d")
         period = registration_utils.get_current_period(self.system_settings)
         sql = f'''
             SELECT * FROM temporary_schedule
@@ -720,26 +738,28 @@ class PyBulletin3(QtWidgets.QMainWindow):
             return doctor
 
         row = rows[0]
-        doctor = string_utils.xstr(row['Agent'])
+        doctor = string_utils.xstr(row["Agent"])
         return doctor
 
     def _get_room_html(self, row, room_count):
         weekday = date_utils.WEEK_DAY_LIST[datetime.datetime.now().weekday()]
-        today = datetime.datetime.today().strftime('%Y-%m-%d')
+        today = datetime.datetime.today().strftime("%Y-%m-%d")
         period = registration_utils.get_current_period(self.system_settings)
 
-        room = number_utils.get_integer(row['Room'])
+        room = number_utils.get_integer(row["Room"])
         # doctor = self._get_doctor(row, weekday, room)
         doctor = string_utils.xstr(row[weekday])
-        doctor, room = registration_utils.get_agent_doctor(self.database, today, period, doctor, room)
+        doctor, room = registration_utils.get_agent_doctor(
+            self.database, today, period, doctor, room
+        )
 
         if doctor is None:
-            return ''
+            return ""
 
         waiting_list_html = self._get_waiting_list_html(room)
         late_waiting_list_html = self._get_late_waiting_list_html(room)
 
-        schedule_table_html = ''
+        schedule_table_html = ""
         if room_count == 1:
             schedule_table_html = self._get_schedule_table_html()
 
@@ -791,7 +811,7 @@ class PyBulletin3(QtWidgets.QMainWindow):
     def _show_waiting_list(self):
         waiting_html = self._get_waiting_html()
 
-        html = f'''
+        html = f"""
             <table align=center cellpadding="0" cellspacing="0" width="100%"
                 style=" background-color: {BG_COLOR};
                         border: 1px solid {BORDER_COLOR};
@@ -801,23 +821,23 @@ class PyBulletin3(QtWidgets.QMainWindow):
                     {waiting_html}
                 </tbody>
             </table>
-        '''
+        """
         self.ui.textBrowser_waiting_list.setHtml(html)
 
     def _set_image_list_filename(self):
         self.image_list = []
-        sql = '''
+        sql = """
             SELECT * FROM system_settings
             WHERE
                 Field LIKE "輪播圖片檔-%"
             ORDER BY Field
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             return
 
         for row in rows:
-            self.image_list.append(string_utils.xstr(row['Value']))
+            self.image_list.append(string_utils.xstr(row["Value"]))
 
     def _set_image_list(self):
         self._set_image_list_filename()
@@ -853,8 +873,8 @@ class PyBulletin3(QtWidgets.QMainWindow):
     def _set_qrcode(self):
         icon_size = 320
 
-        fixed_image = self.system_settings.field('固定圖檔名')
-        if fixed_image in ['', None]:
+        fixed_image = self.system_settings.field("固定圖檔名")
+        if fixed_image in ["", None]:
             return
 
         self.ui.label_qrcode.setPixmap(QtGui.QPixmap(fixed_image))
@@ -873,5 +893,5 @@ def main():
 
 
 # 程式開始
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

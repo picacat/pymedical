@@ -51,6 +51,7 @@ from libs import (
     string_utils,
     system_utils,
     ui_utils,
+    voice_utils,
     web_utils,
 )
 
@@ -2385,7 +2386,7 @@ class PyMedical(QtWidgets.QMainWindow):
             return
 
         voice_data = voice_dict["sentence"]
-        system_utils.speak(voice_data)
+        voice_utils.speak(voice_data, threading=True)
 
     # 重新顯示狀態列
     def refresh_status_bar(self):

@@ -27,6 +27,7 @@ from libs import (
     string_utils,
     system_utils,
     ui_utils,
+    voice_utils,
 )
 
 MAX_ROOM = 10
@@ -36,7 +37,7 @@ MARQUEE_Y = 10
 
 
 class PyBulletin7(QtWidgets.QMainWindow):
-    """候診資訊系統 多診間輪播版 有藥局領藥號廣播."""
+    """候診資訊系統 多診間輪播版 有藥局領藥號廣播.  仁聿"""
 
     def __init__(self, parent=None, *args):
         """初始化."""
@@ -252,7 +253,7 @@ class PyBulletin7(QtWidgets.QMainWindow):
             self._show_pharmacy_list(drug_no=drug_no)
             QtWidgets.qApp.processEvents()
             self._set_lower_audio()
-            system_utils.speak(sentence, threading=True)
+            voice_utils.speak(sentence, threading=True)
             return
 
         regist_no = number_utils.get_integer(voice_dict["regist_no"])
@@ -268,7 +269,7 @@ class PyBulletin7(QtWidgets.QMainWindow):
 
         QtWidgets.qApp.processEvents()
         self._set_lower_audio()
-        system_utils.speak(sentence)
+        voice_utils.speak(sentence, threading=True)
 
     def _play_media(self):
         if self.media_type == "輪播圖片":

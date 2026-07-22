@@ -27,6 +27,7 @@ from libs import (
     string_utils,
     system_utils,
     ui_utils,
+    voice_utils,
 )
 
 
@@ -276,26 +277,6 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
 
         self.audio_timer.stop()
 
-    # # 廣播叫號
-    # def _broadcast_voice(self, json_data):
-    #     voice_dict = json.loads(json_data)
-    #     sentence = voice_dict["sentence"]
-
-    #     regist_no = number_utils.get_integer(voice_dict["regist_no"])
-    #     room = number_utils.get_integer(voice_dict["room"])
-
-    #     self.waiting_number[room] = regist_no
-
-    #     self._set_lower_audio()
-    #     QtWidgets.qApp.processEvents()
-    #     self._show_doctors()
-    #     self._show_sequence(room)
-
-    #     # self.ring_bell()
-    #     self.start_blinking()
-
-    #     system_utils.speak(sentence, threading=True)
-
     # 廣播叫號
     def _broadcast_voice(self, json_data):
         # 增加防呆：檢查是否為空值
@@ -331,7 +312,7 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
             # self.ring_bell()
             self.start_blinking()
 
-            system_utils.speak(sentence, threading=True)
+            voice_utils.speak(sentence, threading=True)
         else:
             print("JSON 格式正確，但缺少必要的欄位 (regist_no 或 room)")
 

@@ -3,7 +3,6 @@
 import configparser
 import datetime
 import json
-import os
 import sys
 import time
 
@@ -11,8 +10,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDesktopWidget
 
-from libs import (class_utils, date_utils, number_utils, registration_utils,
-                  string_utils, system_utils, ui_utils)
+from libs import (
+    class_utils,
+    date_utils,
+    number_utils,
+    registration_utils,
+    string_utils,
+    ui_utils,
+    voice_utils,
+)
 
 
 class ClockOverlay(QtWidgets.QWidget):
@@ -20,6 +26,7 @@ class ClockOverlay(QtWidgets.QWidget):
     透明疊層上的時鐘：顯示在 parent 的 (x, y)，格式預設 %H:%M（24H）。
     不加入任何 layout，使用 move() 定位，並用 raise_() 置頂。
     """
+
     def __init__(self, parent, x=0, y=0, fmt="%H:%M"):
         super().__init__(parent)
         self._x, self._y = int(x), int(y)
@@ -41,7 +48,7 @@ class ClockOverlay(QtWidgets.QWidget):
                 font-weight: bold;        
             }
         """)
-        
+
         # 初始顯示與定位
         self.label.adjustSize()
         self.setFixedSize(self.label.size())
@@ -68,10 +75,10 @@ class ClockOverlay(QtWidgets.QWidget):
 
     def _tick_second(self):
         now = datetime.datetime.now()
-        if now.minute != self._last_minute:   # 只在跨分鐘時更新
+        if now.minute != self._last_minute:  # 只在跨分鐘時更新
             self._last_minute = now.minute
             self._set_now()
-            
+
     # 提供 API 調整位置 / 置頂 / 格式
     def set_position(self, x, y):
         self._x, self._y = int(x), int(y)
@@ -90,13 +97,16 @@ class Marquee(QtWidgets.QWidget):
     文字在 [x1, x2] 的可視區內「從右側長出 → 向左移動 → 到左側逐漸縮回 → 消失 → 從右側再長出」。
     一次讀取 DB 到 self._messages，之後無限循環，不重讀資料庫。
     """
-    def __init__(self, parent, database, system_settings, *, x1=0, x2=800, y=0, speed=150):
+
+    def __init__(
+        self, parent, database, system_settings, *, x1=0, x2=800, y=0, speed=150
+    ):
         super().__init__(parent)
         self.db = database
         self.system_settings = system_settings
         self.x1 = int(x1)
         self.x2 = int(x2)
-        self.y  = int(y)
+        self.y = int(y)
         self.speed = float(speed)  # 像素/秒
 
         # ── 建立「可視區」本體（自己就是 viewport）：放在 (x1, y)，寬度 = x2-x1，高度用字高
@@ -120,14 +130,14 @@ class Marquee(QtWidgets.QWidget):
               font-weight: bold;
             }
         """)
-        
+
         self._label.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
-        self._label.move(self.width(), 0)   # 先擺在最右邊之外（只露出一點會逐步長出）
+        self._label.move(self.width(), 0)  # 先擺在最右邊之外（只露出一點會逐步長出）
 
         # 狀態
         self._messages = []
         self._idx = 0
-        self._x = float(self.width())   # label 的左上角 x（相對於 viewport）
+        self._x = float(self.width())  # label 的左上角 x（相對於 viewport）
         self._text_w = 0
         self._running = False
         self._last_t = None
@@ -142,20 +152,20 @@ class Marquee(QtWidgets.QWidget):
 
     # ---------- 一次性讀 DB ----------
     def _load_messages_once(self):
-        sql = '''
+        sql = """
             SELECT * FROM system_settings
             WHERE Field LIKE "跑馬燈訊息-%"
             ORDER BY Field
-        '''
+        """
         rows = self.db.select_record(sql)
         msgs = []
         if rows:
             for row in rows:
-                text = str(row.get('Value', '')).strip()
+                text = str(row.get("Value", "")).strip()
                 if text:
                     msgs.append(text)
         if not msgs:
-            name = self.system_settings.field('院所名稱') or '本院'
+            name = self.system_settings.field("院所名稱") or "本院"
             msgs = [f"{name} 關心您的健康"]
 
         self._messages = msgs
@@ -224,15 +234,25 @@ class WaitingRoom(QtCore.QObject):
     呼叫 refresh() 可重新抓取資料。
     """
 
-    def __init__(self, parent, database, system_settings, room, doctor,
-                 x=100, y_list=None, items_per_page=5, interval_sec=5):
+    def __init__(
+        self,
+        parent,
+        database,
+        system_settings,
+        room,
+        doctor,
+        x=100,
+        y_list=None,
+        items_per_page=5,
+        interval_sec=5,
+    ):
         super().__init__(parent)
         self.parent = parent
         self.database = database
         self.system_settings = system_settings
         self.room = room
         self.doctor = doctor
-        self.regist_no = '0'
+        self.regist_no = "0"
 
         # 顯示位置設定
         self.x = int(x)
@@ -252,7 +272,7 @@ class WaitingRoom(QtCore.QObject):
         self._timer.setInterval(self.interval_ms)
 
         # 建立 QLabel 元件
-        self._build_doctor_labels()                
+        self._build_doctor_labels()
         self._build_regist_no_labels()
         self._build_waiting_list_labels()
 
@@ -261,9 +281,9 @@ class WaitingRoom(QtCore.QObject):
     # -----------------------------
     def _get_doctor_text(self):
         if self.doctor is None:
-            doctor_text = ''
+            doctor_text = ""
         else:
-            doctor_text = f'{self.room}診 {self.doctor}醫師'
+            doctor_text = f"{self.room}診 {self.doctor}醫師"
 
         return doctor_text
 
@@ -280,11 +300,11 @@ class WaitingRoom(QtCore.QObject):
         """)
 
         y = 100
-        self.label_doctor.move(self.x-30, y)
+        self.label_doctor.move(self.x - 30, y)
         self.label_doctor.adjustSize()
         self.label_doctor.show()
         self.label_doctor.raise_()
-    
+
     def _build_regist_no_labels(self):
         self.label_regist_no_header = QtWidgets.QLabel(self.parent)
         self.label_regist_no_header.setStyleSheet("""
@@ -297,7 +317,7 @@ class WaitingRoom(QtCore.QObject):
             }
         """)
 
-        x1 = self.x-10
+        x1 = self.x - 10
         y = 260
 
         self.label_regist_no_header.move(x1, y)
@@ -341,8 +361,12 @@ class WaitingRoom(QtCore.QObject):
                     font-weight: bold;
                 }
             """)
-            lbl.move(self.x, self.y_list[i] \
-                     if i < len(self.y_list) else self.y_list[-1] + (i - len(self.y_list) + 1) * 80)
+            lbl.move(
+                self.x,
+                self.y_list[i]
+                if i < len(self.y_list)
+                else self.y_list[-1] + (i - len(self.y_list) + 1) * 80,
+            )
             lbl.show()
             lbl.raise_()
             self._labels.append(lbl)
@@ -363,7 +387,7 @@ class WaitingRoom(QtCore.QObject):
         '''
         rows = self.database.select_record(sql)
 
-        self._items = [f'{r["RegistNo"]} {r["Name"]}' for r in rows]
+        self._items = [f"{r['RegistNo']} {r['Name']}" for r in rows]
 
     # -----------------------------
     # 公開控制方法
@@ -377,7 +401,7 @@ class WaitingRoom(QtCore.QObject):
         else:
             self._running = False
             self._timer.stop()
-            
+
     def stop(self):
         """停止循環"""
         self._running = False
@@ -396,7 +420,7 @@ class WaitingRoom(QtCore.QObject):
               </tr>
             </table>
         """
-        
+
         self.label_regist_no.setText(text)
         self.label_regist_no.adjustSize()
 
@@ -405,13 +429,13 @@ class WaitingRoom(QtCore.QObject):
         self.label_doctor.setText(doctor_text)
         self.label_doctor.adjustSize()
         self._refresh_header()
-        
+
     def _refresh_header(self):
         if self.doctor is None:
-            regist_no_header = ''
+            regist_no_header = ""
         else:
-            regist_no_header = '目前\n診號'
-            
+            regist_no_header = "目前\n診號"
+
         self.label_regist_no_header.setText(regist_no_header)
         self.label_regist_no_header.adjustSize()
 
@@ -428,7 +452,7 @@ class WaitingRoom(QtCore.QObject):
         else:
             self._running = False
             self._timer.stop()
-        
+
     def bring_to_front(self):
         """將所有 QLabel 疊到最上層"""
         for lbl in self._labels:
@@ -438,7 +462,7 @@ class WaitingRoom(QtCore.QObject):
     # 顯示邏輯
     # -----------------------------
     def _mask_name(self, name):
-        mask_name = name[0] + '〇' + name[2:6]
+        mask_name = name[0] + "〇" + name[2:6]
 
         return mask_name
 
@@ -454,7 +478,9 @@ class WaitingRoom(QtCore.QObject):
         for i, lbl in enumerate(self._labels):
             if i < len(items):
                 # 分割診號與姓名
-                seq, name = items[i].split(maxsplit=1) if " " in items[i] else (items[i], "")
+                seq, name = (
+                    items[i].split(maxsplit=1) if " " in items[i] else (items[i], "")
+                )
 
                 # 用 HTML table 控制對齊與中間距離
                 text = f"""
@@ -474,12 +500,13 @@ class WaitingRoom(QtCore.QObject):
             else:
                 lbl.setText("")
                 lbl.hide()
-                
 
     def _next_page(self):
         if not self._items:
             return
-        total_pages = max(1, (len(self._items) + self.items_per_page - 1) // self.items_per_page)
+        total_pages = max(
+            1, (len(self._items) + self.items_per_page - 1) // self.items_per_page
+        )
         self._page_index = (self._page_index + 1) % total_pages
         self._apply_page(self._page_index)
 
@@ -490,8 +517,16 @@ class Pharmacy(QtCore.QObject):
     呼叫 refresh() 可重新抓取資料。
     """
 
-    def __init__(self, parent, database, system_settings,
-                 x=100, y_list=None, items_per_page=6, interval_sec=5):
+    def __init__(
+        self,
+        parent,
+        database,
+        system_settings,
+        x=100,
+        y_list=None,
+        items_per_page=6,
+        interval_sec=5,
+    ):
         super().__init__(parent)
         self.parent = parent
         self.database = database
@@ -515,7 +550,7 @@ class Pharmacy(QtCore.QObject):
         self._timer.setInterval(self.interval_ms)
 
         # 建立 QLabel 元件
-        self._build_pharmacy_labels()                
+        self._build_pharmacy_labels()
         self._build_pharmacy_list_labels()
 
     # -----------------------------
@@ -534,12 +569,12 @@ class Pharmacy(QtCore.QObject):
         """)
 
         y = 100
-        self.label_pharmacy.move(self.x-30, y)
-        self.label_pharmacy.setText('可領藥')
+        self.label_pharmacy.move(self.x - 30, y)
+        self.label_pharmacy.setText("可領藥")
         self.label_pharmacy.adjustSize()
         self.label_pharmacy.show()
         self.label_pharmacy.raise_()
-    
+
     def _build_pharmacy_list_labels(self):
         for lbl in self._labels:
             lbl.deleteLater()
@@ -557,8 +592,12 @@ class Pharmacy(QtCore.QObject):
                     font-weight: bold;
                 }
             """)
-            lbl.move(self.x, self.y_list[i] \
-                     if i < len(self.y_list) else self.y_list[-1] + (i - len(self.y_list) + 1) * 80)
+            lbl.move(
+                self.x,
+                self.y_list[i]
+                if i < len(self.y_list)
+                else self.y_list[-1] + (i - len(self.y_list) + 1) * 80,
+            )
             lbl.show()
             lbl.raise_()
             self._labels.append(lbl)
@@ -568,18 +607,17 @@ class Pharmacy(QtCore.QObject):
     # -----------------------------
     def _load_from_db(self):
         """從資料庫讀取候診名單"""
-        sql = f'''
+        sql = """
             SELECT wait.Name, cases.DrugNo FROM wait
                 LEFT JOIN cases ON cases.CaseKey = wait.CaseKey
             WHERE
                 cases.DrugDone = "True" AND
                 cases.DrugPickupDone = "False"
             ORDER BY DrugNo
-        '''
+        """
         rows = self.database.select_record(sql)
-        
 
-        self._items = [f'{r["DrugNo"]} {r["Name"]}' for r in rows]
+        self._items = [f"{r['DrugNo']} {r['Name']}" for r in rows]
 
     # -----------------------------
     # 公開控制方法
@@ -593,7 +631,7 @@ class Pharmacy(QtCore.QObject):
         else:
             self._running = False
             self._timer.stop()
-            
+
     def stop(self):
         """停止循環"""
         self._running = False
@@ -615,7 +653,7 @@ class Pharmacy(QtCore.QObject):
         else:
             self._running = False
             self._timer.stop()
-        
+
     def bring_to_front(self):
         """將所有 QLabel 疊到最上層"""
         for lbl in self._labels:
@@ -636,7 +674,9 @@ class Pharmacy(QtCore.QObject):
         for i, lbl in enumerate(self._labels):
             if i < len(items):
                 # 分割診號與姓名
-                seq, name = items[i].split(maxsplit=1) if " " in items[i] else (items[i], "")
+                seq, name = (
+                    items[i].split(maxsplit=1) if " " in items[i] else (items[i], "")
+                )
 
                 # 用 HTML table 控制對齊與中間距離
                 text = f"""
@@ -654,19 +694,20 @@ class Pharmacy(QtCore.QObject):
             else:
                 lbl.setText("")
                 lbl.hide()
-                
 
     def _next_page(self):
         if not self._items:
             return
-        total_pages = max(1, (len(self._items) + self.items_per_page - 1) // self.items_per_page)
+        total_pages = max(
+            1, (len(self._items) + self.items_per_page - 1) // self.items_per_page
+        )
         self._page_index = (self._page_index + 1) % total_pages
         self._apply_page(self._page_index)
-         
-        
+
+
 class PyBulletin8(QtWidgets.QMainWindow):
     """候診資訊系統 三診間及藥局版."""
-    
+
     def __init__(self, parent=None, *args):
         """初始化."""
         super(PyBulletin8, self).__init__(parent)
@@ -676,7 +717,9 @@ class PyBulletin8(QtWidgets.QMainWindow):
         if not self.database.connected():
             sys.exit(0)
 
-        self.system_settings = class_utils.get_system_settings(self.database, self.config_file)
+        self.system_settings = class_utils.get_system_settings(
+            self.database, self.config_file
+        )
         self.ui = None
 
         self._set_ui()
@@ -689,8 +732,6 @@ class PyBulletin8(QtWidgets.QMainWindow):
         self.move(monitor.left(), monitor.top())
         self.showMaximized()
 
-        self.show_bulletin()
-
     def show_bulletin(self):
         """顯示候診看板."""
         self.marquee = Marquee(
@@ -698,7 +739,7 @@ class PyBulletin8(QtWidgets.QMainWindow):
             database=self.database,
             system_settings=self.system_settings,
             y=self.marquee_y,
-            speed=100
+            speed=100,
         )
         self.marquee.play()
 
@@ -706,11 +747,11 @@ class PyBulletin8(QtWidgets.QMainWindow):
 
         self.refresh_waiting_room_info()
 
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             y_list = [415, 515, 615, 715, 805]
         else:
-            y_list = [400, 500, 600, 700, 792]            
-            
+            y_list = [400, 500, 600, 700, 792]
+
         self.waiting_room = [None, None, None]
         for i in range(len(self.waiting_room)):
             self.waiting_room[i] = WaitingRoom(
@@ -747,7 +788,7 @@ class PyBulletin8(QtWidgets.QMainWindow):
         ]
 
         weekday = date_utils.WEEK_DAY_LIST[datetime.datetime.now().weekday()]
-        current_period = registration_utils.get_current_period(self.system_settings)        
+        current_period = registration_utils.get_current_period(self.system_settings)
         sql = f'''
            SELECT Room, {weekday} AS Doctor FROM doctor_schedule
            WHERE
@@ -757,12 +798,12 @@ class PyBulletin8(QtWidgets.QMainWindow):
         '''
         rows = self.database.select_record(sql)
         for row_no, row in enumerate(rows):
-            self.waiting_room_info[row_no][0] = row['Room']
-            self.waiting_room_info[row_no][1] = row['Doctor']
-        
+            self.waiting_room_info[row_no][0] = row["Room"]
+            self.waiting_room_info[row_no][1] = row["Doctor"]
+
     def _show_waiting_list(self):
         self.refresh_waiting_room_info()
-        
+
         for i in range(len(self.waiting_room)):
             self.waiting_room[i].room = self.waiting_room_info[i][0]
             self.waiting_room[i].doctor = self.waiting_room_info[i][1]
@@ -775,10 +816,10 @@ class PyBulletin8(QtWidgets.QMainWindow):
         self.clock_x = self.width() - 300
         self.marquee_x = self.width() - 400
         self.marquee_y = 936
-        
+
         if hasattr(self, "clock"):
             self.clock.set_position(self.clock_x, self.marquee_y)
-            
+
         if getattr(self, "marquee_auto_bounds", True) and hasattr(self, "marquee"):
             self.marquee.set_bounds(52, self.marquee_x)
 
@@ -788,7 +829,9 @@ class PyBulletin8(QtWidgets.QMainWindow):
 
     def get_monitor_number(self):
         """取得候診系統顯示器編號."""
-        return number_utils.get_integer(self.system_settings.field('候診系統顯示器編號'))
+        return number_utils.get_integer(
+            self.system_settings.field("候診系統顯示器編號")
+        )
 
     def _set_db(self):
         self.host = None
@@ -800,33 +843,33 @@ class PyBulletin8(QtWidgets.QMainWindow):
         if config_file is not None:
             self.config_file = config_file
             config_dict = self._parse_config_file(self.config_file)
-            self.host = config_dict['host']
+            self.host = config_dict["host"]
             self.database = class_utils.get_db(
                 host=self.host,
-                user=config_dict['user'],
-                database=config_dict['database'],
-                password=config_dict['password'],
-                charset=config_dict['charset'],
-                buffered=config_dict['buffered'],
+                user=config_dict["user"],
+                database=config_dict["database"],
+                password=config_dict["password"],
+                charset=config_dict["charset"],
+                buffered=config_dict["buffered"],
             )
-            self.server_ip = config_dict['host']
+            self.server_ip = config_dict["host"]
         else:
             self.database = class_utils.get_db()
             self.config_file = self.database.CONFIG_FILE
             self.host = self.database.host
 
     @staticmethod
-    def _parse_config_file(config_file, db_section='db'):
+    def _parse_config_file(config_file, db_section="db"):
         config = configparser.ConfigParser()
         config.read(config_file)
 
         config_dict = {
-            'host': config[db_section]['host'],
-            'user': config[db_section]['user'],
-            'database': config[db_section]['database'],
-            'password': config[db_section]['password'],
-            'charset': config[db_section]['charset'],
-            'buffered': True
+            "host": config[db_section]["host"],
+            "user": config[db_section]["user"],
+            "database": config[db_section]["database"],
+            "password": config[db_section]["password"],
+            "charset": config[db_section]["charset"],
+            "buffered": True,
         }
 
         return config_dict
@@ -844,7 +887,7 @@ class PyBulletin8(QtWidgets.QMainWindow):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_PY_BULLETIN, self)
         self.ui.setWindowFlags(Qt.FramelessWindowHint)  # 無視窗邊框
         self.setCursor(Qt.BlankCursor)
-        
+
         # 設定背景圖片
         background = QtGui.QPixmap("./images/bulletin_background1.png")
         palette = QtGui.QPalette()
@@ -863,15 +906,6 @@ class PyBulletin8(QtWidgets.QMainWindow):
         self.socket_server.start()
         self.voice_server.start()
 
-    @staticmethod
-    def _notify_wait_arrive():
-        try:
-            mixer.init()
-            mixer.music.load('./icq.mp3')
-            mixer.music.play()
-        except pygame.error:
-            pass
-
     # 廣播叫號
     def _broadcast_speech(self, json_data):
         try:
@@ -879,29 +913,30 @@ class PyBulletin8(QtWidgets.QMainWindow):
         except Exception:
             return
 
-        room = number_utils.get_integer(voice_dict['room'])
-        regist_no = voice_dict['regist_no']
-        
+        room = number_utils.get_integer(voice_dict["room"])
+        regist_no = voice_dict["regist_no"]
+
         for i in range(len(self.waiting_room)):
             if self.waiting_room[i].room == room:
                 self.waiting_room[i].room = self.waiting_room_info[i][0]
                 self.waiting_room[i].doctor = self.waiting_room_info[i][1]
                 self.waiting_room[i].show_regist_no(regist_no)
                 break
-        
-        sentence = voice_dict['sentence']        
+
+        sentence = voice_dict["sentence"]
         QtWidgets.qApp.processEvents()
-        system_utils.speak(sentence)
+        voice_utils.speak(sentence, threading=True)
 
 
 # 主程式
 def main():
     app = QtWidgets.QApplication(sys.argv)
     py_bulletin = PyBulletin8(None, sys.argv)
+    py_bulletin.show_bulletin()
 
     sys.exit(app.exec_())
 
 
 # 程式開始
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

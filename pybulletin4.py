@@ -27,6 +27,7 @@ from libs import (
     string_utils,
     system_utils,
     ui_utils,
+    voice_utils,
 )
 
 MAX_ROOM = 10
@@ -243,7 +244,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
         QtWidgets.qApp.processEvents()
         self._set_lower_audio()
-        system_utils.speak(sentence)
+        voice_utils.speak(sentence, threading=True)
 
     def _play_media(self):
         if self.media_type == "輪播圖片":
@@ -379,8 +380,17 @@ class PyBulletin4(QtWidgets.QMainWindow):
         elif sys.platform == "darwin":
             self.vlc_player.set_nsobject(win_id)
 
-        stream_url = self._get_stream_url(self.stream_index)
-        self.media = self.vlc_instance.media_new(stream_url)
+        # stream_url = self._get_stream_url(self.stream_index)
+        # self.media = self.vlc_instance.media_new(stream_url)
+        # self.vlc_player.set_media(self.media)
+
+        video_url, audio_url = self._get_stream_url(self.stream_index)
+        self.media = self.vlc_instance.media_new(video_url)
+        if audio_url is not None:
+            self.media.add_option(f":input-slave={audio_url}")
+
+        self.media.add_option(":network-caching=3000")
+        self.media.add_option(":audio-desync=-200")  # 毫秒
         self.vlc_player.set_media(self.media)
 
         events = self.vlc_player.event_manager()
@@ -404,18 +414,34 @@ class PyBulletin4(QtWidgets.QMainWindow):
         elif self.volume_retry > 30:
             self.volume_timer.stop()  # 約 9 秒後放棄,避免無限輪詢
 
+    # def _get_stream_url(self, index):
+    #     url = self.stream_list[index]
+
+    #     ydl_opts = {
+    #         "format": "best",
+    #         "buffer-size": "4096",
+    #     }
+    #     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    #         info = ydl.extract_info(url, download=False)
+    #         stream_url = info["url"]
+
+    #     return stream_url
+
     def _get_stream_url(self, index):
         url = self.stream_list[index]
 
-        ydl_opts = {
-            "format": "best",
-            "buffer-size": "4096",
-        }
+        ydl_opts = {"format": "bestvideo+bestaudio/best"}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-            stream_url = info["url"]
 
-        return stream_url
+        if "requested_formats" in info:  # 影音分離
+            video_url = info["requested_formats"][0]["url"]
+            audio_url = info["requested_formats"][1]["url"]
+        else:  # 傳統合流格式
+            video_url = info["url"]
+            audio_url = None
+
+        return video_url, audio_url
 
     def _on_end_reached(self, event):
         self.stream_index += 1

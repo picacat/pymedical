@@ -24,6 +24,7 @@ from libs import (
     string_utils,
     system_utils,
     ui_utils,
+    voice_utils,
     web_utils,
 )
 
@@ -1729,7 +1730,7 @@ class WaitingList(QtWidgets.QMainWindow):
         if sentence is None:
             return
 
-        system_utils.speak(sentence)
+        voice_utils.speak(sentence, threading=True)
 
         if self.system_settings.field("叫號同時啟動叫號燈") == "Y":
             self._send_led()

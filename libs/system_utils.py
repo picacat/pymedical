@@ -1,11 +1,9 @@
 # 元件設定 2017.09.26
 
 # -*- coding: UTF-8 -*-
-import asyncio
 import base64
 import configparser
 import datetime
-import hashlib
 import os
 import platform
 import random
@@ -13,14 +11,11 @@ import shutil
 import socket
 import subprocess
 import sys
-import tempfile
-import threading
 import time
 import urllib.parse
 from os import listdir
 from pathlib import Path
 
-import pygame
 import requests
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QDate, QEvent, QObject, QSettings, QStandardPaths
@@ -331,21 +326,6 @@ if sys.platform == "win32":
     import win32gui
     from win32con import WM_INPUTLANGCHANGEREQUEST
 
-try:
-    import edge_tts
-
-    USE_EDGE_TTS = True
-except ModuleNotFoundError:
-    USE_EDGE_TTS = False
-
-try:
-    from gtts import gTTS
-    from pygame import mixer
-except ModuleNotFoundError:
-    pip3_install("gtts")
-    pip3_install("pygame")
-    from gtts import gTTS
-    from pygame import mixer
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
 CSS_PATH = "css"
@@ -356,21 +336,6 @@ def center_window(window):
     center_point = QtWidgets.QDesktopWidget().availableGeometry().center()
     frame_geometry.moveCenter(center_point)
     window.move(frame_geometry.topLeft())
-
-
-# for windows only
-# def get_ip():
-#     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#     try:
-#         s.connect(('1.1.1.1', 80))
-#         ip = s.getsockname()[0]
-#     except Exception as e:
-#         print(f"Error getting IP: {e}")
-#         ip = '無網路連線'
-#     finally:
-#         s.close()
-
-#     return ip
 
 
 def get_ip():
@@ -497,7 +462,7 @@ def show_message_box(message_icon, title, text, informative, button_text="確定
 def show_message(text):
     msg_box = QMessageBox()
     msg_box.setWindowFlags(QtCore.Qt.Dialog)
-    (msg_box.setIcon(QMessageBox.Information),)
+    msg_box.setIcon(QMessageBox.Information)
     msg_box.setWindowTitle("系統測試")
     msg_box.setText(text)
     msg_box.setInformativeText("系統測試")
@@ -596,302 +561,6 @@ def set_combo_box_item(combo_box, item_text):
         combo_box.insertItem(1, item_text)
 
     combo_box.setCurrentText(item_text)
-
-
-# Windows: 獲取與設定音量
-def get_volume_windows():
-    AudioUtilities, ISimpleAudioVolume = install_pycaw()
-    sessions = AudioUtilities.GetAllSessions()
-    for session in sessions:
-        volume = session._ctl.QueryInterface(ISimpleAudioVolume)
-        return volume.GetMasterVolume()
-
-
-# Linux: 使用 amixer 或 pactl 獲取與設定音量
-def get_volume_linux():
-    if shutil.which("pactl"):
-        result = subprocess.run(
-            "pactl get-sink-volume @DEFAULT_SINK@",
-            shell=True,
-            capture_output=True,
-            text=True,
-        )
-        return int(result.stdout.split("/")[1].strip().replace("%", "")) / 100
-    elif shutil.which("amixer"):
-        result = subprocess.run(
-            "amixer get Master", shell=True, capture_output=True, text=True
-        )
-        return int(result.stdout.split("[")[1].split("%")[0]) / 100
-
-    return None
-
-
-# 保存和設定音量的主函數
-def save_volume():
-    system = platform.system()
-    if system == "Windows":
-        return get_volume_windows()
-    elif system == "Linux":
-        return get_volume_linux()
-    elif system == "Darwin":
-        return get_volume_mac()
-    else:
-        print("不支援的作業系統")
-        return None
-
-
-def restore_volume(volume_level):
-    system = platform.system()
-    if system == "Windows":
-        set_volume_windows(volume_level)
-    elif system == "Linux":
-        set_volume_linux(volume_level)
-    elif system == "Darwin":
-        set_volume_mac(volume_level)
-    else:
-        print("不支援的作業系統")
-
-
-# macOS: 使用 osascript 獲取與設定音量
-def get_volume_mac():
-    result = subprocess.run(
-        "osascript -e 'output volume of (get volume settings)'",
-        shell=True,
-        capture_output=True,
-        text=True,
-    )
-    return int(result.stdout.strip()) / 100
-
-
-def set_volume_windows(volume_level=0.2):
-    AudioUtilities, ISimpleAudioVolume = install_pycaw()
-    sessions = AudioUtilities.GetAllSessions()
-    for session in sessions:
-        volume = session._ctl.QueryInterface(ISimpleAudioVolume)
-        volume.SetMasterVolume(volume_level, None)
-
-
-def set_volume_linux(volume_level):
-    # 根據可用的工具選擇 amixer 或 pactl
-    if shutil.which("pactl"):
-        os.system(f"pactl set-sink-volume @DEFAULT_SINK@ {int(volume_level * 100)}%")
-    elif shutil.which("amixer"):
-        os.system(f"amixer -D pulse sset Master {int(volume_level * 100)}%")
-    else:
-        print("無法找到適合的音量控制工具")
-
-
-def set_volume_mac(volume_level):
-    # macOS 使用 AppleScript 控制音量
-    os.system(f"osascript -e 'set volume output volume {int(volume_level * 100)}'")
-
-
-def set_volume(volume_level=0.2):
-    system = platform.system()
-    if system == "Windows":
-        set_volume_windows(volume_level)
-    elif system == "Linux":
-        set_volume_linux(volume_level)
-    elif system == "Darwin":
-        set_volume_mac(volume_level)
-    else:
-        print("不支援的作業系統")
-
-
-EDGE_TTS_VOICE = "zh-TW-HsiaoChenNeural"  # 曉臻(女) / zh-TW-HsiaoYuNeural 曉雨(女) / zh-TW-YunJheNeural 雲哲(男)
-EDGE_TTS_RATE = "-20%"  # 語速: '+0%' 原速, '-20%' 放慢
-TTS_CACHE_DIR = os.path.join(BASE_DIR, "tts_cache")
-
-
-def _get_tts_cache_filename(sentence):
-    """快取檔名把語音與語速一起算進 hash, 改設定不會播到舊快取"""
-    key_source = f"{sentence}|{EDGE_TTS_VOICE}|{EDGE_TTS_RATE}"
-    key = hashlib.md5(key_source.encode("utf-8")).hexdigest()
-
-    return os.path.join(TTS_CACHE_DIR, f"{key}.mp3")
-
-
-def _edge_tts_save(sentence, filename):
-    async def _run():
-        communicate = edge_tts.Communicate(
-            sentence,
-            EDGE_TTS_VOICE,
-            rate=EDGE_TTS_RATE,
-        )
-        await communicate.save(filename)
-
-    asyncio.run(_run())
-
-
-def _make_tts_mp3(sentence):
-    """
-    回傳 mp3 檔案路徑, 失敗回傳 None
-    順序: 快取 -> edge-tts -> gTTS (備援)
-    """
-    os.makedirs(TTS_CACHE_DIR, exist_ok=True)
-    filename = _get_tts_cache_filename(sentence)
-    if os.path.exists(filename):
-        return filename
-
-    # 先寫 .tmp 再改名, 避免產生到一半的壞檔留在快取
-    tmp_filename = f"{filename}.tmp"
-    try:
-        _edge_tts_save(sentence, tmp_filename)
-    except Exception as e:
-        print(f"edge-tts 產生語音失敗, 改用 gTTS: {e}")
-        try:
-            tts = gTTS(text=sentence, lang="zh-tw", slow=False)
-            tts.save(tmp_filename)
-        except Exception as e2:
-            print(f"gTTS 也失敗, 放棄本次播報: {e2}")
-            if os.path.exists(tmp_filename):
-                os.remove(tmp_filename)
-            return None
-
-    os.replace(tmp_filename, filename)
-
-    return filename
-
-
-def _play_mp3(filename):
-    try:
-        if not mixer.get_init():
-            mixer.init()
-
-        mixer.music.load(filename)
-        mixer.music.play()
-
-        while mixer.music.get_busy():
-            time.sleep(0.1)
-
-        mixer.music.unload()  # 釋放檔案, 避免 Windows 檔案被鎖住
-    except pygame.error:
-        pass
-
-
-def speak_edge(sentence, threaded=False):
-    """edge-tts 語音播報, Windows / Linux 通用"""
-    if threaded:
-        thread = threading.Thread(target=speak_edge, args=(sentence,), daemon=True)
-        thread.start()
-        return
-
-    filename = _make_tts_mp3(sentence)
-    if filename:
-        _play_mp3(filename)
-
-
-def speak(sentence, threading=False):
-    if USE_EDGE_TTS:
-        speak_edge(sentence, threaded=threading)
-        return
-
-    # 沒裝 edge-tts 的客戶, 維持原本 gTTS 路徑
-    if sys.platform == "linux":
-        if threading:
-            speak_linux_thread(sentence)
-        else:
-            speak_linux(sentence)
-    elif sys.platform == "win32":
-        if threading:
-            speak_win32_thread(sentence)
-        else:
-            speak_win32(sentence)
-    else:
-        pass
-
-
-def speak_linux(sentence):
-    tts = gTTS(text=sentence, lang="zh-tw")
-    fp = BytesIO()
-    tts.write_to_fp(fp)
-    fp.seek(0)
-
-    # ------------------ 替換 pydub ------------------
-    # 1. 載入音訊
-    pygame.mixer.init()
-    pygame.mixer.music.load(fp, "mp3")
-
-    # 2. 播放
-    pygame.mixer.music.play()
-
-    # 3. 等待播放完成 (這是必要的，否則程式會直接退出)
-    while pygame.mixer.music.get_busy():
-        pygame.time.Clock().tick(10)
-    # ------------------------------------------------
-
-
-def speak_linux_thread(sentence):
-    def _play_audio():
-        tts = gTTS(text=sentence, lang="zh-tw")
-        fp = BytesIO()
-        tts.write_to_fp(fp)
-        fp.seek(0)
-
-        # 載入音訊
-        pygame.mixer.music.load(fp, "mp3")
-
-        # 播放
-        pygame.mixer.music.play()
-
-        # 等待播放完成
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
-
-    # 確保 mixer.init() 已在主執行緒執行
-    thread = threading.Thread(target=_play_audio, daemon=True)
-    thread.start()
-
-
-# 💡 備註：pygame.mixer.music.load() 不支援音量正規化 (voice.normalize())。
-# gTTS 的音量通常是固定的，如果需要正規化，則需要額外的步驟。
-
-
-def speak_win32(sentence):
-    # original_volume = save_volume()  # 保存原始音量
-
-    with tempfile.NamedTemporaryFile(delete=True) as fp:
-        filename = f"{fp.name}.mp3"
-
-        tts = gTTS(text=sentence, lang="zh-tw", slow=False)
-        tts.save(filename)
-
-        # set_volume(0.1)
-        try:
-            mixer.init()
-            mixer.music.load(filename)
-            mixer.music.play()
-
-            while mixer.music.get_busy():
-                time.sleep(0.1)
-
-        except pygame.error:
-            pass
-
-    # restore_volume(original_volume)  # 恢復到原始音量
-
-
-def speak_win32_thread(sentence):
-    def _play_audio():
-        with tempfile.NamedTemporaryFile(delete=True) as fp:
-            filename = f"{fp.name}.mp3"
-
-            tts = gTTS(text=sentence, lang="zh-tw", slow=False)
-            tts.save(filename)
-
-            try:
-                mixer.init()
-                mixer.music.load(filename)
-                mixer.music.play()
-
-                while mixer.music.get_busy():
-                    time.sleep(0.1)
-
-            except mixer.error:
-                pass
-
-    thread = threading.Thread(target=_play_audio, daemon=True)
-    thread.start()
 
 
 def loggin_error(filename, error_message):
@@ -1066,7 +735,6 @@ def get_qrcode_from_file(parent):
 
 # 'baud=9600 parity=n data=8 stop=1';
 def send_to_com_port(com_port, regist_no):
-    import time
 
     import serial
 
