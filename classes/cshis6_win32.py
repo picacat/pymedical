@@ -1692,7 +1692,10 @@ class CSHIS:
         if not self.write_ic_treatment(case_key, treat_after_check):  # 寫入病名, 費用
             return False
 
-        self.write_prescript_signature(case_key)  # 寫入醫令簽章
+        if not self.write_prescript_signature(case_key):  # 寫入醫令簽章
+            self.logout_hc()
+            return False
+
         case_utils.update_xml(
             self.database,
             "cases",
@@ -1775,12 +1778,12 @@ class CSHIS:
 
         result = self.write_multi_prescript_sign(reg_datetime, prescriptions)
         if result is None:
-            return
+            return False
 
         prescript_sign_list, hex_prescript_sign_list = result
 
         if hex_prescript_sign_list is None:
-            return
+            return False
 
         for row, prescript_sign in zip(prescript_rows, hex_prescript_sign_list):
             prescript_key = row["PrescriptKey"]
@@ -1804,12 +1807,14 @@ class CSHIS:
             self.database.insert_record("presextend", fields, data)
 
         if prescript_sign_list is None:
-            return
+            return True
 
         for row, prescript_sign in zip(prescript_rows, prescript_sign_list):
             binary_data = base64.b64decode(prescript_sign)
             hex_string = binary_data.hex().upper()
             prescript_sign = hex_string
+
+        return True
 
     # 寫入處置處方簽章
     def write_treat_signature(self, case_row, dosage_row, patient_row):
@@ -1846,11 +1851,11 @@ class CSHIS:
 
         result = self.write_multi_prescript_sign(reg_datetime, prescription)
         if result is None:
-            return
+            return False
 
         treat_sign, hex_treat_sign = result
         if not hex_treat_sign:
-            return
+            return False
 
         treat_sign = hex_treat_sign[0]
 
@@ -1872,6 +1877,8 @@ class CSHIS:
             treat_sign,
         ]
         self.database.insert_record("presextend", fields, data)
+
+        return True
 
     # 寫入病名及費用
     def write_ic_treatment(self, case_key, treat_after_check):
@@ -1964,13 +1971,18 @@ class CSHIS:
         """
         prescript_rows = self.database.select_record(sql)
 
+        signed = True
         if string_utils.xstr(case_row["Treatment"]) in nhi_utils.INS_TREAT:
-            self.write_treat_signature(case_row, dosage_row, patient_row)
+            if not self.write_treat_signature(case_row, dosage_row, patient_row):
+                signed = False
 
         if len(prescript_rows) > 0:
-            self.write_medicine_signature(
+            if not self.write_medicine_signature(
                 case_row, patient_row, prescript_rows, dosage_row
-            )
+            ):
+                signed = False
+
+        return signed
 
     def request_token(self, patient_id):
         sam_signature = self.get_sam_signature(service_type="01")
