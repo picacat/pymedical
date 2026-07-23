@@ -635,7 +635,9 @@ class KioskPayment(QtWidgets.QMainWindow):
         if is_payment_done:
             ins_type, doctor, room = self._get_case_data(self.case_key)
             if ins_type == "健保":
+                self.ic_card.silent_mode = True  # 進入無人值守寫卡
                 ic_card_written = self._write_ic_card(self.case_key)
+                self.ic_card.silent_mode = False  # 寫完恢復
                 if not ic_card_written:
                     self._show_ic_card_write_error()
 
