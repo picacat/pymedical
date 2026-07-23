@@ -1385,7 +1385,7 @@ class CSHIS:
         else:
             self.logout_hc()
 
-            return True
+        return True
 
     def upload_data_thread(self, out_queue, upload_type, xml, case_count):
         cshis_x = class_utils.get_cshisx(self.database, self.system_settings)

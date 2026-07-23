@@ -682,20 +682,14 @@ class KioskPayment(QtWidgets.QMainWindow):
         '''
         self.database.exec_sql(sql)
 
-    # def _write_ic_card(self, case_key):
-    #     dialog = self.parent.show_in_progress()
-    #     QCoreApplication.processEvents()
-    #     self.ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
-    #     dialog.close()
-
     def _write_ic_card(self, case_key):
         dialog = self.parent.show_in_progress()
         QCoreApplication.processEvents()
-
         ic_card_written = False
         try:
-            self.ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
-            ic_card_written = True
+            ic_card_written = self.ic_card.write_ic_medical_record(
+                case_key, cshis_utils.NORMAL_CARD
+            )
         except Exception as e:
             print(f"寫卡失敗: {e}")
         finally:
