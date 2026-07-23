@@ -4113,6 +4113,13 @@
                     </property>
                    </widget>
                   </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_beep_anywhere">
+                    <property name="text">
+                     <string>候診名單更新發出提示音</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                 <item row="5" column="0">

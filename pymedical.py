@@ -220,6 +220,7 @@ class PyMedical(QtWidgets.QMainWindow):
         instance_setting = self.system_settings.field("醫療系統執行個體")
         self.set_waiting_list = self.system_settings.field("自動切換醫師候診名單")
         self.no_beep = self.system_settings.field("醫師候診名單不要提示音")
+        self.beep_anywhere = self.system_settings.field("候診名單更新發出提示音")
 
         if sys.platform == "win32" and instance_setting == "獨立執行":
             self._check_single_instance()
@@ -2310,7 +2311,16 @@ class PyMedical(QtWidgets.QMainWindow):
 
         index = self.ui.tabWidget_window.currentIndex()
         current_tab_text = self.ui.tabWidget_window.tabText(index)
-        # self._notify_wait_arrive()
+
+        call_from = data.split(",")[1]
+        doctor = data.split(",")[2]
+
+        if (
+            self.beep_anywhere == "Y"
+            and call_from in ["門診掛號"]
+            and doctor == self.user_name
+        ):
+            self._notify_wait_arrive()
 
         if (
             current_tab_text not in ["門診掛號", "醫師看診作業", "批價作業", "藥局作業"]
@@ -2353,15 +2363,15 @@ class PyMedical(QtWidgets.QMainWindow):
         elif call_from in ["醫師看診作業"]:
             if current_tab_text in ["門診掛號", "批價作業", "藥局作業"]:
                 tab.refresh_wait()
-                # if current_tab_text in ["批價作業"]:
-                #     self._notify_wait_arrive()
+                if current_tab_text in ["批價作業"]:
+                    self._notify_wait_arrive()
             elif current_tab_text in ["醫師看診作業"]:
                 tab.read_wait()
         elif call_from in ["批價作業", "藥局作業"]:
             if current_tab_text in ["批價作業", "藥局作業"]:
                 tab.refresh_wait()
-                # if current_tab_text in ["藥局作業"]:
-                #     self._notify_wait_arrive()
+                if current_tab_text in ["藥局作業"]:
+                    self._notify_wait_arrive()
         else:
             pass
 

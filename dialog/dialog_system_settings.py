@@ -1039,6 +1039,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._set_check_box(self.ui.checkBox_no_separator, "最近病歷不顯示分隔線")
         self._set_check_box(self.ui.checkBox_case_large_font, "病歷主訴大字體")
         self._set_check_box(self.ui.checkBox_no_switch_ime, "不要自動切換輸入法")
+        self._set_check_box(self.ui.checkBox_beep_anywhere, "候診名單更新發出提示音")
         self._set_check_box(
             self.ui.checkBox_show_all_statistics, "候診名單病歷統計顯示全院統計"
         )
@@ -2226,6 +2227,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._save_check_box(self.ui.checkBox_no_separator, "最近病歷不顯示分隔線")
         self._save_check_box(self.ui.checkBox_case_large_font, "病歷主訴大字體")
         self._save_check_box(self.ui.checkBox_no_switch_ime, "不要自動切換輸入法")
+        self._save_check_box(self.ui.checkBox_beep_anywhere, "候診名單更新發出提示音")
         self._save_check_box(
             self.ui.checkBox_show_all_statistics, "候診名單病歷統計顯示全院統計"
         )
