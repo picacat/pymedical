@@ -581,6 +581,39 @@ class KioskPayment(QtWidgets.QMainWindow):
 
         return ins_type, doctor, room
 
+    # def _ready_to_payment(self):
+    #     from joytcm_kiosk.dialog import dialog_payment
+
+    #     self.button_cancel.setVisible(False)
+
+    #     module = importlib.reload(dialog_payment)
+    #     dialog = module.DialogPayment(
+    #         self.parent,
+    #         self.database,
+    #         self.system_settings,
+    #         self.ic_card,
+    #         self.case_key,
+    #         self.total_amount,
+    #     )
+    #     dialog.exec_()
+    #     is_payment_done = dialog.is_payment_done()
+    #     del dialog
+
+    #     if is_payment_done:
+    #         ins_type, doctor, room = self._get_case_data(self.case_key)
+    #         if ins_type == "健保":
+    #             dialog = self.parent.show_in_progress()
+    #             self._write_ic_card(self.case_key)
+    #             dialog.close()
+
+    #         self._print_receipt(self.case_key)
+    #         self._set_data(self.case_key)
+    #         self._show_payment_done()
+    #         self.parent.send_socket_data(doctor, room, "批價作業")
+    #         self._back_to_home()
+
+    #     self.button_cancel.setVisible(True)
+
     def _ready_to_payment(self):
         from joytcm_kiosk.dialog import dialog_payment
 
@@ -602,10 +635,11 @@ class KioskPayment(QtWidgets.QMainWindow):
         if is_payment_done:
             ins_type, doctor, room = self._get_case_data(self.case_key)
             if ins_type == "健保":
-                dialog = self.parent.show_in_progress()
-                self._write_ic_card(self.case_key)
-                dialog.close()
+                ic_card_written = self._write_ic_card(self.case_key)
+                if not ic_card_written:
+                    self._show_ic_card_write_error()
 
+            # 不論寫卡成功與否, 都要列印收據及更新繳費狀態 (錢已收)
             self._print_receipt(self.case_key)
             self._set_data(self.case_key)
             self._show_payment_done()
@@ -613,6 +647,17 @@ class KioskPayment(QtWidgets.QMainWindow):
             self._back_to_home()
 
         self.button_cancel.setVisible(True)
+
+    def _show_ic_card_write_error(self):
+        from joytcm_kiosk.dialog import dialog_message_box
+
+        module = importlib.reload(dialog_message_box)
+        dialog = module.DialogMessageBox(
+            self.parent, self.database, self.system_settings
+        )
+        dialog.set_ic_card_write_error()
+        dialog.exec_()
+        del dialog
 
     def _print_receipt(self, case_key):
         printer_utils.print_misc_form(
@@ -635,11 +680,26 @@ class KioskPayment(QtWidgets.QMainWindow):
         '''
         self.database.exec_sql(sql)
 
+    # def _write_ic_card(self, case_key):
+    #     dialog = self.parent.show_in_progress()
+    #     QCoreApplication.processEvents()
+    #     self.ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
+    #     dialog.close()
+
     def _write_ic_card(self, case_key):
         dialog = self.parent.show_in_progress()
         QCoreApplication.processEvents()
-        self.ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
-        dialog.close()
+
+        ic_card_written = False
+        try:
+            self.ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
+            ic_card_written = True
+        except Exception as e:
+            print(f"寫卡失敗: {e}")
+        finally:
+            dialog.close()
+
+        return ic_card_written
 
     def set_vhc_payment_data(self):
         dialog = self.parent.show_vhc_in_progress()
