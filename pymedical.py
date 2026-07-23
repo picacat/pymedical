@@ -2310,7 +2310,7 @@ class PyMedical(QtWidgets.QMainWindow):
 
         index = self.ui.tabWidget_window.currentIndex()
         current_tab_text = self.ui.tabWidget_window.tabText(index)
-        self._notify_wait_arrive()
+        # self._notify_wait_arrive()
 
         if (
             current_tab_text not in ["門診掛號", "醫師看診作業", "批價作業", "藥局作業"]
