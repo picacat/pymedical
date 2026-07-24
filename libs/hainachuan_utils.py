@@ -10,16 +10,16 @@ from libs import string_utils
 
 # 傳送目前看診號
 def send_seq_number(**kwargs):
-    system_settings = kwargs['system_settings']
+    system_settings = kwargs["system_settings"]
 
-    url = system_settings.field('webservice')
-    if url in [None, '']:
+    url = system_settings.field("webservice")
+    if url in [None, ""]:
         return
 
-    seq_number = kwargs['seq_number']
-    room = kwargs['room']
-    doctor = kwargs['doctor']
-    clinic_id = system_settings.field('院所代號')
+    seq_number = kwargs["seq_number"]
+    room = kwargs["room"]
+    doctor = kwargs["doctor"]
+    clinic_id = system_settings.field("院所代號")
 
     json_data = {
         "tp": "num",
@@ -31,7 +31,7 @@ def send_seq_number(**kwargs):
 
     session = requests.Session()
     retries = Retry(total=3, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
-    session.mount('https://', HTTPAdapter(max_retries=retries))
+    session.mount("https://", HTTPAdapter(max_retries=retries))
 
     try:
         response = session.post(url, json=json_data, timeout=10)
@@ -44,40 +44,43 @@ def send_seq_number(**kwargs):
 
 # 新增預約
 def add_reservation(database, system_settings, reserve_key):
-    sql = f'''
+    if reserve_key in ["", None]:
+        return
+
+    sql = f"""
         SELECT reserve.*, patient.ID, patient.Birthday FROM reserve
             LEFT JOIN patient ON patient.PatientKey = reserve.PatientKey
         WHERE
             ReserveKey = {reserve_key}
-    '''
+    """
     rows = database.select_record(sql)
 
     if len(rows) <= 0:
         return
 
     row = rows[0]
-    reserve_date = row['ReserveDate'].strftime('%Y-%m-%d')
-    reserve_time = row['ReserveDate'].strftime('%H:%M')
-    period = string_utils.xstr(row['Period'])
-    patient_key = string_utils.xstr(row['PatientKey'])
-    name = string_utils.xstr(row['Name'])
+    reserve_date = row["ReserveDate"].strftime("%Y-%m-%d")
+    reserve_time = row["ReserveDate"].strftime("%H:%M")
+    period = string_utils.xstr(row["Period"])
+    patient_key = string_utils.xstr(row["PatientKey"])
+    name = string_utils.xstr(row["Name"])
     try:
-        birthday = row['Birthday'].strftime('%Y-%m-%d')
+        birthday = row["Birthday"].strftime("%Y-%m-%d")
     except Exception:
         birthday = None
 
-    patient_id = string_utils.xstr(row['ID'])
-    doctor = string_utils.xstr(row['Doctor'])
-    room = string_utils.xstr(row['Room'])
-    reserve_no = string_utils.xstr(row['ReserveNo'])
-    source = string_utils.xstr(row['Source'])
-    clinic_id = system_settings.field('院所代號')
-    url = system_settings.field('webservice')
+    patient_id = string_utils.xstr(row["ID"])
+    doctor = string_utils.xstr(row["Doctor"])
+    room = string_utils.xstr(row["Room"])
+    reserve_no = string_utils.xstr(row["ReserveNo"])
+    source = string_utils.xstr(row["Source"])
+    clinic_id = system_settings.field("院所代號")
+    url = system_settings.field("webservice")
 
-    if source in ['初診預約']:
-        visit = '初診'
+    if source in ["初診預約"]:
+        visit = "初診"
     else:
-        visit = '複診'
+        visit = "複診"
 
     json_data = {
         "tp": "reserve",
@@ -101,11 +104,11 @@ def add_reservation(database, system_settings, reserve_key):
 
 # 取消預約
 def cancel_reservation(**kwargs):
-    system_settings = kwargs['system_settings']
-    patient_key = kwargs['patient_key']
-    reserve_key = kwargs['reserve_key']
-    clinic_id = system_settings.field('院所代號')
-    url = system_settings.field('webservice')
+    system_settings = kwargs["system_settings"]
+    patient_key = kwargs["patient_key"]
+    reserve_key = kwargs["reserve_key"]
+    clinic_id = system_settings.field("院所代號")
+    url = system_settings.field("webservice")
 
     json_data = {
         "tp": "cancelReserve",

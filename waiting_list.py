@@ -2157,6 +2157,8 @@ class WaitingList(QtWidgets.QMainWindow):
             WAITING_LIST_COL_NO["CaseKey"]
         )
         name = self.table_widget_waiting_list.field_value(WAITING_LIST_COL_NO["Name"])
+        if case_key in ["", None]:
+            return
 
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
@@ -2175,7 +2177,7 @@ class WaitingList(QtWidgets.QMainWindow):
         if not apply_change:
             return
 
-        sql = f"""
+        sql = """
             UPDATE cases
             SET
                 InsType = "自費",
@@ -2196,26 +2198,29 @@ class WaitingList(QtWidgets.QMainWindow):
                 InsApplyFee = NULL,
                 AgentFee = NULL
             WHERE
-                CaseKey = {case_key}
+                CaseKey = %s
         """
-        self.database.exec_sql(sql)
-        sql = f"""
+        params = (case_key,)
+        self.database.exec_sql(sql, params=params)
+        sql = """
             DELETE FROM prescript
             WHERE
-                CaseKey = {case_key} AND
+                CaseKey = %s AND
                 MedicineSet = 1
         """
-        self.database.exec_sql(sql)
-        sql = f"""
+        params = (case_key,)
+        self.database.exec_sql(sql, params=params)
+        sql = """
             UPDATE wait
             SET
                 InsType = "自費",
                 Card = "免卡",
                 Continuance = NULL
             WHERE
-                CaseKey = {case_key}
+                CaseKey = %s
         """
-        self.database.exec_sql(sql)
+        params = (case_key,)
+        self.database.exec_sql(sql, params=params)
 
         self.read_wait()
 
