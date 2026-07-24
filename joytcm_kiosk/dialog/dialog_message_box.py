@@ -868,3 +868,36 @@ class DialogMessageBox(QtWidgets.QDialog):
             center=True,
         )
         self._set_back_home_button("返回首頁")
+
+    def set_ic_card_write_error(self):
+        png_filename = self._get_png_file_name("cancel.png")
+        system_utils.set_image(
+            self,
+            png_filename,
+            0,
+            self.ICON_Y,
+            width=self.ICON_W,
+            height=self.ICON_H,
+            center=True,
+        )
+        system_utils.set_label(
+            self,
+            "健保卡寫卡失敗！",
+            0,
+            self.LINE2_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.RED,
+            center=True,
+        )
+        system_utils.set_label(
+            self,
+            "請持健保卡至櫃檯補登，謝謝",
+            0,
+            self.LINE3_Y,
+            self.parent.TEXT_FONT,
+            self.parent.FONT_SIZE,
+            self.parent.DARK_GREEN,
+            center=True,
+        )
+        self._set_back_home_button("返回首頁")

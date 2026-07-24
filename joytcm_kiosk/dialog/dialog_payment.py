@@ -45,7 +45,19 @@ class DialogPayment(QtWidgets.QDialog):
     def __del__(self):
         pass
 
+    # def back_to_previous(self):
+    #     self.stop_charge_cash()
+    #     if self.inserted_cash > 0:
+    #         self.kiosk.eject_cash(self.inserted_cash)
+
+    #     del self.kiosk
+    #     self.close()
+
     def back_to_previous(self):
+        if getattr(self, "stop_event", None) is None:
+            self.close()
+            return
+
         self.stop_charge_cash()
         if self.inserted_cash > 0:
             self.kiosk.eject_cash(self.inserted_cash)
@@ -88,6 +100,13 @@ class DialogPayment(QtWidgets.QDialog):
         #     self, '返回繳費確認頁', 'white', 0, self.BUTTON_Y,
         #     self.parent.BUTTON_FONT, self.parent.RED, self.parent.BUTTON_FONT_SIZE,
         #     340, self.parent.BUTTON_HEIGHT, self.back_to_previous, center=True)
+        self.button_close = QtWidgets.QPushButton(self)
+        self.button_close.setGeometry(50, 35, 60, 60)  # 依紅點在視窗上的實際位置微調
+        self.button_close.setStyleSheet(
+            "QPushButton { background: transparent; border: none; }"
+        )
+        self.button_close.setCursor(Qt.PointingHandCursor)
+        self.button_close.clicked.connect(self.back_to_previous)
 
     # 設定信號
     def _set_signal(self):
