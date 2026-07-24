@@ -1467,28 +1467,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
     def modify_patient(self):
         self.parent.open_patient_record(self.patient_key, "門診掛號")
 
-    # def disease_code_editing_finished(self):
-    #     disease_list = [
-    #         [self.ui.lineEdit_disease_code1, self.ui.lineEdit_disease_name1],
-    #         [self.ui.lineEdit_disease_code2, self.ui.lineEdit_disease_name2],
-    #         [self.ui.lineEdit_disease_code3, self.ui.lineEdit_disease_name3],
-    #         [self.ui.lineEdit_disease_code4, self.ui.lineEdit_disease_name4],
-    #     ]
-
-    #     for i in range(len(disease_list)):
-    #         code_field = disease_list[i][0]
-    #         name_field = disease_list[i][1]
-
-    #         if code_field.text() != "" and name_field.text() == "":
-    #             code_field.blockSignals(True)
-    #             code_field.setText("")
-    #             code_field.blockSignals(False)
-
-    #             if i == 0 and self.tab_registration:
-    #                 self.tab_registration.ui.lineEdit_special_code.setText("")
-
-    #     self.disease_code_changed()
-
     def disease_code_editing_finished(self):
         disease_list = [
             [self.ui.lineEdit_disease_code1, self.ui.lineEdit_disease_name1],
@@ -1505,85 +1483,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
                 code_field.blockSignals(False)
 
         self.rearrange_disease_codes()
-
-    # def disease_code_changed(self):
-    #     if getattr(self, "_in_disease_code_changed", False):
-    #         return
-
-    #     self._in_disease_code_changed = True
-    #     try:
-    #         disease_list = [
-    #             [
-    #                 self.ui.lineEdit_disease_code1,
-    #                 self.ui.lineEdit_disease_name1,
-    #                 self.ui.toolButton_disease1,
-    #                 self.ui.pushButton_disease1,
-    #             ],
-    #             [
-    #                 self.ui.lineEdit_disease_code2,
-    #                 self.ui.lineEdit_disease_name2,
-    #                 self.ui.toolButton_disease2,
-    #                 self.ui.pushButton_disease2,
-    #             ],
-    #             [
-    #                 self.ui.lineEdit_disease_code3,
-    #                 self.ui.lineEdit_disease_name3,
-    #                 self.ui.toolButton_disease3,
-    #                 self.ui.pushButton_disease3,
-    #             ],
-    #             [
-    #                 self.ui.lineEdit_disease_code4,
-    #                 self.ui.lineEdit_disease_name4,
-    #                 self.ui.toolButton_disease4,
-    #                 self.ui.pushButton_disease4,
-    #             ],
-    #         ]
-
-    #         # 1. 依序收集非空白的診斷碼
-    #         entries = []
-    #         for code_edit, name_edit, _, _ in disease_list:
-    #             icd_code = code_edit.text().strip().upper()
-    #             if icd_code != "":
-    #                 entries.append((icd_code, name_edit.text()))
-
-    #         # 2. 重填回去（空洞自動往上遞補）
-    #         shifted = False
-    #         for row_no, (code_edit, name_edit, _, _) in enumerate(disease_list):
-    #             if row_no < len(entries):
-    #                 icd_code, disease_name = entries[row_no]
-    #                 if code_edit.text() != icd_code:
-    #                     shifted = True
-    #                     code_edit.setText(icd_code)
-    #                     name_edit.setText(disease_name)
-    #                 case_utils.set_disease_tool_tip(
-    #                     self.database,
-    #                     code_edit,
-    #                     name_edit,
-    #                     self.parent.complicated_treat_list,
-    #                 )
-    #             else:
-    #                 code_edit.setText("")
-    #                 name_edit.setText("")
-    #                 code_edit.setToolTip("")
-    #                 name_edit.setToolTip("")
-
-    #         if shifted and self.tab_registration is not None:
-    #             self.tab_registration.ui.lineEdit_special_code.setText("")
-
-    #         # 3. 最後用「最終狀態」統一設定 enabled
-    #         for row_no, (code_edit, _, tool_button, push_button) in enumerate(
-    #             disease_list
-    #         ):
-    #             enabled = (
-    #                 row_no == 0 or disease_list[row_no - 1][0].text().strip() != ""
-    #             )
-    #             code_edit.setEnabled(enabled)
-    #             tool_button.setEnabled(enabled)
-    #             push_button.setEnabled(enabled)
-
-    #         self.check_chronic_disease()
-    #     finally:
-    #         self._in_disease_code_changed = False
 
     def _get_disease_list(self):
         return [
