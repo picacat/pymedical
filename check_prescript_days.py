@@ -1,22 +1,25 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtGui, QtCore
 import datetime
 
-from libs import class_utils
-from libs import ui_utils
-from libs import date_utils
-from libs import number_utils
-from libs import string_utils
-from libs import system_utils
-from libs import nhi_utils
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+from libs import (
+    class_utils,
+    date_utils,
+    nhi_utils,
+    number_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 用藥天數檢查 2018.01.31
 class CheckPrescriptDays(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(CheckPrescriptDays, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -29,7 +32,8 @@ class CheckPrescriptDays(QtWidgets.QMainWindow):
         self.ui = None
 
         self.start_date = date_utils.get_start_date_by_year_month(
-            self.apply_year, self.apply_month)
+            self.apply_year, self.apply_month
+        )
 
         end_year, end_month = self.apply_year, self.apply_month
         if self.check_two_months:
@@ -73,19 +77,34 @@ class CheckPrescriptDays(QtWidgets.QMainWindow):
 
     def _set_table_widget(self):
         self.table_widget_medical_record = class_utils.get_table_widget(
-            self.ui.tableWidget_medical_record, self.database)
+            self.ui.tableWidget_medical_record, self.database
+        )
         self.table_widget_medical_record.set_column_hidden([0])
         width = [
-            100, 
-            130, 60, 90, 90, 100, 80, 50,
-            100, 50, 100, 300, 90,
-            70, 70, 230,
+            100,
+            130,
+            60,
+            90,
+            90,
+            100,
+            80,
+            50,
+            100,
+            50,
+            100,
+            300,
+            90,
+            70,
+            70,
+            230,
         ]
         self.table_widget_medical_record.set_table_heading_width(width)
 
     # 設定信號
     def _set_signal(self):
-        self.ui.tableWidget_medical_record.doubleClicked.connect(self.open_medical_record)
+        self.ui.tableWidget_medical_record.doubleClicked.connect(
+            self.open_medical_record
+        )
         self.ui.toolButton_find_error.clicked.connect(self._find_error)
 
     def _find_error(self):
@@ -122,7 +141,7 @@ class CheckPrescriptDays(QtWidgets.QMainWindow):
             return
 
         progress_dialog = QtWidgets.QProgressDialog(
-            '正在執行用藥天數檢查中, 請稍後...', '取消', 0, self.row_count(), self
+            "正在執行用藥天數檢查中, 請稍後...", "取消", 0, self.row_count(), self
         )
         progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
         progress_dialog.setValue(0)
@@ -164,28 +183,36 @@ class CheckPrescriptDays(QtWidgets.QMainWindow):
                 continue
 
             error_message = item.text()
-            if '給藥重複' in error_message:
-                duplicated_days = number_utils.get_integer(error_message.split('給藥重複')[1].split('日')[0])
+            if "給藥重複" in error_message:
+                duplicated_days = number_utils.get_integer(
+                    error_message.split("給藥重複")[1].split("日")[0]
+                )
                 self.total_duplicated_days += duplicated_days
 
         if self.total_pres_days <= 0:
-            self.ui.label_message.setText('用藥重複率: 0%')
+            self.ui.label_message.setText("用藥重複率: 0%")
         else:
             percent = self.total_duplicated_days / self.total_pres_days * 100
-            self.ui.label_message.setText(f'''
+            self.ui.label_message.setText(f"""
                 用藥重複率 = 重複給藥日份 / 總給藥日份<br>
                 <b>{self.total_duplicated_days} / {self.total_pres_days} = {percent:.2f}%</b>
-            ''')
+            """)
 
     def _check_duplicated_days(self, row_no, row):
         error_message = []
 
-        patient_key = string_utils.xstr(row['PatientKey'])
+        patient_key = string_utils.xstr(row["PatientKey"])
         try:
             last_case_date = datetime.datetime.strptime(
-                self.ui.tableWidget_medical_record.item(row_no-1, 1).text(), '%Y-%m-%d').date()
-            last_patient_key = self.ui.tableWidget_medical_record.item(row_no-1, 3).text()
-            last_prescript_days = int(self.ui.tableWidget_medical_record.item(row_no-1, 9).text())
+                self.ui.tableWidget_medical_record.item(row_no - 1, 1).text(),
+                "%Y-%m-%d",
+            ).date()
+            last_patient_key = self.ui.tableWidget_medical_record.item(
+                row_no - 1, 3
+            ).text()
+            last_prescript_days = int(
+                self.ui.tableWidget_medical_record.item(row_no - 1, 9).text()
+            )
             self.total_pres_days += number_utils.get_integer(last_prescript_days)
         except AttributeError:
             last_case_date = None
@@ -195,15 +222,16 @@ class CheckPrescriptDays(QtWidgets.QMainWindow):
         duplicated_days = self.duplicated_days
 
         if patient_key == last_patient_key:
-            duplicated_days = (last_case_date +
-                               datetime.timedelta(
-                                   days=last_prescript_days + duplicated_days) -
-                               row['CaseDate'].date()).days - 1
+            duplicated_days = (
+                last_case_date
+                + datetime.timedelta(days=last_prescript_days + duplicated_days)
+                - row["CaseDate"].date()
+            ).days - 1
             # if self.system_settings.field('當日用藥重複檢查次日起算') == 'Y':
             #     duplicated_days += 1
 
             if duplicated_days > 0:
-                error_message.append(f'給藥重複{duplicated_days}日')
+                error_message.append(f"給藥重複{duplicated_days}日")
                 self.total_duplicated_days += duplicated_days
                 self.errors += 1
 
@@ -217,7 +245,7 @@ class CheckPrescriptDays(QtWidgets.QMainWindow):
                 continue
 
             error_message = item.text()
-            if '給藥重複' in error_message:
+            if "給藥重複" in error_message:
                 self.errors += 1
 
     def error_count(self):
@@ -227,80 +255,93 @@ class CheckPrescriptDays(QtWidgets.QMainWindow):
         row_no = self.ui.tableWidget_medical_record.rowCount()
         self.ui.tableWidget_medical_record.setRowCount(row_no + 1)
 
-        year = row['CaseDate'].year
-        month = row['CaseDate'].month
-        day = row['CaseDate'].day
+        year = row["CaseDate"].year
+        month = row["CaseDate"].month
+        day = row["CaseDate"].day
         medical_record = [
-            string_utils.xstr(row['CaseKey']),
-            f'{year}-{month:0>2}-{day:0>2}',
-            string_utils.xstr(row['Period']),
-            string_utils.xstr(row['PatientKey']),
-            string_utils.xstr(row['Name']),
-            string_utils.xstr(row['Share']),
-            string_utils.xstr(row['Card']),
-            string_utils.xstr(row['Continuance']),
-            string_utils.xstr(row['TreatType']),
-            string_utils.xstr(row['Days']),
-            string_utils.xstr(row['DiseaseCode1']),
-            string_utils.xstr(row['DiseaseName1']),
-            string_utils.xstr(row['Doctor']),
-            string_utils.xstr(row['InterDrugFee']),
-            string_utils.xstr(row['PharmacyFee']),
-            ', '.join(error_messages),
+            string_utils.xstr(row["CaseKey"]),
+            f"{year}-{month:0>2}-{day:0>2}",
+            string_utils.xstr(row["Period"]),
+            string_utils.xstr(row["PatientKey"]),
+            string_utils.xstr(row["Name"]),
+            string_utils.xstr(row["Share"]),
+            string_utils.xstr(row["Card"]),
+            string_utils.xstr(row["Continuance"]),
+            string_utils.xstr(row["TreatType"]),
+            string_utils.xstr(row["Days"]),
+            string_utils.xstr(row["DiseaseCode1"]),
+            string_utils.xstr(row["DiseaseName1"]),
+            string_utils.xstr(row["Doctor"]),
+            string_utils.xstr(row["InterDrugFee"]),
+            string_utils.xstr(row["PharmacyFee"]),
+            ", ".join(error_messages),
         ]
         for column_no in range(len(medical_record)):
             self.ui.tableWidget_medical_record.setItem(
-                row_no, column_no,
-                QtWidgets.QTableWidgetItem(medical_record[column_no])
+                row_no, column_no, QtWidgets.QTableWidgetItem(medical_record[column_no])
             )
             if column_no in [7]:
                 self.ui.tableWidget_medical_record.item(
-                    row_no, column_no).setTextAlignment(
-                    QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
-                )
+                    row_no, column_no
+                ).setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
             elif column_no in [3, 9, 13, 14]:
                 self.ui.tableWidget_medical_record.item(
-                    row_no, column_no).setTextAlignment(
-                    QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                )
+                    row_no, column_no
+                ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
             if len(error_messages) > 0:
-                color = QtGui.QColor('red')
-                self.ui.tableWidget_medical_record.item(row_no, column_no).setForeground(color)
+                color = QtGui.QColor("red")
+                self.ui.tableWidget_medical_record.item(
+                    row_no, column_no
+                ).setForeground(color)
 
     def _set_not_this_month_color(self):
         for row_no in range(self.ui.tableWidget_medical_record.rowCount()):
             case_date = self.ui.tableWidget_medical_record.item(row_no, 1).text()
             if date_utils.str_to_date(case_date).month != self.apply_month:
                 for col_no in range(self.ui.tableWidget_medical_record.columnCount()):
-                    self.ui.tableWidget_medical_record.item(row_no, col_no).setForeground(QtGui.QColor('darkGray'))
+                    self.ui.tableWidget_medical_record.item(
+                        row_no, col_no
+                    ).setForeground(QtGui.QColor("darkGray"))
 
     def _remove_useless_rows(self):
         for row_no in reversed(range(self.ui.tableWidget_medical_record.rowCount())):
-            current_case_date = self.ui.tableWidget_medical_record.item(row_no, 1).text()
-            current_patient_key = self.ui.tableWidget_medical_record.item(row_no, 3).text()
+            current_case_date = self.ui.tableWidget_medical_record.item(
+                row_no, 1
+            ).text()
+            current_patient_key = self.ui.tableWidget_medical_record.item(
+                row_no, 3
+            ).text()
             if date_utils.str_to_date(current_case_date).month == self.apply_month:
                 continue
 
             if row_no == 0:
                 if date_utils.str_to_date(current_case_date).month != self.apply_month:
-                    self._set_row_error_message(row_no, 15, '!')
+                    self._set_row_error_message(row_no, 15, "!")
                     break
 
-            last_case_date = self.ui.tableWidget_medical_record.item(row_no-1, 1).text()
-            last_patient_key = self.ui.tableWidget_medical_record.item(row_no-1, 3).text()
+            last_case_date = self.ui.tableWidget_medical_record.item(
+                row_no - 1, 1
+            ).text()
+            last_patient_key = self.ui.tableWidget_medical_record.item(
+                row_no - 1, 3
+            ).text()
 
-            if date_utils.str_to_date(last_case_date).month != self.apply_month and \
-                    current_patient_key == last_patient_key:
-                self._set_row_error_message(row_no, 15, '!')
+            if (
+                date_utils.str_to_date(last_case_date).month != self.apply_month
+                and current_patient_key == last_patient_key
+            ):
+                self._set_row_error_message(row_no, 15, "!")
             else:
                 if current_patient_key != last_patient_key:
-                    self._set_row_error_message(row_no, 15, '!')
+                    self._set_row_error_message(row_no, 15, "!")
 
         for row_no in reversed(range(self.ui.tableWidget_medical_record.rowCount())):
             remove_flag = self.ui.tableWidget_medical_record.item(row_no, 15)
-            if remove_flag is not None and remove_flag.text() == '!':
+            if remove_flag is not None and remove_flag.text() == "!":
                 self.ui.tableWidget_medical_record.removeRow(row_no)
 
     def _set_row_error_message(self, row_no, col_no, error_message):
-        self.ui.tableWidget_medical_record.setItem(row_no, col_no, QtWidgets.QTableWidgetItem(error_message))
+        self.ui.tableWidget_medical_record.setItem(
+            row_no, col_no, QtWidgets.QTableWidgetItem(error_message)
+        )

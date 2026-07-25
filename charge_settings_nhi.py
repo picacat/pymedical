@@ -1,24 +1,26 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QMessageBox, QPushButton, QFileDialog
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPushButton
 
-from libs import class_utils
-from libs import ui_utils
-from libs import string_utils
-from libs import nhi_utils
-from libs import charge_utils
-from libs import system_utils
-from libs import db_utils
-from libs import dialog_utils
-from libs import personnel_utils
+from libs import (
+    charge_utils,
+    class_utils,
+    db_utils,
+    dialog_utils,
+    nhi_utils,
+    personnel_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 收費設定 2018.04.14
 class ChargeSettingsNHI(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(ChargeSettingsNHI, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -43,10 +45,17 @@ class ChargeSettingsNHI(QtWidgets.QMainWindow):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_CHARGE_SETTINGS_NHI, self)
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
-        self.table_widget_nhi = class_utils.get_table_widget(self.ui.tableWidget_nhi, self.database)
+        self.table_widget_nhi = class_utils.get_table_widget(
+            self.ui.tableWidget_nhi, self.database
+        )
         self.table_widget_nhi.set_column_hidden([0])
         self._set_table_width()
-        if personnel_utils.get_permission(self.database, '系統作業', '關閉匯出功能', self.user_name) == 'Y':
+        if (
+            personnel_utils.get_permission(
+                self.database, "系統作業", "關閉匯出功能", self.user_name
+            )
+            == "Y"
+        ):
             self.ui.toolButton_export.setEnabled(False)
 
     # 設定信號
@@ -77,7 +86,7 @@ class ChargeSettingsNHI(QtWidgets.QMainWindow):
 
     # 健保支付標準 *******************************************************************************************************
     def _set_instruction(self):
-        self.textEdit_remark.setHtml('''
+        self.textEdit_remark.setHtml("""
             <b>診察費</b><br>
             1. 每月看診日數計算方式: 每月實際看診日數<b><font color="red">超過26日者，以26日計</font></b>；
             山地離島地區、花蓮縣及臺東縣之院所，每月以<b>實際看診日數</b>計.<br>
@@ -134,18 +143,18 @@ class ChargeSettingsNHI(QtWidgets.QMainWindow):
             註2：P64001、P64002、P64003、P64004、P64005、P64006、P64007、P64008、P64009 每次診療限擇一申報，且給藥日分不得重複。<br>
             註3：(P64005、P64006、P64007、P64008)及(P64009、P64010)不得併報。<br>
             </font>
-        ''')
+        """)
 
     def _read_nhi(self):
         charge_type = tuple(nhi_utils.CHARGE_TYPE)
         charge_type_list = string_utils.xstr(nhi_utils.CHARGE_TYPE)[1:-1]
 
-        sql = f'''
+        sql = f"""
             SELECT * FROM charge_settings
             WHERE
                 ChargeType in {charge_type}
                 ORDER BY FIELD(ChargeType, {charge_type_list}), InsCode
-        '''
+        """
         self.table_widget_nhi.set_db_data(sql, self._set_nhi_data)
 
         row_count = self.table_widget_nhi.row_count()
@@ -155,32 +164,32 @@ class ChargeSettingsNHI(QtWidgets.QMainWindow):
 
     def _set_nhi_data(self, rec_no, rec):
         nhi_rec = [
-            str(rec['ChargeSettingsKey']),
-            string_utils.xstr(rec['ChargeType']),
-            string_utils.xstr(rec['ItemName']),
-            string_utils.xstr(rec['InsCode']),
-            string_utils.xstr(rec['Amount']),
-            string_utils.xstr(rec['Remark']),
+            str(rec["ChargeSettingsKey"]),
+            string_utils.xstr(rec["ChargeType"]),
+            string_utils.xstr(rec["ItemName"]),
+            string_utils.xstr(rec["InsCode"]),
+            string_utils.xstr(rec["Amount"]),
+            string_utils.xstr(rec["Remark"]),
         ]
 
         for column in range(len(nhi_rec)):
             self.ui.tableWidget_nhi.setItem(
-                rec_no, column,
-                QtWidgets.QTableWidgetItem(nhi_rec[column])
+                rec_no, column, QtWidgets.QTableWidgetItem(nhi_rec[column])
             )
             if column in [4]:
-                self.ui.tableWidget_nhi.item(
-                    rec_no, column).setTextAlignment(
+                self.ui.tableWidget_nhi.item(rec_no, column).setTextAlignment(
                     QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
                 )
 
     def _nhi_add(self):
-        dialog = dialog_utils.get_dialog_input_nhi(self, self.database, self.system_settings, None)
+        dialog = dialog_utils.get_dialog_input_nhi(
+            self, self.database, self.system_settings, None
+        )
         result = dialog.exec_()
         if result != 0:
             current_row = self.ui.tableWidget_nhi.rowCount()
             self.ui.tableWidget_nhi.insertRow(current_row)
-            fields = ['ChargeType', 'ItemName', 'InsCode', 'Amount', 'Remark']
+            fields = ["ChargeType", "ItemName", "InsCode", "Amount", "Remark"]
             data = [
                 dialog.ui.comboBox_charge_type.currentText(),
                 dialog.ui.lineEdit_item_name.text(),
@@ -188,14 +197,14 @@ class ChargeSettingsNHI(QtWidgets.QMainWindow):
                 dialog.ui.spinBox_amount.value(),
                 dialog.ui.textEdit_remark.toPlainText(),
             ]
-            self.database.insert_record('charge_settings', fields, data)
+            self.database.insert_record("charge_settings", fields, data)
             charge_type_list = tuple(nhi_utils.CHARGE_TYPE)
-            sql = f'''
+            sql = f"""
                 SELECT * FROM charge_settings
                 WHERE
                     ChargeType in {charge_type_list}
                 ORDER BY ChargeSettingsKey desc limit 1
-            '''
+            """
             row_data = self.database.select_record(sql)[0]
             self._set_nhi_data(current_row, row_data)
             self.ui.tableWidget_nhi.setCurrentCell(current_row, 3)
@@ -205,22 +214,26 @@ class ChargeSettingsNHI(QtWidgets.QMainWindow):
 
     def _nhi_edit(self):
         charge_settings_key = self.table_widget_nhi.field_value(0)
-        dialog = dialog_utils.get_dialog_input_nhi(self, self.database, self.system_settings, charge_settings_key)
+        dialog = dialog_utils.get_dialog_input_nhi(
+            self, self.database, self.system_settings, charge_settings_key
+        )
         dialog.exec_()
         dialog.close_all()
-        sql = f'''
+        sql = f"""
             SELECT * FROM charge_settings
             WHERE
                 ChargeSettingsKey = {charge_settings_key}
-        '''
+        """
         row_data = self.database.select_record(sql)[0]
         self._set_nhi_data(self.ui.tableWidget_nhi.currentRow(), row_data)
 
     def _nhi_delete(self):
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle('刪除健保支付標準')
-        msg_box.setText("<font size='4' color='red'><b>確定刪除此筆健保支付標準資料?</b></font>")
+        msg_box.setWindowTitle("刪除健保支付標準")
+        msg_box.setText(
+            "<font size='4' color='red'><b>確定刪除此筆健保支付標準資料?</b></font>"
+        )
         msg_box.setInformativeText("注意！資料刪除後, 將無法回復!")
         msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
         msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
@@ -229,36 +242,37 @@ class ChargeSettingsNHI(QtWidgets.QMainWindow):
             return
 
         key = self.table_widget_nhi.field_value(0)
-        self.database.delete_record('charge_settings', 'ChargeSettingsKey', key)
+        self.database.delete_record("charge_settings", "ChargeSettingsKey", key)
         self.ui.tableWidget_nhi.removeRow(self.ui.tableWidget_nhi.currentRow())
 
     def _export_data(self):
         options = QFileDialog.Options()
         json_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
-            "匯出支付標準JSON檔案", 'nhi_payment.json',
+            "匯出支付標準JSON檔案",
+            "nhi_payment.json",
             "json檔案 (*.json)",
-            options=options
+            options=options,
         )
         if not json_file_name:
             return
 
-        sql = '''
+        sql = """
             SELECT * FROM charge_settings
             WHERE
                 ChargeType IN("診察費", "藥費", "調劑費", "處置費", "照護費", "檢驗費")
             ORDER BY ChargeSettingsKey
-        '''
+        """
         rows = self.database.select_record(sql)
 
         json_data = db_utils.mysql_to_json(rows)
-        text_file = open(json_file_name, "w", encoding='utf8')
+        text_file = open(json_file_name, "w", encoding="utf8")
         text_file.write(str(json_data))
         text_file.close()
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            'JSON資料匯出完成',
-            f'<h3>{json_file_name}匯出完成.</h3>',
-            'JSON 檔案格式.'
+            "JSON資料匯出完成",
+            f"<h3>{json_file_name}匯出完成.</h3>",
+            "JSON 檔案格式.",
         )

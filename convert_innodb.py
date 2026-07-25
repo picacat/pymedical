@@ -1,15 +1,24 @@
-# convert_gui.py（含進度條 / 分批寫入 / 動態字元集 / 單表錯誤處理）
-
-import sys
 import configparser
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout,
-    QMessageBox, QHBoxLayout, QProgressBar, QTextEdit, QSpinBox
-)
-import mysql.connector
 import os
+import sys
+
+import mysql.connector
+from PyQt5.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QSpinBox,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 
+# convert_gui.py（含進度條 / 分批寫入 / 動態字元集 / 單表錯誤處理）
 class MyISAMToInnoDBConverter(QWidget):
     def __init__(self):
         super().__init__()
@@ -75,14 +84,14 @@ class MyISAMToInnoDBConverter(QWidget):
             return
 
         config = configparser.ConfigParser()
-        config.read(config_file, encoding='utf-8')
+        config.read(config_file, encoding="utf-8")
 
-        self.host_input.setText(config['db'].get('host', 'localhost'))
-        self.port_input.setText(config['db'].get('port', '3306'))
-        self.user_input.setText(config['db'].get('user', 'root'))
-        self.password_input.setText(config['db'].get('password', ''))
-        self.source_input.setText(config['db'].get('database', 'pymedical'))
-        self.target_input.setText(config['db'].get('inno_database', 'pymedical_innodb'))
+        self.host_input.setText(config["db"].get("host", "localhost"))
+        self.port_input.setText(config["db"].get("port", "3306"))
+        self.user_input.setText(config["db"].get("user", "root"))
+        self.password_input.setText(config["db"].get("password", ""))
+        self.source_input.setText(config["db"].get("database", "pymedical"))
+        self.target_input.setText(config["db"].get("inno_database", "pymedical_innodb"))
 
     def _log(self, msg):
         self.log_box.append(msg)
@@ -104,15 +113,20 @@ class MyISAMToInnoDBConverter(QWidget):
                 return
 
             if source_db == target_db:
-                QMessageBox.warning(self, "提示", "來源與目標資料庫不可相同，避免覆蓋原始資料。")
+                QMessageBox.warning(
+                    self, "提示", "來源與目標資料庫不可相同，避免覆蓋原始資料。"
+                )
                 return
 
             self.log_box.clear()
             self.start_button.setEnabled(False)
 
             conn = mysql.connector.connect(
-                host=host, port=port, user=user, password=password,
-                connection_timeout=10
+                host=host,
+                port=port,
+                user=user,
+                password=password,
+                connection_timeout=10,
             )
             cursor = conn.cursor()
 
@@ -120,7 +134,7 @@ class MyISAMToInnoDBConverter(QWidget):
             cursor.execute(
                 "SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME "
                 "FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = %s",
-                (source_db,)
+                (source_db,),
             )
             row = cursor.fetchone()
             if not row:
@@ -136,11 +150,14 @@ class MyISAMToInnoDBConverter(QWidget):
             )
 
             # 找出 MyISAM 表格，順便取得各表筆數，用於後續分批與比對
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT TABLE_NAME, TABLE_ROWS
                 FROM information_schema.TABLES
                 WHERE TABLE_SCHEMA = %s AND ENGINE = 'MyISAM'
-            """, (source_db,))
+            """,
+                (source_db,),
+            )
             tables = cursor.fetchall()
             total = len(tables)
 
@@ -155,7 +172,7 @@ class MyISAMToInnoDBConverter(QWidget):
             success_tables = []
 
             for i, (table, _approx_rows) in enumerate(tables):
-                self._log(f"\n[{i+1}/{total}] 處理表格: {table}")
+                self._log(f"\n[{i + 1}/{total}] 處理表格: {table}")
                 try:
                     # 每張表獨立 cursor + 交易，避免單表失敗影響整體狀態
                     work_cursor = conn.cursor()
@@ -163,22 +180,23 @@ class MyISAMToInnoDBConverter(QWidget):
                     work_cursor.execute(f"SHOW CREATE TABLE `{source_db}`.`{table}`")
                     create_sql = work_cursor.fetchone()[1]
                     create_sql = create_sql.replace(
-                        f'CREATE TABLE `{table}`', f'CREATE TABLE `{target_db}`.`{table}`'
+                        f"CREATE TABLE `{table}`",
+                        f"CREATE TABLE `{target_db}`.`{table}`",
                     )
-                    create_sql = create_sql.replace('ENGINE=MyISAM', 'ENGINE=InnoDB')
+                    create_sql = create_sql.replace("ENGINE=MyISAM", "ENGINE=InnoDB")
 
                     # 若目標表已存在（例如重跑），先記錄但不直接覆蓋，避免誤刪資料
                     work_cursor.execute(
                         "SELECT COUNT(*) FROM information_schema.TABLES "
                         "WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s",
-                        (target_db, table)
+                        (target_db, table),
                     )
                     exists = work_cursor.fetchone()[0] > 0
                     if exists:
-                        self._log(f"  目標表已存在，略過建表，僅檢查資料。")
+                        self._log("  目標表已存在，略過建表，僅檢查資料。")
                     else:
                         work_cursor.execute(create_sql)
-                        self._log(f"  已建立 InnoDB 表格結構。")
+                        self._log("  已建立 InnoDB 表格結構。")
 
                     # 取得來源實際筆數（TABLE_ROWS 對 MyISAM 通常準確，但仍以 COUNT(*) 確認）
                     work_cursor.execute(f"SELECT COUNT(*) FROM `{source_db}`.`{table}`")
@@ -187,8 +205,10 @@ class MyISAMToInnoDBConverter(QWidget):
                     work_cursor.execute(f"SELECT COUNT(*) FROM `{target_db}`.`{table}`")
                     target_count = work_cursor.fetchone()[0]
 
-                    if target_count >= source_count and source_count > 0:
-                        self._log(f"  資料筆數已一致（{target_count}/{source_count}），略過複製。")
+                    if target_count >= source_count > 0:
+                        self._log(
+                            f"  資料筆數已一致（{target_count}/{source_count}），略過複製。"
+                        )
                     else:
                         # 分批複製，避免大表一次性 INSERT 造成長交易、鎖表或記憶體問題
                         copied = target_count
@@ -200,7 +220,9 @@ class MyISAMToInnoDBConverter(QWidget):
                             )
                             conn.commit()
                             copied += batch_size
-                            self._log(f"  已複製約 {min(copied, source_count)}/{source_count} 筆...")
+                            self._log(
+                                f"  已複製約 {min(copied, source_count)}/{source_count} 筆..."
+                            )
 
                     # 最終比對筆數，確認轉換完整
                     work_cursor.execute(f"SELECT COUNT(*) FROM `{target_db}`.`{table}`")
@@ -230,15 +252,16 @@ class MyISAMToInnoDBConverter(QWidget):
                 detail = "\n".join(f"- {t}: {e}" for t, e in failed_tables)
                 self._log(f"失敗清單:\n{detail}")
                 QMessageBox.warning(
-                    self, "部分完成",
-                    f"{summary}\n\n失敗的表格請查看下方紀錄，修正問題後可重新執行（已成功的表格會自動略過）。"
+                    self,
+                    "部分完成",
+                    f"{summary}\n\n失敗的表格請查看下方紀錄，修正問題後可重新執行（已成功的表格會自動略過）。",
                 )
             else:
                 QMessageBox.information(self, "轉換完成", summary)
 
         except Exception as e:
             self._log(f"⚠ 發生錯誤: {e}")
-            QMessageBox.critical(self, "錯誤", f"轉換失敗：\n{str(e)}")
+            QMessageBox.critical(self, "錯誤", f"轉換失敗：\n{e!s}")
         finally:
             self.start_button.setEnabled(True)
             if conn is not None:
@@ -253,4 +276,3 @@ if __name__ == "__main__":
     window = MyISAMToInnoDBConverter()
     window.show()
     sys.exit(app.exec_())
-

@@ -153,7 +153,7 @@ class PyMedical(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None, splash=None, *args):
         """初始化主程式."""
-        super(PyMedical, self).__init__(parent)
+        super().__init__(parent)
         self.splash = splash
         self.args = args
         self.version = system_utils.get_system_version()
@@ -204,7 +204,7 @@ class PyMedical(QtWidgets.QMainWindow):
             msg_box.setIcon(QMessageBox.Critical)
             msg_box.setWindowTitle("連線清理失敗")
             msg_box.setText(
-                f"<font size='4' color='red'><b>無法清除Sleep連線:<br>{str(e)}</b></font>"
+                f"<font size='4' color='red'><b>無法清除Sleep連線:<br>{e!s}</b></font>"
             )
             msg_box.setInformativeText("請檢查傳遞的參數是否正確.")
             msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
@@ -1292,13 +1292,12 @@ class PyMedical(QtWidgets.QMainWindow):
         current_tab.close_all()
         current_tab.deleteLater()
         self.ui.tabWidget_window.removeTab(current_index)
-        if tab_name.find("病歷資料") != -1:
-            self._set_tab(current_tab.call_from)
-        elif tab_name.find("病患資料") != -1:
-            self._set_tab(current_tab.call_from)
-        elif tab_name.find("養生館購買商品") != -1:
-            self._set_tab(current_tab.call_from)
-        elif tab_name.find("購買商品") != -1:
+        if (
+            tab_name.find("病歷資料") != -1
+            or tab_name.find("病患資料") != -1
+            or tab_name.find("養生館購買商品") != -1
+            or tab_name.find("購買商品") != -1
+        ):
             self._set_tab(current_tab.call_from)
 
     # 關閉 tab
@@ -1403,9 +1402,7 @@ class PyMedical(QtWidgets.QMainWindow):
                     current_tab.read_purchase_today()
                 elif tab_name == "門診掛號":
                     current_tab.read_wait()
-                elif tab_name == "消費資料查詢":
-                    current_tab.refresh_massage_case()
-                elif tab_name == "養生館櫃台結帳":
+                elif tab_name == "消費資料查詢" or tab_name == "養生館櫃台結帳":
                     current_tab.refresh_massage_case()
                 elif tab_name == "申報檢查":
                     current_tab.refresh_medical_record()

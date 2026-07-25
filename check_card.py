@@ -19,7 +19,7 @@ from libs import (
 class CheckCard(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(CheckCard, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -545,7 +545,7 @@ class CheckCard(QtWidgets.QMainWindow):
             if datetime.datetime.strptime(
                 case_date, "%Y-%m-%d"
             ) < datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"):
-                for column in range(0, self.ui.tableWidget_errors.columnCount()):
+                for column in range(self.ui.tableWidget_errors.columnCount()):
                     self.ui.tableWidget_errors.item(row_no, column).setForeground(
                         QtGui.QColor("darkGray")
                     )

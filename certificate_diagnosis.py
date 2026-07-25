@@ -1,25 +1,31 @@
-# -*- coding: utf-8 -*-
-# flake8: noqa: E501,D100,D101,D102,D107
-
 import datetime
 import os
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from libs import (class_utils, date_utils, dialog_utils, export_utils,
-                  number_utils, personnel_utils, printer_utils, string_utils,
-                  system_utils, ui_utils)
+from libs import (
+    class_utils,
+    date_utils,
+    dialog_utils,
+    export_utils,
+    number_utils,
+    personnel_utils,
+    printer_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 診斷證明書 2018.12.24
 class CertificateDiagnosis(QtWidgets.QMainWindow):
     """診斷證明書2018.12.24."""
-    
+
     # 初始化
     def __init__(self, parent=None, *args):
         """初始化 CertificateDiagnosis."""
-        super(CertificateDiagnosis, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -39,7 +45,6 @@ class CertificateDiagnosis(QtWidgets.QMainWindow):
     # 關閉
     def close_all(self):
         """關閉這個tab."""
-        pass
 
     # 設定GUI
     def _set_ui(self):
@@ -564,7 +569,7 @@ class CertificateDiagnosis(QtWidgets.QMainWindow):
         }
 
         return case_row
-    
+
     def _export_table_to_excel(self):
         name = self.table_widget_certificate_list.field_value(4)
 
@@ -584,7 +589,9 @@ class CertificateDiagnosis(QtWidgets.QMainWindow):
         system_utils.set_last_directory("診斷證明書", excel_filename)
 
         export_utils.export_table_widget_to_excel(
-            excel_filename, self.ui.tableWidget_certificate_list, [0, 1],
+            excel_filename,
+            self.ui.tableWidget_certificate_list,
+            [0, 1],
             [3, 12],
         )
 

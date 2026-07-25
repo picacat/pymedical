@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 
 from PyQt5 import QtWidgets
@@ -22,7 +20,7 @@ from libs import (
 class PatientData(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(PatientData, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]

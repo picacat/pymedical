@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 
 from PyQt5 import QtCore, QtWidgets
@@ -12,7 +11,7 @@ UPDATE_RECORD_LOG = "update_records.log"
 class CheckDatabase(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(CheckDatabase, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -606,6 +605,12 @@ class CheckDatabase(QtWidgets.QDialog):
                     "add",
                     "Frozen",
                     "tinyint(1) NOT NULL DEFAULT 0 AFTER Arrival",
+                ),
+                self.database.check_field_exists(
+                    "reservation_table",
+                    "add",
+                    "ReservationDate",
+                    "DATE AFTER ReservationTableKey",
                 ),
             ]
         else:

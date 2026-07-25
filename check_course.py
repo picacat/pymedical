@@ -21,7 +21,7 @@ from libs import (
 class CheckCourse(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(CheckCourse, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -168,9 +168,12 @@ class CheckCourse(QtWidgets.QMainWindow):
         error_message = []
         previous_patient_key = self.ui.tableWidget_errors.item(row_no - 1, 3)
 
-        if previous_patient_key is None and course >= 2:  # 第一筆
-            error_message.append("療程未見首次")
-        elif patient_key != previous_patient_key.text() and course >= 2:  # 換人
+        if (
+            previous_patient_key is None
+            and course >= 2
+            or patient_key != previous_patient_key.text()
+            and course >= 2
+        ):  # 第一筆
             error_message.append("療程未見首次")
         else:  # 同人
             previous_card = self.ui.tableWidget_errors.item(row_no - 1, 6).text()
@@ -702,7 +705,7 @@ class CheckCourse(QtWidgets.QMainWindow):
             if datetime.datetime.strptime(
                 case_date, "%Y-%m-%d"
             ) < datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"):
-                for column in range(0, self.ui.tableWidget_errors.columnCount()):
+                for column in range(self.ui.tableWidget_errors.columnCount()):
                     self.ui.tableWidget_errors.item(row_no, column).setForeground(
                         QtGui.QColor("darkGray")
                     )

@@ -24,7 +24,7 @@ from libs import (
 class CheckErrors(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(CheckErrors, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -255,9 +255,7 @@ class CheckErrors(QtWidgets.QMainWindow):
             error_messages.append("姓名空白")
 
         try:
-            if row["Birthday"].year <= 1900:
-                error_messages.append("生日不合理")
-            elif row["Birthday"] > row["CaseDate"].date():
+            if row["Birthday"].year <= 1900 or row["Birthday"] > row["CaseDate"].date():
                 error_messages.append("生日不合理")
             else:
                 share = string_utils.xstr(row["Share"])

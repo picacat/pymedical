@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -19,7 +17,7 @@ from libs import (
 class CheckInsDrug(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(CheckInsDrug, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]

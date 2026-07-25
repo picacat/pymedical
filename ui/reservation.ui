@@ -1269,6 +1269,7 @@
     </property>
     <addaction name="action_save_general_table"/>
     <addaction name="action_save_assigned_table"/>
+    <addaction name="action_save_assigned_date_table"/>
     <addaction name="separator"/>
     <addaction name="action_copy_general_table"/>
     <addaction name="action_remove_general_table"/>
@@ -1640,6 +1641,18 @@
    </property>
    <property name="toolTip">
     <string>列印預約名單2</string>
+   </property>
+  </action>
+  <action name="action_save_assigned_date_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/calendar.svg</normaloff>../icons/calendar.svg</iconset>
+   </property>
+   <property name="text">
+    <string>儲存指定日期班表</string>
+   </property>
+   <property name="toolTip">
+    <string>儲存指定日期班表</string>
    </property>
   </action>
  </widget>

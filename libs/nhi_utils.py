@@ -2404,7 +2404,7 @@ BLOOD_TYPE = [None, "A", "B", "AB", "O", "RH+", "RH-"]
 NATIONALITY = ["本國", "外國", "居留證", "遊民"]
 MARRIAGE = ["未婚", "已婚", "單身"]
 EDUCATION = ["國小", "國中", "高中", "專科", "大學", "碩士", "博士", "其他"]
-OCCUPATION = ["工", "商", "農漁業", "軍公教", "自由業", "服務業", "其他"]
+OCCUPATION = ["工", "商", "農漁業", "軍公教", "自由業", "服務業", "家管", "其他"]
 # DISCOUNT = ['員工', '眷屬', '親友', '殘障', '僧侶', '教友', '老人', '榮民', '福保']
 DISCOUNT = []
 DIVISION = [
@@ -2738,9 +2738,7 @@ def get_diag_share_code(
     diag_share_code = ""
     course_type = get_course_type(course)
 
-    if treatment in ACUPUNCTURE_TREAT:
-        treatment = "針灸治療"
-    elif treatment in ACUPUNCTURE_MERGE_TREAT:
+    if treatment in ACUPUNCTURE_TREAT or treatment in ACUPUNCTURE_MERGE_TREAT:
         treatment = "針灸治療"
     elif treatment in MASSAGE_TREAT:
         treatment = "傷科治療"
@@ -2764,9 +2762,11 @@ def get_diag_share_code(
         diag_share_code = string_utils.xstr(row["InsCode"])
 
     if case_row is not None:
-        if number_utils.get_integer(case_row["DrugShareFee"]) > 0:
-            diag_share_code = "S20"
-        elif number_utils.get_integer(case_row["DiagShareFee"]) > 0 and course >= 2:
+        if (
+            number_utils.get_integer(case_row["DrugShareFee"]) > 0
+            or number_utils.get_integer(case_row["DiagShareFee"]) > 0
+            and course >= 2
+        ):
             diag_share_code = "S20"
 
         if diag_share_code == "S10" and case_row["RegistType"] in TOUR_TYPE:
@@ -2823,9 +2823,10 @@ def get_special_code(database, system_settings, case_key):
             special_code_list.append("C6")
     elif treat_type in HOME_CARE:
         special_code_list.append(SPECIAL_CODE_DICT[treat_type])
-    elif regist_type in SPECIAL_PHARMACY_TYPE + LONG_TERM_CARE:
-        special_code_list.append(SPECIAL_CODE_DICT[regist_type])
-    elif regist_type in CORRECTION_REG_TYPE:
+    elif (
+        regist_type in SPECIAL_PHARMACY_TYPE + LONG_TERM_CARE
+        or regist_type in CORRECTION_REG_TYPE
+    ):
         special_code_list.append(SPECIAL_CODE_DICT[regist_type])
 
     if special_code != "":
@@ -4038,7 +4039,7 @@ def NHI_GetB_thread(out_queue, system_settings, local_id, nhi_id):
         p_download_path,
     )
 
-    out_queue.put((error_code))
+    out_queue.put(error_code)
 
 
 def NHI_GetB(system_settings, local_id, nhi_id):

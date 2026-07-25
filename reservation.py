@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """預約掛號2025-07-26修改."""
 
 import calendar
@@ -35,7 +34,7 @@ class Reservation(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None, *args):
         """初始化."""
-        super(Reservation, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -90,7 +89,6 @@ class Reservation(QtWidgets.QMainWindow):
     # 關閉
     def close_all(self):
         """關閉."""
-        pass
 
     # 設定GUI
     def _set_ui(self):
@@ -245,6 +243,9 @@ class Reservation(QtWidgets.QMainWindow):
         self.ui.action_close.triggered.connect(self.close_reservation)
         self.ui.action_save_general_table.triggered.connect(self._save_general_table)
         self.ui.action_save_assigned_table.triggered.connect(self._save_assigned_table)
+        self.ui.action_save_assigned_date_table.triggered.connect(
+            self._save_assigned_date_table
+        )
         self.ui.action_save_assigned_null_table.triggered.connect(
             self._save_assigned_null_table
         )
@@ -669,8 +670,24 @@ class Reservation(QtWidgets.QMainWindow):
     def _get_reservation_table_rows(self):
         doctor = self.ui.comboBox_doctor.currentText()
         period = self._get_period()
-        weekday_name = self._get_week_day_name()
 
+        reservation_date = self.ui.dateEdit_reservation_date.date().toString(
+            "yyyy-MM-dd"
+        )
+        sql = """
+            SELECT * FROM reservation_table
+            WHERE
+                ReservationDate = %s AND
+                Doctor=%s AND
+                Period = %s
+            ORDER BY RowNo, ColumnNo
+        """
+        params = (reservation_date, doctor, period)
+        rows = self.database.select_record(sql, params=params)
+        if len(rows) > 0:
+            return rows
+
+        weekday_name = self._get_week_day_name()
         sql = """
             SELECT * FROM reservation_table
             WHERE
@@ -681,19 +698,20 @@ class Reservation(QtWidgets.QMainWindow):
         """
         params = (doctor, period, weekday_name)
         rows = self.database.select_record(sql, params=params)
+        if len(rows) > 0:
+            return rows
 
-        if len(rows) <= 0:
-            sql = """
-                SELECT * FROM reservation_table
-                WHERE
-                    Doctor = %s AND
-                    Period = %s AND
-                    ReserveNo IS NOT NULL AND
-                    Weekday IS NULL
-                ORDER BY RowNo, ColumnNo
-            """
-            params = (doctor, period)
-            rows = self.database.select_record(sql, params=params)
+        sql = """
+            SELECT * FROM reservation_table
+            WHERE
+                Doctor = %s AND
+                Period = %s AND
+                ReserveNo IS NOT NULL AND
+                Weekday IS NULL
+            ORDER BY RowNo, ColumnNo
+        """
+        params = (doctor, period)
+        rows = self.database.select_record(sql, params=params)
 
         return rows
 
@@ -895,9 +913,7 @@ class Reservation(QtWidgets.QMainWindow):
 
                 reserve_no = self.ui.tableWidget_reservation.item(row_no, col_no + 1)
                 name = self.ui.tableWidget_reservation.item(row_no, col_no + 2)
-                if reserve_no.text() == "":
-                    continue
-                elif name is not None and name.text() != "":
+                if reserve_no.text() == "" or name is not None and name.text() != "":
                     continue
 
                 sql = """
@@ -930,6 +946,14 @@ class Reservation(QtWidgets.QMainWindow):
         doctor = self.ui.comboBox_doctor.currentText()
         weekday_name = self._get_week_day_name()
         self._save_table(doctor, weekday_name)
+        self.read_reservation()
+
+    def _save_assigned_date_table(self):
+        doctor = self.ui.comboBox_doctor.currentText()
+        reservation_date = self.ui.dateEdit_reservation_date.date().toString(
+            "yyyy-MM-dd"
+        )
+        self._save_table(doctor, reservation_date=reservation_date)
         self.read_reservation()
 
     def _save_assigned_null_table(self):
@@ -1025,10 +1049,12 @@ class Reservation(QtWidgets.QMainWindow):
             "請選擇預約醫師欄位確認資料是否正確.",
         )
 
-    def _save_table(self, doctor, weekday=None):
+    def _save_table(self, doctor, weekday=None, reservation_date=None):
         period = self._get_period()
 
-        self._remove_reservation_table(doctor, period, weekday)
+        self._remove_reservation_table(
+            doctor, period, weekday, reservation_date=reservation_date
+        )
 
         for row_no in range(self.ui.tableWidget_reservation.rowCount()):
             for i in range(1, self.max_reservation_table_times + 1):
@@ -1053,6 +1079,7 @@ class Reservation(QtWidgets.QMainWindow):
                         col_no,
                         time.text().strip(),
                         reserve_no.text().strip(),
+                        reservation_date=reservation_date,
                     )
 
     def _save_null_table(self, doctor, weekday, period):
@@ -1067,7 +1094,14 @@ class Reservation(QtWidgets.QMainWindow):
                     period, weekday, doctor, row_no, col_no, time, reserve_no
                 )
 
-    def _remove_reservation_table(self, doctor, period, weekday):
+    def _remove_reservation_table(self, doctor, period, weekday, reservation_date=None):
+        if reservation_date is None:
+            reservation_date_condition = ""
+        elif reservation_date == "NULL":
+            reservation_date_condition = f"AND ReservationDate IS {reservation_date}"
+        else:
+            reservation_date_condition = f'AND Weekday = "{reservation_date}"'
+
         if weekday is None:
             weekday_condition = ""
         elif weekday == "NULL":
@@ -1080,13 +1114,22 @@ class Reservation(QtWidgets.QMainWindow):
             WHERE
                 Doctor = %s AND
                 Period = %s
+                {reservation_date_condition}
                 {weekday_condition}
         """
         params = (doctor, period)
         self.database.exec_sql(sql, params=params)
 
     def _insert_reservation_table(
-        self, period, weekday, doctor, row_no, col_no, time, reserve_no
+        self,
+        period,
+        weekday,
+        doctor,
+        row_no,
+        col_no,
+        time,
+        reserve_no,
+        reservation_date=None,
     ):
         fields = [
             "Period",
@@ -1096,9 +1139,19 @@ class Reservation(QtWidgets.QMainWindow):
             "ColumnNo",
             "Time",
             "ReserveNo",
+            "ReservationDate",
         ]
 
-        data = [period, weekday, doctor, row_no, col_no, time, reserve_no]
+        data = [
+            period,
+            weekday,
+            doctor,
+            row_no,
+            col_no,
+            time,
+            reserve_no,
+            reservation_date,
+        ]
 
         self.database.insert_record("reservation_table", fields, data)
 
@@ -2506,10 +2559,10 @@ class Reservation(QtWidgets.QMainWindow):
         dialog.deleteLater()
 
     def _set_calendar(self):
-        for i in range(0, self.ui.tableWidget_calendar.columnCount()):
+        for i in range(self.ui.tableWidget_calendar.columnCount()):
             self.ui.tableWidget_calendar.setColumnWidth(i, 111)
 
-        for i in range(0, self.ui.tableWidget_calendar.rowCount()):
+        for i in range(self.ui.tableWidget_calendar.rowCount()):
             self.ui.tableWidget_calendar.setRowHeight(i, 111)
 
         calendar_list = {
@@ -2601,7 +2654,7 @@ class Reservation(QtWidgets.QMainWindow):
         off_day_rows = self._get_off_day_rows(year, month)
 
         last_day = calendar.monthrange(year, month)[1]
-        for i in range(0, last_day):
+        for i in range(last_day):
             day = i + 1
             reservation_date = f"{year}-{month:0>2}-{day:0>2}"
             reservation1 = self._get_reservation_status(

@@ -15,7 +15,7 @@ from libs import db_utils, nhi_utils, system_utils
 class Backup(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(Backup, self).__init__(parent)
+        super().__init__(parent)
         self.database = args[0]
         self.system_settings = args[1]
         self.parent = parent
