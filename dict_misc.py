@@ -1,16 +1,15 @@
 # -*- coding: UTF-8 -*-
 
 from PyQt5 import QtWidgets
-from libs import system_utils
-from libs import ui_utils
-from libs import module_utils
+
+from libs import module_utils, system_utils, ui_utils
 
 
 # 其他詞庫 2019.07.18
 class DictMisc(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DictMisc, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.args = args
         self.database = args[0]
@@ -35,7 +34,7 @@ class DictMisc(QtWidgets.QMainWindow):
         system_utils.center_window(self)
 
         tab_hosp = module_utils.get_dict_hosp(self, *self.args)
-        self.ui.tabWidget_misc.addTab(tab_hosp, '院所資料')
+        self.ui.tabWidget_misc.addTab(tab_hosp, "院所資料")
 
     # 設定信號
     def _set_signal(self):
