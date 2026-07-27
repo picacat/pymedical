@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """系統設定."""
 
 import json
@@ -27,7 +26,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
 
     def __init__(self, parent=None, *args):
         """初始化."""
-        super(DialogSystemSettings, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -1390,6 +1389,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._set_check_box(
             self.ui.checkBox_no_massage_list, "開立費用證明不要列出民俗調理"
         )
+        self._set_check_box(self.ui.checkBox_no_bold, "醫療費用收據不印粗體")
         self._set_check_box(
             self.ui.checkBox_print_certificate_diagnosis_date, "列印診斷證明日期明細"
         )
@@ -2585,6 +2585,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._save_check_box(
             self.ui.checkBox_no_massage_list, "開立費用證明不要列出民俗調理"
         )
+        self._save_check_box(self.ui.checkBox_no_bold, "醫療費用收據不印粗體")
         self._save_check_box(
             self.ui.checkBox_print_certificate_diagnosis_date, "列印診斷證明日期明細"
         )

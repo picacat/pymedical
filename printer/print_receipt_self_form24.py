@@ -176,9 +176,10 @@ class PrintReceiptSelfForm24:
             print_dosage=self.print_dosage,
         )
 
-        if self.system_settings.field("列印所有收費收據費用明細") == "Y":
-            fees_record = self._get_fees_html()
-        elif self.medicine_set == 2:  # 自費2才印費用
+        if (
+            self.system_settings.field("列印所有收費收據費用明細") == "Y"
+            or self.medicine_set == 2
+        ):
             fees_record = self._get_fees_html()
         else:
             fees_record = ""
@@ -262,5 +263,8 @@ class PrintReceiptSelfForm24:
               </body>
             </html>
         """
+
+        if self.system_settings.field("醫療費用收據不印粗體") == "Y":
+            html = html.replace("<b>", "").replace("</b>", "")
 
         return html

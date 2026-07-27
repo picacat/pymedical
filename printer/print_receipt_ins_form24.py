@@ -206,4 +206,7 @@ class PrintReceiptInsForm24:
             </html>
         """
 
+        if self.system_settings.field("醫療費用收據不印粗體") == "Y":
+            html = html.replace("<b>", "").replace("</b>", "")
+
         return html

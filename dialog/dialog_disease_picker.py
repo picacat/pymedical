@@ -10,7 +10,7 @@ from libs import class_utils, string_utils, system_utils, ui_utils
 class DialogDiseasePicker(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogDiseasePicker, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -145,7 +145,7 @@ class DialogDiseasePicker(QtWidgets.QDialog):
                     {chronic_script}
             '''
             # sql += order_type + ' LIMIT 300'
-            sql += order_type
+            sql += order_type + " LIMIT 300"
 
         return sql
 

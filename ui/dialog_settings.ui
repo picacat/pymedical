@@ -984,7 +984,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>890</width>
               <height>820</height>
              </rect>
             </property>
@@ -1733,8 +1733,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1322</width>
-              <height>792</height>
+              <width>638</width>
+              <height>685</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -2185,7 +2185,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>977</width>
               <height>1236</height>
              </rect>
             </property>
@@ -3082,7 +3082,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>685</width>
               <height>982</height>
              </rect>
             </property>
@@ -3888,7 +3888,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>881</width>
               <height>1478</height>
              </rect>
             </property>
@@ -5296,9 +5296,9 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-1558</y>
               <width>1301</width>
-              <height>2319</height>
+              <height>2350</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_58">
@@ -6318,10 +6318,157 @@
                 </property>
                 <item>
                  <layout class="QGridLayout" name="gridLayout_18">
-                  <item row="8" column="3">
-                   <widget class="QLineEdit" name="lineEdit_folk_massage_name">
+                  <item row="21" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_print_stamp_duty">
+                    <property name="text">
+                     <string>醫療費用收據列印「本收據印花稅已總繳」字樣</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="24" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_ins_drug_order_by_location">
+                    <property name="text">
+                     <string>列印科學中藥才依照存放位置排序</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="3">
+                   <widget class="QLineEdit" name="lineEdit_certificate_payment_title">
+                    <property name="placeholderText">
+                     <string>醫療費用明細證明書</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="15" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_self_fee">
+                    <property name="text">
+                     <string>所有的自費收費收據都列印費用明細</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_reservation_no">
+                    <property name="text">
+                     <string>預約單列印預約號碼</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="34" column="2" rowspan="2">
+                   <spacer name="verticalSpacer_13">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="18" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_print_no_treat_fee">
+                    <property name="text">
+                     <string>醫療費用證明書費用總表將處置費合併至自費藥費內</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="21" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_qrcode">
+                    <property name="text">
+                     <string>醫療費用收據列印條碼</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="23" column="0">
+                   <widget class="QCheckBox" name="checkBox_self_prescript_package_dosage">
+                    <property name="text">
+                     <string>自費處方若非科中及水藥，總量=劑量 * 包數 * 天數</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="9" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_folk_massage">
+                    <property name="text">
+                     <string>民俗調理列印收費收據</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="12" column="3">
+                   <widget class="QLineEdit" name="lineEdit_misc_fee_field_name">
+                    <property name="placeholderText">
+                     <string>其他費用</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="9" column="2">
+                   <widget class="QLabel" name="label_165">
+                    <property name="text">
+                     <string>民俗調理收據抬頭</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="10" column="2">
+                   <widget class="QLabel" name="label_99">
+                    <property name="text">
+                     <string>醫療費用證明書自費藥費欄位名稱</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="13" column="2">
+                   <widget class="QLabel" name="label_91">
+                    <property name="text">
+                     <string>醫療費用證明書自費金額欄位名稱</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="34" column="3" rowspan="2">
+                   <spacer name="verticalSpacer_16">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="20" column="0">
+                   <widget class="QCheckBox" name="checkBox_no_print_discount">
+                    <property name="text">
+                     <string>醫療費用收據不印折扣</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="9" column="3">
+                   <widget class="QLineEdit" name="lineEdit_folk_massage_title">
                     <property name="placeholderText">
                      <string>民俗調理</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="10" column="3">
+                   <widget class="QLineEdit" name="lineEdit_medicine_fee_field_name">
+                    <property name="placeholderText">
+                     <string>自費藥費</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="11" column="3">
+                   <widget class="QLineEdit" name="lineEdit_treat_fee_field_name">
+                    <property name="placeholderText">
+                     <string>自費處置</string>
                     </property>
                    </widget>
                   </item>
@@ -6350,40 +6497,57 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="21" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_qrcode">
-                    <property name="text">
-                     <string>醫療費用收據列印條碼</string>
+                  <item row="17" column="3">
+                   <widget class="QPlainTextEdit" name="plainTextEdit_tax_remark">
+                    <property name="plainText">
+                     <string/>
+                    </property>
+                    <property name="placeholderText">
+                     <string>本收據可為報稅憑證, 遺失恕不補發</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="18" column="0">
-                   <layout class="QHBoxLayout" name="horizontalLayout_35">
+                  <item row="16" column="3">
+                   <widget class="QLineEdit" name="lineEdit_print_font">
+                    <property name="placeholderText">
+                     <string>微軟正黑體</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="13" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout">
                     <item>
-                     <widget class="QLabel" name="label_103">
+                     <widget class="QCheckBox" name="checkBox_print_symptom_limitation">
                       <property name="text">
-                       <string>費用收據預設字體大小</string>
+                       <string>列印主訴字數最多</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QSpinBox" name="spinBox_prescript_font_size">
+                     <widget class="QSpinBox" name="spinBox_symptom_count">
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
-                      <property name="minimum">
-                       <number>8</number>
-                      </property>
                       <property name="maximum">
-                       <number>36</number>
+                       <number>3000</number>
+                      </property>
+                      <property name="singleStep">
+                       <number>50</number>
                       </property>
                       <property name="value">
-                       <number>14</number>
+                       <number>150</number>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <spacer name="horizontalSpacer_25">
+                     <widget class="QLabel" name="label_89">
+                      <property name="text">
+                       <string>個字</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_26">
                       <property name="orientation">
                        <enum>Qt::Horizontal</enum>
                       </property>
@@ -6397,38 +6561,43 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="33" column="1" rowspan="2">
-                   <spacer name="verticalSpacer_17">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item row="20" column="2" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_no_tax_hint">
+                  <item row="11" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_alias">
                     <property name="text">
-                     <string>醫療費用收據不印「本收據可為報稅憑證」字樣</string>
+                     <string>收費收據列印處方別名</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="33" column="0" rowspan="2">
-                   <spacer name="verticalSpacer_10">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
+                  <item row="6" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_print_certificate_diagnosis_date">
+                    <property name="text">
+                     <string>診斷證明列印日期明細</string>
                     </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
+                   </widget>
+                  </item>
+                  <item row="13" column="3">
+                   <widget class="QLineEdit" name="lineEdit_total_fee_field_name">
+                    <property name="placeholderText">
+                     <string>自費金額</string>
                     </property>
-                   </spacer>
+                   </widget>
+                  </item>
+                  <item row="10" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_bg_color">
+                    <property name="text">
+                     <string>列印報表雙色印刷</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="12" column="2">
+                   <widget class="QLabel" name="label_168">
+                    <property name="text">
+                     <string>醫療費用證明書其他費用欄位名稱</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
                   </item>
                   <item row="4" column="0" rowspan="2">
                    <widget class="QGroupBox" name="groupBox_61">
@@ -6497,10 +6666,157 @@
                     </layout>
                    </widget>
                   </item>
-                  <item row="22" column="0">
-                   <widget class="QCheckBox" name="checkBox_no_print_prescript">
+                  <item row="34" column="0" rowspan="2">
+                   <spacer name="verticalSpacer_10">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="14" column="2">
+                   <widget class="QLabel" name="label_100">
                     <property name="text">
-                     <string>醫療費用收據不印處方</string>
+                     <string>醫療費用自付明細自費金額欄位名稱</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="17" column="2">
+                   <widget class="QLabel" name="label_194">
+                    <property name="text">
+                     <string>醫療費用收據自訂報稅備註</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="23" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_order_by_location">
+                    <property name="text">
+                     <string>列印處方依照存放位置排序</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="19" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_print_treatment">
+                    <property name="text">
+                     <string>健保費用收據列印針灸或傷科治療名稱</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2" rowspan="4" colspan="2">
+                   <widget class="QGroupBox" name="groupBox_50">
+                    <property name="title">
+                     <string>病歷存檔列印順序</string>
+                    </property>
+                    <property name="flat">
+                     <bool>true</bool>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_51">
+                     <item>
+                      <widget class="QRadioButton" name="radioButton_print_order1">
+                       <property name="text">
+                        <string>處方箋 → 費用收據 → 其他收據</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="radioButton_print_order2">
+                       <property name="text">
+                        <string>其他收據 → 處方箋 → 費用收據</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="radioButton_print_order3">
+                       <property name="text">
+                        <string>其他收據→ 費用收據 → 處方箋 </string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item row="16" column="2">
+                   <widget class="QLabel" name="label_115">
+                    <property name="text">
+                     <string>列印預設字體</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="32" column="0" colspan="4">
+                   <layout class="QHBoxLayout" name="horizontalLayout_46">
+                    <item>
+                     <widget class="QLabel" name="label_111">
+                      <property name="text">
+                       <string>民俗調理單地址</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_print_massage_address"/>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_112">
+                      <property name="text">
+                       <string>民俗調理單備註</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_print_massage_remark"/>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_34">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="12" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_treat">
+                    <property name="text">
+                     <string>健保費用收據列印穴道或處置 (自費費用收據不受限制)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="15" column="2">
+                   <widget class="QLabel" name="label_102">
+                    <property name="text">
+                     <string>健保收據適應症內容 (預設為病名)</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_agreement">
+                    <property name="text">
+                     <string>自費同意書只顯示病歷自費1的金額</string>
                     </property>
                    </widget>
                   </item>
@@ -6551,57 +6867,6 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="33" column="2" rowspan="2">
-                   <spacer name="verticalSpacer_13">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item row="6" column="2" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_print_certificate_diagnosis_date">
-                    <property name="text">
-                     <string>診斷證明列印日期明細</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="16" column="3">
-                   <widget class="QLineEdit" name="lineEdit_print_font">
-                    <property name="placeholderText">
-                     <string>微軟正黑體</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="14" column="2">
-                   <widget class="QLabel" name="label_100">
-                    <property name="text">
-                     <string>醫療費用自付明細自費金額欄位名稱</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="23" column="2" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_order_by_location">
-                    <property name="text">
-                     <string>列印處方依照存放位置排序</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="9" column="3">
-                   <widget class="QLineEdit" name="lineEdit_folk_massage_title">
-                    <property name="placeholderText">
-                     <string>民俗調理</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="7" column="0">
                    <layout class="QHBoxLayout" name="horizontalLayout_14">
                     <item>
@@ -6620,203 +6885,33 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="8" column="2">
-                   <widget class="QLabel" name="label_90">
-                    <property name="text">
-                     <string>民俗調理項目名稱</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="15" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_self_fee">
-                    <property name="text">
-                     <string>所有的自費收費收據都列印費用明細</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_prescript_total_dosage">
-                    <property name="text">
-                     <string>處方箋列印總量</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="9" column="2">
-                   <widget class="QLabel" name="label_165">
-                    <property name="text">
-                     <string>民俗調理收據抬頭</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="8" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_remark">
-                    <property name="text">
-                     <string>處方箋列印病歷備註</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="31" column="0" colspan="4">
-                   <layout class="QHBoxLayout" name="horizontalLayout_46">
+                  <item row="19" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_40">
                     <item>
-                     <widget class="QLabel" name="label_111">
+                     <widget class="QLabel" name="label_104">
                       <property name="text">
-                       <string>民俗調理單地址</string>
+                       <string>醫療費用證明預設證明書金額</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="lineEdit_print_massage_address"/>
-                    </item>
-                    <item>
-                     <widget class="QLabel" name="label_112">
-                      <property name="text">
-                       <string>民俗調理單備註</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLineEdit" name="lineEdit_print_massage_remark"/>
-                    </item>
-                    <item>
-                     <spacer name="horizontalSpacer_34">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                   </layout>
-                  </item>
-                  <item row="19" column="2" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_print_treatment">
-                    <property name="text">
-                     <string>健保費用收據列印針灸或傷科治療名稱</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="18" column="2" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_print_no_treat_fee">
-                    <property name="text">
-                     <string>醫療費用證明書費用總表將處置費合併至自費藥費內</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="2" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_agreement">
-                    <property name="text">
-                     <string>自費同意書只顯示病歷自費1的金額</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_reservation_no">
-                    <property name="text">
-                     <string>預約單列印預約號碼</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2" rowspan="4" colspan="2">
-                   <widget class="QGroupBox" name="groupBox_50">
-                    <property name="title">
-                     <string>病歷存檔列印順序</string>
-                    </property>
-                    <property name="flat">
-                     <bool>true</bool>
-                    </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_51">
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_print_order1">
-                       <property name="text">
-                        <string>處方箋 → 費用收據 → 其他收據</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_print_order2">
-                       <property name="text">
-                        <string>其他收據 → 處方箋 → 費用收據</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_print_order3">
-                       <property name="text">
-                        <string>其他收據→ 費用收據 → 處方箋 </string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item row="9" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_folk_massage">
-                    <property name="text">
-                     <string>民俗調理列印收費收據</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_regist_non_zero">
-                    <property name="text">
-                     <string>掛號收據應收金額為0不列印</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_massager">
-                    <property name="text">
-                     <string>掛號收據列印推拿師父姓名</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="13" column="0">
-                   <layout class="QHBoxLayout" name="horizontalLayout">
-                    <item>
-                     <widget class="QCheckBox" name="checkBox_print_symptom_limitation">
-                      <property name="text">
-                       <string>列印主訴字數最多</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QSpinBox" name="spinBox_symptom_count">
+                     <widget class="QSpinBox" name="spinBox_certificate_diag_default_fee">
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
-                      <property name="maximum">
-                       <number>3000</number>
+                      <property name="minimum">
+                       <number>0</number>
                       </property>
-                      <property name="singleStep">
-                       <number>50</number>
+                      <property name="maximum">
+                       <number>1000</number>
                       </property>
                       <property name="value">
-                       <number>150</number>
+                       <number>0</number>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLabel" name="label_89">
-                      <property name="text">
-                       <string>個字</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="horizontalSpacer_26">
+                     <spacer name="horizontalSpacer_28">
                       <property name="orientation">
                        <enum>Qt::Horizontal</enum>
                       </property>
@@ -6830,20 +6925,57 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="12" column="2">
-                   <widget class="QLabel" name="label_168">
-                    <property name="text">
-                     <string>醫療費用證明書其他費用欄位名稱</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  <item row="15" column="3">
+                   <widget class="QLineEdit" name="lineEdit_indication">
+                    <property name="placeholderText">
+                     <string>體質調理</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="10" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_bg_color">
-                    <property name="text">
-                     <string>列印報表雙色印刷</string>
+                  <item row="18" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_35">
+                    <item>
+                     <widget class="QLabel" name="label_103">
+                      <property name="text">
+                       <string>費用收據預設字體大小</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="spinBox_prescript_font_size">
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                      <property name="minimum">
+                       <number>8</number>
+                      </property>
+                      <property name="maximum">
+                       <number>36</number>
+                      </property>
+                      <property name="value">
+                       <number>14</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_25">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="8" column="3">
+                   <widget class="QLineEdit" name="lineEdit_folk_massage_name">
+                    <property name="placeholderText">
+                     <string>民俗調理</string>
                     </property>
                    </widget>
                   </item>
@@ -6893,125 +7025,17 @@
                     </layout>
                    </widget>
                   </item>
-                  <item row="22" column="2" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_no_print_fee">
+                  <item row="20" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_no_tax_hint">
                     <property name="text">
-                     <string>處方箋不印費用明細</string>
+                     <string>醫療費用收據不印「本收據可為報稅憑證」字樣</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="33" column="3" rowspan="2">
-                   <spacer name="verticalSpacer_16">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item row="19" column="0">
-                   <layout class="QHBoxLayout" name="horizontalLayout_40">
-                    <item>
-                     <widget class="QLabel" name="label_104">
-                      <property name="text">
-                       <string>醫療費用證明預設證明書金額</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QSpinBox" name="spinBox_certificate_diag_default_fee">
-                      <property name="alignment">
-                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                      </property>
-                      <property name="minimum">
-                       <number>0</number>
-                      </property>
-                      <property name="maximum">
-                       <number>1000</number>
-                      </property>
-                      <property name="value">
-                       <number>0</number>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="horizontalSpacer_28">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                   </layout>
-                  </item>
-                  <item row="10" column="3">
-                   <widget class="QLineEdit" name="lineEdit_medicine_fee_field_name">
-                    <property name="placeholderText">
-                     <string>自費藥費</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="16" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_each_self_fee">
+                  <item row="22" column="0">
+                   <widget class="QCheckBox" name="checkBox_no_print_prescript">
                     <property name="text">
-                     <string>每張自費收據只列印各自的費用金額</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="14" column="3">
-                   <widget class="QLineEdit" name="lineEdit_total_fee_field_name2">
-                    <property name="placeholderText">
-                     <string>自費金額</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="12" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_treat">
-                    <property name="text">
-                     <string>健保費用收據列印穴道或處置 (自費費用收據不受限制)</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="10" column="2">
-                   <widget class="QLabel" name="label_99">
-                    <property name="text">
-                     <string>醫療費用證明書自費藥費欄位名稱</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="13" column="3">
-                   <widget class="QLineEdit" name="lineEdit_total_fee_field_name">
-                    <property name="placeholderText">
-                     <string>自費金額</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="16" column="2">
-                   <widget class="QLabel" name="label_115">
-                    <property name="text">
-                     <string>列印預設字體</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="15" column="3">
-                   <widget class="QLineEdit" name="lineEdit_indication">
-                    <property name="placeholderText">
-                     <string>體質調理</string>
+                     <string>醫療費用收據不印處方</string>
                     </property>
                    </widget>
                   </item>
@@ -7025,20 +7049,48 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="11" column="0">
-                   <widget class="QCheckBox" name="checkBox_print_alias">
+                  <item row="8" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_remark">
                     <property name="text">
-                     <string>收費收據列印處方別名</string>
+                     <string>處方箋列印病歷備註</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="17" column="2">
-                   <widget class="QLabel" name="label_194">
+                  <item row="6" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_prescript_total_dosage">
                     <property name="text">
-                     <string>醫療費用收據自訂報稅備註</string>
+                     <string>處方箋列印總量</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="22" column="2" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_no_print_fee">
+                    <property name="text">
+                     <string>處方箋不印費用明細</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_massager">
+                    <property name="text">
+                     <string>掛號收據列印推拿師父姓名</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="2">
+                   <widget class="QLabel" name="label_90">
+                    <property name="text">
+                     <string>民俗調理項目名稱</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="16" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_each_self_fee">
+                    <property name="text">
+                     <string>每張自費收據只列印各自的費用金額</string>
                     </property>
                    </widget>
                   </item>
@@ -7052,77 +7104,25 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="20" column="0">
-                   <widget class="QCheckBox" name="checkBox_no_print_discount">
-                    <property name="text">
-                     <string>醫療費用收據不印折扣</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="23" column="0">
-                   <widget class="QCheckBox" name="checkBox_self_prescript_package_dosage">
-                    <property name="text">
-                     <string>自費處方若非科中及水藥，總量=劑量 * 包數 * 天數</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="13" column="2">
-                   <widget class="QLabel" name="label_91">
-                    <property name="text">
-                     <string>醫療費用證明書自費金額欄位名稱</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="15" column="2">
-                   <widget class="QLabel" name="label_102">
-                    <property name="text">
-                     <string>健保收據適應症內容 (預設為病名)</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="21" column="2" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_print_stamp_duty">
-                    <property name="text">
-                     <string>醫療費用收據列印「本收據印花稅已總繳」字樣</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="12" column="3">
-                   <widget class="QLineEdit" name="lineEdit_misc_fee_field_name">
+                  <item row="14" column="3">
+                   <widget class="QLineEdit" name="lineEdit_total_fee_field_name2">
                     <property name="placeholderText">
-                     <string>其他費用</string>
+                     <string>自費金額</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="17" column="3">
-                   <widget class="QPlainTextEdit" name="plainTextEdit_tax_remark">
-                    <property name="plainText">
-                     <string/>
+                  <item row="34" column="1" rowspan="2">
+                   <spacer name="verticalSpacer_17">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
                     </property>
-                    <property name="placeholderText">
-                     <string>本收據可為報稅憑證, 遺失恕不補發</string>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
                     </property>
-                   </widget>
-                  </item>
-                  <item row="11" column="3">
-                   <widget class="QLineEdit" name="lineEdit_treat_fee_field_name">
-                    <property name="placeholderText">
-                     <string>自費處置</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="3">
-                   <widget class="QLineEdit" name="lineEdit_certificate_payment_title">
-                    <property name="placeholderText">
-                     <string>醫療費用明細證明書</string>
-                    </property>
-                   </widget>
+                   </spacer>
                   </item>
                   <item row="24" column="0">
                    <widget class="QCheckBox" name="checkBox_no_massage_list">
@@ -7131,10 +7131,17 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="24" column="2" colspan="2">
-                   <widget class="QCheckBox" name="checkBox_ins_drug_order_by_location">
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="checkBox_print_regist_non_zero">
                     <property name="text">
-                     <string>列印科學中藥才依照存放位置排序</string>
+                     <string>掛號收據應收金額為0不列印</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="25" column="0">
+                   <widget class="QCheckBox" name="checkBox_no_bold">
+                    <property name="text">
+                     <string>熱感印表機列印醫療費用收據不印粗體</string>
                     </property>
                    </widget>
                   </item>
@@ -7168,7 +7175,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>508</width>
               <height>883</height>
              </rect>
             </property>
@@ -7478,7 +7485,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>1301</width>
+              <width>980</width>
               <height>1440</height>
              </rect>
             </property>
