@@ -5692,6 +5692,10 @@ class Registration(QtWidgets.QMainWindow):
                         "請重新取得授權.",
                     )
                     return
+
+            ic_card = class_utils.get_vhccshis(
+                self, self.database, self.system_settings, qrcode
+            )
         else:
             if not ic_card.insert_correct_ic_card(patient_key):
                 return
