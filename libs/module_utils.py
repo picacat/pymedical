@@ -780,6 +780,7 @@ def get_ins_apply_list(
     apply_type,
     clinic_id,
     case_type,
+    months,
     ins_list=None,
 ):
     import ins_apply_list
@@ -795,6 +796,7 @@ def get_ins_apply_list(
         apply_type,
         clinic_id,
         case_type,
+        months,
         ins_list,
     )
 
@@ -1135,6 +1137,7 @@ def get_ins_apply_tab(
     period,
     apply_type,
     clinic_id,
+    months,
     ins_list=None,
 ):
     import ins_apply_tab
@@ -1149,6 +1152,7 @@ def get_ins_apply_tab(
         period,
         apply_type,
         clinic_id,
+        months,
         ins_list,
     )
 

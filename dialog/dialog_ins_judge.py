@@ -1,20 +1,18 @@
-
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets
 import datetime
 
-from libs import system_utils
-from libs import ui_utils
-from libs import string_utils
+from PyQt5 import QtWidgets
+
+from libs import string_utils, system_utils, ui_utils
 
 
 # 主視窗
 class DialogInsJudge(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogInsJudge, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -37,10 +35,10 @@ class DialogInsJudge(QtWidgets.QDialog):
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         self.setFixedSize(self.size())  # non resizable dialog
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('確定')
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText('取消')
-        self.ui.lineEdit_clinic_name.setText(self.system_settings.field('院所名稱'))
-        self.ui.lineEdit_clinic_id.setText(self.system_settings.field('院所代號'))
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("確定")
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText("取消")
+        self.ui.lineEdit_clinic_name.setText(self.system_settings.field("院所名稱"))
+        self.ui.lineEdit_clinic_id.setText(self.system_settings.field("院所代號"))
         self._set_combo_box()
         self._set_apply_date()
 
@@ -72,7 +70,7 @@ class DialogInsJudge(QtWidgets.QDialog):
     def _set_apply_date(self):
         year = self.ui.comboBox_year.currentText()
         month = self.ui.comboBox_month.currentText()
-        log_name = f'{year}-{month:0>2}'
+        log_name = f"{year}-{month:0>2}"
         sql = f'''
             SELECT * FROM system_log
             WHERE
@@ -81,9 +79,11 @@ class DialogInsJudge(QtWidgets.QDialog):
         '''
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
-            apply_date = datetime.datetime.strptime(f'{year}-{month}-01', '%Y-%m-%d')
+            apply_date = datetime.datetime.strptime(f"{year}-{month}-01", "%Y-%m-%d")
         else:
-            apply_date = datetime.datetime.strptime(string_utils.xstr(rows[0]['Log']), '%Y-%m-%d')
+            apply_date = datetime.datetime.strptime(
+                string_utils.xstr(rows[0]["Log"]), "%Y-%m-%d"
+            )
 
         self.ui.dateEdit_apply.setDate(apply_date)
 

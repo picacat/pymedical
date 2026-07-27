@@ -40,8 +40,7 @@ def get_age(birth_date, current_date=datetime.datetime.now()):
     # month = current_date.month - birth_date.month if current_date.month >= birth_date.month \
     #     else 12 - (birth_date.month - current_date.month)
 
-    if year < 0:
-        year = 0
+    year = max(year, 0)
 
     return year, month
 
@@ -272,26 +271,31 @@ def get_end_date_by_year_month(year, month):
     return end_date
 
 
-def get_two_month_date(database, system_settings, patient_key, apply_year, apply_month):
+def get_two_month_date(
+    database, system_settings, patient_key, apply_year, apply_month, month_range=None
+):
+    if month_range is None:
+        month_range = 2  # 預設維持原本的兩個月
+
     month = number_utils.get_integer(apply_month)
-    if month > 1:
-        year = apply_year
-        month -= 1
-    else:
-        year = apply_year - 1
-        month = 12
 
-    start_date = get_start_date_by_year_month(year, month)  # 上月
-    start_date2 = get_end_date_by_year_month(year, month)  # 上月最後一日
+    # 往前推 month_range - 1 個月 (含申報月本身共 month_range 個月)
+    total_months = apply_year * 12 + (month - 1) - (month_range - 1)
+    year = total_months // 12
+    month = total_months % 12 + 1
 
-    sql = f'''
+    start_date = get_start_date_by_year_month(year, month)  # 區間起始月
+    start_date2 = get_end_date_by_year_month(year, month)  # 起始月最後一日
+
+    sql = """
         SELECT CaseKey FROM cases
         WHERE
             InsType = "健保" AND
-            CaseDate BETWEEN "{start_date}" AND "{start_date2}" AND
-            PatientKey = {patient_key}
-    '''
-    rows = database.select_record(sql)  # 檢查兩個月前是否有病歷
+            CaseDate BETWEEN %s AND %s AND
+            PatientKey = %s
+    """
+    params = (start_date, start_date2, patient_key)
+    rows = database.select_record(sql, params=params)  # 檢查區間起始月是否有病歷
     if len(rows) <= 0:  # 如果沒病歷, 找出最後一次的病歷
         ins_judge_init_date = system_settings.field("電子化抽審初診日期")
         if ins_judge_init_date != "":
@@ -299,23 +303,21 @@ def get_two_month_date(database, system_settings, patient_key, apply_year, apply
         else:
             end_date_script = ""
 
-        sql = f'''
+        sql = f"""
             SELECT CaseDate FROM cases
             WHERE
                 InsType = "健保" AND
-                PatientKey = {patient_key} AND
-                CaseDate < "{start_date}"
+                PatientKey = %s AND
+                CaseDate < %s
                 {end_date_script}
             ORDER BY CaseDate DESC LIMIT 1
-        '''
-        rows = database.select_record(sql)
+        """
+        params = (patient_key, start_date)
+        rows = database.select_record(sql, params=params)
         if len(rows) > 0:
-            # start_date = get_start_date_by_year_month(
-            #     rows[0]['CaseDate'].year, rows[0]['CaseDate'].month)  # 雙月檢查
             start_date = rows[0]["CaseDate"].strftime("%Y-%m-%d 00:00:00")
 
     end_date = get_end_date_by_year_month(apply_year, apply_month)
-
     return start_date, end_date
 
 
