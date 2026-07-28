@@ -26,7 +26,7 @@ from libs import (
 class InsApplyXML(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsApplyXML, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -588,9 +588,10 @@ class InsApplyXML(QtWidgets.QMainWindow):
                 if (
                     string_utils.xstr(row["CaseType"]) == "22"
                 ):  # 特定照護: 孕產照護，肝乳癌照護, 癌症中醫門診延長照護
-                    if treat_code in ["P59041", "P59042"]:  # 癌症中醫門診延長照護
-                        order_type = "2"
-                    elif regist_type in nhi_utils.LONG_TERM_CARE:
+                    if (
+                        treat_code in ["P59041", "P59042"]
+                        or regist_type in nhi_utils.LONG_TERM_CARE
+                    ):  # 癌症中醫門診延長照護
                         order_type = "2"
                     else:
                         order_type = "4"
@@ -943,6 +944,9 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p4.text = treat_code
 
         if treat_code in nhi_utils.COMPLICATED_TREAT_CODE:
+            # if row["CaseType"] == "22":
+            #     print(row["Sequence"], row["Name"], treat_code)
+
             treat_position_code = prescript_utils.get_treat_position_code(
                 self.database, case_key, "治療部位:"
             )

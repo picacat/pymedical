@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from PyQt5 import QtCore, QtWidgets
 
 from libs import (
@@ -17,7 +15,7 @@ from libs import (
 class InsApplyGenerateFile(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsApplyGenerateFile, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -253,10 +251,7 @@ class InsApplyGenerateFile(QtWidgets.QMainWindow):
             LIMIT 1
         """
         rows = self.database.select_record(sql)
-        if len(rows) > 0:
-            return True
-        else:
-            return False
+        return len(rows) > 0
 
     def _check_case_error(self, row, first_visit, share_code):
         message = []
