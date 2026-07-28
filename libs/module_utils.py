@@ -1137,7 +1137,7 @@ def get_ins_apply_tab(
     period,
     apply_type,
     clinic_id,
-    months,
+    months=2,
     ins_list=None,
 ):
     import ins_apply_tab
