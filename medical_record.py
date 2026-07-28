@@ -40,7 +40,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(MedicalRecord, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -1513,10 +1513,17 @@ class MedicalRecord(QtWidgets.QMainWindow):
         ]
 
     def disease_code_changed(self):
-        # 打字中觸發: 只設定 enabled 狀態, 不改內容, 不查資料庫
+        # 打字中觸發: 設定 enabled 狀態; 若 code 被清空, 連 name 一併清掉
         disease_list = self._get_disease_list()
+        for row_no, (code_edit, name_edit, tool_button, push_button) in enumerate(
+            disease_list
+        ):
+            if code_edit.text().strip() == "":
+                if name_edit.text() != "":
+                    name_edit.setText("")
+                    name_edit.setToolTip("")
+                code_edit.setToolTip("")
 
-        for row_no, (code_edit, _, tool_button, push_button) in enumerate(disease_list):
             enabled = row_no == 0 or disease_list[row_no - 1][0].text().strip() != ""
             code_edit.setEnabled(enabled)
             tool_button.setEnabled(enabled)
@@ -1725,9 +1732,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             if (
                 self.system_settings.field("輸入病名後不要彈出複雜性針傷提示視窗")
                 == "Y"
-            ):
-                pass
-            elif treat_type in [
+            ) or treat_type in [
                 None,
                 self.tab_list[0].comboBox_treatment.currentText(),
             ]:
@@ -4659,7 +4664,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
         """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
-            return None
+            return
 
         row = rows[0]
         json_medical_record = json.loads(row["JSON"])[0]
