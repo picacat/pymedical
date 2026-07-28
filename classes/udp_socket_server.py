@@ -1,7 +1,7 @@
-
 # -*- coding: UTF-8 -*-
 
 import socket
+
 from PyQt5 import QtCore
 
 
@@ -9,7 +9,7 @@ class UDPSocketServer(QtCore.QThread):
     update_signal = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None, *args):
-        super(UDPSocketServer, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.default_port = args[0]
         self.buffer_size = 1024
@@ -22,7 +22,7 @@ class UDPSocketServer(QtCore.QThread):
         # self.wait()
 
     def _init_socket_server(self):
-        host = ''
+        host = ""
         if self.default_port is not None:
             port = self.default_port
         else:
@@ -64,7 +64,7 @@ class UDPSocketServer(QtCore.QThread):
 
             if data is not None:
                 try:
-                    self.update_signal.emit(str(data, 'utf-8'))
+                    self.update_signal.emit(str(data, "utf-8"))
                 except UnicodeDecodeError:
                     pass
 
@@ -75,7 +75,7 @@ class VoiceServer(QtCore.QThread):
     update_signal = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None, *args):
-        super(VoiceServer, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.default_port = args[0]
         self.buffer_size = 1024
@@ -88,7 +88,7 @@ class VoiceServer(QtCore.QThread):
         self.wait()
 
     def _init_voice_server(self):
-        host = ''
+        host = ""
         if self.default_port is not None:
             port = self.default_port
         else:
@@ -124,7 +124,7 @@ class VoiceServer(QtCore.QThread):
 
             if data is not None:
                 try:
-                    self.update_signal.emit(str(data, 'utf-8'))
+                    self.update_signal.emit(str(data, "utf-8"))
                 except UnicodeDecodeError:
                     pass
 
