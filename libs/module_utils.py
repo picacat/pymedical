@@ -1427,6 +1427,7 @@ def get_ins_upload_emr(
     period,
     clinic_id,
     apply_upload_date,
+    months=2,
 ):
     import ins_upload_emr
 
@@ -1440,6 +1441,7 @@ def get_ins_upload_emr(
         period,
         clinic_id,
         apply_upload_date,
+        months,
     )
 
     return widget

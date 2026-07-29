@@ -204,6 +204,7 @@ class InsJudge(QtWidgets.QMainWindow):
             self.period,
             self.clinic_id,
             self.apply_upload_date,
+            months=self.months,
         )
 
         ins_emr.upload_emr_files()
@@ -403,6 +404,7 @@ class InsJudge(QtWidgets.QMainWindow):
             self.period,
             self.clinic_id,
             self.apply_upload_date,
+            months=self.months,
         )
 
         ins_emr.create_emr_files()

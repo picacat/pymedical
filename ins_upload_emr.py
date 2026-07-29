@@ -29,7 +29,7 @@ from libs import (
 class InsUploadEMR(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsUploadEMR, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -38,6 +38,7 @@ class InsUploadEMR(QtWidgets.QMainWindow):
         self.period = args[4]
         self.clinic_id = args[5]
         self.apply_upload_date = args[6]
+        self.months = args[7]
         self.ui = None
         self.start_no = 1
 
@@ -154,6 +155,7 @@ class InsUploadEMR(QtWidgets.QMainWindow):
             patient_key,
             self.apply_year,
             self.apply_month,
+            month_range=self.months,
         )
         case_type = string_utils.xstr(row["CaseType"])
         sequence = string_utils.xstr(row["Sequence"])
