@@ -794,44 +794,44 @@ def send_to_com_port(com_port, regist_no):
 
 def get_checksum_list():
     checksum_list = [None]
-    for i in range(0, 9):  # 1-9 start: 0x24
+    for i in range(9):  # 1-9 start: 0x24
         checksum_list.append(0x24 + i)
 
     for i in range(1, 10):  # 10-99 start: 0x15
-        for j in range(0, 10):
+        for j in range(10):
             checksum_list.append(0x15 + (j - 1) + i)
 
-    for i in range(0, 10):  # 100-109 start: 0x06
+    for i in range(10):  # 100-109 start: 0x06
         checksum_list.append(0x06 + i)
 
     for i in range(1, 37):  # 110-469 start: 0x07
-        for j in range(0, 10):
+        for j in range(10):
             checksum_list.append(0x07 + ((i - 1) % 9) + j)
 
     for i in range(1, 4):  # 470-499 start: 0x10
-        for j in range(0, 10):
+        for j in range(10):
             checksum_list.append(0x10 + ((i - 1) % 9) + j)
 
     for i in range(1, 28):  # 500-769 start: 0x0a
-        for j in range(0, 10):
+        for j in range(10):
             checksum_list.append(0x10 + ((i - 1) % 9) + j)
 
     for i in range(1, 4):  # 770-799 start: 0x13
-        for j in range(0, 10):
+        for j in range(10):
             checksum_list.append(0x13 + ((i - 1) % 9) + j)
 
     for i in range(1, 10):  # 800-889 start: 0x0d
-        for j in range(0, 10):
+        for j in range(10):
             checksum_list.append(0x0D + ((i - 1) % 9) + j)
 
-    for i in range(0, 10):  # 890-899 start: 0x16
+    for i in range(10):  # 890-899 start: 0x16
         checksum_list.append(0x16 + i)
 
     for i in range(1, 10):  # 900-989 start: 0x0e
-        for j in range(0, 10):
+        for j in range(10):
             checksum_list.append(0x0E + ((i - 1) % 9) + j)
 
-    for i in range(0, 10):  # 990-999 start: 0x17
+    for i in range(10):  # 990-999 start: 0x17
         checksum_list.append(0x17 + i)
 
     return checksum_list
@@ -872,7 +872,7 @@ def set_combo_box_treat_type(combobox_treat_type, start_date=None):
 
 
 def verify_confirm_code():
-    random_number = f"{str(random.randint(0000, 9999)):0>4}"
+    random_number = f"{random.randint(0000, 9999)!s:0>4}"
     input_dialog = dialog_utils.get_dialog(
         "掛號刪除雙重確認",
         f"請輸入刪除確認碼 {random_number}",
@@ -1442,4 +1442,4 @@ def set_combo_box_text(combo_box, value):
         return
 
     index = combo_box.findText(str(value))
-    combo_box.setCurrentIndex(index if index >= 0 else 0)
+    combo_box.setCurrentIndex(max(index, 0))

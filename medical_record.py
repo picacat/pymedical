@@ -4342,7 +4342,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             )
 
         self.insert_text(self.ui.textEdit_symptom, today + " ", "", insert_comma=False)
-        self.ui.textEdit_symptom.setFocus(True)
+        self.ui.textEdit_symptom.setFocus()
 
     def _insert_calendar(self):
         insert_date = date_utils.get_dialog_date(
@@ -4354,7 +4354,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self.insert_text(
             self.ui.textEdit_symptom, insert_date + " ", "", insert_comma=False
         )
-        self.ui.textEdit_symptom.setFocus(True)
+        self.ui.textEdit_symptom.setFocus()
 
     def _symptom_selection_changed(self):
         selected_text = self.ui.textEdit_symptom.textCursor().selectedText().strip()
