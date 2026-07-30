@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import (
     QDialog,
@@ -55,7 +53,7 @@ class MultiChoiceDialog(QDialog):
 class DoctorSchedule(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DoctorSchedule, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -299,49 +297,47 @@ class DoctorSchedule(QtWidgets.QMainWindow):
             "Sunday",
         ]
         field = doctor_schedule_col[col_no]
+        period = ("早班", "午班", "晚班")[row_no]
 
-        if row_no == 0:
-            period = "早班"
-        elif row_no == 1:
-            period = "午班"
-        else:
-            period = "晚班"
+        # 1. 只清掉「這個班別、這一天」的欄位，其他星期原封不動
+        self.database.exec_sql(
+            f"UPDATE special_schedule SET {field} = NULL WHERE Period = %s", (period,)
+        )
 
-        # 1. 為了保持資料整潔，最安全的做法是「先刪除該班別舊的所有紀錄」，再依據新的醫師數量重新寫入
-        # 這樣就不會發生 UPDATE 把多筆資料搞混的問題
-        delete_sql = f'DELETE FROM special_schedule WHERE Period = "{period}"'
-        self.database.exec_sql(delete_sql)
+        # 2. 取出該班別現有的列（依主鍵排序，維持名次順序）
+        rows = self.database.select_record(
+            f'SELECT * FROM special_schedule WHERE Period = "{period}" '
+            f"ORDER BY SpecialScheduleKey"
+        )
 
-        # 2. 如果使用者把醫生都勾掉了 (清空)
-        if not selected_doctors:
-            self.ui.tableWidget_special_schedule.setItem(
-                row_no, col_no, QtWidgets.QTableWidgetItem("")
-            )
-            # 雖然刪除了，但資料庫最好留一筆空白的 Period 紀錄，確保讀取時不會完全沒資料
-            insert_empty_sql = (
-                f'INSERT INTO special_schedule (Period) VALUES ("{period}")'
-            )
-            self.database.exec_sql(insert_empty_sql)
+        # 3. 逐位醫師寫入：現有列不夠用才 INSERT 新列
+        for i, doctor in enumerate(selected_doctors):
+            if i < len(rows):
+                self.database.exec_sql(
+                    f"UPDATE special_schedule SET {field} = %s "
+                    f"WHERE SpecialScheduleKey = %s",
+                    (doctor, rows[i]["SpecialScheduleKey"]),
+                )
+            else:
+                self.database.exec_sql(
+                    f"INSERT INTO special_schedule (Period, {field}) VALUES (%s, %s)",
+                    (period, doctor),
+                )
 
-            self.ui.tableWidget_special_schedule.resizeRowToContents(row_no)
-            return
+        # 4. 清掉七天全空的殘留列（但至少保留一列，讀取時不會沒資料）
+        empty_cond = " AND ".join(
+            f'({col} IS NULL OR {col} = "")' for col in doctor_schedule_col
+        )
+        self.database.exec_sql(
+            f'DELETE FROM special_schedule WHERE Period = "{period}" AND {empty_cond} '
+            f"AND (SELECT c FROM (SELECT COUNT(*) c FROM special_schedule "
+            f'WHERE Period = "{period}") t) > 1'
+        )
 
-        # 3. 畫面更新：將勾選的醫師用 \n 串接顯示
-        combined_text = "\n".join(selected_doctors)
-        item = QtWidgets.QTableWidgetItem(combined_text)
+        # 5. 畫面更新
+        item = QtWidgets.QTableWidgetItem("\n".join(selected_doctors))
         item.setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
         self.ui.tableWidget_special_schedule.setItem(row_no, col_no, item)
-
-        # 4. 資料庫寫入：有幾位醫師，我們就寫入幾筆紀錄
-        # 這樣上一話寫的 `_set_special_schedule` 用 `for row in rows:` 讀取時，就能完美對接！
-        for doctor in selected_doctors:
-            insert_sql = f'''
-                INSERT INTO special_schedule (Period, {field}) 
-                VALUES ("{period}", "{doctor}")
-            '''
-            self.database.exec_sql(insert_sql)
-
-        # 自動調整列高
         self.ui.tableWidget_special_schedule.resizeRowToContents(row_no)
 
     def _edit_schedule_room(self, schedule_key):
