@@ -19,7 +19,7 @@ from libs import (
 class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsBusinessIncomeList, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -206,8 +206,7 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
                 base = number_utils.get_integer(prescript_rows[0]["Amount"])
 
         net = base - discount_fee
-        if net < 0:
-            net = 0  # 折讓大於登錄金額屬資料異常, 不讓負數污染統計
+        net = max(net, 0)  # 折讓大於登錄金額屬資料異常, 不讓負數污染統計
 
         return net
 
@@ -338,15 +337,15 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
     def _get_case_rows(self):
         period_condition = ""
         if self.period != "全部":
-            period_condition = ' AND Period = "{0}"'.format(self.period)
+            period_condition = f' AND Period = "{self.period}"'
 
         ins_type_condition = ""
         if self.ins_type != "全部":
-            ins_type_condition = ' AND InsType = "{0}"'.format(self.ins_type)
+            ins_type_condition = f' AND InsType = "{self.ins_type}"'
 
         doctor_condition = ""
         if self.doctor != "全部":
-            doctor_condition = ' AND Doctor = "{0}"'.format(self.doctor)
+            doctor_condition = f' AND Doctor = "{self.doctor}"'
 
         weekday_condition = ""
         if len(self.weekday_list) > 0:
