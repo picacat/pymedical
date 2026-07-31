@@ -126,15 +126,7 @@ class StatisticsDoctorMonthlyPersonCount2(QtWidgets.QMainWindow):
         self._set_heading("一般傷科", ["首次", "2-6次"])
         self._set_heading("中度複傷", ["首次", "2-6次"])
         self._set_heading("高度複傷", ["首次", "2-6次"])
-        # self._set_heading(
-        #     "傷科類給藥", ["<=3天", "4-7天", "8-14天", ">=15天", "人數", "金額"]
-        # )
-        # self._set_heading("一般針灸", ["首次", "2-6次", "人數", "金額"])
-        # self._set_heading("中度複雜性針灸", ["首次", "2-6次", "人數", "金額"])
-        # self._set_heading("高度複雜性針灸", ["起始次", "後續治療", "人數", "金額"])
-        # self._set_heading("一般傷科", ["首次", "2-6次", "人數", "金額"])
-        # self._set_heading("中度複雜性傷科", ["人數", "金額"])
-        # self._set_heading("高度複雜性傷科", ["人數", "金額"])
+        self._set_heading("自費金額", ["科中", "外用", "針灸", "飲片", "其他"])
 
         self._set_calendar_heading(v_heading_height)
 
@@ -235,11 +227,14 @@ class StatisticsDoctorMonthlyPersonCount2(QtWidgets.QMainWindow):
             if row_no is None:
                 continue
 
+            case_key = row["CaseKey"]
             treatment = string_utils.xstr(row["Treatment"])
             course = number_utils.get_integer(row["Continuance"])
             pres_days = case_utils.get_pres_days(self.database, row["CaseKey"])
 
-            if treatment in nhi_utils.ACUPUNCTURE_TREAT:
+            if number_utils.get_integer(row["TotalFee"]) > 0:
+                self._calculate_self_fees(row_no, case_key)
+            elif treatment in nhi_utils.ACUPUNCTURE_TREAT:
                 if pres_days > 0:
                     if treatment in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_LIST:
                         self._set_value(row_no, course, 4, 5)
@@ -276,6 +271,53 @@ class StatisticsDoctorMonthlyPersonCount2(QtWidgets.QMainWindow):
         progress_dialog.setValue(row_count)
         progress_dialog.deleteLater()
 
+    def _calculate_self_fees(self, row_no, case_key):
+        prescript_rows = self._get_prescript_rows(case_key)
+        for row in prescript_rows:
+            medicine_type = self._get_medicine_type(row)
+            amount = number_utils.get_integer(row["Amount"])
+            if medicine_type == "科中":
+                self._set_amount(row_no, 26, amount)
+            elif medicine_type == "外用":
+                self._set_amount(row_no, 27, amount)
+            elif medicine_type == "針灸":
+                self._set_amount(row_no, 28, amount)
+            elif medicine_type == "飲片":
+                self._set_amount(row_no, 29, amount)
+            elif medicine_type == "其他":
+                self._set_amount(row_no, 30, amount)
+            else:
+                self._set_amount(row_no, 30, amount)
+
+    def _get_prescript_rows(self, case_key):
+        sql = """
+            SELECT MedicineType, MedicineName, Amount FROM prescript
+            WHERE
+              CaseKey = %s AND
+              MedicineSet >= 2 AND
+              Amount > 0
+        """
+        params = (case_key,)
+        rows = self.database.select_record(sql, params=params)
+
+        return rows
+
+    def _get_medicine_type(self, row):
+        medicine_type = string_utils.xstr(row["MedicineType"])
+        medicine_name = string_utils.xstr(row["MedicineName"])
+        if medicine_type in ["單方", "複方"] or "自費粉藥" in medicine_name:
+            medicine_type = "科中"
+        elif medicine_type in ["外用"] or "藥布" in medicine_name:
+            medicine_type = "外用"
+        elif medicine_type in ["穴道"] or "針灸" in medicine_name:
+            medicine_type = "針灸"
+        elif medicine_type in ["水藥"] or "自費水藥" in medicine_name:
+            medicine_type = "飲片"
+        else:
+            medicine_type = "其他"
+
+        return medicine_type
+
     def _set_value(self, row_no, course, col_no1, col_no2):
         if course <= 1:
             col_no = col_no1
@@ -289,6 +331,12 @@ class StatisticsDoctorMonthlyPersonCount2(QtWidgets.QMainWindow):
             + 1
         )
         self._set_item_data(row_no, col_no, case_count)
+
+    def _set_amount(self, row_no, col_no, amount):
+        amount += number_utils.get_integer(
+            self.ui.tableWidget_doctor_monthly.item(row_no, col_no).text()
+        )
+        self._set_item_data(row_no, col_no, amount)
 
     def _set_internal_cases(self, row_no):
         col_no = 1
