@@ -1805,6 +1805,20 @@ def get_statistics_doctor_monthly_person_count(
     return widget
 
 
+# 醫師統計-醫師人數月報表
+def get_statistics_doctor_monthly_person_count2(
+    parent, database, system_settings, year, month, doctor
+):
+    import statistics_doctor_monthly_person_count2
+
+    module = importlib.reload(statistics_doctor_monthly_person_count2)
+    widget = module.StatisticsDoctorMonthlyPersonCount2(
+        parent, database, system_settings, year, month, doctor
+    )
+
+    return widget
+
+
 # 醫師統計-醫師月報表-收入統計
 def get_statistics_doctor_monthly_income(
     parent, database, system_settings, year, month, doctor

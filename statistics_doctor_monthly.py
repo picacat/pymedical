@@ -2,17 +2,14 @@
 
 from PyQt5 import QtWidgets
 
-from libs import ui_utils
-from libs import system_utils
-from libs import dialog_utils
-from libs import module_utils
+from libs import dialog_utils, module_utils, system_utils, ui_utils
 
 
 # 醫師月報表 2022.05.12
 class StatisticsDoctorMonthly(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsDoctorMonthly, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -59,12 +56,14 @@ class StatisticsDoctorMonthly(QtWidgets.QMainWindow):
 
     # 讀取病歷
     def open_dialog(self):
-        dialog = dialog_utils.get_dialog_date_picker(self, self.database, self.system_settings, '醫師月報表')
+        dialog = dialog_utils.get_dialog_date_picker(
+            self, self.database, self.system_settings, "醫師月報表"
+        )
 
-        if self.dialog_setting['dialog_executed']:
-            dialog.ui.comboBox_year.setCurrentText(self.dialog_setting['year'])
-            dialog.ui.comboBox_month.setCurrentText(self.dialog_setting['month'])
-            dialog.ui.comboBox_doctor.setCurrentText(self.dialog_setting['therapist'])
+        if self.dialog_setting["dialog_executed"]:
+            dialog.ui.comboBox_year.setCurrentText(self.dialog_setting["year"])
+            dialog.ui.comboBox_month.setCurrentText(self.dialog_setting["month"])
+            dialog.ui.comboBox_doctor.setCurrentText(self.dialog_setting["therapist"])
 
         if not dialog.exec_():
             dialog.deleteLater()
@@ -74,10 +73,10 @@ class StatisticsDoctorMonthly(QtWidgets.QMainWindow):
         month = dialog.ui.comboBox_month.currentText()
         therapist = dialog.ui.comboBox_doctor.currentText()
 
-        self.dialog_setting['dialog_executed'] = True
-        self.dialog_setting['year'] = year
-        self.dialog_setting['month'] = month
-        self.dialog_setting['therapist'] = therapist
+        self.dialog_setting["dialog_executed"] = True
+        self.dialog_setting["year"] = year
+        self.dialog_setting["month"] = month
+        self.dialog_setting["therapist"] = therapist
 
         dialog.deleteLater()
         self._set_tab_widget(year, month, therapist)
@@ -85,31 +84,57 @@ class StatisticsDoctorMonthly(QtWidgets.QMainWindow):
     def _set_tab_widget(self, year, month, doctor):
         self.ui.tabWidget_statistics_doctor.clear()
 
-        self.ui.statusbar.showMessage(
-            f' 統計期間: {year} 年 {month} 月 醫師: {doctor}'
-        )
+        self.ui.statusbar.showMessage(f" 統計期間: {year} 年 {month} 月 醫師: {doctor}")
 
         self._add_statistic_doctor_monthly_count(year, month, doctor)
         self._add_statistic_doctor_monthly_income(year, month, doctor)
         self._add_statistic_doctor_monthly_person_count(year, month, doctor)
+        self._add_statistic_doctor_monthly_person_count2(year, month, doctor)
 
     # 醫師門診人數統計
     def _add_statistic_doctor_monthly_count(self, year, month, doctor):
-        self.tab_statistics_doctor_monthly_count = module_utils.get_statistics_doctor_monthly_count(
-            self, self.database, self.system_settings, year, month, doctor)
+        self.tab_statistics_doctor_monthly_count = (
+            module_utils.get_statistics_doctor_monthly_count(
+                self, self.database, self.system_settings, year, month, doctor
+            )
+        )
         self.tab_statistics_doctor_monthly_count.start_calculate()
-        self.ui.tabWidget_statistics_doctor.addTab(self.tab_statistics_doctor_monthly_count, '月報表')
+        self.ui.tabWidget_statistics_doctor.addTab(
+            self.tab_statistics_doctor_monthly_count, "月報表"
+        )
 
     # 醫師門診人數統計-收入統計
     def _add_statistic_doctor_monthly_income(self, year, month, doctor):
-        self.tab_statistics_doctor_monthly_income = module_utils.get_statistics_doctor_monthly_income(
-            self, self.database, self.system_settings, year, month, doctor)
+        self.tab_statistics_doctor_monthly_income = (
+            module_utils.get_statistics_doctor_monthly_income(
+                self, self.database, self.system_settings, year, month, doctor
+            )
+        )
         self.tab_statistics_doctor_monthly_income.start_calculate()
-        self.ui.tabWidget_statistics_doctor.addTab(self.tab_statistics_doctor_monthly_income, '掛號收費統計')
+        self.ui.tabWidget_statistics_doctor.addTab(
+            self.tab_statistics_doctor_monthly_income, "掛號收費統計"
+        )
 
     # 醫師門診人數月報表統計 - 耀康 2025-01-18
     def _add_statistic_doctor_monthly_person_count(self, year, month, doctor):
-        self.tab_statistics_doctor_monthly_person_count = module_utils.get_statistics_doctor_monthly_person_count(
-            self, self.database, self.system_settings, year, month, doctor)
+        self.tab_statistics_doctor_monthly_person_count = (
+            module_utils.get_statistics_doctor_monthly_person_count(
+                self, self.database, self.system_settings, year, month, doctor
+            )
+        )
         self.tab_statistics_doctor_monthly_person_count.start_calculate()
-        self.ui.tabWidget_statistics_doctor.addTab(self.tab_statistics_doctor_monthly_person_count, '人數月報表')
+        self.ui.tabWidget_statistics_doctor.addTab(
+            self.tab_statistics_doctor_monthly_person_count, "人數月報表"
+        )
+
+    # 醫師門診人數月報表統計 - 祈恩 2026-07-31
+    def _add_statistic_doctor_monthly_person_count2(self, year, month, doctor):
+        self.tab_statistics_doctor_monthly_person_count2 = (
+            module_utils.get_statistics_doctor_monthly_person_count2(
+                self, self.database, self.system_settings, year, month, doctor
+            )
+        )
+        self.tab_statistics_doctor_monthly_person_count2.start_calculate()
+        self.ui.tabWidget_statistics_doctor.addTab(
+            self.tab_statistics_doctor_monthly_person_count2, "健保人數及自費金額月報表"
+        )

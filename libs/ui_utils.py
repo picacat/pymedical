@@ -180,6 +180,9 @@ UI_STATISTICS_GROWTH_INCOME = "statistics_growth_income.ui"
 UI_STATISTICS_DOCTOR_MONTHLY = "statistics_doctor_monthly.ui"
 UI_STATISTICS_DOCTOR_MONTHLY_COUNT = "statistics_doctor_monthly_count.ui"
 UI_STATISTICS_DOCTOR_MONTHLY_PERSON_COUNT = "statistics_doctor_monthly_person_count.ui"
+UI_STATISTICS_DOCTOR_MONTHLY_PERSON_COUNT2 = (
+    "statistics_doctor_monthly_person_count2.ui"
+)
 UI_STATISTICS_DOCTOR_MONTHLY_INCOME = "statistics_doctor_monthly_income.ui"
 
 UI_STATISTICS_INS_DISCOUNT = "statistics_ins_discount.ui"

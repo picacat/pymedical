@@ -20,7 +20,7 @@ from libs import (
 
 
 # 醫師月報表 2022.05.12
-class StatisticsDoctorMonthlyCount(QtWidgets.QMainWindow):
+class StatisticsDoctorMonthlyPersonCount2(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
         super().__init__(parent)
@@ -35,7 +35,6 @@ class StatisticsDoctorMonthlyCount(QtWidgets.QMainWindow):
         self.last_day = calendar.monthrange(int(self.year), int(self.month))[1]
         self.start_date = f"{self.year}-{self.month}-01 00:00:00"
         self.end_date = f"{self.year}-{self.month}-{self.last_day} 23:59:59"
-
         self._set_ui()
         self._set_signal()
 
@@ -74,7 +73,7 @@ class StatisticsDoctorMonthlyCount(QtWidgets.QMainWindow):
         self.ui.tableWidget_doctor_monthly.setRowCount(0)
         self._set_statistics_table_heading()
         self._calculate_data()
-        self._calculate_subtotal()
+        # self._calculate_subtotal()
         self._calculate_total()
 
     def _set_heading(self, title, submenu):
@@ -100,6 +99,9 @@ class StatisticsDoctorMonthlyCount(QtWidgets.QMainWindow):
 
     def _set_statistics_table_heading(self):
         v_heading_height = 2
+        self.ui.tableWidget_doctor_monthly.clearSpans()
+        self.ui.tableWidget_doctor_monthly.clear()
+
         self.ui.tableWidget_doctor_monthly.setColumnCount(1)
         self.ui.tableWidget_doctor_monthly.setRowCount(v_heading_height)
 
@@ -111,22 +113,28 @@ class StatisticsDoctorMonthlyCount(QtWidgets.QMainWindow):
             QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
         )
 
-        self._set_heading(
-            "內科", ["<=3天", "4-7天", "8-14天", ">=15天", "人數", "金額"]
-        )
-        self._set_heading(
-            "針灸類給藥", ["<=3天", "4-7天", "8-14天", ">=15天", "人數", "金額"]
-        )
-        self._set_heading(
-            "傷科類給藥", ["<=3天", "4-7天", "8-14天", ">=15天", "人數", "金額"]
-        )
-        self._set_heading("一般針灸", ["首次", "2-6次", "人數", "金額"])
-        self._set_heading("中度複雜性針灸", ["首次", "2-6次", "人數", "金額"])
-        self._set_heading("高度複雜性針灸", ["起始次", "後續治療", "人數", "金額"])
-        self._set_heading("一般傷科", ["首次", "2-6次", "人數", "金額"])
-        self._set_heading("中度複雜性傷科", ["人數", "金額"])
-        self._set_heading("高度複雜性傷科", ["人數", "金額"])
-        # self._set_heading('居家醫療', ['居家人數', '居家金額'])
+        self._set_heading("內科", ["人數"])
+        self._set_heading("一般針灸給藥", ["首次", "2-6次"])
+        self._set_heading("中度複針給藥", ["首次", "2-6次"])
+        self._set_heading("高度複針給藥", ["首次", "2-6次"])
+        self._set_heading("一般傷科給藥", ["首次", "2-6次"])
+        self._set_heading("中度複傷給藥", ["首次", "2-6次"])
+        self._set_heading("高度複傷給藥", ["首次", "2-6次"])
+        self._set_heading("一般針灸", ["首次", "2-6次"])
+        self._set_heading("中度複針", ["首次", "2-6次"])
+        self._set_heading("高度複針", ["首次", "2-6次"])
+        self._set_heading("一般傷科", ["首次", "2-6次"])
+        self._set_heading("中度複傷", ["首次", "2-6次"])
+        self._set_heading("高度複傷", ["首次", "2-6次"])
+        # self._set_heading(
+        #     "傷科類給藥", ["<=3天", "4-7天", "8-14天", ">=15天", "人數", "金額"]
+        # )
+        # self._set_heading("一般針灸", ["首次", "2-6次", "人數", "金額"])
+        # self._set_heading("中度複雜性針灸", ["首次", "2-6次", "人數", "金額"])
+        # self._set_heading("高度複雜性針灸", ["起始次", "後續治療", "人數", "金額"])
+        # self._set_heading("一般傷科", ["首次", "2-6次", "人數", "金額"])
+        # self._set_heading("中度複雜性傷科", ["人數", "金額"])
+        # self._set_heading("高度複雜性傷科", ["人數", "金額"])
 
         self._set_calendar_heading(v_heading_height)
 
@@ -230,139 +238,49 @@ class StatisticsDoctorMonthlyCount(QtWidgets.QMainWindow):
             treatment = string_utils.xstr(row["Treatment"])
             course = number_utils.get_integer(row["Continuance"])
             pres_days = case_utils.get_pres_days(self.database, row["CaseKey"])
-            if treatment in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_LIST:
-                self._set_moderate_acupuncture_cases(row, row_no, course)
-            elif treatment in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_LIST:
-                self._set_highly_acupuncture_cases(row, row_no, course)
-            elif treatment in nhi_utils.MODERATE_COMPLICATED_MASSAGE_TREAT:
-                self._set_moderate_massage_cases(row, row_no)
-            elif treatment in nhi_utils.HIGHLY_COMPLICATED_MASSAGE_TREAT:
-                self._set_highly_massage_cases(row, row_no)
-            elif treatment in nhi_utils.ACUPUNCTURE_TREAT and pres_days > 0:
-                self._set_acupuncture_medicine_cases(row, row_no, pres_days)
-            elif treatment in nhi_utils.MASSAGE_TREAT and pres_days > 0:
-                self._set_massage_medicine_cases(row, row_no, pres_days)
-            elif treatment in nhi_utils.GENERAL_ACUPUNCTURE_TREAT:
-                self._set_general_acupuncture_cases(row, row_no, course)
-            elif treatment in nhi_utils.GENERAL_MASSAGE_TREAT:
-                self._set_general_massage_cases(row, row_no, course)
-            else:  # 內科
-                self._set_internal_cases(row, row_no, pres_days)
 
-            # treat_type = string_utils.xstr(row['TreatType'])
-            # if treat_type in nhi_utils.HOME_CARE:
-            #     self._set_home_care_cases(row, row_no)
+            if treatment in nhi_utils.ACUPUNCTURE_TREAT:
+                if pres_days > 0:
+                    if treatment in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_LIST:
+                        self._set_value(row_no, course, 4, 5)
+                    elif treatment in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_LIST:
+                        self._set_value(row_no, course, 6, 7)
+                    else:
+                        self._set_value(row_no, course, 2, 3)
+                else:
+                    if treatment in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_LIST:
+                        self._set_value(row_no, course, 16, 17)
+                    elif treatment in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_LIST:
+                        self._set_value(row_no, course, 18, 19)
+                    else:
+                        self._set_value(row_no, course, 14, 15)
+            elif treatment in nhi_utils.MASSAGE_TREAT:
+                if pres_days > 0:
+                    if treatment in nhi_utils.MODERATE_COMPLICATED_MASSAGE_TREAT:
+                        self._set_value(row_no, course, 10, 11)
+                    elif treatment in nhi_utils.HIGHLY_COMPLICATED_MASSAGE_TREAT:
+                        self._set_value(row_no, course, 12, 13)
+                    else:
+                        self._set_value(row_no, course, 8, 9)
+                else:
+                    if treatment in nhi_utils.MODERATE_COMPLICATED_MASSAGE_TREAT:
+                        self._set_value(row_no, course, 22, 23)
+                    elif treatment in nhi_utils.HIGHLY_COMPLICATED_MASSAGE_TREAT:
+                        self._set_value(row_no, course, 24, 25)
+                    else:
+                        self._set_value(row_no, course, 20, 21)
+
+            else:  # 內科
+                self._set_internal_cases(row_no)
 
         progress_dialog.setValue(row_count)
         progress_dialog.deleteLater()
 
-    def _set_internal_cases(self, row, row_no, pres_days):
-        if pres_days <= 3:
-            col_no = 1
-        elif 4 <= pres_days <= 7:
-            col_no = 2
-        elif 8 <= pres_days <= 14:
-            col_no = 3
-        elif pres_days >= 15:
-            col_no = 4
-
-        try:
-            case_count = (
-                number_utils.get_integer(
-                    self.ui.tableWidget_doctor_monthly.item(row_no, col_no).text()
-                )
-                + 1
-            )
-            self._set_item_data(row_no, col_no, case_count)
-        except Exception:
-            pass
-
-        try:
-            case_subtotal = (
-                number_utils.get_integer(
-                    self.ui.tableWidget_doctor_monthly.item(row_no, 5).text()
-                )
-                + 1
-            )
-            self._set_item_data(row_no, 5, case_subtotal)
-        except Exception:
-            pass
-
-        try:
-            ins_apply_fee = number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 6).text()
-            ) + number_utils.get_integer(row["InsApplyFee"])
-            self._set_item_data(row_no, 6, ins_apply_fee)
-        except Exception:
-            pass
-
-    def _set_acupuncture_medicine_cases(self, row, row_no, pres_days):
-        if pres_days <= 3:
-            col_no = 7
-        elif 4 <= pres_days <= 7:
-            col_no = 8
-        elif 8 <= pres_days <= 14:
-            col_no = 9
-        elif pres_days >= 15:
-            col_no = 10
-
-        case_count = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, col_no).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, col_no, case_count)
-
-        case_subtotal = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 11).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, 11, case_subtotal)
-
-        ins_apply_fee = number_utils.get_integer(
-            self.ui.tableWidget_doctor_monthly.item(row_no, 12).text()
-        ) + number_utils.get_integer(row["InsApplyFee"])
-        self._set_item_data(row_no, 12, ins_apply_fee)
-
-    def _set_massage_medicine_cases(self, row, row_no, pres_days):
-        if pres_days <= 3:
-            col_no = 13
-        elif 4 <= pres_days <= 7:
-            col_no = 14
-        elif 8 <= pres_days <= 14:
-            col_no = 15
-        elif pres_days >= 15:
-            col_no = 16
-
-        case_count = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, col_no).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, col_no, case_count)
-
-        case_subtotal = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 17).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, 17, case_subtotal)
-
-        ins_apply_fee = number_utils.get_integer(
-            self.ui.tableWidget_doctor_monthly.item(row_no, 18).text()
-        ) + number_utils.get_integer(row["InsApplyFee"])
-        self._set_item_data(row_no, 18, ins_apply_fee)
-
-    def _set_general_acupuncture_cases(self, row, row_no, course):
+    def _set_value(self, row_no, course, col_no1, col_no2):
         if course <= 1:
-            col_no = 19
+            col_no = col_no1
         else:
-            col_no = 20
+            col_no = col_no2
 
         case_count = (
             number_utils.get_integer(
@@ -372,24 +290,8 @@ class StatisticsDoctorMonthlyCount(QtWidgets.QMainWindow):
         )
         self._set_item_data(row_no, col_no, case_count)
 
-        case_subtotal = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 21).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, 21, case_subtotal)
-
-        ins_apply_fee = number_utils.get_integer(
-            self.ui.tableWidget_doctor_monthly.item(row_no, 22).text()
-        ) + number_utils.get_integer(row["InsApplyFee"])
-        self._set_item_data(row_no, 22, ins_apply_fee)
-
-    def _set_moderate_acupuncture_cases(self, row, row_no, course):
-        if course <= 1:
-            col_no = 23
-        else:
-            col_no = 24
+    def _set_internal_cases(self, row_no):
+        col_no = 1
 
         case_count = (
             number_utils.get_integer(
@@ -398,116 +300,6 @@ class StatisticsDoctorMonthlyCount(QtWidgets.QMainWindow):
             + 1
         )
         self._set_item_data(row_no, col_no, case_count)
-
-        case_subtotal = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 25).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, 25, case_subtotal)
-
-        ins_apply_fee = number_utils.get_integer(
-            self.ui.tableWidget_doctor_monthly.item(row_no, 26).text()
-        ) + number_utils.get_integer(row["InsApplyFee"])
-
-        self._set_item_data(row_no, 26, ins_apply_fee)
-
-    def _set_highly_acupuncture_cases(self, row, row_no, course):
-        if course <= 1:
-            col_no = 27
-        else:
-            col_no = 28
-
-        case_count = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, col_no).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, col_no, case_count)
-
-        case_subtotal = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 29).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, 29, case_subtotal)
-
-        ins_apply_fee = number_utils.get_integer(
-            self.ui.tableWidget_doctor_monthly.item(row_no, 30).text()
-        ) + number_utils.get_integer(row["InsApplyFee"])
-        self._set_item_data(row_no, 30, ins_apply_fee)
-
-    def _set_general_massage_cases(self, row, row_no, course):
-        if course <= 1:
-            col_no = 31
-        else:
-            col_no = 32
-
-        case_count = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, col_no).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, col_no, case_count)
-
-        case_subtotal = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 33).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, 33, case_subtotal)
-
-        ins_apply_fee = number_utils.get_integer(
-            self.ui.tableWidget_doctor_monthly.item(row_no, 34).text()
-        ) + number_utils.get_integer(row["InsApplyFee"])
-        self._set_item_data(row_no, 34, ins_apply_fee)
-
-    def _set_moderate_massage_cases(self, row, row_no):
-        case_count = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 35).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, 35, case_count)
-
-        ins_apply_fee = number_utils.get_integer(
-            self.ui.tableWidget_doctor_monthly.item(row_no, 36).text()
-        ) + number_utils.get_integer(row["InsApplyFee"])
-        self._set_item_data(row_no, 36, ins_apply_fee)
-
-    def _set_highly_massage_cases(self, row, row_no):
-        case_count = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 37).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, 37, case_count)
-
-        ins_apply_fee = number_utils.get_integer(
-            self.ui.tableWidget_doctor_monthly.item(row_no, 38).text()
-        ) + number_utils.get_integer(row["InsApplyFee"])
-        self._set_item_data(row_no, 38, ins_apply_fee)
-
-    def _set_home_care_cases(self, row, row_no):
-        case_count = (
-            number_utils.get_integer(
-                self.ui.tableWidget_doctor_monthly.item(row_no, 39).text()
-            )
-            + 1
-        )
-        self._set_item_data(row_no, 39, case_count)
-
-        ins_apply_fee = number_utils.get_integer(
-            self.ui.tableWidget_doctor_monthly.item(row_no, 40).text()
-        ) + number_utils.get_integer(row["InsApplyFee"])
-        self._set_item_data(row_no, 40, ins_apply_fee)
 
     def _set_item_data(self, row_no, col_no, value):
         item = self.ui.tableWidget_doctor_monthly.item(row_no, col_no)
@@ -536,7 +328,7 @@ class StatisticsDoctorMonthlyCount(QtWidgets.QMainWindow):
             excel_file_name,
             self.ui.tableWidget_doctor_monthly,
             None,
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            [],
         )
 
         system_utils.show_message_box(

@@ -4340,7 +4340,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
             today = date_utils.west_date_to_nhi_date(
                 datetime.date.today().strftime("%Y-%m-%d"), "/"
             )
-
         self.insert_text(self.ui.textEdit_symptom, today + " ", "", insert_comma=False)
         self.ui.textEdit_symptom.setFocus()
 
