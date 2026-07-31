@@ -411,7 +411,7 @@ class StatisticsDoctorMonthlyPersonCount2(QtWidgets.QMainWindow):
     def _split_set_amount(self, case_key, medicine_set, net):
         sql = """
             SELECT
-                MedicineName, MedicineType, Amount
+                MedicineName, MedicineType, Unit, Amount
             FROM
                 prescript
             WHERE
@@ -450,17 +450,32 @@ class StatisticsDoctorMonthlyPersonCount2(QtWidgets.QMainWindow):
     def _get_medicine_type(self, row):
         medicine_type = string_utils.xstr(row["MedicineType"])
         medicine_name = string_utils.xstr(row["MedicineName"])
+        unit = string_utils.xstr(row["Unit"])
+
         if (
             medicine_type in ["單方", "複方"]
             or "粉藥" in medicine_name
             or "科中" in medicine_name
+            or "克" in unit
         ):
             medicine_type = "科中"
-        elif medicine_type in ["外用"] or "藥布" in medicine_name:
+        elif (
+            medicine_type in ["外用"]
+            or "藥布" in medicine_name
+            or "藥膏" in medicine_name
+            or "膏藥" in medicine_name
+        ):
             medicine_type = "外用"
-        elif medicine_type in ["穴道"] or "針灸" in medicine_name:
+        elif (
+            medicine_type in ["穴道"] or "針" in medicine_name or "針" in medicine_type
+        ):
             medicine_type = "針灸"
-        elif medicine_type in ["水藥"] or "水藥" in medicine_name:
+        elif (
+            medicine_type in ["水藥"]
+            or "水藥" in medicine_name
+            or "飲片" in medicine_name
+            or "錢" in unit
+        ):
             medicine_type = "飲片"
         else:
             medicine_type = "其他"

@@ -396,7 +396,6 @@ class StatisticsBusinessIncomeList(QtWidgets.QMainWindow):
             medicine_name = string_utils.xstr(row["MedicineName"])
             for item_name in self.item_list:
                 if item_name in medicine_name or item_name in medicine_type:
-                    print(item_name, medicine_name)
                     return item_name
 
         # 第二優先: 依 MedicineType 推斷 (每列都要重新取值)
