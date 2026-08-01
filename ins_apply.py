@@ -2,6 +2,7 @@
 
 import os.path
 import subprocess
+import time
 import webbrowser
 
 from PyQt5 import QtWidgets
@@ -498,7 +499,9 @@ class InsApply(QtWidgets.QMainWindow):
         self.ui.tabWidget_ins_data.addTab(self.tab_indicator, "健保指標")
 
     def _open_nhi_vpn(self):
-        med_vpn_addr = "https://medvpn.nhi.gov.tw/iwse0000/IWSE0020S01.aspx"
+        med_vpn_addr = (
+            f"https://medvpn.nhi.gov.tw/iwse0000/IWSE0020S01.aspx?_t={int(time.time())}"
+        )
         webbrowser.open(med_vpn_addr, new=0)  # 0: open in existing tab, 2: new tab
 
     @staticmethod

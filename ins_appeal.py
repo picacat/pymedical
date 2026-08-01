@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import os.path
+import time
 import webbrowser
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -24,7 +25,7 @@ from libs import (
 class InsAppeal(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsAppeal, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -394,7 +395,7 @@ class InsAppeal(QtWidgets.QMainWindow):
         """
         self.table_widget_appeal_items.set_db_data(sql, self._set_appeal_items_data)
 
-        for row_no in range(0, self.ui.tableWidget_appeal_items.rowCount()):
+        for row_no in range(self.ui.tableWidget_appeal_items.rowCount()):
             self.ui.tableWidget_appeal_items.setRowHeight(row_no, 300)
 
     def _set_appeal_items_data(self, row_no, row):
@@ -470,7 +471,9 @@ class InsAppeal(QtWidgets.QMainWindow):
         self.ui.tableWidget_appeal_items.setCellWidget(row_no, 2, widget)
 
     def _open_nhi_vpn(self):
-        med_vpn_addr = "https://medvpn.nhi.gov.tw/iwse0000/IWSE0020S01.aspx"
+        med_vpn_addr = (
+            f"https://medvpn.nhi.gov.tw/iwse0000/IWSE0020S01.aspx?_t={int(time.time())}"
+        )
         webbrowser.open(med_vpn_addr, new=0)  # 0: open in existing tab, 2: new tab
 
     @staticmethod

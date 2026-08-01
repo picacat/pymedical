@@ -8,6 +8,7 @@ import datetime
 import json
 import os
 import sys
+import time
 
 if sys.platform == "linux":
     os.environ["QT_QPA_PLATFORM"] = "xcb"
@@ -2586,10 +2587,11 @@ class PyMedical(QtWidgets.QMainWindow):
 
     def _open_hyper_link(self):
         sender_name = self.sender().objectName()
+
         address_list = {
             "toolButton_nhi": "https://www.nhi.gov.tw/",
-            "toolButton_nhi_vpn": "https://medvpn.nhi.gov.tw/iwse0000/IWSE0020S01.aspx",
-            "toolButton_nhi_vpn_new": "https://medvpn.nhi.gov.tw/iwse5000/IWSE5020S01.aspx",
+            "toolButton_nhi_vpn": f"https://medvpn.nhi.gov.tw/iwse0000/IWSE0020S01.aspx?_t={int(time.time())}",
+            "toolButton_nhi_vpn_new": f"https://medvpn.nhi.gov.tw/iwse5000/IWSE5020S01.aspx?_t={int(time.time())}",
             "toolButton_hpa": "https://www.hpa.gov.tw/",
             "toolButton_mohw": "https://euservice.mohw.gov.tw",
             "toolButton_hca": "https://hca.nat.gov.tw",
