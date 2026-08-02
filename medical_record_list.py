@@ -32,7 +32,7 @@ class MedicalRecordList(QtWidgets.QMainWindow):
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(MedicalRecordList, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -453,8 +453,9 @@ class MedicalRecordList(QtWidgets.QMainWindow):
                 cases.PatientKey = {patient_key}
             ORDER BY CaseDate
         """
-        rows = self.database.select_record(self.sql)
-        self.medical_record_rows = len(rows)
+        # rows = self.database.select_record(self.sql)
+        # self.medical_record_rows = len(rows)
+        self.medical_record_rows = self._count_records(self.database, self.sql)
         self._read_medical_record_list(self.sql, self.medicine_list)
 
     # 讀取病歷
@@ -535,8 +536,9 @@ class MedicalRecordList(QtWidgets.QMainWindow):
 
             self.sql = dialog.get_sql()
             archive_database = self._get_archive_database()
-            rows = archive_database.select_record(self.sql)
-            self.medical_record_rows = len(rows)
+            # rows = archive_database.select_record(self.sql)
+            # self.medical_record_rows = len(rows)
+            self.medical_record_rows = self._count_records(archive_database, self.sql)
 
         dialog.close_all()
         dialog.deleteLater()
@@ -568,6 +570,33 @@ class MedicalRecordList(QtWidgets.QMainWindow):
             )
 
         return archive_database
+
+    def _count_records(self, database, sql):
+        """只取符合條件的筆數，不要把資料本身撈回來。
+
+        原本的作法是 len(database.select_record(sql))——那會把每一列的
+        每一個欄位都傳回 Python 並建成 dict，只為了數個數，然後整包丟掉。
+        資料量大的客戶查詢一整年時，這一步比真正要顯示的那一頁還貴，
+        而且後面 _read_medical_record_list 還會再跑一次相同的 SQL。
+
+        改成把原查詢包成衍生表再 COUNT(*)，資料完全不離開伺服器。
+
+        衍生表要求欄位名稱唯一，萬一將來查詢條件產生了重複欄位名，
+        就退回原本的作法——寧可慢也不能算錯筆數（筆數會決定總頁數）。
+        """
+        if sql is None:
+            return 0
+
+        try:
+            rows = database.select_record(
+                f"SELECT COUNT(*) AS RecordCount FROM ({sql}) AS CountBase"
+            )
+            if rows:
+                return number_utils.get_integer(rows[0]["RecordCount"])
+        except Exception as e:
+            print(f"（計數查詢改用備援方式：{e}）")
+
+        return len(database.select_record(sql))
 
     def _read_medical_record_list(self, sql, medicine_list, page=1):
         if sql is None:
@@ -2735,8 +2764,9 @@ class MedicalRecordList(QtWidgets.QMainWindow):
         self.sql = self.sql.replace(
             "AND (Position1 IS NULL OR LENGTH(Position1) = 0)", ""
         )
-        rows = self.database.select_record(self.sql)
-        self.medical_record_rows = len(rows)
+        # rows = self.database.select_record(self.sql)
+        # self.medical_record_rows = len(rows)
+        self.medical_record_rows = self._count_records(self.database, self.sql)
         self._read_medical_record_list(self.sql, self.medicine_list)
 
     def open_ins_medical_record(self):

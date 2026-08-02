@@ -59,14 +59,12 @@ class CheckDatabase(QtWidgets.QDialog):
         self._check_clinic()
         self._check_certificate()
         self._check_others()
+        self._check_ins_apply()
 
         try:
-            self._check_ins_apply()
+            self.database.exec_sql("DROP TABLE IF EXISTS insreply")
         except Exception:
-            try:
-                self.database.exec_sql("DROP TABLE insreply")
-            except Exception:
-                pass
+            print("error: DROP TABLE IF EXISTS insreply")
 
         self.progress_dialog.deleteLater()
 
@@ -174,6 +172,7 @@ class CheckDatabase(QtWidgets.QDialog):
             "DoctorDone",
         )
         self.database.add_index_if_not_exists("cases", index_name, fields)
+        self.database.add_index_if_not_exists("cases", "idx_case_date", ["CaseDate"])
 
     def _check_cases_thc_index(self):
         index_name = "idx_thc_position1"
@@ -746,12 +745,6 @@ class CheckDatabase(QtWidgets.QDialog):
                     "add",
                     "OriginalIdentifier",
                     "varchar(20) AFTER ActualIdentifier",
-                ),
-                self.database.check_field_exists(
-                    "insreply", "add", "ReplySeq", "int AFTER Reason2"
-                ),
-                self.database.check_field_exists(
-                    "insreply", "add", "ReplyInsCode", "varchar(12) AFTER ReplySeq"
                 ),
             ]
         else:
