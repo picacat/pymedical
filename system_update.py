@@ -27,7 +27,7 @@ from libs import class_utils, string_utils, system_utils, ui_utils, update_utils
 class SystemUpdate(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(SystemUpdate, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -532,7 +532,7 @@ class SystemUpdate(QtWidgets.QDialog):
 
         try:
             response = urllib.request.urlopen(url, context=context, timeout=timeout)
-        except (urllib.error.URLError, socket.timeout) as e:
+        except (TimeoutError, urllib.error.URLError) as e:
             QtWidgets.QMessageBox.warning(
                 self, "錯誤", "❌ 下載更新檔失敗，請檢查網路狀態。"
             )
