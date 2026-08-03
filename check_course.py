@@ -675,35 +675,6 @@ class CheckCourse(QtWidgets.QMainWindow):
             if remove_flag is not None and remove_flag.text() == "!":
                 self.ui.tableWidget_errors.removeRow(row_no)
 
-    # def _remove_useless_record(self):
-    #     for row_no in range(self.ui.tableWidget_errors.rowCount()):
-    #         case_date = self.ui.tableWidget_errors.item(row_no, 1).text()
-    #         patient_key = self.ui.tableWidget_errors.item(row_no, 3).text()
-    #         card = self.ui.tableWidget_errors.item(row_no, 6).text()
-    #         course = number_utils.get_integer(self.ui.tableWidget_errors.item(row_no, 7).text())
-
-    #         if date_utils.str_to_date(case_date).month != self.apply_month:
-    #             last_case_date = case_date
-    #             for i in range(1, 7):
-    #                 next_case_date = self.ui.tableWidget_errors.item(row_no+i, 1)
-    #                 if next_case_date is None:
-    #                     continue
-
-    #                 next_case_date = next_case_date.text()
-    #                 next_patient_key = self.ui.tableWidget_errors.item(row_no+i, 3).text()
-    #                 next_card = self.ui.tableWidget_errors.item(row_no+i, 6).text()
-    #                 next_course = number_utils.get_integer(self.ui.tableWidget_errors.item(row_no+i, 7).text())
-    #                 if patient_key == next_patient_key and card == next_card and next_course > course:
-    #                     last_case_date = next_case_date
-
-    #             if date_utils.str_to_date(last_case_date).month != self.apply_month:
-    #                 self._set_row_error_message(row_no, 13, '!')
-
-    #     for row_no in reversed(range(self.ui.tableWidget_errors.rowCount())):
-    #         remove_flag = self.ui.tableWidget_errors.item(row_no, 13)
-    #         if remove_flag is not None and remove_flag.text() == '!':
-    #             self.ui.tableWidget_errors.removeRow(row_no)
-
     def _set_last_month_color(self):
         for row_no in range(self.ui.tableWidget_errors.rowCount()):
             case_date = self.ui.tableWidget_errors.item(row_no, 1).text()
