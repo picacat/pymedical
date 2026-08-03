@@ -113,7 +113,18 @@ class CheckCard(QtWidgets.QMainWindow):
         apply_type_sql = nhi_utils.get_apply_type_sql(self.apply_type)
 
         sql = f'''
-            SELECT * FROM cases
+            SELECT
+                CaseKey, CaseDate, Period, PatientKey, Name, Share,
+                Card, Continuance, DiseaseCode1, DiseaseName1,
+                TreatType, Doctor, RegistType,
+                (SELECT d.Days FROM dosage d
+                  WHERE d.CaseKey = cases.CaseKey AND d.MedicineSet = 1
+                  LIMIT 1) AS PresDays,
+                (SELECT ce.Content FROM caseextend ce
+                  WHERE ce.CaseKey = cases.CaseKey
+                    AND ce.ExtendType = "整合醫療照護"
+                  LIMIT 1) AS IntegrateCare
+            FROM cases
             WHERE
                 (CaseDate BETWEEN "{start_date}" AND "{end_date}") AND
                 (cases.InsType = "健保") AND
@@ -129,6 +140,17 @@ class CheckCard(QtWidgets.QMainWindow):
 
     def start_check(self):
         self.read_data()
+
+        # CaseKey → 整合醫療照護。read_data 已經帶回來了，
+        # _calculate_integrate_count 與 _set_integrate_limit 不必再逐筆查。
+        self._integrate_care = {
+            string_utils.xstr(r["CaseKey"]): string_utils.xstr(r.get("IntegrateCare"))
+            for r in self.rows
+        }
+        self._regist_type = {
+            string_utils.xstr(r["CaseKey"]): string_utils.xstr(r["RegistType"])
+            for r in self.rows
+        }
 
         self.ui.tableWidget_errors.setRowCount(0)
         for row in self.rows:
@@ -152,7 +174,10 @@ class CheckCard(QtWidgets.QMainWindow):
 
     def _calculate_integrate_count(self, case_key, patient_key):
         # 1. 先確認是否為整合醫療案件，若不是則直接過關
-        if case_utils.get_case_extend(self.database, case_key, "整合醫療照護") != "Y":
+        # if case_utils.get_case_extend(self.database, case_key, "整合醫療照護") != "Y":
+        #     return
+
+        if self._integrate_care.get(case_key) != "Y":
             return
 
         # 2. 取得目前次數
@@ -281,9 +306,10 @@ class CheckCard(QtWidgets.QMainWindow):
                             pass
                             # error_message.append('療程未滿6次')
                         else:
-                            regist_type = case_utils.get_case_field_value(
-                                self.database, case_key, "RegistType"
-                            )
+                            # regist_type = case_utils.get_case_field_value(
+                            #     self.database, case_key, "RegistType"
+                            # )
+                            regist_type = self._regist_type.get(case_key, "")
                             if (
                                 regist_type in nhi_utils.LONG_TERM_CARE
                                 or next_treat_type in nhi_utils.ALL_CARE_TREAT
@@ -519,29 +545,12 @@ class CheckCard(QtWidgets.QMainWindow):
             if remove_flag is not None and remove_flag.text() == "!":
                 self.ui.tableWidget_errors.removeRow(row_no)
 
-    def _check_remove_need(self, row_no):
+    def _set_last_month_color(self):
         start_date = date_utils.get_start_date_by_year_month(
             self.apply_year, self.apply_month
         )
-        patient_key = self.ui.tableWidget_errors.item(row_no, 3).text()
-        card = self.ui.tableWidget_errors.item(row_no, 6).text()
-        sql = f'''
-            SELECT CaseKey FROM cases
-            WHERE
-                PatientKey = {patient_key} AND
-                Card = "{card}" AND
-                CaseDate >= "{start_date}"
-        '''
-        rows = self.database.select_record(sql)
-        if len(rows) <= 0:
-            self.ui.tableWidget_errors.removeRow(row_no)
-
-    def _set_last_month_color(self):
         for row_no in range(self.ui.tableWidget_errors.rowCount()):
             case_date = self.ui.tableWidget_errors.item(row_no, 1).text()
-            start_date = date_utils.get_start_date_by_year_month(
-                self.apply_year, self.apply_month
-            )
             if datetime.datetime.strptime(
                 case_date, "%Y-%m-%d"
             ) < datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"):
@@ -555,7 +564,14 @@ class CheckCard(QtWidgets.QMainWindow):
             row_no = self.ui.tableWidget_errors.rowCount()
             self.ui.tableWidget_errors.setRowCount(row_no + 1)
 
-        pres_days = case_utils.get_pres_days(self.database, row["CaseKey"])
+        # pres_days = case_utils.get_pres_days(self.database, row["CaseKey"])
+        # 原本每列各查一次 dosage。refresh_medical_record 走另一支 SQL，
+        # 取不到就退回原本的查法。
+        if "PresDays" in row:
+            pres_days = number_utils.get_integer(row["PresDays"])
+        else:
+            pres_days = case_utils.get_pres_days(self.database, row["CaseKey"])
+
         year = row["CaseDate"].year
         month = row["CaseDate"].month
         day = row["CaseDate"].day
