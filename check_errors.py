@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import datetime
+from collections import Counter
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QPushButton
@@ -39,6 +40,8 @@ class CheckErrors(QtWidgets.QMainWindow):
         self.check_chronic_pres_days = self.system_settings.field("慢性病開藥檢查")
         self.no_massage = self.system_settings.field("不申報傷科治療")
         self.rows = None
+        self._cache = {}
+        self._run_cache = {}
 
         self._set_ui()
         self._set_signal()
@@ -147,6 +150,7 @@ class CheckErrors(QtWidgets.QMainWindow):
 
     def start_check(self):
         self.read_data()
+        self._run_cache = {}
 
         if self.row_count() <= 0:
             return
@@ -159,6 +163,7 @@ class CheckErrors(QtWidgets.QMainWindow):
 
         self.ui.tableWidget_errors.setRowCount(0)
         for row_no, row in enumerate(self.rows):
+            self._cache = {}
             error_messages = []
             error_messages += self._check_patient(row)
             error_messages += self._check_medical_record(row)
@@ -293,27 +298,29 @@ class CheckErrors(QtWidgets.QMainWindow):
         error_message = None
 
         case_key = row["CaseKey"]
-        treat_type = string_utils.xstr(row["TreatType"])
         treatment = string_utils.xstr(row["Treatment"])
-        correct_treat_type = self._get_treat_type(case_key)
 
-        sql = f"""
-            SELECT PrescriptKey FROM prescript
-            WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = 1 AND
-                MedicineType IN ("穴道", "處置")
-            LIMIT 1
-        """
-        rows = self.database.select_record(sql)
-        if treatment == "" and len(rows) > 0:
+        # sql = f"""
+        #     SELECT PrescriptKey FROM prescript
+        #     WHERE
+        #         CaseKey = {case_key} AND
+        #         MedicineSet = 1 AND
+        #         MedicineType IN ("穴道", "處置")
+        #     LIMIT 1
+        # """
+        # rows = self.database.select_record(sql)
+        # if treatment == "" and len(rows) > 0:
+        #     error_message = "有處置方式無健保處置醫令"
+        # elif treatment != "" and len(rows) <= 0:
+        #     error_message = "有健保處置醫令無處置方式"
+        has_treat_prescript = any(
+            string_utils.xstr(r["MedicineType"]) in ("穴道", "處置")
+            for r in self._prescript_rows_of_set(case_key, 1)
+        )
+        if treatment == "" and has_treat_prescript:
             error_message = "有處置方式無健保處置醫令"
-        elif treatment != "" and len(rows) <= 0:
+        elif treatment != "" and not has_treat_prescript:
             error_message = "有健保處置醫令無處置方式"
-
-        # if treat_type != correct_treat_type:
-        #     error_message = '就醫類別錯誤'
-
         return error_message
 
     def _check_medical_record(self, row):
@@ -516,21 +523,13 @@ class CheckErrors(QtWidgets.QMainWindow):
             special_code = ""
             for i in range(len(disease_list)):
                 disease_code = disease_list[i]
-                special_code = case_utils.get_disease_special_code(
-                    self.database,
-                    disease_code,
-                )
+                # special_code = case_utils.get_disease_special_code(
+                #     self.database,
+                #     disease_code,
+                # )
+                special_code = self._disease_special_code(disease_code)
                 if special_code != "":
                     break
-
-            # if case_utils.get_case_extend(self.database, case_key, '不申報慢性病') == 'Y':
-            #     pass
-            # elif special_code != '' and string_utils.xstr(row['SpecialCode']).strip() == '':
-            #     error_messages.append('診斷碼為慢性病但病歷無慢性病代碼')
-
-            # if special_code == '' and treat_type == '內科' and \
-            #    share_type not in nhi_utils.INFECTIOUS_INJURY_TYPE and pres_days > 7:
-            #     error_messages.append('診斷碼非慢性病但內科開藥超過七日')
 
             if (
                 case_utils.get_case_extend(self.database, case_key, "不申報慢性病")
@@ -578,9 +577,10 @@ class CheckErrors(QtWidgets.QMainWindow):
 
                 #     error_messages.append(f'{disease_name}不可申報')
 
-                if disease_code != "" and not case_utils.is_disease_code_exist(
-                    self.database, disease_code
-                ):
+                # if disease_code != "" and not case_utils.is_disease_code_exist(
+                #     self.database, disease_code
+                # ):
+                if disease_code != "" and not self._disease_code_exist(disease_code):
                     disease_code = self._correct_invalid_disease(case_key, i)
                     if disease_code is None:
                         error_messages.append(f"診斷碼 {disease_code} 無效")
@@ -646,17 +646,75 @@ class CheckErrors(QtWidgets.QMainWindow):
 
         return error_messages
 
+    def _disease_code_exist(self, disease_code):
+        """診斷碼是否存在。
+
+        查的是診斷碼參考表——整批檢查期間不會變動，而同一個診斷碼在
+        一個月的病歷裡會被問上百次。快取到整批結束為止。
+        """
+        key = f"exist:{disease_code}"
+        if key not in self._run_cache:
+            self._run_cache[key] = case_utils.is_disease_code_exist(
+                self.database, disease_code
+            )
+        return self._run_cache[key]
+
+    def _disease_code_neat(self, disease_code):
+        key = f"neat:{disease_code}"
+        if key not in self._run_cache:
+            self._run_cache[key] = case_utils.is_disease_code_neat(
+                self.database, disease_code
+            )
+        return self._run_cache[key]
+
+    def _disease_special_code(self, disease_code):
+        key = f"special:{disease_code}"
+        if key not in self._run_cache:
+            self._run_cache[key] = case_utils.get_disease_special_code(
+                self.database, disease_code
+            )
+        return self._run_cache[key]
+
+    def _prescript_rows(self, case_key):
+        """整張病歷的處方只取一次，各項檢查共用。
+
+        刻意不加 MedicineSet 條件——各檢查需要的 set 不同
+        （處方檢查用 1、加強照護用 11），一次全取回來在 Python 過濾，
+        比每個檢查各發一次查詢便宜得多。
+        """
+        if "prescript" not in self._cache:
+            self._cache["prescript"] = self.database.select_record(
+                "SELECT MedicineSet, MedicineType, MedicineName, InsCode, Dosage "
+                "FROM prescript WHERE CaseKey = %s",
+                params=(case_key,),
+            )
+        return self._cache["prescript"]
+
+    def _prescript_rows_of_set(self, case_key, medicine_set):
+        """取指定 MedicineSet 的處方。"""
+        return [
+            r
+            for r in self._prescript_rows(case_key)
+            if number_utils.get_integer(r["MedicineSet"]) == medicine_set
+        ]
+
     def _check_prescript(self, row):
         error_messages = []
 
         case_key = row["CaseKey"]
-        sql = f"""
-            SELECT MedicineType, MedicineName, InsCode, Dosage FROM prescript
-            WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = 1
-        """
-        prescript_rows = self.database.select_record(sql)
+        # 原本這裡自己發一次 SELECT ... WHERE MedicineSet = 1。
+        # 改成從共用快取取，但【必須自己過濾 MedicineSet == 1】——
+        # 共用查詢是整張病歷的所有 set。
+        prescript_rows = self._prescript_rows_of_set(case_key, 1)
+
+        # sql = f"""
+        #     SELECT MedicineType, MedicineName, InsCode, Dosage FROM prescript
+        #     WHERE
+        #         CaseKey = {case_key} AND
+        #         MedicineSet = 1
+        # """
+        # prescript_rows = self.database.select_record(sql)
+
         if (
             len(prescript_rows) <= 0
             and string_utils.xstr(row["TreatType"]) != "醫療諮詢"
@@ -688,6 +746,15 @@ class CheckErrors(QtWidgets.QMainWindow):
         treat_start_times, treat_end_times, treat_times = None, None, None
         treat_position_count, auxiliary_treat_count = 0, 0
         use_infectious_drug = False
+
+        # 重複開立的判斷原本對每個藥品各發一次 SELECT，資料其實已經在
+        # prescript_rows 裡。改用計數，13 次查詢變 0 次。
+        name_counter = Counter(
+            (string_utils.xstr(r["MedicineType"]), string_utils.xstr(r["MedicineName"]))
+            for r in prescript_rows
+            if string_utils.xstr(r["MedicineType"]) not in ("穴道", "處置")
+        )
+
         for prescript_row in prescript_rows:
             ins_code = string_utils.xstr(prescript_row["InsCode"])
 
@@ -710,29 +777,47 @@ class CheckErrors(QtWidgets.QMainWindow):
             medicine_type = string_utils.xstr(prescript_row["MedicineType"])
             medicine_name = string_utils.xstr(prescript_row["MedicineName"])
 
-            sql = f'''
-                SELECT PrescriptKey FROM prescript
-                WHERE
-                    CaseKey = {case_key} AND
-                    MedicineSet = 1 AND
-                    MedicineType = "{medicine_type}" AND
-                    MedicineType NOT IN ("穴道", "處置") AND
-                    MedicineName = "{medicine_name}"
-            '''
-            try:
-                rows = self.database.select_record(sql)
-            except Exception:
-                if ins_code in [None, ""]:
-                    pass
-                else:
+            # sql = f'''
+            #     SELECT PrescriptKey FROM prescript
+            #     WHERE
+            #         CaseKey = {case_key} AND
+            #         MedicineSet = 1 AND
+            #         MedicineType = "{medicine_type}" AND
+            #         MedicineType NOT IN ("穴道", "處置") AND
+            #         MedicineName = "{medicine_name}"
+            # '''
+            # try:
+            #     rows = self.database.select_record(sql)
+            # except Exception:
+            #     if ins_code in [None, ""]:
+            #         pass
+            #     else:
+            #         total_ins_medicine += 1
+            #         error_messages.append(
+            #             f"{medicine_name}處方名稱錯誤(不可以使用雙引號)"
+            #         )  # 2026-01-30
+
+            #     continue
+
+            # if len(rows) >= 2:
+            #     error = f"{medicine_name}重複開立"
+            #     if error not in error_messages:
+            #         error_messages.append(error)
+
+            # 原本靠 SQL 語法錯誤來偵測名稱含雙引號（try/except），
+            # 那會把真正的資料庫錯誤一起吞掉。改成明確檢查。
+            if '"' in medicine_name or "'" in medicine_name:
+                if ins_code not in [None, ""]:
                     total_ins_medicine += 1
                     error_messages.append(
-                        f"{medicine_name}處方名稱錯誤(不可以使用雙引號)"
-                    )  # 2026-01-30
-
+                        f"{medicine_name}處方名稱錯誤(不可以使用引號)"
+                    )
                 continue
 
-            if len(rows) >= 2:
+            if (
+                medicine_type not in ("穴道", "處置")
+                and name_counter[(medicine_type, medicine_name)] >= 2
+            ):
                 error = f"{medicine_name}重複開立"
                 if error not in error_messages:
                     error_messages.append(error)
@@ -966,6 +1051,7 @@ class CheckErrors(QtWidgets.QMainWindow):
             self.database,
             self.system_settings,
             case_key=row["CaseKey"],
+            case_date=row["CaseDate"],
             reg_type=string_utils.xstr(row["RegistType"]),
             treat_type=treat_type,
             share=string_utils.xstr(row["Share"]),
@@ -1594,15 +1680,19 @@ class CheckErrors(QtWidgets.QMainWindow):
         ):
             return error_messages
 
-        case_key = row["CaseKey"]
-        sql = f"""
-            SELECT * FROM prescript
-            WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = 11
-        """
-        prescript_rows = self.database.select_record(sql)
-        if len(prescript_rows) <= 0:
+        # case_key = row["CaseKey"]
+        # sql = f"""
+        #     SELECT * FROM prescript
+        #     WHERE
+        #         CaseKey = {case_key} AND
+        #         MedicineSet = 11
+        # """
+        # prescript_rows = self.database.select_record(sql)
+        # if len(prescript_rows) <= 0:
+        #     error_messages.append(f"{treat_type}無加強照護處置項目")
+
+        # return error_messages
+        if len(self._prescript_rows_of_set(row["CaseKey"], 11)) <= 0:
             error_messages.append(f"{treat_type}無加強照護處置項目")
 
         return error_messages
@@ -1673,46 +1763,67 @@ class CheckErrors(QtWidgets.QMainWindow):
 
         return error_messages
 
+        # def _check_duplicate_treat(self, row):
+        error_messages = []
+
+        # case_key = row["CaseKey"]
+
+        # sql = f"""
+        #     SELECT PrescriptKey FROM prescript
+        #     WHERE
+        #         CaseKey = {case_key} AND
+        #         MedicineSet = 1 AND
+        #         MedicineType IN ("穴道", "處置") AND
+        #         MedicineName LIKE "治療時間%"
+        # """
+        # rows = self.database.select_record(sql)
+        # if len(rows) >= 2:
+        #     error_messages.append("治療時間重複")
+
+        # sql = f"""
+        #     SELECT PrescriptKey FROM prescript
+        #     WHERE
+        #         CaseKey = {case_key} AND
+        #         MedicineSet = 1 AND
+        #         MedicineType IN ("穴道", "處置") AND
+        #         MedicineName LIKE "治療開始%"
+        # """
+        # rows = self.database.select_record(sql)
+        # if len(rows) >= 2:
+        #     error_messages.append("治療開始時間重複")
+
+        # sql = f"""
+        #     SELECT PrescriptKey FROM prescript
+        #     WHERE
+        #         CaseKey = {case_key} AND
+        #         MedicineSet = 1 AND
+        #         MedicineType IN ("穴道", "處置") AND
+        #         MedicineName LIKE "治療結束%"
+        # """
+        # rows = self.database.select_record(sql)
+        # if len(rows) >= 2:
+        #     error_messages.append("治療結束時間重複")
+
+        # return error_messages
+
     def _check_duplicate_treat(self, row):
         error_messages = []
 
-        case_key = row["CaseKey"]
+        # 原本這裡發三個 SELECT 數筆數。資料在 _check_prescript 就已經
+        # 撈回來了，直接從共用快取過濾，三次查詢變零次。
+        names = [
+            string_utils.xstr(r["MedicineName"])
+            for r in self._prescript_rows_of_set(row["CaseKey"], 1)
+            if string_utils.xstr(r["MedicineType"]) in ("穴道", "處置")
+        ]
 
-        sql = f"""
-            SELECT PrescriptKey FROM prescript
-            WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = 1 AND
-                MedicineType IN ("穴道", "處置") AND
-                MedicineName LIKE "治療時間%"
-        """
-        rows = self.database.select_record(sql)
-        if len(rows) >= 2:
-            error_messages.append("治療時間重複")
-
-        sql = f"""
-            SELECT PrescriptKey FROM prescript
-            WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = 1 AND
-                MedicineType IN ("穴道", "處置") AND
-                MedicineName LIKE "治療開始%"
-        """
-        rows = self.database.select_record(sql)
-        if len(rows) >= 2:
-            error_messages.append("治療開始時間重複")
-
-        sql = f"""
-            SELECT PrescriptKey FROM prescript
-            WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = 1 AND
-                MedicineType IN ("穴道", "處置") AND
-                MedicineName LIKE "治療結束%"
-        """
-        rows = self.database.select_record(sql)
-        if len(rows) >= 2:
-            error_messages.append("治療結束時間重複")
+        for prefix, message in (
+            ("治療時間", "治療時間重複"),
+            ("治療開始", "治療開始時間重複"),
+            ("治療結束", "治療結束時間重複"),
+        ):
+            if sum(1 for name in names if name.startswith(prefix)) >= 2:
+                error_messages.append(message)
 
         return error_messages
 

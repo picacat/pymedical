@@ -181,6 +181,9 @@ class CheckDatabase(QtWidgets.QDialog):
             "Position1",
         )
         self.database.add_index_if_not_exists("cases", index_name, fields)
+        self.database.add_index_if_not_exists(
+            "caseextend", "idx_case_type", ["CaseKey", "ExtendType"]
+        )
 
     def _check_cases(self):
         try:
@@ -373,6 +376,9 @@ class CheckDatabase(QtWidgets.QDialog):
             ]
 
         self._exec_process(process_list)
+        self.database.add_index_if_not_exists(
+            "dosage", "idx_case_set", ["CaseKey", "MedicineSet"]
+        )
 
     def _check_prescript_index(self):
         index_name = "idx_update_optimization"

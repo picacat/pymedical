@@ -263,11 +263,7 @@ def get_regist_fee(
 
         if "針" in treat_type:
             treat_type = "針灸治療"
-        elif "傷科" in treat_type:
-            treat_type = "傷科治療"
-        elif "脫臼" in treat_type:
-            treat_type = "傷科治療"
-        elif "骨折" in treat_type:
+        elif "傷科" in treat_type or "脫臼" in treat_type or "骨折" in treat_type:
             treat_type = "傷科治療"
         else:
             treat_type = "內科"
@@ -1441,7 +1437,10 @@ def get_ins_fee(database, system_settings, table_widget_ins_care=None, **kwargs)
         integrate_care = None
 
     case_key = kwargs["case_key"]
-    case_date, _ = case_utils.get_case_date(database, case_key)
+    # case_date, _ = case_utils.get_case_date(database, case_key)
+    case_date = kwargs.get("case_date")
+    if case_date is None:
+        case_date, _ = case_utils.get_case_date(database, case_key)
 
     if kwargs["treat_type"] in nhi_utils.CARE_TREAT:
         ins_fee = get_ins_special_care_fee(
@@ -3315,9 +3314,12 @@ def get_discount_fee(system_settings, self_total_fee, discount_rate):
 
     if rounded_type == "無條件進位":
         if discount_rate == 100:  # 判斷是否要無條件進位或捨去
-            if remainder_type == "尾數為0" and self_total_fee % 10 == 0:
-                return 0
-            elif self_total_fee % 10 == 0 or self_total_fee % 5 == 0:
+            if (
+                remainder_type == "尾數為0"
+                and self_total_fee % 10 == 0
+                or self_total_fee % 10 == 0
+                or self_total_fee % 5 == 0
+            ):
                 return 0
 
     discount_fee = number_utils.get_integer(
