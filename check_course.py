@@ -32,6 +32,7 @@ class CheckCourse(QtWidgets.QMainWindow):
         self.ui = None
         self.errors = 0
         self.rows = None
+        self._regist_type = {}
 
         self._set_ui()
         self._set_signal()
@@ -121,7 +122,11 @@ class CheckCourse(QtWidgets.QMainWindow):
                 CaseKey, CaseDate,
                 Period, PatientKey, Name, Share, Card, Continuance,
                 DiseaseCode1, DiseaseName1, Treatment, Doctor,
-                AcupunctureFee, MassageFee, DislocateFee
+                AcupunctureFee, MassageFee, DislocateFee,
+                RegistType,
+                (SELECT d.Days FROM dosage d
+                  WHERE d.CaseKey = cases.CaseKey AND d.MedicineSet = 1
+                  LIMIT 1) AS PresDays
             FROM cases
             WHERE
                 (CaseDate BETWEEN "{last_start_date}" AND "{end_date}") AND
@@ -138,13 +143,31 @@ class CheckCourse(QtWidgets.QMainWindow):
 
     def start_check(self):
         self.read_data()
+        self._regist_type = {
+            string_utils.xstr(r["CaseKey"]): string_utils.xstr(r["RegistType"])
+            for r in self.rows
+        }
 
-        self.ui.tableWidget_errors.setRowCount(0)
-        for row in self.rows:
-            self._insert_record(row)
+        # self.ui.tableWidget_errors.setRowCount(0)
+        # for row in self.rows:
+        #     self._insert_record(row)
 
-        self._remove_useless_record()
-        self._set_last_month_color()
+        tw = self.ui.tableWidget_errors
+        tw.setUpdatesEnabled(False)
+        tw.setSortingEnabled(False)
+        try:
+            tw.setRowCount(0)
+            for row in self.rows:
+                self._insert_record(row)
+
+            self._remove_useless_record()
+            self._set_last_month_color()
+        finally:
+            tw.setSortingEnabled(True)
+            tw.setUpdatesEnabled(True)
+
+        # self._remove_useless_record()
+        # self._set_last_month_color()
         self.ui.tableWidget_errors.setAlternatingRowColors(True)
 
         self._check_course()
@@ -191,6 +214,7 @@ class CheckCourse(QtWidgets.QMainWindow):
                         DATE(CaseDate) >= "{previous_case_date}" AND DATE(CaseDate) < "{case_date}" AND
                         Card = "{card}" AND
                         Continuance < {course}
+                    LIMIT 1
                 '''
                 rows = self.database.select_record(sql)
                 if len(rows) <= 0:
@@ -226,9 +250,10 @@ class CheckCourse(QtWidgets.QMainWindow):
             delta = date_utils.str_to_date(case_date) - date_utils.str_to_date(
                 previous_case_date
             )
-            regist_type = case_utils.get_case_field_value(
-                self.database, case_key, "RegistType"
-            )
+            # regist_type = case_utils.get_case_field_value(
+            #     self.database, case_key, "RegistType"
+            # )
+            regist_type = self._regist_type.get(case_key, "")
             card = self.ui.tableWidget_errors.item(row_no, 6).text()
             if (
                 delta.days < 30
@@ -679,23 +704,6 @@ class CheckCourse(QtWidgets.QMainWindow):
     #         if remove_flag is not None and remove_flag.text() == '!':
     #             self.ui.tableWidget_errors.removeRow(row_no)
 
-    def _check_remove_need(self, row_no):
-        start_date = date_utils.get_start_date_by_year_month(
-            self.apply_year, self.apply_month
-        )
-        patient_key = self.ui.tableWidget_errors.item(row_no, 3).text()
-        card = self.ui.tableWidget_errors.item(row_no, 6).text()
-        sql = f'''
-            SELECT CaseKey FROM cases
-            WHERE
-                PatientKey = {patient_key} AND
-                Card = "{card}" AND
-                CaseDate >= "{start_date}"
-        '''
-        rows = self.database.select_record(sql)
-        if len(rows) <= 0:
-            self.ui.tableWidget_errors.removeRow(row_no)
-
     def _set_last_month_color(self):
         for row_no in range(self.ui.tableWidget_errors.rowCount()):
             case_date = self.ui.tableWidget_errors.item(row_no, 1).text()
@@ -719,7 +727,17 @@ class CheckCourse(QtWidgets.QMainWindow):
         year = row["CaseDate"].year
         month = row["CaseDate"].month
         day = row["CaseDate"].day
-        pres_days = case_utils.get_pres_days(self.database, case_key)
+        # pres_days = case_utils.get_pres_days(self.database, case_key)
+        # if pres_days <= 0:
+        #     pres_days = None
+
+        # 原本每列各查一次 dosage，改由 read_data 的子查詢一次帶回來。
+        # refresh_medical_record 走的是另一支 SQL，取不到就退回原本的查法。
+        if "PresDays" in row:
+            pres_days = number_utils.get_integer(row["PresDays"])
+        else:
+            pres_days = case_utils.get_pres_days(self.database, case_key)
+
         if pres_days <= 0:
             pres_days = None
 
