@@ -419,6 +419,11 @@ class RestoreWorker(QObject):
                 user=p["user"],
                 password=p["password"],
                 charset="utf8mb4",
+                # 一定要明確指定 collation。mysql-connector-python 內建一張
+                # charset → collation 對照表，utf8mb4 會對到 MySQL 8 的預設值
+                # utf8mb4_0900_ai_ci；MariaDB 沒有這個 collation，連線當下就會
+                # 拋 1273 Unknown collation，連第一次查詢都到不了。
+                collation="utf8mb4_general_ci",
                 connection_timeout=10,
                 # mysql.connector 預設 autocommit=False。若不明確開啟，
                 # 步驟 3 的檢查查詢會開啟一個交易並持續到步驟 4 第一句
@@ -1031,6 +1036,11 @@ class SqlRestoreWindow(QWidget):
                 user=self.user_input.text().strip(),
                 password=self.password_input.text(),
                 charset="utf8mb4",
+                # 一定要明確指定 collation。mysql-connector-python 內建一張
+                # charset → collation 對照表，utf8mb4 會對到 MySQL 8 的預設值
+                # utf8mb4_0900_ai_ci；MariaDB 沒有這個 collation，連線當下就會
+                # 拋 1273 Unknown collation，連第一次查詢都到不了。
+                collation="utf8mb4_general_ci",
                 connection_timeout=10,
             )
             pcur = probe.cursor()
