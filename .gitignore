@@ -11,7 +11,7 @@
 *.pyc
 *.sqlite
 *.zip
-cshis.dll
+*.dll
 *診所*.json
 tts_cache/
 bq.conf
