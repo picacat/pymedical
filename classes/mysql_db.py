@@ -706,8 +706,13 @@ class MySQLDatabase(DatabaseInterface):
                         flags=re.IGNORECASE,
                     )
                     # 若未指定 ENGINE，則補上 ENGINE 與 CHARSET 設定
+                    # if "ENGINE=" not in statement.upper():
+                    #     statement += f" ENGINE={engine} DEFAULT CHARSET={self.charset}"
                     if "ENGINE=" not in statement.upper():
-                        statement += f" ENGINE={engine} DEFAULT CHARSET={self.charset}"
+                        statement += (
+                            f" ENGINE={engine} DEFAULT CHARSET={self.charset} "
+                            f"COLLATE {self.charset}_{COLLATION_SUFFIX}"
+                        )
 
                 final_statements.append(statement)
 

@@ -727,7 +727,29 @@ class RestoreWorker(QObject):
                 cols_by_table = defaultdict(list)
                 for table, col, cs in text_cols:
                     cols_by_table[table].append((col, cs))
-                tables_need_rebuild = set(cols_by_table.keys())
+
+                # tables_need_rebuild = set(cols_by_table.keys())
+
+                # 原本是 tables_need_rebuild = set(cols_by_table.keys())，
+                # 也就是「字元集不是 utf8mb4」的表才重建。那會漏掉
+                # 「字元集已是 utf8mb4、但 collation 不是目標值」的表——
+                # MariaDB 11.4 起 utf8mb4 的預設 collation 是 uca1400_ai_ci，
+                # 沒帶 COLLATE 的 ALTER 全會落在那裡，而它們的
+                # CHARACTER_SET_NAME 就是 utf8mb4，上面那個查詢篩不出來。
+                cur.execute(
+                    """
+                    SELECT DISTINCT c.TABLE_NAME
+                    FROM information_schema.COLUMNS c
+                    JOIN information_schema.TABLES t
+                      ON t.TABLE_SCHEMA = c.TABLE_SCHEMA
+                     AND t.TABLE_NAME   = c.TABLE_NAME
+                    WHERE c.TABLE_SCHEMA = %s
+                      AND t.TABLE_TYPE = 'BASE TABLE'
+                      AND c.COLLATION_NAME IS NOT NULL
+                      AND c.COLLATION_NAME <> %s""",
+                    (db, TARGET_COLLATION),
+                )
+                tables_need_rebuild = {r[0] for r in cur.fetchall()}
 
                 lossy = []
                 n_tables_to_check = len(cols_by_table)
@@ -826,7 +848,7 @@ class RestoreWorker(QObject):
                         + f"。耗時 {fmt_secs(t_check)}。"
                     )
                 else:
-                    self.log("所有文字欄位已是 utf8mb4，無須檢查。")
+                    self.log("所有文字欄位已是 utf8mb4，無須無損檢查。")
             else:
                 self.log("\n[步驟 3/5] 未勾選字元集轉換，略過。")
 
@@ -853,7 +875,10 @@ class RestoreWorker(QObject):
                             f"COLLATE {TARGET_COLLATION}"
                         )
                         notes.append("字元集")
-                    elif not (tbl_coll or "").startswith("utf8mb4"):
+                    # elif not (tbl_coll or "").startswith("utf8mb4"):
+                    # 原本判斷 startswith("utf8mb4")——但 utf8mb4_uca1400_ai_ci
+                    # 也是 utf8mb4 開頭，會被判定成「已經正確」而完全不處理。
+                    elif (tbl_coll or "") != TARGET_COLLATION:
                         # 沒有非 utf8mb4 的文字欄位，只是預設字元集不符：
                         # 改中繼資料即可，不需重建資料
                         specs.append(
