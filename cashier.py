@@ -251,7 +251,7 @@ class Cashier(QtWidgets.QMainWindow):
 
         if (
             ins_type != "健保"
-            or card in nhi_utils.ABNORMAL_CARD
+            or card in ["欠卡"] + nhi_utils.ABNORMAL_CARD
             or xcard in nhi_utils.ABNORMAL_CARD
         ):
             ic_wrote = "略"
