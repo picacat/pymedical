@@ -50,6 +50,28 @@
      讓「經本工具還原的資料庫」與「程式後續新建的資料表」collation 不同，
      JOIN/UNION 時可能拋 Illegal mix of collations（1267）。詳見
      TARGET_COLLATION 的註解。
+
+本版（配合 backup.py 全面改用 mysqldump）再新增：
+  L. 認得 backup.py 產生的非資料表檔案，不再把它們當成資料表匯入：
+       00_schema.sql   只讀取來源資料庫的字元集，【不執行】。
+                       它含有 USE `來源庫`，直接匯入會把 session 切走，
+                       在來源庫名下建出一個多餘的資料庫，而目標庫的
+                       字元集完全沒被設定。
+       zz_views.sql    檢視表依賴基底表，必須排在所有資料表之後匯入。
+       zz_routines.sql 同上。
+       zz_grants.sql   全是註解，完全不匯入。
+  M. 支援 binary 編碼的備份檔。backup.py 已改用
+     --default-character-set=binary --hex-blob 匯出（避免 Big5 舊資料
+     在匯出時被轉碼），檔頭因此寫著 SET NAMES binary。匯入時沿用
+     binary 是正確的（原樣灌回、不轉碼），但 binary【不可】拿去當
+     資料庫的預設字元集——那會讓之後在該庫新建的資料表全部變成
+     binary，中文無法正常比較排序。改為從 00_schema.sql 讀取來源
+     資料庫真正的字元集。
+  N. 步驟 3 的文字欄位查詢加上 TABLE_TYPE = 'BASE TABLE' 過濾。
+     zz_views.sql 匯入的檢視表欄位原本會被撈進來做全表掃描檢查，
+     白花時間，而步驟 4 只處理 BASE TABLE，永遠不會真的去 ALTER 它。
+  O. 開始前比對 00_manifest.txt：檔案缺漏、大小不符、或備份當下就已
+     標記 FAIL，都在確認對話框中明確列出。
 """
 
 import configparser
@@ -79,9 +101,34 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-CHARSET_CHOICES = ["自動偵測", "utf8mb4", "utf8mb3", "utf8", "big5", "latin1"]
+CHARSET_CHOICES = [
+    "自動偵測",
+    "utf8mb4",
+    "utf8mb3",
+    "utf8",
+    "big5",
+    "latin1",
+    "binary",
+]
 ENGINE_FOLLOW_FILE = "依備份檔（建議）"
 ENGINE_CHOICES = [ENGINE_FOLLOW_FILE, "MyISAM", "InnoDB"]
+
+# ---------------------------------------------------------------------------
+# backup.py 產生的非資料表檔案
+#
+# 檔名前綴是刻意設計的：00_ 排在最前、zz_ 排在最後，sorted() 掃目錄
+# 剛好就是正確的還原順序。但它們的處理方式各不相同，不能一視同仁地
+# 當作資料表匯入。
+# ---------------------------------------------------------------------------
+SCHEMA_FILE = "00_schema.sql"  # 只讀取來源字元集，不執行
+VIEWS_FILE = "zz_views.sql"  # 依賴基底表，最後匯入
+ROUTINES_FILE = "zz_routines.sql"  # 同上
+GRANTS_FILE = "zz_grants.sql"  # 純註解，完全不匯入
+MANIFEST_FILE = "00_manifest.txt"
+
+INFO_FILES = {SCHEMA_FILE}  # 只讀取，不匯入
+SKIP_FILES = {GRANTS_FILE}  # 完全略過
+LAST_FILES = [VIEWS_FILE, ROUTINES_FILE]  # 排在所有資料表之後
 
 # 還原後轉換 utf8mb4 時採用的 collation。
 #
@@ -143,6 +190,116 @@ def fmt_secs(seconds):
     return f"{h} 小時 {m} 分 {s} 秒"
 
 
+def split_sql_files(folder):
+    """
+    把目錄中的 .sql 分成三類。
+
+    回傳 (table_files, last_files, info_files)：
+      table_files — 一般資料表，照字母序匯入
+      last_files  — 檢視表、routines，必須排在所有資料表之後
+      info_files  — 只讀取不匯入（目前只有 00_schema.sql）
+
+    zz_grants.sql 全是註解，直接排除。
+    """
+    try:
+        all_files = sorted(f for f in os.listdir(folder) if f.endswith(".sql"))
+    except OSError:
+        return [], [], []
+
+    table_files = [
+        f
+        for f in all_files
+        if f not in SKIP_FILES and f not in INFO_FILES and f not in LAST_FILES
+    ]
+    last_files = [f for f in LAST_FILES if f in all_files]
+    info_files = [f for f in INFO_FILES if f in all_files]
+    return table_files, last_files, info_files
+
+
+def read_source_db_charset(folder):
+    """
+    從 00_schema.sql 讀出來源資料庫的字元集與 collation。
+
+    這個檔的內容形如：
+        CREATE DATABASE IF NOT EXISTS `yokang` /*!40100 DEFAULT CHARACTER
+        SET utf8mb4 COLLATE utf8mb4_general_ci */;
+        USE `yokang`;
+
+    只解析、不執行——裡面的 USE 會把 session 切到來源資料庫名稱，
+    直接匯入會建出一個多餘的資料庫，而目標庫什麼都沒設定到。
+
+    回傳 (charset, collation)，讀不到則回傳 (None, None)。
+    """
+    try:
+        with open(
+            os.path.join(folder, SCHEMA_FILE), encoding="utf-8", errors="replace"
+        ) as f:
+            text = f.read()
+    except OSError:
+        return None, None
+
+    charset = re.search(r"CHARACTER\s+SET\s+(\w+)", text, re.IGNORECASE)
+    collation = re.search(r"COLLATE\s+(\w+)", text, re.IGNORECASE)
+    return (
+        charset.group(1) if charset else None,
+        collation.group(1) if collation else None,
+    )
+
+
+def verify_against_manifest(folder):
+    """
+    比對 00_manifest.txt 與實際檔案，回傳問題描述清單。
+
+    manifest 由 backup.py 產生，每行格式為：
+        檔名<TAB>位元組數<TAB>OK|FAIL<TAB>錯誤訊息
+
+    沒有 manifest（舊備份或其他工具產生）時回傳空清單，不視為錯誤。
+    """
+    path = os.path.join(folder, MANIFEST_FILE)
+    if not os.path.exists(path):
+        return []
+
+    problems = []
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+    except OSError as e:
+        return [f"無法讀取 {MANIFEST_FILE}：{e}"]
+
+    for line in lines:
+        if line.startswith("#") or not line.strip():
+            continue
+        parts = line.rstrip("\n").split("\t")
+        if len(parts) < 3:
+            continue
+
+        name, size, status = parts[0], parts[1], parts[2]
+        message = parts[3] if len(parts) > 3 else ""
+
+        if status != "OK":
+            problems.append(
+                f"{name}：備份當下就標記為 {status}"
+                + (f"（{message}）" if message else "")
+            )
+            continue
+
+        full_path = os.path.join(folder, name)
+        if not os.path.exists(full_path):
+            problems.append(f"{name}：manifest 有記錄但檔案不存在")
+            continue
+
+        try:
+            actual = os.path.getsize(full_path)
+        except OSError as e:
+            problems.append(f"{name}：無法取得檔案大小（{e}）")
+            continue
+
+        if str(actual) != size:
+            problems.append(f"{name}：大小不符（manifest {size}／實際 {actual}）")
+
+    return problems
+
+
 def detect_sql_charset(folder, sql_files, max_files=3, sample_bytes=4 * 1024 * 1024):
     """
     偵測 .sql 備份檔的內容編碼。回傳 (charset, 說明) 或 (None, 原因)。
@@ -152,6 +309,11 @@ def detect_sql_charset(folder, sql_files, max_files=3, sample_bytes=4 * 1024 * 1
       3. 位元組結構：整份樣本能以嚴格 UTF-8 解碼 → utf8mb4；
          否則能以 cp950（Big5 的 Windows 超集）解碼 → big5。
     純 ASCII 內容會被判為 utf8mb4，選任何編碼匯入結果皆相同，無影響。
+
+    注意：新版 backup.py 以 --default-character-set=binary 匯出，
+    檔頭會寫 SET NAMES binary，此處會如實回傳 "binary"。那是正確的
+    匯入編碼（原樣灌回、不轉碼），但不可拿去當資料庫的預設字元集，
+    呼叫端須另行處理。
     """
     samples = []
     for name in sql_files[:max_files]:
@@ -371,17 +533,26 @@ class RestoreWorker(QObject):
             t_start = time.time()
             t_import = t_check = t_alter = t_analyze = 0.0
 
-            sql_files = sorted(
-                f for f in os.listdir(p["sql_folder"]) if f.endswith(".sql")
-            )
+            # 資料表檔與物件檔分開：檢視表、routines 依賴基底表，
+            # 必須排在所有資料表之後；00_schema.sql 只讀不匯入。
+            table_files, last_files, info_files = split_sql_files(p["sql_folder"])
+            sql_files = table_files + last_files
             total = len(sql_files)
             if total == 0:
-                raise RuntimeError("指定目錄中沒有任何 .sql 檔案。")
+                raise RuntimeError("指定目錄中沒有任何可匯入的 .sql 檔案。")
 
-            self.log(f"找到 {total} 個 .sql 檔案。")
+            self.log(f"找到 {len(table_files)} 個資料表檔案。")
+            if last_files:
+                self.log(
+                    "另有物件檔案（將排在資料表之後匯入）：" + "、".join(last_files)
+                )
+            if info_files:
+                self.log(f"參考檔案（只讀取不匯入）：{'、'.join(info_files)}")
 
+            # 編碼偵測只看資料表檔——00_schema.sql 與 zz_grants.sql 是
+            # backup.py 自行產生的 UTF-8 文字，不代表備份資料的編碼。
             if file_charset == "自動偵測":
-                detected, reason = detect_sql_charset(p["sql_folder"], sql_files)
+                detected, reason = detect_sql_charset(p["sql_folder"], table_files)
                 if not detected:
                     raise RuntimeError(
                         f"無法自動判斷備份檔編碼（{reason}）。\n"
@@ -390,12 +561,12 @@ class RestoreWorker(QObject):
                 file_charset = detected
                 self.log(f"自動偵測備份檔編碼：{file_charset}（{reason}）")
 
-            slow_dump, dump_note = inspect_dump_format(p["sql_folder"], sql_files)
+            slow_dump, dump_note = inspect_dump_format(p["sql_folder"], table_files)
             if dump_note:
                 self.log(("⚠ " if slow_dump else "") + dump_note)
 
             # 備份檔宣告的引擎（覆蓋風險已在主視窗確認，這裡留下記錄）
-            dump_engines, dump_myisam = scan_dump_engines(p["sql_folder"], sql_files)
+            dump_engines, dump_myisam = scan_dump_engines(p["sql_folder"], table_files)
             if dump_engines:
                 self.log(
                     "備份檔宣告的引擎："
@@ -436,7 +607,28 @@ class RestoreWorker(QObject):
 
             # ---------- 1. 建立（或確認）目標資料庫 ----------
             self.log("\n[步驟 1/5] 確認目標資料庫 …")
-            db_charset = "utf8mb4" if to_utf8mb4 else file_charset
+
+            # binary 是「傳輸時不轉碼」的設定，不是資料庫的字元集。
+            # 拿它去 CREATE DATABASE 會讓之後在該庫新建的資料表全部
+            # 變成 binary，中文無法正常比較排序。真正的字元集寫在各表的
+            # CREATE TABLE 與 00_schema.sql 裡。
+            if file_charset == "binary":
+                source_charset, source_collation = read_source_db_charset(
+                    p["sql_folder"]
+                )
+                db_charset = "utf8mb4" if to_utf8mb4 else (source_charset or "utf8mb4")
+                self.log(
+                    f"備份檔以 binary 匯出（原樣保留位元組，不轉碼）；"
+                    f"目標資料庫預設字元集採用 {db_charset}"
+                    + (
+                        f"（讀自 {SCHEMA_FILE}：{source_charset} / {source_collation}）"
+                        if source_charset
+                        else "（找不到 00_schema.sql，退回 utf8mb4）"
+                    )
+                )
+            else:
+                db_charset = "utf8mb4" if to_utf8mb4 else file_charset
+
             cur.execute(
                 "SELECT COUNT(*) FROM information_schema.SCHEMATA "
                 "WHERE SCHEMA_NAME = %s",
@@ -514,14 +706,20 @@ class RestoreWorker(QObject):
             if to_utf8mb4:
                 self.log("\n[步驟 3/5] 檢查所有文字資料能否無損轉換為 utf8mb4 …")
                 t0_phase = time.time()
+                # 只查 BASE TABLE：檢視表的欄位不能也不需要 ALTER，
+                # 撈進來只會白做一次全表掃描。
                 cur.execute(
                     """
-                    SELECT TABLE_NAME, COLUMN_NAME, CHARACTER_SET_NAME
-                    FROM information_schema.COLUMNS
-                    WHERE TABLE_SCHEMA = %s
-                      AND CHARACTER_SET_NAME IS NOT NULL
-                      AND CHARACTER_SET_NAME <> 'utf8mb4'
-                    ORDER BY TABLE_NAME, ORDINAL_POSITION""",
+                    SELECT c.TABLE_NAME, c.COLUMN_NAME, c.CHARACTER_SET_NAME
+                    FROM information_schema.COLUMNS c
+                    JOIN information_schema.TABLES t
+                      ON t.TABLE_SCHEMA = c.TABLE_SCHEMA
+                     AND t.TABLE_NAME   = c.TABLE_NAME
+                    WHERE c.TABLE_SCHEMA = %s
+                      AND t.TABLE_TYPE = 'BASE TABLE'
+                      AND c.CHARACTER_SET_NAME IS NOT NULL
+                      AND c.CHARACTER_SET_NAME <> 'utf8mb4'
+                    ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION""",
                     (db,),
                 )
                 text_cols = cur.fetchall()
@@ -769,6 +967,12 @@ class RestoreWorker(QObject):
             )
             n_tables = cur.fetchone()[0]
             cur.execute(
+                "SELECT COUNT(*) FROM information_schema.TABLES "
+                "WHERE TABLE_SCHEMA = %s AND TABLE_TYPE = 'VIEW'",
+                (db,),
+            )
+            n_views = cur.fetchone()[0]
+            cur.execute(
                 "SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME "
                 "FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = %s",
                 (db,),
@@ -783,7 +987,8 @@ class RestoreWorker(QObject):
             # ---------- 摘要 ----------
             lines = [
                 f"資料庫 `{db}` 還原完成：{total} 個檔案全部匯入成功，"
-                f"共 {n_tables} 張資料表。",
+                f"共 {n_tables} 張資料表"
+                + (f"、{n_views} 個檢視表。" if n_views else "。"),
                 f"引擎分佈：{engine_summary}；字元集：{db_cs} / {db_coll}。",
                 f"耗時：總計 {fmt_secs(t_total)}"
                 f"（匯入 {fmt_secs(t_import)}、"
@@ -832,6 +1037,13 @@ class RestoreWorker(QObject):
                     + "、".join(f"{t}（{n}）" for t, n, _ in alter_failed)
                 )
                 ok = False
+
+            if GRANTS_FILE in os.listdir(p["sql_folder"]):
+                lines.append(
+                    f"備份中含 {GRANTS_FILE}（使用者權限，全為註解未匯入）。"
+                    f"若這是搬到新主機，請開啟該檔人工建立所需帳號與權限。"
+                )
+
             lines.append("建議抽查主要資料表的筆數（如 cases、patient）確認內容。")
 
             summary = "\n".join(lines)
@@ -899,6 +1111,12 @@ class SqlRestoreWindow(QWidget):
         self.charset_combo = QComboBox()
         self.charset_combo.addItems(CHARSET_CHOICES)
         self.charset_combo.setCurrentText("自動偵測")
+        self.charset_combo.setToolTip(
+            "須與備份檔匯出時的編碼一致。\n"
+            "新版 backup.py 以 binary 匯出（不轉碼、原樣保留位元組），\n"
+            "選 binary 或維持「自動偵測」即可；\n"
+            "目標資料庫的預設字元集會另從 00_schema.sql 取得。"
+        )
         eng_label = QLabel("資料引擎:")
         self.engine_combo = QComboBox()
         self.engine_combo.addItems(ENGINE_CHOICES)
@@ -1022,10 +1240,10 @@ class SqlRestoreWindow(QWidget):
             QMessageBox.warning(self, "提示", "埠號必須是數字。")
             return
 
-        sql_files = sorted(f for f in os.listdir(folder) if f.endswith(".sql"))
-        n_sql = len(sql_files)
+        table_files, last_files, info_files = split_sql_files(folder)
+        n_sql = len(table_files) + len(last_files)
         if n_sql == 0:
-            QMessageBox.warning(self, "提示", "指定目錄中沒有任何 .sql 檔案。")
+            QMessageBox.warning(self, "提示", "指定目錄中沒有任何可匯入的 .sql 檔案。")
             return
 
         # 目標資料庫若已含資料表，開始前明確警告覆蓋風險
@@ -1064,6 +1282,19 @@ class SqlRestoreWindow(QWidget):
                 f"還原會以備份檔內容【覆蓋同名資料表】，原有資料將遺失。"
             )
 
+        # 備份完整性：比對 backup.py 產生的 00_manifest.txt。
+        # 檔案缺漏、被截斷、或備份當下就已標記 FAIL，都在這裡先攔下來。
+        manifest_problems = verify_against_manifest(folder)
+        if manifest_problems:
+            preview = "\n".join(f"　{item}" for item in manifest_problems[:8])
+            if len(manifest_problems) > 8:
+                preview += f"\n　…等共 {len(manifest_problems)} 項"
+            warn += (
+                f"\n\n⚠ 備份檔與 {MANIFEST_FILE} 不符（{len(manifest_problems)} 項）：\n"
+                f"{preview}\n"
+                f"這份備份可能不完整，還原後請務必核對資料筆數。"
+            )
+
         engine_choice = self.engine_combo.currentText()
         if engine_choice != ENGINE_FOLLOW_FILE:
             warn += (
@@ -1075,7 +1306,7 @@ class SqlRestoreWindow(QWidget):
         # 備份檔宣告的引擎。轉換前產生的舊備份仍寫著 ENGINE=MyISAM，
         # 「依備份檔」會照原樣還原成 MyISAM——必須在開始前就講清楚，
         # 而不是等跑完才在摘要裡發現。
-        dump_engines, dump_myisam = scan_dump_engines(folder, sql_files)
+        dump_engines, dump_myisam = scan_dump_engines(folder, table_files)
         engine_note = ""
         if dump_engines:
             engine_note = "、".join(
@@ -1099,12 +1330,22 @@ class SqlRestoreWindow(QWidget):
                 "不建議用於正式資料。"
             )
 
+        # 非資料表檔案的處理方式，讓使用者一眼看到，不必猜
+        object_note = ""
+        if last_files:
+            object_note += f"\n物件檔案（排在資料表之後匯入）：{'、'.join(last_files)}"
+        if info_files:
+            object_note += f"\n參考檔案（只讀取不匯入）：{'、'.join(info_files)}"
+        if GRANTS_FILE in os.listdir(folder):
+            object_note += f"\n權限檔案（全為註解，不匯入）：{GRANTS_FILE}"
+
         to_utf8mb4 = self.utf8mb4_checkbox.isChecked()
         answer = QMessageBox.question(
             self,
             "還原前確認",
-            f"將從目錄匯入 {n_sql} 個 .sql 檔案到資料庫「{database}」。\n"
-            f"備份檔編碼：{self.charset_combo.currentText()}"
+            f"將從目錄匯入 {len(table_files)} 個資料表檔案到資料庫「{database}」。"
+            + object_note
+            + f"\n備份檔編碼：{self.charset_combo.currentText()}"
             f"（須與備份檔匯出時的編碼一致）\n"
             f"資料引擎：{engine_choice}"
             + (f"（備份檔宣告：{engine_note}）\n" if engine_note else "\n")
