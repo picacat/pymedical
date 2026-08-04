@@ -5,7 +5,8 @@
 重寫版本 2026-08-04
 主要修正：
   1. _locate_git()      解壓 PortableGit 後重新掃描路徑（原版永遠回傳 False）
-  2. _run_git()         加上 timeout、None 防呆、錯誤訊息保留 3. 失敗/無差異分離     git 指令失敗回傳 None，無差異回傳 ""，不再混為一談
+  2. _run_git()         加上 timeout、None 防呆、錯誤訊息保留
+  3. 失敗/無差異分離     git 指令失敗回傳 None，無差異回傳 ""，不再混為一談
   4. update_mode        明確的模式旗標，不再靠 git_exe 猜測
   5. _check_writable()  更新前實測寫入權限
   6. _log()             所有動作與錯誤寫入 update.log
@@ -74,7 +75,21 @@ PROTECT_FILES = [
 ]
 
 # 掃描檔案時要排除的目錄
-EXCLUDE_DIRS = {".git", "PortableGit", "_temp", "__pycache__", "tts_cache"}
+EXCLUDE_DIRS = {
+    ".git",
+    "PortableGit",
+    "_temp",
+    "__pycache__",
+    "tts_cache",
+    "_old_files",
+}
+
+# 執行中可能被本程式載入而鎖住的檔案類型
+# Windows 不允許刪除已載入的 DLL / pyd，Git unlink 會失敗
+LOCKABLE_EXTENSIONS = {".dll", ".pyd", ".exe", ".ocx"}
+
+# 被鎖定的舊檔改名後暫存的目錄，下次啟動時清除
+QUARANTINE_DIR = "_old_files"
 
 # zip 更新模式要比對的子目錄
 ZIP_SUB_DIRS = [
@@ -128,6 +143,9 @@ class SystemUpdate(QtWidgets.QDialog):
         self._log("=" * 60)
         self._log(f"開啟系統更新視窗 base_path={self.base_path}")
         self._log(f"git_exe={self.git_exe}")
+
+        # 清除上次更新時被移開的鎖定檔案（此時 DLL 已隨程式重啟釋放）
+        self._cleanup_quarantine()
 
     # 解構
     def __del__(self):
@@ -321,6 +339,107 @@ class SystemUpdate(QtWidgets.QDialog):
             )
             return False
 
+    # ------------------------------------------------------------------
+    # 鎖定檔案處理（cshis.dll 等執行中被載入的元件）
+    # ------------------------------------------------------------------
+    def _is_file_locked(self, path):
+        """判斷檔案是否被其他程式鎖住（無法寫入）
+
+        已被 ctypes 載入的 DLL 會被 Windows 以唯讀方式鎖定，
+        用附加模式開啟就會失敗。
+        """
+        try:
+            with open(path, "ab"):
+                pass
+            return False
+        except Exception:
+            return True
+
+    def _get_changed_files(self):
+        """取得本次更新會異動的檔案清單（相對路徑）"""
+        diff = self._run_git(["diff", "HEAD", "FETCH_HEAD", "--name-only", "--"])
+        if diff is None:
+            return []
+
+        return [f.strip() for f in diff.strip().splitlines() if f.strip()]
+
+    def _quarantine_locked_files(self, file_list):
+        """把即將被更新、但正被本程式載入而鎖住的檔案改名移開
+
+        === 新增 2026-08 ===
+        症狀：git reset --hard 失敗，錯誤訊息
+              unable to unlink old 'cshis.dll': Invalid argument
+
+        原因：cshis.dll（健保讀卡機控制元件）被執行中的 pymedical 載入，
+              Windows 不允許刪除已載入的 DLL。
+
+        解法：Windows 允許「改名」已載入的 DLL，只是不能刪除。
+              先把舊檔改名到 _old_files/，Git 就能寫入新檔，
+              程式重新啟動後再清除 _old_files/。
+
+        回傳 (成功移開的清單, 移不開的清單)
+        """
+        quarantine = os.path.join(self.base_path, QUARANTINE_DIR)
+        moved = []
+        failed = []
+
+        for rel_path in file_list:
+            ext = os.path.splitext(rel_path)[1].lower()
+            if ext not in LOCKABLE_EXTENSIONS:
+                continue
+
+            src = os.path.join(self.base_path, rel_path.replace("/", os.sep))
+            if not os.path.exists(src):
+                continue
+
+            try:
+                os.chmod(src, os.stat(src).st_mode | stat.S_IWRITE)
+            except Exception:
+                pass
+
+            # 沒被鎖住就交給 Git 自己處理，不必多此一舉
+            if not self._is_file_locked(src):
+                continue
+
+            self._log(f"偵測到鎖定檔案: {rel_path}")
+
+            try:
+                os.makedirs(quarantine, exist_ok=True)
+                stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                dst = os.path.join(quarantine, f"{os.path.basename(src)}.{stamp}.old")
+                os.rename(src, dst)  # 已載入的 DLL 可以改名，但不能刪除
+                moved.append(rel_path)
+                self._log(f"已將鎖定檔案移開: {rel_path} → {QUARANTINE_DIR}/")
+            except Exception as e:
+                failed.append(rel_path)
+                self._log(f"無法移開鎖定檔案 {rel_path}: {e}")
+
+        return moved, failed
+
+    def _cleanup_quarantine(self):
+        """清除上次更新時移開的舊檔（程式重啟後 DLL 已釋放，可安全刪除）"""
+        quarantine = os.path.join(self.base_path, QUARANTINE_DIR)
+        if not os.path.isdir(quarantine):
+            return
+
+        removed = 0
+        for f in listdir(quarantine):
+            p = os.path.join(quarantine, f)
+            try:
+                os.chmod(p, os.stat(p).st_mode | stat.S_IWRITE)
+                os.remove(p)
+                removed += 1
+            except Exception:
+                pass  # 還鎖著就留到下次，不影響更新
+
+        try:
+            os.rmdir(quarantine)
+        except Exception:
+            pass
+
+        if removed:
+            self._log(f"已清除 {removed} 個上次更新遺留的舊檔")
+
     def _unlock_readonly_files(self):
         """解除整個專案目錄的唯讀屬性，回報解鎖失敗的檔案數"""
         failed = 0
@@ -504,15 +623,40 @@ class SystemUpdate(QtWidgets.QDialog):
 
     def _show_git_error(self, title):
         self._set_status(f"{title}")
+
+        error = self.last_git_error or "未知錯誤"
+
+        # 檔案鎖定類的錯誤，給對應的排除方向（網路建議在此無用）
+        if "unable to unlink" in error or "Permission denied" in error:
+            locked_name = ""
+            marker = "unable to unlink old '"
+            if marker in error:
+                locked_name = error.split(marker, 1)[1].split("'", 1)[0]
+
+            hint = (
+                f"<br>1. 檔案「{locked_name}」正被程式使用中"
+                if locked_name
+                else "<br>1. 有檔案正被程式使用中"
+            )
+            advice = (
+                f"{hint}"
+                f"<br>2. 請關閉所有醫療系統視窗與健保讀卡機程式後重試"
+                f"<br>3. 若仍失敗，請重新開機後第一時間執行更新"
+                f"<br>4. 詳細記錄請見程式目錄下的 update.log"
+            )
+        else:
+            advice = (
+                "<br>1. 確認診所網路可連上 github.com (443 埠)"
+                "<br>2. 檢查防毒軟體 / 防火牆是否攔截 git.exe"
+                "<br>3. 詳細記錄請見程式目錄下的 update.log"
+            )
+
         QMessageBox.critical(
             self,
             "更新失敗",
             f"<font size='4'><b>{title}</b></font>"
-            f"<br><br>原因：{self.last_git_error or '未知錯誤'}"
-            f"<br><br>常見排除方向："
-            f"<br>1. 確認診所網路可連上 github.com (443 埠)"
-            f"<br>2. 檢查防毒軟體 / 防火牆是否攔截 git.exe"
-            f"<br>3. 詳細記錄請見程式目錄下的 update.log",
+            f"<br><br>原因：{error}"
+            f"<br><br>常見排除方向：{advice}",
         )
 
     def _update_github(self):
@@ -530,6 +674,28 @@ class SystemUpdate(QtWidgets.QDialog):
         if self._fetch() is None:
             self._show_git_error("同步雲端資料失敗")
             return False
+
+        # --- 3.5 移開被本程式載入而鎖住的 DLL / pyd ---
+        # cshis.dll（健保讀卡機元件）是典型案例：Windows 不允許刪除已載入的 DLL
+        changed_files = self._get_changed_files()
+        moved, lock_failed = self._quarantine_locked_files(changed_files)
+
+        if lock_failed:
+            self._set_status("有檔案被鎖定，無法更新")
+            QMessageBox.critical(
+                self,
+                "檔案被鎖定，無法更新",
+                f"<font size='4'><b>以下檔案正被其他程式使用中</b></font>"
+                f"<br><br>{'<br>'.join(lock_failed[:10])}"
+                f"{'<br>...' if len(lock_failed) > 10 else ''}"
+                f"<br><br>請完全關閉所有醫療系統視窗（含櫃檯、診間其他電腦上的程式），"
+                f"以及健保讀卡機相關程式後，再重新執行更新。",
+            )
+            self._restore_protected_files(vault, force_all=True)
+            return False
+
+        if moved:
+            self._log(f"本次共移開 {len(moved)} 個鎖定檔案，將於重新啟動後清除")
 
         self._set_status("正在覆寫系統檔案...")
 
