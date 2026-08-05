@@ -2,7 +2,7 @@
 """
 醫療系統更新模組 (system_update.py)
 
-重寫版本 2026-08-04 v6
+重寫版本 2026-08-04 v9
 主要修正：
   1. _locate_git()      解壓 PortableGit 後重新掃描路徑（原版永遠回傳 False）
   2. _run_git()         加上 timeout、None 防呆、錯誤訊息保留
