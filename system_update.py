@@ -753,45 +753,60 @@ class SystemUpdate(QtWidgets.QDialog):
         # 注意：被鎖住不等於有問題。只有「這次真的要更新」且「正被佔用」的
         # 檔案才會擋住更新；單純被載入但內容沒變的 DLL，Git 根本不會碰。
         locked = self._find_locked_pending_files()
+        skip_locked = False
+
         if locked:
-            self._set_status("有檔案被佔用，無法更新")
-            QMessageBox.critical(
+            self._set_status("有檔案被佔用")
+            reply = QMessageBox.question(
                 self,
-                "檔案被佔用，無法更新",
+                "檔案被佔用",
                 f"<font size='4'><b>以下檔案需要更新，但正被其他程式使用中</b></font>"
                 f"<br><br>{'<br>'.join(locked[:10])}"
                 f"{'<br>...' if len(locked) > 10 else ''}"
-                f"<br><br>請關閉下列程式後再更新一次："
-                f"<br>1. 其他電腦上的醫療系統"
-                f"<br>2. 健保讀卡機控制軟體"
-                f"<br>3. 候診看板 (PyBulletin)",
+                f"<br><br><b>要跳過這些檔案，繼續更新其他部分嗎？</b>"
+                f"<br>被跳過的檔案會維持診所目前的版本，其餘檔案照常更新。"
+                f"<br><br>若選擇「否」，請關閉醫療系統、健保讀卡機控制軟體、"
+                f"候診看板後再更新一次。",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
             )
-            self._restore_protected_files(vault, force_all=True)
-            return False
+
+            if reply != QMessageBox.Yes:
+                self._log(f"使用者選擇中止（{len(locked)} 個檔案被佔用）")
+                self._restore_protected_files(vault, force_all=True)
+                return False
+
+            skip_locked = True
 
         # --- 6. 覆寫檔案 ---
-        self._set_status("正在覆寫系統檔案...")
+        if skip_locked:
+            if not self._checkout_except_locked(locked):
+                self._show_git_error("更新失敗（跳過佔用檔案模式）")
+                self._restore_protected_files(vault, force_all=True)
+                return False
+        else:
+            self._set_status("正在覆寫系統檔案...")
 
-        # (A) 強制對齊指針與索引
-        # -q 抑制 "Updating files: nn%" 進度訊息，大量檔案時可省下時間也讓錯誤訊息乾淨
-        if not self._run_git_with_retry(
-            ["reset", "-q", "--hard", "FETCH_HEAD"], "reset"
-        ):
-            self._show_git_error("更新失敗 (reset)")
-            self._restore_protected_files(vault, force_all=True)
-            return False
+            # (A) 強制對齊指針與索引
+            # -q 抑制 "Updating files: nn%" 進度訊息，大量檔案時可省時間也讓錯誤訊息乾淨
+            if not self._run_git_with_retry(
+                ["reset", "-q", "--hard", "FETCH_HEAD"], "reset"
+            ):
+                self._show_git_error("更新失敗 (reset)")
+                self._restore_protected_files(vault, force_all=True)
+                return False
 
-        # (B) 強制覆蓋實體檔案
-        if not self._run_git_with_retry(
-            ["checkout", "-f", "-q", "FETCH_HEAD", "--", "."], "checkout"
-        ):
-            self._show_git_error("更新失敗 (checkout)")
-            self._restore_protected_files(vault, force_all=True)
-            return False
+            # (B) 強制覆蓋實體檔案
+            if not self._run_git_with_retry(
+                ["checkout", "-f", "-q", "FETCH_HEAD", "--", "."], "checkout"
+            ):
+                self._show_git_error("更新失敗 (checkout)")
+                self._restore_protected_files(vault, force_all=True)
+                return False
 
-        # (C) 修正分支指針
-        self._run_git(["update-ref", f"refs/heads/{GITHUB_BRANCH}", "FETCH_HEAD"])
-        self._run_git(["symbolic-ref", "HEAD", f"refs/heads/{GITHUB_BRANCH}"])
+            # (C) 修正分支指針
+            self._run_git(["update-ref", f"refs/heads/{GITHUB_BRANCH}", "FETCH_HEAD"])
+            self._run_git(["symbolic-ref", "HEAD", f"refs/heads/{GITHUB_BRANCH}"])
 
         # --- 7. 還原診所專屬設定 ---
         self._set_status("正在還原診所設定檔...")
@@ -852,6 +867,84 @@ class SystemUpdate(QtWidgets.QDialog):
             self._log(f"已清除殘留的 .git/index.lock（{age:.0f} 秒前建立）")
         except Exception as e:
             self._log(f"清除 index.lock 失敗: {e}")
+
+    def _get_changed_files_with_status(self):
+        """取得待更新檔案及其變更類型 [(status, path), ...]
+
+        status: A=新增 M=修改 D=刪除
+        """
+        output = self._run_git(["diff", "HEAD", "FETCH_HEAD", "--name-status", "--"])
+        if output is None:
+            return []
+
+        rows = []
+        for line in output.strip().splitlines():
+            parts = line.split("\t")
+            if len(parts) >= 2 and parts[-1].strip():
+                rows.append((parts[0][0], parts[-1].strip()))
+
+        return rows
+
+    def _checkout_except_locked(self, locked):
+        """只更新沒被佔用的檔案，被佔用的維持診所目前的版本
+
+        === 為什麼不用 reset --hard ===
+        reset --hard 是全有全無：只要有一個檔案 unlink 失敗，
+        整個操作就 fatal 中止，其他該更新的檔案也一起卡住。
+
+        讀卡機控制軟體升級時會就地換掉 CsHis30.dll 這類元件，
+        使它與 repo 版本不同；只要當下正被載入，更新就永遠過不了。
+
+        改為：
+          1. 逐一 checkout 沒被佔用的檔案
+          2. 用 reset --mixed 把 HEAD 與索引推進到 FETCH_HEAD，
+             但完全不碰工作目錄
+
+        結果是被跳過的檔案保留診所版本，且待更新清單會歸零，
+        不會每次開更新視窗都重複提示。
+        """
+        locked_set = set(locked)
+        rows = self._get_changed_files_with_status()
+
+        to_checkout = [p for status, p in rows if status != "D" and p not in locked_set]
+        to_delete = [p for status, p in rows if status == "D" and p not in locked_set]
+
+        self._set_status(
+            f"正在更新 {len(to_checkout)} 個檔案（跳過 {len(locked)} 個佔用中的檔案）..."
+        )
+
+        # 分批處理，避免命令列長度上限
+        for i in range(0, len(to_checkout), 80):
+            chunk = to_checkout[i : i + 80]
+            if (
+                self._run_git(
+                    ["checkout", "-f", "-q", "FETCH_HEAD", "--"] + chunk,
+                    GIT_TIMEOUT_NETWORK,
+                )
+                is None
+            ):
+                return False
+            QApplication.processEvents()
+
+        for rel_path in to_delete:
+            path = os.path.join(self.base_path, rel_path.replace("/", os.sep))
+            try:
+                if os.path.exists(path):
+                    os.chmod(path, os.stat(path).st_mode | stat.S_IWRITE)
+                    os.remove(path)
+            except Exception as e:
+                self._log(f"刪除 {rel_path} 失敗: {e}")
+
+        # 推進 HEAD 與索引，不動工作目錄
+        self._run_git(["symbolic-ref", "HEAD", f"refs/heads/{GITHUB_BRANCH}"])
+        if (
+            self._run_git(["reset", "-q", "--mixed", "FETCH_HEAD"], GIT_TIMEOUT_NETWORK)
+            is None
+        ):
+            return False
+
+        self._log(f"已跳過 {len(locked)} 個被佔用的檔案: {locked[:10]}")
+        return True
 
     def _verify_git_update(self):
         """更新後再比對一次，確認檔案真的被寫入
