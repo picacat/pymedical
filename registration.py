@@ -1,5 +1,3 @@
-# -* coding: utf-8 -*-
-
 import datetime
 import platform
 import re
@@ -43,7 +41,7 @@ class Registration(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
         """掛號作業初始化."""
-        super(Registration, self).__init__(parent)
+        super().__init__(parent)
         self._parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -1679,13 +1677,12 @@ class Registration(QtWidgets.QMainWindow):
                 self.reserve_key,
             )  # 取得診號
             self.ui.spinBox_reg_no.setValue(int(reg_no))
-        elif sender_name == "lineEdit_regist_fee":
-            self._set_total_amount()
-        elif sender_name == "lineEdit_diag_share_fee":
-            self._set_total_amount()
-        elif sender_name == "lineEdit_deposit_fee":
-            self._set_total_amount()
-        elif sender_name == "lineEdit_traditional_health_care_fee":
+        elif (
+            sender_name == "lineEdit_regist_fee"
+            or sender_name == "lineEdit_diag_share_fee"
+            or sender_name == "lineEdit_deposit_fee"
+            or sender_name == "lineEdit_traditional_health_care_fee"
+        ):
             self._set_total_amount()
 
         if "IC06" in self.ui.comboBox_card.currentText():
@@ -2887,9 +2884,10 @@ class Registration(QtWidgets.QMainWindow):
             self.ui.comboBox_share_type.setStyleSheet("background-color: lightgreen")
         elif self.ui.comboBox_share_type.currentText() in ["職業傷害"]:
             self.ui.comboBox_share_type.setStyleSheet("background-color: lightblue")
-        elif self.ui.comboBox_share_type.currentText() in ["山地離島"]:
-            self.ui.comboBox_share_type.setStyleSheet("background-color: lightgreen")
-        elif self.ui.comboBox_share_type.currentText() in nhi_utils.INFECTIOUS_TYPE:
+        elif (
+            self.ui.comboBox_share_type.currentText() in ["山地離島"]
+            or self.ui.comboBox_share_type.currentText() in nhi_utils.INFECTIOUS_TYPE
+        ):
             self.ui.comboBox_share_type.setStyleSheet("background-color: lightgreen")
 
         if (
@@ -3068,11 +3066,13 @@ class Registration(QtWidgets.QMainWindow):
         diag_share_fee = medical_record["SDiagShareFee"]
         deposit_fee = medical_record["DepositFee"]
         ins_type = medical_record["InsType"]
-        traditional_health_care_fee = (
-            charge_utils.get_traditional_health_care_fee_from_case(
-                self.database, case_key, ins_type=ins_type
+        traditional_health_care_fee = None
+        if self.system_settings.field("掛號名單顯示民俗調理費") == "Y":  # 顯示速度太慢
+            traditional_health_care_fee = (
+                charge_utils.get_traditional_health_care_fee_from_case(
+                    self.database, case_key, ins_type=ins_type
+                )
             )
-        )
 
         self.ui.lineEdit_regist_fee.setText(str(regist_fee))
         self.ui.lineEdit_diag_share_fee.setText(str(diag_share_fee))

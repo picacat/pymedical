@@ -3448,7 +3448,7 @@ def get_traditional_health_care_fee_from_case(database, case_key, ins_type="ÂÅ•‰
     sql = f"""
         SELECT TotalFee FROM cases
         WHERE
-            Position1 = {case_key}
+            Position1 = "{case_key}"
     """
     rows = database.select_record(sql)
 
