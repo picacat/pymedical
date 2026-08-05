@@ -3066,14 +3066,19 @@ class Registration(QtWidgets.QMainWindow):
         diag_share_fee = medical_record["SDiagShareFee"]
         deposit_fee = medical_record["DepositFee"]
         ins_type = medical_record["InsType"]
-        traditional_health_care_fee = None
-        if self.system_settings.field("掛號名單顯示民俗調理費") == "Y":  # 顯示速度太慢
-            traditional_health_care_fee = (
-                charge_utils.get_traditional_health_care_fee_from_case(
-                    self.database, case_key, ins_type=ins_type
-                )
-            )
+        # traditional_health_care_fee = None
+        # if self.system_settings.field("掛號名單顯示民俗調理費") == "Y":  # 顯示速度太慢
+        #     traditional_health_care_fee = (
+        #         charge_utils.get_traditional_health_care_fee_from_case(
+        #             self.database, case_key, ins_type=ins_type
+        #         )
+        #     )
 
+        traditional_health_care_fee = (
+            charge_utils.get_traditional_health_care_fee_from_case(
+                self.database, case_key, ins_type=ins_type
+            )
+        )
         self.ui.lineEdit_regist_fee.setText(str(regist_fee))
         self.ui.lineEdit_diag_share_fee.setText(str(diag_share_fee))
         self.ui.lineEdit_deposit_fee.setText(str(deposit_fee))
