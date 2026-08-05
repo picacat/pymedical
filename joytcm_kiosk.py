@@ -35,6 +35,7 @@ class ClockWorker(QtCore.QObject):
             QtCore.QThread.sleep(1)
 
 
+# 退避機制
 class PasswordDialog(QDialog):
     TEXT_FONT = "源泉圓體月 H"
     FONT_SIZE = 42
@@ -216,7 +217,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(JOYTCM_Kiosk, self).__init__(parent)
+        super().__init__(parent)
         self.args = args
 
         try:
