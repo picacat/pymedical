@@ -82,11 +82,24 @@ EXCLUDE_DIRS = {
     "__pycache__",
     "tts_cache",
     "_old_files",
+    "_conf_backup",
 }
+
+# 更新期間存放診所專屬檔案的實體備份目錄
+# 只要這個目錄還在，就代表上一次更新沒有跑完還原步驟
+CONF_BACKUP_DIR = "_conf_backup"
+
+# .bat 是否一律還原
+#   True  = 保護診所自訂的啟動檔（Python 路徑、位元版本各家不同）
+#   False = 讓 Git 有機會更新啟動檔，但診所的自訂內容會被蓋掉
+RESTORE_BAT_ALWAYS = True
 
 # 執行中可能被本程式載入而鎖住的檔案類型
 # Windows 不允許刪除已載入的 DLL / pyd，Git unlink 會失敗
-LOCKABLE_EXTENSIONS = {".dll", ".pyd", ".exe", ".ocx"}
+# 注意：不用副檔名清單來判斷「哪些檔案可能被鎖住」。
+# 實際遇過被鎖的包含 .dll(cshis)、.ttf(code128 條碼字型)、
+# vlc 的 plugin 等等，列舉永遠會漏。
+# _find_locked_pending_files() 改為對「所有待更新檔案」逐一實測是否可寫入。
 
 
 # zip 更新模式要比對的子目錄
@@ -108,6 +121,94 @@ ZIP_SUB_DIRS = [
     "payment_machine",
     "kiosk",
 ]
+
+
+def extract_git_error(output, limit=500):
+    """從 git 輸出中萃取真正的錯誤行
+
+    === 為什麼需要 ===
+    git 在大量檔案的操作會噴出一長串 `Updating files: 91% (3290/3577)`
+    進度訊息。原本直接取輸出的最後 500 字元，結果整段都是進度，
+    真正的 `error: unable to unlink old 'xxx.dll'` 反而被擠掉，
+    使用者看到的錯誤視窗完全沒有診斷價值。
+
+    這裡優先保留 error/fatal/warning 開頭的行。
+    """
+    text = (output or "").replace("\r", "\n")
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+
+    important = [
+        line
+        for line in lines
+        if line.startswith(("error:", "fatal:", "warning:", "hint:"))
+    ]
+
+    if important:
+        # 保留最前面的 error（真正的起因）與最後的 fatal（結果）
+        picked = important[:6]
+        if important[-1] not in picked:
+            picked.append(important[-1])
+        return "\n".join(picked)[:limit]
+
+    # 沒有結構化錯誤行時，濾掉進度訊息再取尾端
+    plain = [line for line in lines if "Updating files:" not in line]
+    return "\n".join(plain)[-limit:]
+
+
+def restore_pending_protected_files(base_path, logger=None):
+    """補救上一次沒跑完的更新
+
+    === 為什麼需要 ===
+    原本的保護機制是把設定檔讀進記憶體，reset 之後再寫回去。
+    但只要更新流程在「reset 完成」與「還原設定檔」之間崩潰
+    （例如 git 輸出編碼錯誤），記憶體裡的備份就跟著行程一起消失，
+    診所的 pymedical.conf 就停留在 Git 的版本了。
+
+    改為實體備份到 _conf_backup/ 之後，這個函式可以在任何時候
+    （開啟更新視窗時、或 pymedical 啟動時）檢查該目錄是否還在。
+    還在就代表上次沒跑完，直接把設定檔補回去。
+
+    這個函式刻意不依賴 self，也不依賴 PyQt，方便從 pymedical.py
+    的啟動流程直接呼叫：
+
+        from system_update import restore_pending_protected_files
+        restore_pending_protected_files(os.path.dirname(os.path.abspath(__file__)))
+    """
+    backup_dir = os.path.join(base_path, CONF_BACKUP_DIR)
+    if not os.path.isdir(backup_dir):
+        return []
+
+    def _say(message):
+        if logger:
+            logger(message)
+        else:
+            print(message)
+
+    restored = []
+    for f_name in os.listdir(backup_dir):
+        src = os.path.join(backup_dir, f_name)
+        dst = os.path.join(base_path, f_name)
+        if not os.path.isfile(src):
+            continue
+        try:
+            if os.path.exists(dst):
+                os.chmod(dst, os.stat(dst).st_mode | stat.S_IWRITE)
+            shutil.copy2(src, dst)
+            restored.append(f_name)
+        except Exception as e:
+            _say(f"補救還原 {f_name} 失敗: {e}")
+
+    if restored:
+        _say(
+            f"偵測到上次更新未完成，已補救還原 {len(restored)} 個診所專屬檔案: {restored}"
+        )
+
+    try:
+        shutil.rmtree(backup_dir)
+    except Exception:
+        pass
+
+    return restored
 
 
 # 醫療系統更新
@@ -141,6 +242,9 @@ class SystemUpdate(QtWidgets.QDialog):
         self._log("=" * 60)
         self._log(f"開啟系統更新視窗 base_path={self.base_path}")
         self._log(f"git_exe={self.git_exe}")
+
+        # 上一次更新若在還原設定檔之前中斷，這裡把它補回來
+        restore_pending_protected_files(self.base_path, self._log)
 
     # 解構
     def __del__(self):
@@ -297,9 +401,9 @@ class SystemUpdate(QtWidgets.QDialog):
         except subprocess.TimeoutExpired:
             self.last_git_error = f"指令逾時 ({timeout} 秒)，請檢查診所網路或防火牆設定"
         except subprocess.CalledProcessError as e:
-            self.last_git_error = (e.output or "").strip()[
-                -500:
-            ] or f"結束代碼 {e.returncode}"
+            self.last_git_error = (
+                extract_git_error(e.output) or f"結束代碼 {e.returncode}"
+            )
         except Exception as e:
             self.last_git_error = str(e)
 
@@ -669,20 +773,17 @@ class SystemUpdate(QtWidgets.QDialog):
         self._set_status("正在覆寫系統檔案...")
 
         # (A) 強制對齊指針與索引
-        if (
-            self._run_git(["reset", "--hard", "FETCH_HEAD"], GIT_TIMEOUT_NETWORK)
-            is None
+        # -q 抑制 "Updating files: nn%" 進度訊息，大量檔案時可省下時間也讓錯誤訊息乾淨
+        if not self._run_git_with_retry(
+            ["reset", "-q", "--hard", "FETCH_HEAD"], "reset"
         ):
             self._show_git_error("更新失敗 (reset)")
             self._restore_protected_files(vault, force_all=True)
             return False
 
         # (B) 強制覆蓋實體檔案
-        if (
-            self._run_git(
-                ["checkout", "-f", "FETCH_HEAD", "--", "."], GIT_TIMEOUT_NETWORK
-            )
-            is None
+        if not self._run_git_with_retry(
+            ["checkout", "-f", "-q", "FETCH_HEAD", "--", "."], "checkout"
         ):
             self._show_git_error("更新失敗 (checkout)")
             self._restore_protected_files(vault, force_all=True)
@@ -704,6 +805,53 @@ class SystemUpdate(QtWidgets.QDialog):
             return False
 
         return True
+
+    def _run_git_with_retry(self, args, label, attempts=2, delay=5):
+        """執行 git 指令，失敗時清理殘留鎖檔後重試
+
+        大量檔案的 reset 會觸發防毒軟體密集掃描，可能短暫鎖住
+        .git/index 而導致 "Could not reset index file"。
+        等幾秒重試通常就過了。
+        """
+        for attempt in range(1, attempts + 1):
+            if self._run_git(args, GIT_TIMEOUT_NETWORK) is not None:
+                return True
+
+            self._log(f"{label} 第 {attempt} 次失敗: {self.last_git_error}")
+
+            if attempt >= attempts:
+                return False
+
+            self._clear_stale_index_lock()
+            self._set_status(f"更新受阻，{delay} 秒後重試 ({attempt}/{attempts})...")
+
+            for _ in range(delay * 4):
+                QtCore.QThread.msleep(250)
+                QApplication.processEvents()
+
+        return False
+
+    def _clear_stale_index_lock(self):
+        """清除殘留的 .git/index.lock
+
+        git 被中斷或防毒攔截時會留下鎖檔，之後每次操作都失敗。
+        只清除明顯過期的（超過 60 秒），避免誤刪正在運作的鎖。
+        """
+        lock_path = os.path.join(self.base_path, ".git", "index.lock")
+        if not os.path.exists(lock_path):
+            return
+
+        try:
+            age = datetime.datetime.now().timestamp() - os.stat(lock_path).st_mtime
+            if age < 60:
+                self._log(f".git/index.lock 存在但仍新（{age:.0f} 秒），不處理")
+                return
+
+            os.chmod(lock_path, os.stat(lock_path).st_mode | stat.S_IWRITE)
+            os.remove(lock_path)
+            self._log(f"已清除殘留的 .git/index.lock（{age:.0f} 秒前建立）")
+        except Exception as e:
+            self._log(f"清除 index.lock 失敗: {e}")
 
     def _verify_git_update(self):
         """更新後再比對一次，確認檔案真的被寫入
@@ -736,6 +884,21 @@ class SystemUpdate(QtWidgets.QDialog):
     # 診所專屬檔案保護
     # ------------------------------------------------------------------
     def _backup_protected_files(self):
+        """備份診所專屬檔案
+
+        同時保留記憶體副本與實體副本。實體副本存在 _conf_backup/，
+        萬一更新流程在還原之前崩潰，下次開啟更新視窗時
+        restore_pending_protected_files() 會據此補救。
+        """
+        backup_dir = os.path.join(self.base_path, CONF_BACKUP_DIR)
+        try:
+            if os.path.isdir(backup_dir):
+                shutil.rmtree(backup_dir)
+            os.makedirs(backup_dir, exist_ok=True)
+        except Exception as e:
+            self._log(f"建立備份目錄失敗，改用記憶體備份: {e}")
+            backup_dir = None
+
         vault = {}
         for f_name in PROTECT_FILES:
             p = os.path.join(self.base_path, f_name)
@@ -746,21 +909,34 @@ class SystemUpdate(QtWidgets.QDialog):
                     vault[f_name] = f.read()
             except Exception as e:
                 self._log(f"備份 {f_name} 失敗: {e}")
+                continue
 
-        self._log(f"已備份 {len(vault)} 個診所專屬檔案")
+            if backup_dir:
+                try:
+                    shutil.copy2(p, os.path.join(backup_dir, f_name))
+                except Exception as e:
+                    self._log(f"寫入實體備份 {f_name} 失敗: {e}")
+
+        self._log(f"已備份 {len(vault)} 個診所專屬檔案（含實體備份）")
         return vault
 
     def _restore_protected_files(self, vault, force_all=False):
         """
         策略 A：.conf 一律還原（診所設定唯一，絕不能被 Git 蓋掉）
-        策略 B：.bat 只有在檔案遺失時才還原（讓 Git 有機會更新啟動檔）
+        策略 B：.bat 依 RESTORE_BAT_ALWAYS 決定，預設也一律還原
+                （各家的 Python 路徑與位元版本不同，讓 Git 覆蓋風險太大）
         force_all：更新失敗回滾時，全部還原
+
+        還原完成後刪除實體備份目錄，代表這次更新已經善後乾淨。
         """
         for f_name, content in vault.items():
             p = os.path.join(self.base_path, f_name)
 
             should_restore = (
-                force_all or f_name.endswith(".conf") or not os.path.exists(p)
+                force_all
+                or f_name.endswith(".conf")
+                or (RESTORE_BAT_ALWAYS and f_name.endswith(".bat"))
+                or not os.path.exists(p)
             )
             if not should_restore:
                 self._log(f"{f_name} 已由 Git 同步，無需還原")
@@ -772,6 +948,14 @@ class SystemUpdate(QtWidgets.QDialog):
                 self._log(f"已還原: {f_name}")
             except Exception as e:
                 self._log(f"還原 {f_name} 失敗: {e}")
+
+        # 善後完成，清除實體備份
+        backup_dir = os.path.join(self.base_path, CONF_BACKUP_DIR)
+        if os.path.isdir(backup_dir):
+            try:
+                shutil.rmtree(backup_dir)
+            except Exception as e:
+                self._log(f"清除備份目錄失敗: {e}")
 
     def _fix_bat_launch_parameters(self):
         """修正 .bat 的啟動指令 py -3 → pythonw
