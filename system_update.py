@@ -280,7 +280,9 @@ class SystemUpdate(QtWidgets.QDialog):
 
             kwargs = {
                 "stderr": subprocess.STDOUT,
-                "universal_newlines": True,
+                "text": True,
+                "encoding": "utf-8",  # git 一律輸出 UTF-8
+                "errors": "replace",  # 萬一仍有無法解碼的位元組，不要炸掉
                 "cwd": self.base_path,  # 務必在 pymedical 根目錄執行
                 "env": env,
                 "timeout": timeout,  # === 修正：原版沒有 timeout，網路卡住就假死 ===
