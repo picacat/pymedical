@@ -1748,12 +1748,15 @@ class MedicalRecord(QtWidgets.QMainWindow):
                         f"""<font size="5"><b>診斷碼 {disease_code}</b></font><br>
                         {"<br>".join(hint_list)}"""
                     )
-                    msg_box.addButton(QPushButton("關閉"), QMessageBox.NoRole)
-                    msg_box.addButton(
-                        QPushButton(f"執行{treat_type}"), QMessageBox.YesRole
-                    )
-                    exec_treat = msg_box.exec_()
-                    if exec_treat:
+                    close_button = QPushButton("關閉")
+                    treat_button = QPushButton(f"執行{treat_type}")
+                    msg_box.addButton(close_button, QMessageBox.NoRole)
+                    msg_box.addButton(treat_button, QMessageBox.YesRole)
+                    msg_box.setDefaultButton(close_button)  # Enter 預設落在關閉
+                    msg_box.setEscapeButton(close_button)  # Esc / 右上角 X 也視同關閉
+
+                    msg_box.exec_()
+                    if msg_box.clickedButton() is treat_button:
                         self.tab_list[0].comboBox_treatment.setCurrentText(treat_type)
                 else:
                     system_utils.show_message_box(
