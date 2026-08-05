@@ -2403,5 +2403,57 @@
         "Amount": 327,
         "Remark": null,
         "TimeStamp": "2026-07-06 07:07:47"
+    },
+    {
+        "ChargeSettingsKey": 461,
+        "ChargeType": "照護費",
+        "ItemName": "特定癌症門診加強照護費(給藥日數29-35天)",
+        "InsType": null,
+        "ShareType": null,
+        "TreatType": null,
+        "Course": null,
+        "InsCode": "P56009",
+        "Amount": 2100,
+        "Remark": "註1:包含中醫輔助醫療診察費、口服藥。\n註2:限預定出國或返回離島地區、遠洋漁船船員出海作業或國際航線船舶船員出海服務、罕見疾病病人及經保險人認定確有一次領取該處方箋總用藥量必要之特殊病人(需附相關證明)。",
+        "TimeStamp": "2026-08-06 07:15:12"
+    },
+    {
+        "ChargeSettingsKey": 462,
+        "ChargeType": "照護費",
+        "ItemName": "特定癌症門診加強照護費(給藥日數36-42天)",
+        "InsType": null,
+        "ShareType": null,
+        "TreatType": null,
+        "Course": null,
+        "InsCode": "P56010",
+        "Amount": 2450,
+        "Remark": "註1:包含中醫輔助醫療診察費、口服藥。\n註2:限預定出國或返回離島地區、遠洋漁船船員出海作業或國際航線船舶船員出海服務、罕見疾病病人及經保險人認定確有一次領取該處方箋總用藥量必要之特殊病人(需附相關證明)。",
+        "TimeStamp": "2026-08-06 07:16:14"
+    },
+    {
+        "ChargeSettingsKey": 463,
+        "ChargeType": "照護費",
+        "ItemName": "特定癌症門診加強照護費(給藥日數43-49天)",
+        "InsType": null,
+        "ShareType": null,
+        "TreatType": null,
+        "Course": null,
+        "InsCode": "P56011",
+        "Amount": 2800,
+        "Remark": "註1:包含中醫輔助醫療診察費、口服藥。\n註2:限預定出國或返回離島地區、遠洋漁船船員出海作業或國際航線船舶船員出海服務、罕見疾病病人及經保險人認定確有一次領取該處方箋總用藥量必要之特殊病人(需附相關證明)。",
+        "TimeStamp": "2026-08-06 07:16:57"
+    },
+    {
+        "ChargeSettingsKey": 464,
+        "ChargeType": "照護費",
+        "ItemName": "特定癌症門診加強照護費(給藥日數50-56天)",
+        "InsType": null,
+        "ShareType": null,
+        "TreatType": null,
+        "Course": null,
+        "InsCode": "P56012",
+        "Amount": 3150,
+        "Remark": "註1:包含中醫輔助醫療診察費、口服藥。\n註2:限預定出國或返回離島地區、遠洋漁船船員出海作業或國際航線船舶船員出海服務、罕見疾病病人及經保險人認定確有一次領取該處方箋總用藥量必要之特殊病人(需附相關證明)。",
+        "TimeStamp": "2026-08-06 07:17:28"
     }
 ]

@@ -1023,6 +1023,9 @@ CANCER_CARE_TREAT = [
     "子宮頸癌照護",
     "子宮體癌照護",
     "甲狀腺癌照護",
+    "卵巢癌照護",
+    "鼻咽癌照護",
+    "膀胱癌照護",
 ]
 KIDNEY_CARE_TREAT = ["慢性腎病照護"]
 MISC_CARE_TREAT = ["癌症中醫門診延長照護", "兒童鼻炎"]
@@ -1056,6 +1059,9 @@ SPECIAL_CODE_DICT = {
     "子宮頸癌照護": "MA",
     "子宮體癌照護": "MB",
     "甲狀腺癌照護": "MC",
+    "卵巢癌照護": "MD",
+    "鼻咽癌照護": "ME",
+    "膀胱癌照護": "MF",
     "慢性腎病照護": "JP",
     "照護機構中醫照護": "JR",
     "預定出國領藥": "CC",
@@ -4585,6 +4591,24 @@ def is_endometrial_cancer(icd_code):
 # 甲狀腺癌
 def is_thyroid_cancer(icd_code):
     cancer_list = ["C73"]
+    return any(icd_code.startswith(code) for code in cancer_list)
+
+
+# 卵巢癌
+def is_ovary_cancer(icd_code):
+    cancer_list = ["C56"]
+    return any(icd_code.startswith(code) for code in cancer_list)
+
+
+# 鼻咽癌
+def is_nasopharynx_cancer(icd_code):
+    cancer_list = ["C11"]
+    return any(icd_code.startswith(code) for code in cancer_list)
+
+
+# 膀胱癌
+def is_bladder_cancer(icd_code):
+    cancer_list = ["C67"]
     return any(icd_code.startswith(code) for code in cancer_list)
 
 

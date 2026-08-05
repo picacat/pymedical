@@ -413,7 +413,7 @@ class InsApplyGenerateFile(QtWidgets.QMainWindow):
             case_type = nhi_utils.get_case_type(
                 self.database, self.system_settings, row, diag_fee, ins_total_fee
             )
-            if pres_days > 30:  # 2024.05.18 慢性病連續處方箋
+            if case_type == "24" and pres_days > 30:  # 2024.05.18 慢性病連續處方箋
                 if pres_days == 56:
                     pres_days = 28  # 拆成兩筆
                 elif pres_days == 60:

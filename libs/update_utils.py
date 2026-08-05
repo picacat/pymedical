@@ -8,9 +8,13 @@ from libs import case_utils, dropbox_utils, number_utils, string_utils
 
 
 def update_database(parent, database):
-    if case_utils.get_case_extend(database, 0, "202607-001") != "Y":
+    if case_utils.get_case_extend(database, 0, "202608-001") != "Y":
         update_nhi_payment(database)
-        case_utils.set_case_extend(database, 0, "202607-001", "Y")
+        case_utils.set_case_extend(database, 0, "202608-001", "Y")
+
+    # if case_utils.get_case_extend(database, 0, "202607-001") != "Y":
+    #     update_nhi_payment(database)
+    #     case_utils.set_case_extend(database, 0, "202607-001", "Y")
 
     # if case_utils.get_case_extend(database, 0, '202505-002') != 'Y':
     #     update_nhi_payment(database)

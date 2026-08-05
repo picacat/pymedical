@@ -25,7 +25,7 @@ from libs import (
 class MedicalRecordCheck(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, **kwargs):
-        super(MedicalRecordCheck, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = kwargs["database"]
         self.system_settings = kwargs["system_settings"]
@@ -136,54 +136,58 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         error_message = None
 
         if treat_type == "腦血管疾病":
-            if "G450" <= self.disease_code1[:4] <= "G468":
-                pass
-            elif "I60" <= self.disease_code1[:3] <= "I69":
+            if (
+                "G450" <= self.disease_code1[:4] <= "G468"
+                or "I60" <= self.disease_code1[:3] <= "I69"
+            ):
                 pass
             else:
                 error_message = "* ICD-10-CM主診斷碼非腦血管疾病<br>腦血管疾病範圍範圍: G450~G468, I60~I69"
         elif treat_type == "助孕照護":
-            if "N970" <= self.disease_code1[:4] <= "N979":  # 女性不孕症
-                pass
-            elif "N460" <= self.disease_code1[:4] <= "N469":  # 男性不孕症
+            if (
+                "N970" <= self.disease_code1[:4] <= "N979"
+                or "N460" <= self.disease_code1[:4] <= "N469"
+            ):  # 女性不孕症
                 pass
             else:
                 error_message = "* ICD-10-CM主診斷碼非不孕症<br>女性不孕症主診斷碼範圍: N970 ~ N979<br>男性不孕症主診斷碼範圍: N4601 ~ N469"
         elif treat_type == "小兒氣喘":
-            if disease_code1[:3] == "J45":  #
+            if disease_code1[:3] == "J45":
                 pass
             else:
                 error_message = (
                     "* ICD-10-CM主診斷碼非小兒氣喘病名<br>小兒氣喘主診斷碼範圍: J45~"
                 )
         elif treat_type == "小兒腦性麻痺":
-            if disease_code1[:3] == "G80":  #
+            if disease_code1[:3] == "G80":
                 pass
             else:
                 error_message = "* ICD-10-CM主診斷碼非小兒腦性麻痺病名<br>小兒腦性麻痺主診斷碼範圍: G80~"
         elif treat_type == "特定癌症照護":
-            if disease_code1[:3] in [
-                "C18",
-                "C19",
-                "C20",
-                "C21",
-                "C22",
-                "C23",
-                "C24",
-                "C33",
-                "C34",
-                "C50",
-            ]:
-                pass
-            elif disease_code1 == "C7981":
+            if (
+                disease_code1[:3]
+                in [
+                    "C18",
+                    "C19",
+                    "C20",
+                    "C21",
+                    "C22",
+                    "C23",
+                    "C24",
+                    "C33",
+                    "C34",
+                    "C50",
+                ]
+                or disease_code1 == "C7981"
+            ):
                 pass
             else:
                 error_message = "* ICD-10-CM主診斷碼非特定癌症病名<br>癌症主診斷碼範圍: C18~C24, C33~C34, C7981<br>"
         elif treat_type == "乳癌照護":
-            if nhi_utils.is_breast_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(disease_code1) and nhi_utils.is_breast_cancer(
-                disease_code2
+            if (
+                nhi_utils.is_breast_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_breast_cancer(disease_code2)
             ):
                 pass
             else:
@@ -191,19 +195,19 @@ class MedicalRecordCheck(QtWidgets.QDialog):
                     "* ICD-10-CM主診斷碼非乳癌病名<br>乳癌主診斷碼範圍: C50~, C7981<br>"
                 )
         elif treat_type == "肝癌照護":
-            if nhi_utils.is_liver_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(disease_code1) and nhi_utils.is_liver_cancer(
-                disease_code2
+            if (
+                nhi_utils.is_liver_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_liver_cancer(disease_code2)
             ):
                 pass
             else:
                 error_message = "* ICD-10-CM主診斷碼非肝癌病名<br>肝癌主診斷碼範圍: C22~, C23~, C24~<br>"
         elif treat_type == "肺癌照護":
-            if nhi_utils.is_lung_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(disease_code1) and nhi_utils.is_lung_cancer(
-                disease_code2
+            if (
+                nhi_utils.is_lung_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_lung_cancer(disease_code2)
             ):
                 pass
             else:
@@ -211,39 +215,39 @@ class MedicalRecordCheck(QtWidgets.QDialog):
                     "* ICD-10-CM主診斷碼非肺癌病名<br>肺癌主診斷碼範圍: C33~, C34~<br>"
                 )
         elif treat_type == "大腸癌照護":
-            if nhi_utils.is_colorectal_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(
-                disease_code1
-            ) and nhi_utils.is_colorectal_cancer(disease_code2):
+            if (
+                nhi_utils.is_colorectal_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_colorectal_cancer(disease_code2)
+            ):
                 pass
             else:
                 error_message = "* ICD-10-CM主診斷碼非大腸癌病名<br>大腸癌主診斷碼範圍: C18~, C19~, C20~, C21~<br>"
         elif treat_type == "胃癌照護":
-            if nhi_utils.is_stomach_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(
-                disease_code1
-            ) and nhi_utils.is_stomach_cancer(disease_code2):
+            if (
+                nhi_utils.is_stomach_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_stomach_cancer(disease_code2)
+            ):
                 pass
             else:
                 error_message = (
                     "* ICD-10-CM主診斷碼非胃癌病名<br>胃癌主診斷碼範圍: C16~<br>"
                 )
         elif treat_type == "攝護腺癌照護":
-            if nhi_utils.is_prostate_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(
-                disease_code1
-            ) and nhi_utils.is_prostate_cancer(disease_code2):
+            if (
+                nhi_utils.is_prostate_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_prostate_cancer(disease_code2)
+            ):
                 pass
             else:
                 error_message = "* ICD-10-CM主診斷碼非攝護腺癌病名<br>攝護腺癌主診斷碼範圍: C61~<br>"
         elif treat_type == "口腔癌照護":
-            if nhi_utils.is_oral_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(disease_code1) and nhi_utils.is_oral_cancer(
-                disease_code2
+            if (
+                nhi_utils.is_oral_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_oral_cancer(disease_code2)
             ):
                 pass
             else:
@@ -251,37 +255,58 @@ class MedicalRecordCheck(QtWidgets.QDialog):
                     "* ICD-10-CM主診斷碼非口腔癌病名<br>口腔癌主診斷碼範圍: C01~C10<br>"
                 )
         elif treat_type == "子宮頸癌照護":
-            if nhi_utils.is_cervical_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(
-                disease_code1
-            ) and nhi_utils.is_cervcial_cancer(disease_code2):
+            if (
+                nhi_utils.is_cervical_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_cervcial_cancer(disease_code2)
+            ):
                 pass
             else:
                 error_message = (
                     "* ICD-10-CM主診斷碼非子宮頸癌病名<br>子宮頸癌主診斷碼範圍: C53<br>"
                 )
         elif treat_type == "子宮體癌照護":
-            if nhi_utils.is_endometrial_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(
-                disease_code1
-            ) and nhi_utils.is_endometrial_cancer(disease_code2):
+            if (
+                nhi_utils.is_endometrial_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_endometrial_cancer(disease_code2)
+            ):
                 pass
             else:
                 error_message = (
                     "* ICD-10-CM主診斷碼非子宮體癌病名<br>子宮體癌主診斷碼範圍: C54<br>"
                 )
         elif treat_type == "甲狀腺癌照護":
-            if nhi_utils.is_thyroid_cancer(disease_code1):
-                pass
-            elif nhi_utils.is_main_cancer(
-                disease_code1
-            ) and nhi_utils.is_thyroid_cancer(disease_code2):
+            if (
+                nhi_utils.is_thyroid_cancer(disease_code1)
+                or nhi_utils.is_main_cancer(disease_code1)
+                and nhi_utils.is_thyroid_cancer(disease_code2)
+            ):
                 pass
             else:
                 error_message = (
                     "* ICD-10-CM主診斷碼非甲狀腺癌病名<br>甲狀腺癌主診斷碼範圍: C73<br>"
+                )
+        elif treat_type == "卵巢癌照護":
+            if nhi_utils.is_ovary_cancer(disease_code1):
+                pass
+            else:
+                error_message = (
+                    "* ICD-10-CM主診斷碼非卵巢癌病名<br>卵巢癌主診斷碼範圍: C56<br>"
+                )
+        elif treat_type == "鼻咽癌照護":
+            if nhi_utils.is_nasopharynx_cancer(disease_code1):
+                pass
+            else:
+                error_message = (
+                    "* ICD-10-CM主診斷碼非鼻咽癌病名<br>鼻咽癌主診斷碼範圍: C11<br>"
+                )
+        elif treat_type == "膀胱癌照護":
+            if nhi_utils.is_bladder_cancer(disease_code1):
+                pass
+            else:
+                error_message = (
+                    "* ICD-10-CM主診斷碼非膀胱癌病名<br>膀胱癌主診斷碼範圍: C67<br>"
                 )
         elif treat_type == "慢性腎病照護":
             if disease_code1[:4] in [
@@ -307,11 +332,12 @@ class MedicalRecordCheck(QtWidgets.QDialog):
     def _check_pres_days_error(treat_type, pres_days):
         error_message = None
 
-        if treat_type in nhi_utils.PREGNANT_CARE_TREAT and pres_days < 7:
-            error_message = (
-                f"* {treat_type}未開立七天以上的內服藥, 請開立內服藥至少七天"
-            )
-        elif treat_type in nhi_utils.CANCER_CARE_TREAT and pres_days < 7:
+        if (
+            treat_type in nhi_utils.PREGNANT_CARE_TREAT
+            and pres_days < 7
+            or treat_type in nhi_utils.CANCER_CARE_TREAT
+            and pres_days < 7
+        ):
             error_message = (
                 f"* {treat_type}未開立七天以上的內服藥, 請開立內服藥至少七天"
             )
@@ -1332,9 +1358,7 @@ class MedicalRecordCheck(QtWidgets.QDialog):
             error_message.append(
                 f"* 主診斷碼不可申報{self.disease_code1}, 請輸入在次診斷碼!"
             )
-        elif self.disease_code2 in ["Z8616"]:
-            pass
-        elif self.disease_code3 in ["Z8616"]:
+        elif self.disease_code2 in ["Z8616"] or self.disease_code3 in ["Z8616"]:
             pass
         else:
             if self.disease_code1[:1] in ["V", "W", "X", "Y", "Z"]:
@@ -3395,27 +3419,27 @@ class MedicalRecordCheck(QtWidgets.QDialog):
                 ):
                     error_message.append("治療時間不足10分鐘")
                 elif (
-                    self.treatment in ["一般針灸", "電針", "中度複雜性針灸"]
-                    and self.second_treatment in ["高度複雜性傷科"]
-                    and number_utils.get_integer(treat_name) < 20
-                ):
-                    error_message.append("治療時間不足20分鐘")
-                elif (
-                    self.treatment in ["高度複雜性針灸"]
-                    and self.second_treatment in ["一般傷科", "中度複雜性傷科"]
-                    and number_utils.get_integer(treat_name) < 20
-                ):
-                    error_message.append("治療時間不足20分鐘")
-                elif (
-                    self.treatment in ["高度複雜性針灸"]
-                    and self.second_treatment
-                    in [
-                        "高度複雜性傷科",
-                        "中度複雜性傷科合併特殊疾病",
-                        "脫臼整復復位",
-                        "骨折復位",
-                    ]
-                    and number_utils.get_integer(treat_name) < 20
+                    (
+                        self.treatment in ["一般針灸", "電針", "中度複雜性針灸"]
+                        and self.second_treatment in ["高度複雜性傷科"]
+                        and number_utils.get_integer(treat_name) < 20
+                    )
+                    or (
+                        self.treatment in ["高度複雜性針灸"]
+                        and self.second_treatment in ["一般傷科", "中度複雜性傷科"]
+                        and number_utils.get_integer(treat_name) < 20
+                    )
+                    or (
+                        self.treatment in ["高度複雜性針灸"]
+                        and self.second_treatment
+                        in [
+                            "高度複雜性傷科",
+                            "中度複雜性傷科合併特殊疾病",
+                            "脫臼整復復位",
+                            "骨折復位",
+                        ]
+                        and number_utils.get_integer(treat_name) < 20
+                    )
                 ):
                     error_message.append("治療時間不足20分鐘")
 

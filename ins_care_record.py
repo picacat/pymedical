@@ -17,7 +17,7 @@ from libs import (
 class InsCareRecord(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsCareRecord, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -448,14 +448,44 @@ class InsCareRecord(QtWidgets.QMainWindow):
             treat_code = "P56002"
         elif pres_days <= 21:
             treat_code = "P56003"
-        else:
+        elif pres_days <= 28:
             treat_code = "P56004"
+        elif pres_days <= 35:
+            treat_code = "P56009"
+        elif pres_days <= 42:
+            treat_code = "P56010"
+        elif pres_days <= 49:
+            treat_code = "P56011"
+        elif pres_days <= 56:
+            treat_code = "P56012"
+        else:
+            return
 
         self._remove_specific_treat_code(
-            ["P56001", "P56002", "P56003", "P56004", "P56008"]
+            [
+                "P56001",
+                "P56002",
+                "P56003",
+                "P56004",
+                "P56008",
+                "P56009",
+                "P56010",
+                "P56011",
+                "P56012",
+            ]
         )  # 歸零
         self._remove_specific_treat_code(
-            ["P56001", "P56002", "P56003", "P56004", "P56008"]
+            [
+                "P56001",
+                "P56002",
+                "P56003",
+                "P56004",
+                "P56008",
+                "P56009",
+                "P56010",
+                "P56011",
+                "P56012",
+            ]
         )  # 歸零
         self._add_care_row(treat_code, self.ui.tableWidget_prescript.rowCount())
         self._add_care_row("P56008", self.ui.tableWidget_prescript.rowCount())
