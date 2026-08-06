@@ -1,11 +1,9 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
-from libs import printer_utils
-from libs import string_utils
-from libs import number_utils
-from libs import system_utils
+
+from libs import number_utils, printer_utils, string_utils, system_utils
 
 
 # 民俗調理格式12 2.5"套表民俗調理單
@@ -20,7 +18,9 @@ class PrintMassageForm12:
         self.case_key = args[2]
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '民俗調理單印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "民俗調理單印表機"
+        )
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
         self.return_card = None
@@ -54,7 +54,9 @@ class PrintMassageForm12:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
@@ -65,8 +67,8 @@ class PrintMassageForm12:
         painter = QtGui.QPainter()
         painter.setFont(self.font)
         painter.begin(self.printer)
-        painter.drawText(0, 10, 'print test line1 中文測試')
-        painter.drawText(0, 30, 'print test line2 中文測試')
+        painter.drawText(0, 10, "print test line1 中文測試")
+        painter.drawText(0, 30, "print test line2 中文測試")
         painter.end()
 
     def print_html(self, printing, return_card=None):
@@ -80,18 +82,18 @@ class PrintMassageForm12:
             document.print(self.printer)
 
     def _get_case_row(self, case_key):
-        sql = f'''
+        sql = f"""
             SELECT * FROM cases
             WHERE
                 CaseKey = {case_key}
-        '''
+        """
         row = self.database.select_record(sql)[0]
 
-        if string_utils.xstr(row['TreatType']) != '民俗調理':
+        if string_utils.xstr(row["TreatType"]) != "民俗調理":
             sql = f'''
                 SELECT * FROM cases
                 WHERE
-                    Position1 = {case_key}
+                    Position1 = "{case_key}"
             '''
             rows = self.database.select_record(sql)
             if len(rows) <= 0:
@@ -104,23 +106,23 @@ class PrintMassageForm12:
     def _html(self):
         row = self._get_case_row(self.case_key)
 
-        clinic_telephone = self.system_settings.field('院所電話')
-        patient_key = string_utils.xstr(row['PatientKey'])
-        patient_name = string_utils.xstr(row['Name'])
-        registration_no = string_utils.xstr(row['RegistNo'])
-        room = string_utils.xstr(row['Room'])
-        massager = string_utils.xstr(row['Massager'])
-        case_date = string_utils.xstr(row['CaseDate'].date())
-        case_time = string_utils.xstr(row['CaseDate'].time())[:5]
+        clinic_telephone = self.system_settings.field("院所電話")
+        patient_key = string_utils.xstr(row["PatientKey"])
+        patient_name = string_utils.xstr(row["Name"])
+        registration_no = string_utils.xstr(row["RegistNo"])
+        room = string_utils.xstr(row["Room"])
+        massager = string_utils.xstr(row["Massager"])
+        case_date = string_utils.xstr(row["CaseDate"].date())
+        case_time = string_utils.xstr(row["CaseDate"].time())[:5]
 
-        regist_fee = number_utils.get_integer(row['RegistFee'])
-        massage_fee = number_utils.get_integer(row['SMassageFee'])
+        regist_fee = number_utils.get_integer(row["RegistFee"])
+        massage_fee = number_utils.get_integer(row["SMassageFee"])
         total_fee = regist_fee + massage_fee
 
         if regist_fee == 0:
-            regist_fee = ''
-        
-        html = f'''
+            regist_fee = ""
+
+        html = f"""
             <html>
                 <body>
                     <p style="font-size:16px"><b>民俗調理 {clinic_telephone}</b></p>
@@ -158,6 +160,6 @@ class PrintMassageForm12:
                     </table>
                 </body>
             </html>
-        '''
+        """
 
         return html

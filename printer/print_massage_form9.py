@@ -1,12 +1,9 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
-from libs import printer_utils
-from libs import string_utils
-from libs import number_utils
-from libs import system_utils
-from libs import date_utils
+
+from libs import date_utils, number_utils, printer_utils, string_utils, system_utils
 
 
 # 民俗調理單格式9 3"套表掛號單 (禾生堂簡易版)
@@ -20,7 +17,9 @@ class PrintMassageForm9:
         self.case_key = args[2]
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '門診掛號單印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "門診掛號單印表機"
+        )
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
         self.return_card = None
@@ -54,7 +53,9 @@ class PrintMassageForm9:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
@@ -65,8 +66,8 @@ class PrintMassageForm9:
         painter = QtGui.QPainter()
         painter.setFont(self.font)
         painter.begin(self.printer)
-        painter.drawText(0, 10, 'print test line1 中文測試')
-        painter.drawText(0, 30, 'print test line2 中文測試')
+        painter.drawText(0, 10, "print test line1 中文測試")
+        painter.drawText(0, 30, "print test line2 中文測試")
         painter.end()
 
     def print_html(self, printing, return_card=None):
@@ -80,54 +81,54 @@ class PrintMassageForm9:
             document.print(self.printer)
 
     def _get_massager(self, case_row):
-        massager = string_utils.xstr(case_row['Massager'])
+        massager = string_utils.xstr(case_row["Massager"])
 
-        if massager == '':
+        if massager == "":
             sql = f'''
                 SELECT Massager FROM cases
                 WHERE
-                    Position1 = {self.case_key}
+                    Position1 = "{self.case_key}"
             '''
             rows = self.database.select_record(sql)
             if len(rows) >= 1:
                 row = rows[0]
-                massager = string_utils.xstr(row['Massager'])
+                massager = string_utils.xstr(row["Massager"])
 
         return massager
 
     def _html(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM cases
             WHERE
                 CaseKey = {self.case_key}
-        '''
+        """
         row = self.database.select_record(sql)[0]
 
-        card = string_utils.xstr(row['Card'])
-        if number_utils.get_integer(row['Continuance']) >= 1:
-            card += '-' + string_utils.xstr(row['Continuance'])
+        card = string_utils.xstr(row["Card"])
+        if number_utils.get_integer(row["Continuance"]) >= 1:
+            card += "-" + string_utils.xstr(row["Continuance"])
 
-        if self.system_settings.field('列印院所名稱') == 'Y':
-            clinic_name = self.system_settings.field('院所名稱')
-            clinic_telephone = f'電話: {self.system_settings.field("院所電話")}'
+        if self.system_settings.field("列印院所名稱") == "Y":
+            clinic_name = self.system_settings.field("院所名稱")
+            clinic_telephone = f"電話: {self.system_settings.field('院所電話')}"
         else:
-            clinic_name = ''
-            clinic_telephone = ''
+            clinic_name = ""
+            clinic_telephone = ""
 
         # patient_key = string_utils.xstr(row['PatientKey'])
-        patient_name = string_utils.xstr(row['Name'])
-        registration_no = string_utils.xstr(row['RegistNo'])
+        patient_name = string_utils.xstr(row["Name"])
+        registration_no = string_utils.xstr(row["RegistNo"])
         # room = string_utils.xstr(row['Room'])
         # ins_type = string_utils.xstr(row['InsType'])
         # regist_fee = string_utils.xstr(row['RegistFee'])
         # deposit_fee = string_utils.xstr(row['DepositFee'])
-        case_date = date_utils.west_date_to_nhi_date(row['CaseDate'].date(), '-')
+        case_date = date_utils.west_date_to_nhi_date(row["CaseDate"].date(), "-")
         # share = string_utils.xstr(row['Share'])
-        period = string_utils.xstr(row['Period'])
+        period = string_utils.xstr(row["Period"])
         # diag_share_fee = string_utils.xstr(row['SDiagShareFee'])
         massager = self._get_massager(row)
 
-        html = f'''
+        html = f"""
             <html>
                 <body>
                     <p style="font-size:22px; margin-left: 50px">
@@ -167,6 +168,6 @@ class PrintMassageForm9:
                     </table>
                 </body>
             </html>
-        '''
+        """
 
         return html

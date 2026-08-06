@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import calendar
 import datetime
 import html
@@ -2301,8 +2299,7 @@ def get_self_prescript_medicine_row_record(medical_record_row):
     rows = medical_record_row["PrescriptJSON"]
     for row in rows:
         medicine_set = row["MedicineSet"]
-        if medicine_set > max_medicine_set:
-            max_medicine_set = medicine_set
+        max_medicine_set = max(max_medicine_set, medicine_set)
 
     if max_medicine_set <= 1:
         return prescript_html
@@ -2417,9 +2414,7 @@ def is_moderate_complicated_acupuncture_ok(
         or disease_code2 in moderate_complicated_acupuncture_list
         or disease_code3 in moderate_complicated_acupuncture_list
         or disease_code4 in moderate_complicated_acupuncture_list
-    ):
-        check_ok = True
-    elif is_special_disease_ok(
+    ) or is_special_disease_ok(
         disease_code1, disease_code2, disease_code3, disease_code4, special_disease_list
     ):
         check_ok = True
@@ -2467,9 +2462,7 @@ def is_highly_complicated_acupuncture_ok(
         or disease_code2 in highly_complicated_acupuncture_list
         or disease_code3 in highly_complicated_acupuncture_list
         or disease_code4 in highly_complicated_acupuncture_list
-    ):
-        check_ok = True
-    elif is_moderate_complicated_acupuncture_with_special_disease_ok(
+    ) or is_moderate_complicated_acupuncture_with_special_disease_ok(
         disease_code1,
         disease_code2,
         disease_code3,
@@ -2497,9 +2490,7 @@ def is_moderate_complicated_massage_ok(
         or disease_code2 in moderate_complicated_massage_list
         or disease_code3 in moderate_complicated_massage_list
         or disease_code4 in moderate_complicated_massage_list
-    ):
-        check_ok = True
-    elif is_special_disease_ok(
+    ) or is_special_disease_ok(
         disease_code1, disease_code2, disease_code3, disease_code4, special_disease_list
     ):
         check_ok = True
@@ -2546,9 +2537,7 @@ def is_highly_complicated_massage_ok(
         or disease_code2 in highly_complicated_massage_list
         or disease_code3 in highly_complicated_massage_list
         or disease_code4 in highly_complicated_massage_list
-    ):
-        check_ok = True
-    elif is_moderate_complicated_massage_with_special_disease_ok(
+    ) or is_moderate_complicated_massage_with_special_disease_ok(
         disease_code1,
         disease_code2,
         disease_code3,
@@ -2997,7 +2986,7 @@ def delete_traditional_health_care(database, in_case_key):
         SELECT CaseKey FROM cases
         WHERE
             InsType = "自費" AND
-            Position1 = {in_case_key}
+            Position1 = "{in_case_key}"
     """
     rows = database.select_record(sql)
     if len(rows) <= 0:
@@ -3021,7 +3010,7 @@ def update_traditional_health_care(
     """
     rows = database.select_record(sql)
     if len(rows) <= 0:
-        return None
+        return
 
     row = rows[0]
 
@@ -3356,7 +3345,7 @@ def is_traditional_health_case(database, case_key):
         WHERE
             CaseKey = {case_key} AND
             TreatType = "民俗調理" OR
-            Position1 = {case_key}
+            Position1 = "{case_key}"
         LIMIT 1
     """
     rows = database.select_record(sql)
@@ -4265,9 +4254,12 @@ def get_prescript_json_html_data(
         if medicine_name in ["", "優待"]:
             continue
 
-        if treatment is not None and medicine_type not in ["穴道", "處置"]:
-            continue
-        elif treatment is None and medicine_type in ["穴道", "處置"]:
+        if (
+            treatment is not None
+            and medicine_type not in ["穴道", "處置"]
+            or treatment is None
+            and medicine_type in ["穴道", "處置"]
+        ):
             continue
 
         sequence += 1

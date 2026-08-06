@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import html
 import importlib
 import json
@@ -4997,9 +4995,7 @@ def print_regist_form(
             return
     elif system_settings.field("列印門診掛號單") == "預覽":
         print_type = "preview"
-    elif system_settings.field("列印門診掛號單") == "列印":
-        print_type = "print"
-    elif printable == "列印":
+    elif system_settings.field("列印門診掛號單") == "列印" or printable == "列印":
         print_type = "print"
 
     print_registration_form = get_print_registration_form(form)
@@ -5029,7 +5025,7 @@ def print_massage_form(
     sql = f"""
         SELECT InsType FROM cases
         WHERE
-            Position1 = {case_key}
+            Position1 = "{case_key}"
     """
     rows = database.select_record(sql)
     if printable == "自費" and len(rows) >= 1:  # 只印自費民俗調理, 健保+民俗調理不印
@@ -5265,9 +5261,12 @@ def print_ins_prescript(
 
     prescript_count = get_prescript_count(database, case_key, medicine_set=1)
 
-    if printable == "不印":
-        return
-    elif print_option == "系統設定" and printable == "藥品" and prescript_count <= 0:
+    if (
+        printable == "不印"
+        or print_option == "系統設定"
+        and printable == "藥品"
+        and prescript_count <= 0
+    ):
         return
     elif printable == "詢問":
         print_type = "print"
@@ -5333,9 +5332,12 @@ def print_self_prescript(
         database, case_key, medicine_set=0
     )  # medicine_set = 0 全部自費
 
-    if printable == "不印":
-        return
-    elif print_option == "系統設定" and printable == "藥品" and prescript_count <= 0:
+    if (
+        printable == "不印"
+        or print_option == "系統設定"
+        and printable == "藥品"
+        and prescript_count <= 0
+    ):
         return
     elif printable == "詢問":
         print_type = "print"
@@ -5397,9 +5399,12 @@ def print_ins_receipt(
     if print_option != "系統設定" and printable == "不印":
         printable = "列印"
 
-    if printable == "不印":
-        return
-    elif print_option == "系統設定" and printable == "藥品" and prescript_count <= 0:
+    if (
+        printable == "不印"
+        or print_option == "系統設定"
+        and printable == "藥品"
+        and prescript_count <= 0
+    ):
         return
     elif printable == "詢問":
         print_type = "print"
@@ -5476,9 +5481,12 @@ def print_self_receipt(
     if print_option != "系統設定" and printable == "不印":
         printable = "列印"
 
-    if printable == "不印":
-        return
-    elif print_option == "系統設定" and printable == "藥品" and prescript_count <= 0:
+    if (
+        printable == "不印"
+        or print_option == "系統設定"
+        and printable == "藥品"
+        and prescript_count <= 0
+    ):
         return
     elif printable == "詢問":
         print_type = "print"
@@ -5578,9 +5586,7 @@ def print_prescript_bag(
 
     prescript_count = get_prescript_count(database, case_key, medicine_set=medicine_set)
 
-    if printable == "不印":
-        return
-    elif printable == "藥品" and prescript_count <= 0:
+    if printable == "不印" or printable == "藥品" and prescript_count <= 0:
         return
     elif printable == "詢問":
         print_type = "print"
