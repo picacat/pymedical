@@ -173,6 +173,7 @@ class CheckDatabase(QtWidgets.QDialog):
         )
         self.database.add_index_if_not_exists("cases", index_name, fields)
         self.database.add_index_if_not_exists("cases", "idx_case_date", ["CaseDate"])
+        self.database.add_index_if_not_exists("cases", "idx_position1", ["Position1"])
 
     def _check_cases_thc_index(self):
         index_name = "idx_thc_position1"
