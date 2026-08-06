@@ -5154,6 +5154,42 @@ class Registration(QtWidgets.QMainWindow):
         else:
             purchase_script = ' AND wait.TreatType NOT IN ("自購")'
 
+        # sql = f"""
+        #     SELECT
+        #         wait.WaitKey,
+        #         cases.CaseKey, cases.PatientKey, cases.Name,
+        #         cases.InsType, cases.Share, cases.TreatType,
+        #         cases.Visit, cases.Card, cases.XCard, cases.Continuance,
+        #         cases.Security,
+        #         cases.Room, cases.RegistNo, cases.Doctor, cases.DrugNo,
+        #         cases.RegistFee, cases.SDiagShareFee, cases.SDrugShareFee,
+        #         cases.DepositFee, cases.TotalFee,
+        #         cases.Remark,
+        #         patient.Gender,
+        #         dosage.Days AS PresDays,
+        #         thc.THCFee
+        #     FROM wait
+        #         LEFT JOIN patient ON wait.PatientKey = patient.PatientKey
+        #         LEFT JOIN cases ON wait.CaseKey = cases.CaseKey
+        #         LEFT JOIN dosage ON dosage.CaseKey = cases.CaseKey AND dosage.MedicineSet = 1
+        #         LEFT JOIN (
+        #             SELECT Position1, MAX(TotalFee) AS THCFee
+        #             FROM cases
+        #             WHERE
+        #                 TreatType = "民俗調理" AND
+        #                 IFNULL(Position1, "") != ""
+        #             GROUP BY Position1
+        #         ) thc ON thc.Position1 = CAST(cases.CaseKey AS CHAR)
+        #     WHERE
+        #         cases.DoctorDone = "True"
+        #         AND NOT (
+        #             cases.TreatType = "民俗調理"
+        #             AND IFNULL(cases.Position1, "") != ""
+        #         )
+        #         {purchase_script}
+        #         {period_script}
+        #     ORDER BY FIELD(cases.Period, "晚班", "午班", "早班"), cases.RegistNo DESC
+        # """
         sql = f"""
             SELECT
                 wait.WaitKey,
@@ -5167,19 +5203,14 @@ class Registration(QtWidgets.QMainWindow):
                 cases.Remark,
                 patient.Gender,
                 dosage.Days AS PresDays,
-                thc.THCFee
+                (SELECT MAX(thc.TotalFee)
+                   FROM cases thc
+                  WHERE thc.TreatType = "民俗調理"
+                    AND thc.Position1 = CAST(cases.CaseKey AS CHAR)) AS THCFee
             FROM wait
                 LEFT JOIN patient ON wait.PatientKey = patient.PatientKey
                 LEFT JOIN cases ON wait.CaseKey = cases.CaseKey
                 LEFT JOIN dosage ON dosage.CaseKey = cases.CaseKey AND dosage.MedicineSet = 1
-                LEFT JOIN (
-                    SELECT Position1, MAX(TotalFee) AS THCFee
-                    FROM cases
-                    WHERE
-                        TreatType = "民俗調理" AND
-                        IFNULL(Position1, "") != ""
-                    GROUP BY Position1
-                ) thc ON thc.Position1 = CAST(cases.CaseKey AS CHAR)
             WHERE
                 cases.DoctorDone = "True"
                 AND NOT (
