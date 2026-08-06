@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import os
 
@@ -18,11 +17,11 @@ from libs import (
 )
 
 
-# 健保藥品更新 2026.04.20 v1
+# 健保藥品更新 2026.08.07 v2
 class DictInsDrug(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DictInsDrug, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -38,6 +37,8 @@ class DictInsDrug(QtWidgets.QMainWindow):
             "clear_ins_code": 6,
             "error_message": 7,
         }
+
+        self._updating = False  # 防止轉檔期間重入
 
         self._set_ui()
         self._set_signal()
@@ -116,7 +117,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self.ui.action_sync_drug.triggered.connect(self._manual_sync_drug)
         self.ui.action_update_drug.triggered.connect(self._live_update_ins_drug)
         self.ui.action_close.triggered.connect(self._close_ins_drug)
-        self.ui.action_update_valid_date.triggered.connect(self._update_valid_date)
+        self.ui.action_update_valid_date.triggered.connect(
+            lambda: self._update_valid_date(prompt=True)
+        )
         self.ui.action_update_prescript.triggered.connect(
             lambda: self._update_prescript(prompt=True)
         )
@@ -131,6 +134,50 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self.ui.spinBox_valid_year.valueChanged.connect(self._valid_date_changed)
         self.ui.spinBox_valid_month.valueChanged.connect(self._valid_date_changed)
         self.ui.action_export_drug_json.triggered.connect(self._export_dict_drug_json)
+
+    # ------------------------------------------------------------------
+    # 共用工具: 進度對話框 / 互斥執行
+    # ------------------------------------------------------------------
+
+    # 建立進度對話框. 筆數為 0 時回傳 None, 避免留下關不掉的 modal 視窗
+    def _new_progress_dialog(self, message, count):
+        if count <= 0:
+            return None
+
+        dialog = QtWidgets.QProgressDialog(message, "取消", 0, count, self)
+        dialog.setWindowModality(QtCore.Qt.WindowModal)
+        dialog.setMinimumDuration(0)  # 立即顯示, 不留 4 秒延遲彈出的伏筆
+        dialog.setValue(0)
+
+        return dialog
+
+    # 關閉進度對話框. reset() 會停掉內部的 forceTimer, 不依賴 autoClose
+    def _close_progress_dialog(self, dialog):
+        if dialog is None:
+            return
+
+        dialog.reset()
+        dialog.close()
+        dialog.deleteLater()
+
+    # 互斥執行長時間作業: 執行中停用本視窗, 避免 processEvents() 造成重入
+    def _run_exclusive(self, func):
+        if self._updating:
+            return False
+
+        self._updating = True
+        self.setEnabled(False)
+        try:
+            func()
+        finally:
+            self.setEnabled(True)
+            self._updating = False
+
+        return True
+
+    # ------------------------------------------------------------------
+    # 藥品資料讀取
+    # ------------------------------------------------------------------
 
     def _read_medicine(self, medicine_name=None):
         medicine_name_script = ""
@@ -217,7 +264,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 self._clear_ins_code,
             )
 
-    def _clear_ins_code(self, show_warning=True):
+    # *args 用來吃掉 clicked(bool) 傳進來的位置引數,
+    # 避免確認視窗被 checked=False 意外關掉
+    def _clear_ins_code(self, *args, show_warning=True):
         medicine_name = self.table_widget_medicine.field_value(
             self.col_no["medicine_name"]
         )
@@ -253,9 +302,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
         row_no = self.ui.tableWidget_medicine.currentRow()
 
+        # drug_name(3), ins_code(4), valid_date(5) 三欄都要清空
         for column in range(
             self.col_no["drug_name"],
-            self.col_no["ins_code"],
             self.col_no["clear_ins_code"],
         ):
             self.ui.tableWidget_medicine.setItem(
@@ -265,17 +314,42 @@ class DictInsDrug(QtWidgets.QMainWindow):
             row_no, self.col_no["clear_ins_code"], None
         )
 
+    # ------------------------------------------------------------------
+    # 健保碼更新
+    # ------------------------------------------------------------------
+
     # 手動更新健保碼
     def _manual_sync_drug(self):
-        self._update_drug_file1("單方.ods")
-        self._update_drug_file2("複方.ods")
+        def job():
+            self._update_drug_file1("單方.ods")
+            self._update_drug_file2("複方.ods")
+            self._read_medicine()
+            self._auto_correct_errors()
 
-        self._read_medicine()
-        self._auto_correct_errors()
+        if not self._run_exclusive(job):
+            return
 
         system_utils.show_message_box(
             QMessageBox.Information,
             "本機更新健保碼",
+            '<font size="5" color="blue"><b>最新版本的健保碼更新已完成.</b></font>',
+            "恭喜您! 現在已經是最新的健保藥品",
+        )
+
+    # 線上更新健保碼
+    def _live_update_ins_drug(self):
+        def job():
+            self._update_drug_file1()
+            self._update_drug_file2()
+            self._read_medicine()
+            self._auto_correct_errors()
+
+        if not self._run_exclusive(job):
+            return
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "線上更新健保碼",
             '<font size="5" color="blue"><b>最新版本的健保碼更新已完成.</b></font>',
             "恭喜您! 現在已經是最新的健保藥品",
         )
@@ -509,10 +583,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
             return
 
         for row_no in range(self.ui.tableWidget_medicine.rowCount() - 1, -1, -1):
-            error_item = self.ui.tableWidget_medicine.item(
-                row_no, self.col_no["error_message"]
-            )
-            if error_item is None or error_item.text() == "":
+            if not self._has_error(row_no):
                 self.ui.tableWidget_medicine.removeRow(row_no)
 
     def _drug_name_query(self):
@@ -525,7 +596,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
         self._read_medicine()
         self._filter_medicine()
 
-    def _update_valid_date(self, prompt: True):
+    def _update_valid_date(self, prompt=True):
         if prompt:
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Warning)
@@ -541,30 +612,27 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 return
 
         record_count = self.ui.tableWidget_medicine.rowCount()
-
-        progress_dialog = QtWidgets.QProgressDialog(
-            "正在更新健保藥品有效期限中, 請稍後...", "取消", 0, record_count, self
+        progress_dialog = self._new_progress_dialog(
+            "正在更新健保藥品有效期限中, 請稍後...", record_count
         )
 
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
+        try:
+            for row_no in range(record_count):
+                progress_dialog.setValue(row_no)
+                if progress_dialog.wasCanceled():
+                    break
 
-        for row_no in range(record_count):
-            progress_dialog.setValue(row_no)
-            if progress_dialog.wasCanceled():
-                break
+                self.ui.tableWidget_medicine.setCurrentCell(
+                    row_no, self.col_no["medicine_name"]
+                )
+                if self.ui.tableWidget_drug.rowCount() > 0:
+                    self.ui.tableWidget_drug.setCurrentCell(0, 0)
+                    self._set_ins_drug()
+                else:
+                    self._clear_ins_code(show_warning=False)
+        finally:
+            self._close_progress_dialog(progress_dialog)
 
-            self.ui.tableWidget_medicine.setCurrentCell(
-                row_no, self.col_no["medicine_name"]
-            )
-            if self.ui.tableWidget_drug.rowCount() > 0:
-                self.ui.tableWidget_drug.setCurrentCell(0, 0)
-                self._set_ins_drug()
-            else:
-                self._clear_ins_code(show_warning=False)
-
-        progress_dialog.setValue(record_count)
-        progress_dialog.deleteLater()
         self._read_medicine()
         self._filter_medicine()
 
@@ -602,8 +670,11 @@ class DictInsDrug(QtWidgets.QMainWindow):
         progress_bar.setMaximum(len(rows))
         progress_bar.setValue(0)
         self.ui.statusbar.addWidget(progress_bar)
-        self._write_ins_drug(medicine_type, rows, progress_bar)
-        self.ui.statusbar.removeWidget(progress_bar)
+        try:
+            self._write_ins_drug(medicine_type, rows, progress_bar)
+        finally:
+            self.ui.statusbar.removeWidget(progress_bar)
+            progress_bar.deleteLater()
 
     def _convert_valid_date(self, valid_date):
         if len(valid_date) == 7:
@@ -846,38 +917,30 @@ class DictInsDrug(QtWidgets.QMainWindow):
 
             self.database.insert_record("drug", field, data)
 
-    def _live_update_ins_drug(self):
-        self._update_drug_file1()
-        self._update_drug_file2()
+    # ------------------------------------------------------------------
+    # 錯誤檢查與自動修正
+    # ------------------------------------------------------------------
 
-        self._read_medicine()
-        self._auto_correct_errors()
+    # 該列是否有錯誤訊息. 空字串不算錯誤
+    def _has_error(self, row_no):
+        item = self.ui.tableWidget_medicine.item(row_no, self.col_no["error_message"])
 
-        system_utils.show_message_box(
-            QMessageBox.Information,
-            "線上更新健保碼",
-            '<font size="5" color="blue"><b>最新版本的健保碼更新已完成.</b></font>',
-            "恭喜您! 現在已經是最新的健保藥品",
-        )
+        return item is not None and item.text().strip() != ""
 
     def _auto_correct_errors(self):
-        for row_no in range(self.ui.tableWidget_medicine.rowCount()):
-            item = self.ui.tableWidget_medicine.item(
-                row_no, self.col_no["error_message"]
-            )
-            if item is not None:
-                self.ui.radioButton_errors.click()
-                self._update_valid_date(prompt=False)
-                self._update_prescript(prompt=False)
-                break
+        row_count = self.ui.tableWidget_medicine.rowCount()
+        has_error = any(self._has_error(row_no) for row_no in range(row_count))
 
-        error_count = 0
-        for row_no in range(self.ui.tableWidget_medicine.rowCount()):
-            item = self.ui.tableWidget_medicine.item(
-                row_no, self.col_no["error_message"]
-            )
-            if item is not None:
-                error_count += 1
+        if has_error:
+            self.ui.radioButton_errors.click()
+            self._update_valid_date(prompt=False)
+            self._update_prescript(prompt=False)
+
+        error_count = sum(
+            1
+            for row_no in range(self.ui.tableWidget_medicine.rowCount())
+            if self._has_error(row_no)
+        )
 
         if error_count == 0:
             self.ui.radioButton_all.click()
@@ -900,77 +963,73 @@ class DictInsDrug(QtWidgets.QMainWindow):
                 return
 
         record_count = self.ui.tableWidget_medicine.rowCount()
-
-        progress_dialog = QtWidgets.QProgressDialog(
-            "正在更新病歷處方健保藥品碼中, 請稍後...", "取消", 0, record_count, self
+        progress_dialog = self._new_progress_dialog(
+            "正在更新病歷處方健保藥品碼中, 請稍後...", record_count
         )
-
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
 
         valid_year = self.ui.spinBox_valid_year.value()
         valid_month = self.ui.spinBox_valid_month.value()
         start_date = f"{valid_year}-{valid_month:0>2}-01 00:00:00"
 
-        for row_no in range(record_count):
-            progress_dialog.setValue(row_no)
-            if progress_dialog.wasCanceled():
-                break
+        try:
+            for row_no in range(record_count):
+                progress_dialog.setValue(row_no)
+                if progress_dialog.wasCanceled():
+                    break
 
-            ins_code = self.ui.tableWidget_medicine.item(
-                row_no, self.col_no["ins_code"]
-            )
-            if ins_code is not None:
-                ins_code = ins_code.text()
+                ins_code = self.ui.tableWidget_medicine.item(
+                    row_no, self.col_no["ins_code"]
+                )
+                if ins_code is not None:
+                    ins_code = ins_code.text()
 
-            if ins_code in [None, ""]:
-                ins_code = "NULL"
+                if ins_code in [None, ""]:
+                    ins_code = "NULL"
 
-            medicine_key = self.ui.tableWidget_medicine.item(
-                row_no, self.col_no["medicine_key"]
-            )
-            if medicine_key is not None:
-                medicine_key = medicine_key.text()
-            else:
-                continue
+                medicine_key = self.ui.tableWidget_medicine.item(
+                    row_no, self.col_no["medicine_key"]
+                )
+                if medicine_key is not None:
+                    medicine_key = medicine_key.text()
+                else:
+                    continue
 
-            medicine_type = self.ui.tableWidget_medicine.item(
-                row_no, self.col_no["medicine_type"]
-            )
-            if medicine_type is not None:
-                medicine_type = medicine_type.text()
-            else:
-                continue
+                medicine_type = self.ui.tableWidget_medicine.item(
+                    row_no, self.col_no["medicine_type"]
+                )
+                if medicine_type is not None:
+                    medicine_type = medicine_type.text()
+                else:
+                    continue
 
-            medicine_name = self.ui.tableWidget_medicine.item(
-                row_no, self.col_no["medicine_name"]
-            )
-            if medicine_name is not None:
-                medicine_name = medicine_name.text()
-            else:
-                continue
+                medicine_name = self.ui.tableWidget_medicine.item(
+                    row_no, self.col_no["medicine_name"]
+                )
+                if medicine_name is not None:
+                    medicine_name = medicine_name.text()
+                else:
+                    continue
 
-            if ins_code == "NULL":
-                update_condition = "InsCode = NULL"
-                check_condition = "InsCode IS NOT NULL"
-            else:
-                update_condition = f'InsCode = "{ins_code}"'
-                check_condition = f'(InsCode != "{ins_code}" OR InsCode IS NULL)'
+                if ins_code == "NULL":
+                    update_condition = "InsCode = NULL"
+                    check_condition = "InsCode IS NOT NULL"
+                else:
+                    update_condition = f'InsCode = "{ins_code}"'
+                    check_condition = f'(InsCode != "{ins_code}" OR InsCode IS NULL)'
 
-            sql = f'''
-                UPDATE prescript
-                SET
-                    {update_condition}
-                WHERE
-                    CaseDate >= "{start_date}" AND
-                    MedicineSet = 1 AND
-                    (MedicineKey = {medicine_key} AND MedicineName = "{medicine_name}") AND
-                    {check_condition}
-            '''
-            self.database.exec_sql(sql)
-
-        progress_dialog.setValue(record_count)
-        progress_dialog.deleteLater()
+                sql = f'''
+                    UPDATE prescript
+                    SET
+                        {update_condition}
+                    WHERE
+                        CaseDate >= "{start_date}" AND
+                        MedicineSet = 1 AND
+                        (MedicineKey = {medicine_key} AND MedicineName = "{medicine_name}") AND
+                        {check_condition}
+                '''
+                self.database.exec_sql(sql)
+        finally:
+            self._close_progress_dialog(progress_dialog)
 
         if prompt:
             msg_box = QMessageBox()
@@ -980,6 +1039,10 @@ class DictInsDrug(QtWidgets.QMainWindow):
             msg_box.setInformativeText("請按確定鍵結束.")
             msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
             msg_box.exec_()
+
+    # ------------------------------------------------------------------
+    # 指定藥廠
+    # ------------------------------------------------------------------
 
     # 選擇藥廠名稱
     def _get_factory(self):
@@ -1014,25 +1077,28 @@ class DictInsDrug(QtWidgets.QMainWindow):
             return
 
         row_count = self.ui.tableWidget_medicine.rowCount()
-        progress_dialog = QtWidgets.QProgressDialog(
-            "正在轉入指定的藥廠藥品碼中, 請稍後...", "取消", 0, row_count, self
+        progress_dialog = self._new_progress_dialog(
+            "正在轉入指定的藥廠藥品碼中, 請稍後...", row_count
         )
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
 
-        for row_no in range(row_count):
-            self.ui.tableWidget_medicine.setCurrentCell(
-                row_no, self.col_no["medicine_name"]
-            )
-            medicine_name = self.ui.tableWidget_medicine.item(
-                row_no, self.col_no["medicine_name"]
-            ).text()
-            self._set_factory(factory, medicine_name)
+        try:
+            for row_no in range(row_count):
+                progress_dialog.setValue(row_no)
+                if progress_dialog.wasCanceled():
+                    break
 
-            progress_dialog.setValue(row_no)
+                self.ui.tableWidget_medicine.setCurrentCell(
+                    row_no, self.col_no["medicine_name"]
+                )
+                medicine_name_item = self.ui.tableWidget_medicine.item(
+                    row_no, self.col_no["medicine_name"]
+                )
+                if medicine_name_item is None:
+                    continue
 
-        progress_dialog.setValue(row_count)
-        progress_dialog.deleteLater()
+                self._set_factory(factory, medicine_name_item.text())
+        finally:
+            self._close_progress_dialog(progress_dialog)
 
         system_utils.show_message_box(
             QMessageBox.Information,
@@ -1081,7 +1147,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
                     row_no, self.col_no["error_message"]
                 )
                 error_message = []
-                if message_item is not None:
+                if message_item is not None and message_item.text().strip() != "":
                     error_message.append(message_item.text())
 
                 error_message.append(f"藥名不符:{drug_name}")
@@ -1129,9 +1195,8 @@ class DictInsDrug(QtWidgets.QMainWindow):
         rows = self.database.select_record(sql)
 
         json_data = db_utils.mysql_to_json(rows)
-        text_file = open(json_file_name, "w", encoding="utf8")
-        text_file.write(str(json_data))
-        text_file.close()
+        with open(json_file_name, "w", encoding="utf8") as text_file:
+            text_file.write(str(json_data))
 
         system_utils.show_message_box(
             QMessageBox.Information,
