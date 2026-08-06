@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""pymedical 每日備份.
+"""pymedical 每日備份. 2026-08-05
 
 全部改用 mysqldump，不再複製 .MYD/.MYI/.frm 實體檔案。
 
