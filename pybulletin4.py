@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import datetime
 import json
 import os
@@ -39,7 +37,7 @@ ROTATION_SECONDS = 5000
 class PyBulletin4(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(PyBulletin4, self).__init__(parent)
+        super().__init__(parent)
         self.args = args
 
         self._set_db()
@@ -345,6 +343,11 @@ class PyBulletin4(QtWidgets.QMainWindow):
         filename = self.media_list[self.video_index]
         self._play_video(filename)
 
+    def _is_url(self, source):
+        return source.lower().startswith(
+            ("http://", "https://", "rtsp://", "rtmp://", "mms://")
+        )
+
     def _set_stream_list(self):
         self.stream_index = 0
 
@@ -361,7 +364,9 @@ class PyBulletin4(QtWidgets.QMainWindow):
             self.stream_list.append(self.url)
 
         for row in rows:
-            self.stream_list.append(row["Value"])
+            url = row["Value"]
+            if self._is_url(url):
+                self.stream_list.append(url)
 
     def _play_url_stream(self):
         self._set_stream_list()
