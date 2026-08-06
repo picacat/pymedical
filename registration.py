@@ -4079,7 +4079,7 @@ class Registration(QtWidgets.QMainWindow):
             SELECT TotalFee FROM cases
             WHERE
                 InsType = "自費" AND
-                Position1 = {case_key}
+                Position1 = "{case_key}"
         """
         rows = self.database.select_record(sql)
         if len(rows) > 0:
@@ -4847,7 +4847,7 @@ class Registration(QtWidgets.QMainWindow):
             WHERE
                 PatientKey = {patient_key} AND
                 TreatType = "民俗調理" AND
-                Position1 = {case_key}
+                Position1 = "{case_key}"
         '''
         self.database.exec_sql(sql)
 
