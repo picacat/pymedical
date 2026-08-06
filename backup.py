@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""pymedical 每日備份. 2026-08-05
+"""pymedical 每日備份.
 
 全部改用 mysqldump，不再複製 .MYD/.MYI/.frm 實體檔案。
 
@@ -170,7 +170,8 @@ class TargetResult:
         self.ok = False
         self.cancelled = False
         self.tables_total = 0
-        self.failed = []
+        self.failed = []  # 資料表失敗 → 致命
+        self.warnings = []  # 物件檔失敗 → 警告，不阻擋備份
         self.error = ""
         self.seconds = 0.0
 
@@ -185,6 +186,7 @@ class TargetResult:
             "tables_total": self.tables_total,
             "tables_failed": len(self.failed),
             "failed": [f"{t.name}: {t.error}" for t in self.failed[:20]],
+            "warnings": [f"{t.name}: {t.error}" for t in self.warnings[:20]],
             "error": self.error,
             "seconds": round(self.seconds, 1),
             "finished_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -393,6 +395,7 @@ class Backup(QtWidgets.QDialog):
             return result
 
         table_results = []
+        object_results = []
         locked = self._acquire_global_lock(result)
         try:
             for table_name in table_names:
@@ -401,7 +404,7 @@ class Backup(QtWidgets.QDialog):
                 self._advance()
 
             self._set_label("正在備份資料庫物件 ...")
-            table_results.extend(self._dump_objects(result.backup_path, view_names))
+            object_results = self._dump_objects(result.backup_path, view_names)
             self._advance()
         except BackupCancelled:
             result.cancelled = True
@@ -415,7 +418,11 @@ class Backup(QtWidgets.QDialog):
         self._end_stage()
 
         result.failed = [t for t in table_results if not t.ok]
-        self._write_manifest(result.backup_path, label, table_results)
+        result.warnings = [t for t in object_results if not t.ok]
+        self._write_manifest(result.backup_path, label, table_results + object_results)
+
+        # 物件檔（檢視表、routines）失敗不算致命：病歷資料本身完整，
+        # 異地備份仍應照常複製，舊備份也可以照常輪替。
         result.ok = not result.failed and not result.cancelled and not result.error
         result.seconds = time.time() - started
         return result
@@ -528,8 +535,67 @@ class Backup(QtWidgets.QDialog):
 
         return self._verify_dump_file(filename, full_filename)
 
+    def _dump_object_file(self, name, backup_path, arg_variants):
+        """依序嘗試多組參數，第一組成功就採用。
+
+        舊版 mysqldump 對 --events / --routines 的支援程度不一，
+        失敗時降級重試比直接放棄好。
+        """
+        full_filename = os.path.join(backup_path, name)
+        last_error = ""
+
+        for args in arg_variants:
+            try:
+                self._run_mysqldump(args, full_filename)
+            except subprocess.CalledProcessError as error:
+                # 關鍵：mysqldump 真正的原因在 stderr，不在例外的字串裡
+                stderr = (error.stderr or b"").decode("utf-8", errors="ignore").strip()
+                last_error = stderr or f"exit status {error.returncode}"
+                logger.warning("%s 匯出失敗（%s），嘗試下一組參數", name, last_error)
+                continue
+            except OSError as error:
+                return TableResult(name, False, 0, f"無法執行 mysqldump: {error}")
+
+            return self._verify_dump_file(name, full_filename)
+
+        # 全部失敗，刪掉可能殘留的半成品，避免還原時匯入空檔
+        try:
+            if os.path.isfile(full_filename):
+                os.remove(full_filename)
+        except OSError:
+            pass
+
+        return TableResult(name, False, 0, last_error)
+
+    def _count_routines_and_events(self):
+        """回傳 (routine 數, event 數)；查不到時回傳 -1 代表無法判斷."""
+        try:
+            rows = self.database.select_record(
+                "SELECT COUNT(*) AS c FROM information_schema.ROUTINES "
+                "WHERE ROUTINE_SCHEMA = %s",
+                (self._database_name,),
+            )
+            routines = int(rows[0]["c"]) if rows else 0
+        except Exception:  # noqa: BLE001
+            routines = -1  # 查不到就當作可能有，照樣嘗試匯出
+
+        try:
+            rows = self.database.select_record(
+                "SELECT COUNT(*) AS c FROM information_schema.EVENTS "
+                "WHERE EVENT_SCHEMA = %s",
+                (self._database_name,),
+            )
+            events = int(rows[0]["c"]) if rows else 0
+        except Exception:  # noqa: BLE001
+            events = 0  # 舊版伺服器沒有 EVENTS 檢視表
+
+        return routines, events
+
     def _dump_objects(self, backup_path, view_names):
-        """匯出逐表 dump 抓不到的東西：資料庫字元集、檢視表、routines、權限."""
+        """匯出逐表 dump 抓不到的東西：資料庫字元集、檢視表、routines、權限.
+
+        這些都不是病歷資料本身，失敗只當警告處理。
+        """
         results = []
 
         # 1. CREATE DATABASE（保住資料庫層級的字元集與 collation）
@@ -545,31 +611,39 @@ class Backup(QtWidgets.QDialog):
 
         # 2. 檢視表（逐表 dump 的 BASE TABLE 過濾會漏掉）
         if view_names:
-            full_filename = os.path.join(backup_path, VIEWS_FILENAME)
-            try:
-                self._run_mysqldump([self._database_name, *view_names], full_filename)
-                results.append(self._verify_dump_file(VIEWS_FILENAME, full_filename))
-            except Exception as error:  # noqa: BLE001
-                results.append(TableResult(VIEWS_FILENAME, False, 0, str(error)))
+            results.append(
+                self._dump_object_file(
+                    VIEWS_FILENAME,
+                    backup_path,
+                    [["--skip-lock-tables", self._database_name, *view_names]],
+                )
+            )
 
         # 3. stored procedure / function / event
-        full_filename = os.path.join(backup_path, ROUTINES_FILENAME)
-        try:
-            self._run_mysqldump(
-                [
-                    "--routines",
-                    "--events",
-                    "--no-create-info",
-                    "--no-data",
-                    "--no-create-db",
-                    "--skip-triggers",  # triggers 已隨各資料表匯出
-                    self._database_name,
-                ],
-                full_filename,
+        #
+        # 沒有任何 routine 與 event 時直接略過——大多數診所的資料庫
+        # 都是這種情況，何必為了一個空檔案去踩舊版 mysqldump 的雷。
+        routines, events = self._count_routines_and_events()
+        if routines == 0 and events == 0:
+            logger.info("資料庫沒有 routine 與 event，略過 %s", ROUTINES_FILENAME)
+        else:
+            base_args = [
+                "--routines",
+                "--no-create-info",
+                "--no-data",
+                "--no-create-db",
+                "--skip-triggers",  # triggers 已隨各資料表匯出
+                self._database_name,
+            ]
+            # 舊版 mysqldump（例如 mysqldump50）對新版伺服器的
+            # mysql.event / mysql.proc 可能讀不動，逐步降級重試
+            variants = []
+            if events != 0:
+                variants.append(["--events", *base_args])
+            variants.append(base_args)
+            results.append(
+                self._dump_object_file(ROUTINES_FILENAME, backup_path, variants)
             )
-            results.append(self._verify_dump_file(ROUTINES_FILENAME, full_filename))
-        except Exception as error:  # noqa: BLE001
-            results.append(TableResult(ROUTINES_FILENAME, False, 0, str(error)))
 
         # 4. 使用者權限（權限不足時略過，不算失敗）
         try:
@@ -910,9 +984,29 @@ class Backup(QtWidgets.QDialog):
         )
 
     def _report(self, results, target_count):
-        """成功時安靜結束，有任何問題就跳出明確警告."""
+        """成功時安靜結束；資料表失敗跳紅字，物件檔失敗只提醒."""
         problems = [r for r in results if not r.ok]
+        warned = [r for r in results if r.ok and r.warnings]
+
+        # 全部順利：安靜結束，不打擾櫃檯
+        if not problems and not warned and len(results) == target_count:
+            return
+
+        # 資料表都完整，只是物件檔有問題 → 提醒即可，備份仍然有效
         if not problems and len(results) == target_count:
+            lines = []
+            for result in warned:
+                for item in result.warnings:
+                    lines.append(f"　- {item.name}：{item.error}")
+            system_utils.show_message_box(
+                QMessageBox.Warning,
+                "備份完成（部分物件未備份）",
+                '<font size="5"><b>病歷資料已完整備份，'
+                "但部分資料庫物件備份失敗。</b></font>",
+                "以下項目未納入本次備份，不影響病歷資料的還原：\n"
+                + "\n".join(lines)
+                + "\n\n請在方便時通知系統維護人員檢查。",
+            )
             return
 
         lines = []
@@ -923,12 +1017,16 @@ class Backup(QtWidgets.QDialog):
                 lines.append(f"● {result.label}：{result.error}")
             if result.failed:
                 lines.append(
-                    f"● {result.label}：{len(result.failed)} / {result.tables_total} 個項目失敗"
+                    f"● {result.label}：{len(result.failed)} / {result.tables_total} 個資料表失敗"
                 )
                 for item in result.failed[:10]:
                     lines.append(f"　　- {item.name}：{item.error}")
                 if len(result.failed) > 10:
                     lines.append(f"　　- 其餘 {len(result.failed) - 10} 項請見備份日誌")
+
+        for result in results:
+            for item in result.warnings:
+                lines.append(f"● {result.label}：{item.name} 未備份（{item.error}）")
 
         if len(results) < target_count:
             lines.append("● 主要目標失敗，其餘備份路徑本次未複製。")
