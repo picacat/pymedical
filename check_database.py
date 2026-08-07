@@ -6,6 +6,23 @@ from libs import charge_utils, date_utils, system_utils, update_utils
 
 UPDATE_RECORD_LOG = "update_records.log"
 
+# 允許自動清除的殘骸表（錯誤 1932：.frm 還在，但引擎裡沒有資料實體）
+#
+# 這種表任何讀寫都會拋 1932，備份也會失敗。麻煩的是 information_schema
+# 看得到它，所以「不存在就自動建立」的判斷會被 .frm 騙過去，這個狀態會
+# 永遠卡住，不會自己好。
+#
+# 只加入「刪掉之後由系統重建空表即可、不含需要保留的歷史資料」的表。
+# 【絕對不要】加入 cases、patient、prescript、dosage、insapply 等
+# 病歷與申報相關資料表——那類表出問題應該走災難復原流程
+# （停機、完整備份資料目錄、嘗試 IMPORT TABLESPACE 或從備份還原），
+# 不該由程式自動刪除。
+ORPHAN_CHECK_TABLES = [
+    "returngoods",
+    "chargeregist",
+    "insappeal",
+]
+
 
 # 系統設定 2018.03.19
 class CheckDatabase(QtWidgets.QDialog):
@@ -32,12 +49,21 @@ class CheckDatabase(QtWidgets.QDialog):
 
     # 檢查資料庫狀態
     def check_database(self):
+        self._drop_wrong_tables()
         self._alter_table()
         self._correct_records()
         self._check_additional_records()
         update_utils.update_database(self.parent, self.database)
 
+    def _drop_wrong_tables(self):
+        try:
+            self.database.exec_sql("DROP TABLE IF EXISTS `ReturnGoods`")
+        except Exception:
+            pass
+
     def _alter_table(self):
+        self._check_orphan_tables()
+
         max_progress = 61
         self.progress = 0
         self.progress_dialog = QtWidgets.QProgressDialog(
@@ -173,7 +199,6 @@ class CheckDatabase(QtWidgets.QDialog):
         )
         self.database.add_index_if_not_exists("cases", index_name, fields)
         self.database.add_index_if_not_exists("cases", "idx_case_date", ["CaseDate"])
-        self.database.add_index_if_not_exists("cases", "idx_position1", ["Position1"])
 
     def _check_cases_thc_index(self):
         index_name = "idx_thc_position1"
@@ -1404,3 +1429,76 @@ class CheckDatabase(QtWidgets.QDialog):
     def _check_value(self):
         if self.system_settings.field("健保IC卡資料上傳格式") != "2.0":
             self.system_settings.post("健保IC卡資料上傳格式", "2.0")
+
+    def _find_table_name(self, table_name):
+        """回傳資料庫中實際的表名，找不到則回傳 None.
+
+        Linux/FreeBSD 的 MariaDB 表名分大小寫，實際名稱可能是
+        ReturnGoods 而非 returngoods，必須拿回真正的名字才能操作。
+        """
+        sql = f'''
+                SELECT TABLE_NAME FROM information_schema.TABLES
+                WHERE
+                    TABLE_SCHEMA = DATABASE() AND
+                    TABLE_TYPE = "BASE TABLE" AND
+                    LOWER(TABLE_NAME) = LOWER("{table_name}")
+                LIMIT 1
+            '''
+        rows = self.database.select_record(sql)
+        if not rows:
+            return None
+        return list(rows[0].values())[0]
+
+    def _table_is_usable(self, table_name):
+        """真的去引擎開一次表；只有明確是 1932 才回報不可用.
+
+        其他任何錯誤（連線問題、權限不足）一律當作可用，
+        絕不因為不確定就刪表。
+        """
+        try:
+            self.database.select_record(f"SELECT 1 FROM `{table_name}` LIMIT 1")
+            return True
+        except Exception as e:
+            message = str(e)
+            if "1932" in message or "doesn't exist in engine" in message:
+                return False
+            return True
+
+    def _write_update_log(self, message):
+        # 訊息一律用 ASCII：這個檔案在別處是用預設編碼讀取的，
+        # 混入中文會讓 _check_highly_complicated_treatment 的 read() 爆掉
+        try:
+            with open(UPDATE_RECORD_LOG, "a") as f:
+                f.write(f"{date_utils.now_to_str()}: {message}\n")
+        except Exception:
+            pass
+
+    def _check_orphan_tables(self):
+        """清除 ORPHAN_CHECK_TABLES 名單內的殘骸表，回傳已刪除的表名清單."""
+        dropped = []
+
+        for name in ORPHAN_CHECK_TABLES:
+            try:
+                actual_name = self._find_table_name(name)
+                if actual_name is None:
+                    continue  # 本來就不存在，交給既有的自動建表流程
+                if self._table_is_usable(actual_name):
+                    continue  # 正常，不動它
+
+                self.database.exec_sql(f"DROP TABLE IF EXISTS `{actual_name}`")
+
+                if self._find_table_name(name) is not None:
+                    # DROP 回報成功但 .frm 仍在，需要停服務手動移除
+                    self._write_update_log(
+                        f"orphan table {actual_name} still exists after DROP"
+                    )
+                    continue
+
+                dropped.append(actual_name)
+                self._write_update_log(
+                    f"orphan table {actual_name} dropped (error 1932)"
+                )
+            except Exception as e:
+                self._write_update_log(f"orphan table {name} check failed: {e}")
+
+        return dropped
