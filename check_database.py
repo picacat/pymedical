@@ -19,9 +19,7 @@ UPDATE_RECORD_LOG = "update_records.log"
 # 不該由程式自動刪除。
 ORPHAN_CHECK_TABLES = [
     "returngoods",
-    "chargeregist",
     "insappeal",
-    "checklist",
 ]
 
 
@@ -64,6 +62,16 @@ class CheckDatabase(QtWidgets.QDialog):
 
         try:
             self.database.exec_sql("DROP TABLE IF EXISTS `ReturnGoods`")
+        except Exception:
+            pass
+
+        try:
+            self.database.exec_sql("DROP TABLE IF EXISTS `checklist`")
+        except Exception:
+            pass
+
+        try:
+            self.database.exec_sql("DROP TABLE IF EXISTS `chargeregist`")
         except Exception:
             pass
 
