@@ -21,6 +21,7 @@ ORPHAN_CHECK_TABLES = [
     "returngoods",
     "chargeregist",
     "insappeal",
+    "checklist",
 ]
 
 
@@ -57,6 +58,11 @@ class CheckDatabase(QtWidgets.QDialog):
 
     def _drop_wrong_tables(self):
         try:
+            self.database.exec_sql("DROP TABLE IF EXISTS insreply")
+        except Exception:
+            print("error: DROP TABLE IF EXISTS insreply")
+
+        try:
             self.database.exec_sql("DROP TABLE IF EXISTS `ReturnGoods`")
         except Exception:
             pass
@@ -86,11 +92,6 @@ class CheckDatabase(QtWidgets.QDialog):
         self._check_certificate()
         self._check_others()
         self._check_ins_apply()
-
-        try:
-            self.database.exec_sql("DROP TABLE IF EXISTS insreply")
-        except Exception:
-            print("error: DROP TABLE IF EXISTS insreply")
 
         self.progress_dialog.deleteLater()
 
