@@ -1310,7 +1310,7 @@
      <normaloff>../icons/gtk-cancel.svg</normaloff>../icons/gtk-cancel.svg</iconset>
    </property>
    <property name="text">
-    <string>取消預約[F5]</string>
+    <string>取消預約F5</string>
    </property>
    <property name="toolTip">
     <string>取消預約</string>
@@ -1325,7 +1325,7 @@
      <normaloff>../icons/dialog-ok.svg</normaloff>../icons/dialog-ok.svg</iconset>
    </property>
    <property name="text">
-    <string>預約報到[F10]</string>
+    <string>預約報到F10</string>
    </property>
    <property name="toolTip">
     <string>預約報到</string>
@@ -1340,7 +1340,7 @@
      <normaloff>../icons/appointment-new.svg</normaloff>../icons/appointment-new.svg</iconset>
    </property>
    <property name="text">
-    <string>新增預約[F2]</string>
+    <string>新增預約F2</string>
    </property>
    <property name="toolTip">
     <string>新增選取時間表內的預約掛號</string>
@@ -1355,7 +1355,7 @@
      <normaloff>../icons/system-search.png</normaloff>../icons/system-search.png</iconset>
    </property>
    <property name="text">
-    <string>預約查詢[F1]</string>
+    <string>預約查詢F1</string>
    </property>
    <property name="shortcut">
     <string>F1</string>
@@ -1394,7 +1394,7 @@
      <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
    </property>
    <property name="text">
-    <string>更改預約[F3]</string>
+    <string>更改預約F3</string>
    </property>
    <property name="toolTip">
     <string>取消預約</string>
@@ -1409,7 +1409,7 @@
      <normaloff>../icons/printer-printing.png</normaloff>../icons/printer-printing.png</iconset>
    </property>
    <property name="text">
-    <string>列預約單[F7]</string>
+    <string>列預約單F7</string>
    </property>
    <property name="toolTip">
     <string>列印預約單</string>
@@ -1463,7 +1463,7 @@
      <normaloff>../icons/dialog-warning.png</normaloff>../icons/dialog-warning.png</iconset>
    </property>
    <property name="text">
-    <string>保留預約[F8]</string>
+    <string>保留預約F8</string>
    </property>
    <property name="toolTip">
     <string>保留此預約時間</string>
