@@ -706,9 +706,9 @@ class PyMedical(QtWidgets.QMainWindow):
         self.ui.statusbar.addPermanentWidget(self.label_version)
         self.ui.statusbar.addPermanentWidget(self.add_separator())
 
-        self.label_template = QtWidgets.QLabel()  # 先暫時卡位 2025-04-30
-        self.label_template.setFixedWidth(200)
-        self.ui.statusbar.addPermanentWidget(self.label_template)
+        self.label_db_engine = QtWidgets.QLabel()  # 先暫時卡位 2025-04-30
+        self.label_db_engine.setFixedWidth(200)
+        self.ui.statusbar.addPermanentWidget(self.label_db_engine)
         self.ui.statusbar.addPermanentWidget(self.add_separator())
 
         self.label_record_index = QtWidgets.QLabel()
@@ -2410,6 +2410,7 @@ class PyMedical(QtWidgets.QMainWindow):
         self.label_station_no.setText(
             f"工作站編號: {self.system_settings.field('工作站編號')}"
         )
+        self.label_db_engine.setText(f"資料引擎: {self.database.db_engine()}")
         self.label_ip.setText(f"本機IP: {self.system_settings.field('使用者IP')}")
         self.label_version.setText(f"版本: {self.version}")
         self.label_server_ip.setText(f"伺服器IP: {self.host}")
