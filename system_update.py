@@ -1485,7 +1485,7 @@ class SystemUpdate(QtWidgets.QDialog):
             current_user = self.system_settings.field("使用者")
             pc_name = socket.gethostname()
             os_info = self._get_os_info()
-            db_engine = self.database.db_engine()
+            db_engine = self.database.db_engine()  # 資料庫引擎
             ip_address = self._get_ip_address(pc_name)
 
             conn = self._get_db_connection()
