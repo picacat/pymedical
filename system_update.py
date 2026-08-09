@@ -1485,6 +1485,7 @@ class SystemUpdate(QtWidgets.QDialog):
             current_user = self.system_settings.field("使用者")
             pc_name = socket.gethostname()
             os_info = self._get_os_info()
+            db_engine = self.database.db_engine()
             ip_address = self._get_ip_address(pc_name)
 
             conn = self._get_db_connection()
@@ -1499,13 +1500,13 @@ class SystemUpdate(QtWidgets.QDialog):
                 REPLACE INTO update_logs
                 (clinic_name, pc_name, login_user, current_version, os_version,
                  ip_address, update_status, error_msg, update_time)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
             """
             legacy_query = """
                 REPLACE INTO update_logs
                 (clinic_name, pc_name, login_user, current_version, os_version,
                  ip_address, update_time)
-                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
             """
 
             try:
@@ -1517,6 +1518,7 @@ class SystemUpdate(QtWidgets.QDialog):
                         current_user,
                         commit_msg,
                         os_info,
+                        db_engine,
                         ip_address,
                         update_status,
                         (error_msg or "")[:500],
@@ -1531,6 +1533,7 @@ class SystemUpdate(QtWidgets.QDialog):
                         current_user,
                         commit_msg,
                         os_info,
+                        db_engine,
                         ip_address,
                     ),
                 )
