@@ -224,6 +224,8 @@ class SystemUpdate(QtWidgets.QDialog):
 
         self.ui = None
         self.restart_pymedical = False
+        self.db_engine = self.database.db_engine()
+        print(self.db_engine)
 
         # === 修正：base_path 必須在 _set_ui() 之前就定義好 ===
         # 原版把它放在 _set_ui() 之後，任何 UI 初始化流程一旦用到就會 AttributeError
@@ -1498,15 +1500,15 @@ class SystemUpdate(QtWidgets.QDialog):
             new_query = """
                 REPLACE INTO update_logs
                 (clinic_name, pc_name, login_user, current_version, os_version,
-                 ip_address, update_status, error_msg, update_time)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                 ip_address, update_status, error_msg, update_time, db_engine)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
             """
 
             legacy_query = """
                 REPLACE INTO update_logs
                 (clinic_name, pc_name, login_user, current_version, os_version,
-                 ip_address, update_time)
-                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                 ip_address, update_time, db_engine)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), %s)
             """
 
             try:
@@ -1521,6 +1523,7 @@ class SystemUpdate(QtWidgets.QDialog):
                         ip_address,
                         update_status,
                         (error_msg or "")[:500],
+                        self.db_engine,
                     ),
                 )
             except mysql.connector.Error:
@@ -1533,6 +1536,7 @@ class SystemUpdate(QtWidgets.QDialog):
                         commit_msg,
                         os_info,
                         ip_address,
+                        self.db_engine,
                     ),
                 )
 
