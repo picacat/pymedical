@@ -1499,13 +1499,13 @@ class SystemUpdate(QtWidgets.QDialog):
             new_query = """
                 REPLACE INTO update_logs
                 (clinic_name, pc_name, login_user, current_version, os_version,
-                 ip_address, update_status, error_msg, update_time)
+                 db_engine, ip_address, update_status, error_msg, update_time)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
             """
             legacy_query = """
                 REPLACE INTO update_logs
                 (clinic_name, pc_name, login_user, current_version, os_version,
-                 ip_address, update_time)
+                 db_engine, ip_address, update_time)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
             """
 
