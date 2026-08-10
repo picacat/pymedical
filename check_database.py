@@ -616,7 +616,17 @@ class CheckDatabase(QtWidgets.QDialog):
 
         self._exec_process(process_list)
 
+    def _check_reserve_index(self):
+        self.database.add_index_if_not_exists(
+            "reserve", "idx_reserve_date", ["ReserveDate"]
+        )
+
     def _check_reserve(self):
+        try:
+            self._check_reserve_index()
+        except Exception:
+            pass
+
         if self.call_from == "pymedical":
             process_list = [
                 self.database.check_field_exists(
@@ -673,9 +683,6 @@ class CheckDatabase(QtWidgets.QDialog):
             ]
 
         self._exec_process(process_list)
-        self.database.add_index_if_not_exists(
-            "reserve", "idx_reserve_date", ["ReserveDate"]
-        )
 
     def _check_wait(self):
         if self.call_from == "pymedical":

@@ -130,9 +130,6 @@ def last_successful_backup(data_dir):
 
 def check_backup_health(system_settings, warn_days=WARN_DAYS):
     """主程式啟動時呼叫，回傳 (ok, message)."""
-    if system_settings.field("資料路徑") == "不備份":
-        return True, ""
-
     backup_dir = nhi_utils.get_dir(system_settings, "備份路徑")
     if backup_dir in ["", None]:
         return False, "尚未設定備份路徑，系統目前沒有任何自動備份。"
@@ -355,10 +352,9 @@ class Backup(QtWidgets.QDialog):
                         "請重新檢查備份路徑是否存在.",
                     )
 
-        if self.system_settings.field("資料路徑") != "不備份":
-            backup_dir = nhi_utils.get_dir(self.system_settings, "備份路徑")
-            if backup_dir not in ["", None]:
-                targets.append(("本機備份", backup_dir))
+        backup_dir = nhi_utils.get_dir(self.system_settings, "備份路徑")
+        if backup_dir not in ["", None]:
+            targets.append(("本機備份", backup_dir))
 
         external_dir = self.system_settings.field("異地備份路徑")
         if external_dir not in ["", None]:
