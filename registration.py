@@ -2030,6 +2030,11 @@ class Registration(QtWidgets.QMainWindow):
                 self.ui.comboBox_course.setCurrentIndex(0)
                 self.ui.comboBox_injury_type.setCurrentIndex(0)
 
+        try:
+            self._remind_upcoming_reservation(patient_key)
+        except Exception:
+            pass
+
         self._registration_precheck(patient_key)
         self._set_regist_fee()
         self._set_diag_share_fee()
@@ -2039,6 +2044,31 @@ class Registration(QtWidgets.QMainWindow):
         self._set_last_doctor(patient_key)
 
         self.ui.comboBox_card.setFocus()
+
+    def _remind_upcoming_reservation(self, patient_key):
+        sql = """
+            SELECT ReserveDate FROM reserve
+            WHERE
+                PatientKey = %s AND
+                ReserveDate > %s
+        """
+        params = (patient_key, datetime.datetime.now().strftime("%Y-%m-%d 23:59:59"))
+        rows = self.database.select_record(sql, params=params)
+
+        reservation_list = []
+        for row in rows:
+            reservation_list.append(row["ReserveDate"].strftime("%Y-%m-%d"))
+
+        if len(reservation_list) <= 0:
+            return
+
+        message = f"請注意！ 此病人在<br>{'<br>'.join(reservation_list)}<br> 尚有{len(reservation_list)}次預約"
+        system_utils.show_message_box(
+            QMessageBox.Warning,
+            "未來有預約提醒",
+            f'<font size="5" color="darkgreen"><b>{message}</b></font>',
+            "",
+        )
 
     def _set_last_doctor(self, patient_key):
         period = self.ui.comboBox_period.currentText()
