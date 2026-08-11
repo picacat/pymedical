@@ -18,7 +18,7 @@ UPDATE_RECORD_LOG = "update_records.log"
 # （停機、完整備份資料目錄、嘗試 IMPORT TABLESPACE 或從備份還原），
 # 不該由程式自動刪除。
 ORPHAN_CHECK_TABLES = [
-    # "returngoods",
+    "returngoods",
     "insappeal",
 ]
 
