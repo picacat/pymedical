@@ -312,6 +312,14 @@ class MySQLDatabase(DatabaseInterface):
                 except Exception:
                     pass
 
+    def db_engine(self):
+        try:
+            engine = self._detect_engine()
+        except Exception:
+            engine = "未知"
+
+        return engine
+
     def _detect_engine(self):
         """依現有資料表判定本資料庫使用的儲存引擎。
 

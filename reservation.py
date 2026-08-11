@@ -1472,7 +1472,7 @@ class Reservation(QtWidgets.QMainWindow):
         if self.table_widget_reservation_list.row_count() > 0:
             self.ui.action_reservation_arrival.setEnabled(True)
         else:
-            self.ui.action_reservation_arrival.setEnabled(True)
+            self.ui.action_reservation_arrival.setEnabled(False)
 
         self._set_permission()
 

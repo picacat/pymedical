@@ -496,13 +496,21 @@ class PyMedical(QtWidgets.QMainWindow):
         self._shutdown()
         event.accept()
 
+    def _backup_database(self):
+        if self.user_name == "超級使用者" or self.system_settings.field("資料路徑") in [
+            "不備份",
+        ]:
+            return
+
+        backup_process = module_utils.get_backup(
+            self, self.database, self.system_settings
+        )
+        backup_process.start_backup()
+
     def _shutdown(self, run_backup=True):
         """關閉前的清理作業(備份、關資料庫、關socket等)"""
-        if run_backup and self.user_name != "超級使用者":
-            backup_process = module_utils.get_backup(
-                self, self.database, self.system_settings
-            )
-            backup_process.start_backup()
+        if run_backup:
+            self._backup_database()
 
         self._turn_off_led()
         pygame.quit()
@@ -706,9 +714,9 @@ class PyMedical(QtWidgets.QMainWindow):
         self.ui.statusbar.addPermanentWidget(self.label_version)
         self.ui.statusbar.addPermanentWidget(self.add_separator())
 
-        self.label_template = QtWidgets.QLabel()  # 先暫時卡位 2025-04-30
-        self.label_template.setFixedWidth(200)
-        self.ui.statusbar.addPermanentWidget(self.label_template)
+        self.label_db_engine = QtWidgets.QLabel()  # 先暫時卡位 2025-04-30
+        self.label_db_engine.setFixedWidth(200)
+        self.ui.statusbar.addPermanentWidget(self.label_db_engine)
         self.ui.statusbar.addPermanentWidget(self.add_separator())
 
         self.label_record_index = QtWidgets.QLabel()
@@ -2410,6 +2418,7 @@ class PyMedical(QtWidgets.QMainWindow):
         self.label_station_no.setText(
             f"工作站編號: {self.system_settings.field('工作站編號')}"
         )
+        self.label_db_engine.setText(f"資料引擎: {self.database.db_engine()}")
         self.label_ip.setText(f"本機IP: {self.system_settings.field('使用者IP')}")
         self.label_version.setText(f"版本: {self.version}")
         self.label_server_ip.setText(f"伺服器IP: {self.host}")

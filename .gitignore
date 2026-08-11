@@ -25,6 +25,7 @@ __pycache__/
 .idea/
 .vscode/
 _temp/
+auto_backup/
 cfg/
 git_core/
 install/
