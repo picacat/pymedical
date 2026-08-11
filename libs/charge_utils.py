@@ -1144,7 +1144,13 @@ def get_ins_acupuncture_fee(
     if treatment not in nhi_utils.ACUPUNCTURE_DRUG_DICT:
         return ins_acupuncture_fee
 
-    if long_term_care and "合併中度傷科" in treatment:  # 針灸合併中度傷科才分不分療程
+    if long_term_care and treatment in [
+        "一般針灸合併一般傷科",
+        "電針合併一般傷科",
+        "中度針灸合併中度傷科",
+        "高度針灸合併一般傷科",
+        "中度複雜性傷科",
+    ]:
         treatment += "不分療程"
 
     if ins_drug_fee > 0:
