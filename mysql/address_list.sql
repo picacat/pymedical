@@ -1,21 +1,15 @@
--- MariaDB dump 10.19  Distrib 10.11.6-MariaDB, for debian-linux-gnu (x86_64)
---
--- Host: localhost    Database: pymedical
--- ------------------------------------------------------
--- Server version	10.11.6-MariaDB-0+deb12u1
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+-- ------------------------------------------------------------
+-- 資料表 address_list
+-- 來源: localhost:3306 / pymedical_innodb
+-- 產生: 資料表結構匯出工具 v1.3  2026-08-11 16:01:23
+-- ------------------------------------------------------------
 
---
--- Table structure for table `address_list`
---
+-- 本檔不含 DROP 陳述式。目標資料庫若已有同名物件，
+-- 匯入會停在錯誤 1050 (Table already exists)。
 
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+SET NAMES utf8mb4;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+
 CREATE TABLE `address_list` (
   `AddressListKey` int(11) NOT NULL AUTO_INCREMENT,
   `ZipCode` varchar(5) DEFAULT NULL,
@@ -26,13 +20,6 @@ CREATE TABLE `address_list` (
   `TimeStamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`AddressListKey`),
   KEY `ZipCode` (`ZipCode`,`City`,`District`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2025-02-04  9:14:27
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

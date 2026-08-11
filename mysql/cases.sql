@@ -1,21 +1,15 @@
--- MariaDB dump 10.19  Distrib 10.11.6-MariaDB, for debian-linux-gnu (x86_64)
---
--- Host: localhost    Database: pymedical
--- ------------------------------------------------------
--- Server version	10.11.6-MariaDB-0+deb12u1
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+-- ------------------------------------------------------------
+-- 資料表 cases
+-- 來源: localhost:3306 / pymedical_innodb
+-- 產生: 資料表結構匯出工具 v1.3  2026-08-11 16:01:24
+-- ------------------------------------------------------------
 
---
--- Table structure for table `cases`
---
+-- 本檔不含 DROP 陳述式。目標資料庫若已有同名物件，
+-- 匯入會停在錯誤 1050 (Table already exists)。
 
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+SET NAMES utf8mb4;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+
 CREATE TABLE `cases` (
   `CaseKey` int(11) NOT NULL AUTO_INCREMENT,
   `PatientKey` int(11) NOT NULL DEFAULT 0,
@@ -64,9 +58,9 @@ CREATE TABLE `cases` (
   `Temperature` int(11) DEFAULT NULL,
   `BPHigh` int(11) DEFAULT NULL,
   `BPLow` int(11) DEFAULT NULL,
-  `Symptom` text DEFAULT NULL,
-  `Tongue` mediumtext DEFAULT NULL,
-  `Pulse` mediumtext DEFAULT NULL,
+  `Symptom` mediumtext DEFAULT NULL,
+  `Tongue` longtext DEFAULT NULL,
+  `Pulse` longtext DEFAULT NULL,
   `Equipment` varchar(8) DEFAULT NULL,
   `DiseaseCode1` varchar(10) DEFAULT NULL,
   `DiseaseName1` varchar(40) DEFAULT NULL,
@@ -81,7 +75,7 @@ CREATE TABLE `cases` (
   `Distincts` varchar(40) DEFAULT NULL,
   `Cure` varchar(40) DEFAULT NULL,
   `CurativeEffect` int(11) DEFAULT NULL,
-  `Remark` mediumtext DEFAULT NULL,
+  `Remark` longtext DEFAULT NULL,
   `Package1` int(11) DEFAULT NULL,
   `PresDays1` int(11) DEFAULT NULL,
   `Instruction1` varchar(40) DEFAULT NULL,
@@ -144,24 +138,22 @@ CREATE TABLE `cases` (
   `MassageDone` enum('False','True') NOT NULL DEFAULT 'False',
   `ChargeDone` enum('False','True') NOT NULL DEFAULT 'False',
   `DrugDone` enum('False','True') NOT NULL DEFAULT 'False',
+  `DrugPickupDone` enum('False','True') NOT NULL DEFAULT 'False',
   `DesignatedDoctor` enum('False','True') NOT NULL,
   `DesignatedMassager` enum('False','True') NOT NULL,
   `Reference` enum('False','True') NOT NULL DEFAULT 'False',
   `Note` char(1) DEFAULT NULL,
   `Cert` varchar(20) DEFAULT NULL,
   `Message` varchar(40) DEFAULT NULL,
-  `Security` mediumtext DEFAULT NULL,
+  `Security` longtext DEFAULT NULL,
+  `IsClosed` tinyint(1) NOT NULL DEFAULT 0,
   `InvoiceNo` varchar(20) DEFAULT NULL,
   `TimeStamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`CaseKey`),
-  KEY `PatientKey` (`PatientKey`,`CaseDate`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+  KEY `PatientKey` (`PatientKey`,`CaseDate`),
+  KEY `idx_select_optimization` (`Period`,`RegistType`,`InsType`,`TreatType`,`Doctor`,`DoctorDone`),
+  KEY `idx_thc_position1` (`TreatType`,`Position1`),
+  KEY `idx_case_date` (`CaseDate`)
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2025-02-04  9:14:27
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

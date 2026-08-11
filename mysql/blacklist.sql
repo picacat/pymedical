@@ -1,7 +1,7 @@
 -- ------------------------------------------------------------
--- 資料表 patient_extension
+-- 資料表 blacklist
 -- 來源: localhost:3306 / pymedical_innodb
--- 產生: 資料表結構匯出工具 v1.3  2026-08-11 16:01:33
+-- 產生: 資料表結構匯出工具 v1.3  2026-08-11 16:01:23
 -- ------------------------------------------------------------
 
 -- 本檔不含 DROP 陳述式。目標資料庫若已有同名物件，
@@ -10,14 +10,13 @@
 SET NAMES utf8mb4;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 
-CREATE TABLE `patient_extension` (
-  `PatientExtensionKey` int(11) NOT NULL AUTO_INCREMENT,
-  `PatientKey` int(11) NOT NULL,
-  `ExtensionType` varchar(20) DEFAULT NULL,
-  `Content` varchar(4096) DEFAULT NULL,
-  `TimeStamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`PatientExtensionKey`),
-  KEY `PatientKey` (`PatientKey`,`ExtensionType`)
+CREATE TABLE `blacklist` (
+  `BlacklistKey` int(11) NOT NULL AUTO_INCREMENT,
+  `ID` varchar(20) DEFAULT NULL,
+  `RegistrationDate` date DEFAULT NULL,
+  `TimeStamp` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`BlacklistKey`),
+  KEY `ID` (`ID`)
 ) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
