@@ -1002,7 +1002,10 @@ class MedicalRecordCheck(QtWidgets.QDialog):
             "中度針灸合併高度傷科",
             "高度針灸合併高度傷科",
         ] or self.second_treatment in ["高度複雜性傷科", "中度複雜性傷科合併特殊疾病"]:
-            if self.medical_record["RegistType"] in nhi_utils.TOUR_TYPE:
+            if (
+                self.medical_record["RegistType"]
+                in nhi_utils.TOUR_TYPE + nhi_utils.LONG_TERM_CARE
+            ):
                 return True
 
             if not self._check_highly_complicated_massage_duration():
