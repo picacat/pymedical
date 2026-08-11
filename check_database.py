@@ -61,11 +61,6 @@ class CheckDatabase(QtWidgets.QDialog):
             print("error: DROP TABLE IF EXISTS insreply")
 
         try:
-            self.database.exec_sql("DROP TABLE IF EXISTS `ReturnGoods`")
-        except Exception:
-            pass
-
-        try:
             self.database.exec_sql("DROP TABLE IF EXISTS `checklist`")
         except Exception:
             pass
