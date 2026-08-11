@@ -710,12 +710,12 @@ class PyMedical(QtWidgets.QMainWindow):
     def set_status_bar(self):
         """設定狀態列."""
         self.label_version = QtWidgets.QLabel()
-        self.label_version.setFixedWidth(230)
+        self.label_version.setFixedWidth(280)
         self.ui.statusbar.addPermanentWidget(self.label_version)
         self.ui.statusbar.addPermanentWidget(self.add_separator())
 
         self.label_db_engine = QtWidgets.QLabel()  # 先暫時卡位 2025-04-30
-        self.label_db_engine.setFixedWidth(200)
+        self.label_db_engine.setFixedWidth(180)
         self.ui.statusbar.addPermanentWidget(self.label_db_engine)
         self.ui.statusbar.addPermanentWidget(self.add_separator())
 
@@ -725,7 +725,7 @@ class PyMedical(QtWidgets.QMainWindow):
         self.ui.statusbar.addPermanentWidget(self.add_separator())
 
         self.label_station_no = QtWidgets.QLabel()
-        self.label_station_no.setFixedWidth(180)
+        self.label_station_no.setFixedWidth(150)
         self.ui.statusbar.addPermanentWidget(self.label_station_no)
         self.ui.statusbar.addPermanentWidget(self.add_separator())
 

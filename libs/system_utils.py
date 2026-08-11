@@ -5,6 +5,7 @@ import base64
 import configparser
 import datetime
 import os
+import os.path
 import platform
 import random
 import shutil
@@ -37,6 +38,147 @@ from io import BytesIO
 
 from libs import dialog_utils, nhi_utils, number_utils, ui_utils
 
+# -*- coding: UTF-8 -*-
+"""
+版本資訊（含更新檢查）
+
+只在 pymedical 啟動時檢查一次。
+
+用 `git ls-remote` 只問遠端的 commit SHA，不下載任何 git 物件，
+通常 1 秒內完成。逾時設 5 秒——寧可查不到，也不要讓程式開不起來。
+"""
+
+
+IS_WINDOWS = platform.system() == "Windows"
+CREATE_NO_WINDOW = 0x08000000 if IS_WINDOWS else 0
+
+GITHUB_BRANCH = "main"
+
+# 逾時秒數。啟動時卡住是診所最有感的問題，所以刻意設短
+LS_REMOTE_TIMEOUT = 5
+
+
+def _locate_git(base_path):
+    for rel in [
+        r"PortableGit\bin\git.exe",
+        r"PortableGit\cmd\git.exe",
+        r"PortableGit\mingw32\bin\git.exe",
+        r"PortableGit\mingw64\bin\git.exe",
+    ]:
+        path = os.path.join(base_path, rel.replace("\\", os.sep))
+        if os.path.exists(path):
+            return path
+    return None
+
+
+def _run_git(git_exe, base_path, args, timeout):
+    """回傳 stdout 字串，失敗回傳 None"""
+    try:
+        env = os.environ.copy()
+        env["GIT_TERMINAL_PROMPT"] = "0"  # 禁用互動式提示，避免無人值守時卡住
+        env["GIT_ASKPASS"] = "echo"
+        env["LC_ALL"] = "C"
+
+        kwargs = {
+            "stderr": subprocess.STDOUT,
+            "text": True,
+            "encoding": "utf-8",  # git 一律輸出 UTF-8，不能用系統預設的 cp950
+            "errors": "replace",
+            "cwd": base_path,
+            "env": env,
+            "timeout": timeout,
+        }
+        if IS_WINDOWS:
+            kwargs["creationflags"] = CREATE_NO_WINDOW
+
+        return subprocess.check_output([git_exe] + args, **kwargs).strip()
+    except Exception:
+        return None
+
+
+def has_pending_update(base_path):
+    """檢查 GitHub 上是否有更新
+
+    回傳
+        True  有更新
+        False 已是最新
+        None  無法判斷（沒有 Git 環境、網路不通、逾時等）
+
+    None 與 False 要分開：連不上時不該顯示「待更新」，
+    否則診所會看到一個永遠消不掉的標記。
+    """
+    git_exe = _locate_git(base_path)
+    if not git_exe or not os.path.exists(os.path.join(base_path, ".git")):
+        return None
+
+    local_sha = _run_git(git_exe, base_path, ["rev-parse", "HEAD"], 10)
+    if not local_sha:
+        return None
+
+    # ls-remote 只問遠端的 SHA，不下載任何 git 物件，比 fetch 快得多
+    output = _run_git(
+        git_exe, base_path, ["ls-remote", "origin", GITHUB_BRANCH], LS_REMOTE_TIMEOUT
+    )
+    if not output:
+        return None
+
+    parts = output.split()
+    if not parts or len(parts[0]) < 7:
+        return None
+
+    return local_sha.strip() != parts[0].strip()
+
+
+# 取得醫療系統版本資訊
+def get_system_version():
+    base_path = os.path.dirname(os.path.abspath(__file__))
+
+    version_file = os.path.join(base_path, "version.txt")
+    version = None
+
+    if os.path.exists(version_file):
+        try:
+            with open(version_file, "r", encoding="utf-8") as f:
+                version = f.read().strip()
+        except Exception:
+            version = None
+
+    if not version:
+        try:
+            file_date = get_file_date("pymedical.zip")
+        except (FileNotFoundError, OSError):
+            try:
+                file_date = get_file_date("pymedical.py")
+            except (FileNotFoundError, OSError):
+                file_date = ""
+        version = f"PyMed{file_date}"
+
+    try:
+        if has_pending_update(base_path) is True:
+            version += " (待更新)"
+    except Exception:
+        pass
+
+    return version
+
+
+# 取得醫療系統版本資訊
+# def get_system_version():
+#     version_file = "version.txt"
+#     if os.path.exists(version_file):
+#         with open(version_file, "r", encoding="utf-8") as f:
+#             return f.read().strip()
+
+#     try:
+#         file_date = get_file_date("pymedical.zip")
+#     except FileNotFoundError:
+#         file_date = get_file_date("pymedical.py")
+
+#     version = f"PyMed{file_date}"
+
+#     return version
+
+
 PY_MEDICAL_JSON_FILE = "pymedical.json"
 COMPLICATED_TREATMENT_DISEASE_FILE = "complicated_treatment_disease.json"
 
@@ -68,23 +210,6 @@ def install_pycaw():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pycaw"])
         from pycaw.pycaw import AudioUtilities, ISimpleAudioVolume  # 安裝後重新導入
     return AudioUtilities, ISimpleAudioVolume
-
-
-# 取得醫療系統版本資訊
-def get_system_version():
-    version_file = "version.txt"
-    if os.path.exists(version_file):
-        with open(version_file, "r", encoding="utf-8") as f:
-            return f.read().strip()
-
-    try:
-        file_date = get_file_date("pymedical.zip")
-    except FileNotFoundError:
-        file_date = get_file_date("pymedical.py")
-
-    version = f"PyMed{file_date}"
-
-    return version
 
 
 def get_file_date(filename, created_date=None):
