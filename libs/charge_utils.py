@@ -1145,10 +1145,10 @@ def get_ins_acupuncture_fee(
         return ins_acupuncture_fee
 
     if long_term_care and treatment in [
-        "一般針灸合併一般傷科",
-        "電針合併一般傷科",
+        "一般針灸合併中度傷科",
+        "電針合併中度傷科",
         "中度針灸合併中度傷科",
-        "高度針灸合併一般傷科",
+        "高度針灸合併中度傷科",
         "中度複雜性傷科",
     ]:
         treatment += "不分療程"
