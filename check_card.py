@@ -318,8 +318,8 @@ class CheckCard(QtWidgets.QMainWindow):
                             else:
                                 if delta.days + 1 < 14:  # 當天也算一天 +1
                                     error_message.append("療程14日未完成另開新卡")
-                                # elif delta.days + 1 < 30:  # 當天也算一天 +1
-                                #     error_message.append('療程30日未完成另開新卡')
+                                elif delta.days + 1 < 30:  # 當天也算一天 +1
+                                    error_message.append("療程30日未完成另開新卡")
 
                     if (
                         treat_type != next_treat_type
