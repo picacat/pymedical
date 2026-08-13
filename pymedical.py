@@ -47,6 +47,7 @@ from libs import (
     log_utils,
     module_utils,
     nhi_utils,
+    notification_utils,
     number_utils,
     personnel_utils,
     string_utils,
@@ -149,6 +150,9 @@ def collect_traceback(exctype, value, tb):
     )
 
 
+BEEP_COOLDOWN_SECONDS = 3
+
+
 class PyMedical(QtWidgets.QMainWindow):
     """主程式."""
 
@@ -222,6 +226,7 @@ class PyMedical(QtWidgets.QMainWindow):
         self.set_waiting_list = self.system_settings.field("自動切換醫師候診名單")
         self.no_beep = self.system_settings.field("醫師候診名單不要提示音")
         self.beep_anywhere = self.system_settings.field("候診名單更新發出提示音")
+        self._last_beep_time = 0.0
 
         if sys.platform == "win32" and instance_setting == "獨立執行":
             self._check_single_instance()
@@ -232,6 +237,8 @@ class PyMedical(QtWidgets.QMainWindow):
 
         self._set_ui()
         self._set_udp_server()
+        self._set_notification_server()
+
         self._set_signal()
         self._set_user_name()
 
@@ -683,6 +690,26 @@ class PyMedical(QtWidgets.QMainWindow):
         if len(massage_host_dict) > 0:
             self.ui.menu_massage.menuAction().setVisible(True)
 
+    def _set_notification_server(self):
+        channels = [notification_utils.CHANNEL_WAITING_LIST]
+        if self.system_settings.field("廣播叫號主機") == "Y":
+            channels.append(notification_utils.CHANNEL_CALL_NUMBER)
+
+        self.notification_server = notification_utils.NotificationServer(
+            self,
+            database=self.database,
+            station="pymedical",
+            channels=channels,
+        )
+        self.notification_server.update_signal.connect(self._on_notification)
+
+    def _on_notification(self, channel, message):
+        print(channel, message)
+        # if channel == notification_utils.CHANNEL_WAITING_LIST:
+        #     self._refresh_waiting_data(message)
+        # elif channel == notification_utils.CHANNEL_CALL_NUMBER:
+        #     self._broadcast_speech(message)
+
     def _set_udp_server(self):
         self._set_socket_server()
         self.voice_server = class_utils.get_voice_server()
@@ -1130,6 +1157,8 @@ class PyMedical(QtWidgets.QMainWindow):
                 CaseDate > "{tonight}"
         '''
         self.database.exec_sql(sql)
+
+        self.notification_server.purge_old_records()
 
     # 設定按鈕權限
     def _set_button_enabled(self):
@@ -2311,15 +2340,17 @@ class PyMedical(QtWidgets.QMainWindow):
 
     # 重新顯示病歷登錄候診名單
     def _refresh_waiting_data(self, data):
-        clinic_name = data.split(",")[0]
+        fields = data.split(",")
+        clinic_name = fields[0] if len(fields) > 0 else ""
+        call_from = fields[1] if len(fields) > 1 else ""
+        doctor = fields[2] if len(fields) > 2 else None
+        room = fields[3] if len(fields) > 3 else None
+
         if clinic_name != self.clinic_name:  # 其他分院呼叫
             return
 
         index = self.ui.tabWidget_window.currentIndex()
         current_tab_text = self.ui.tabWidget_window.tabText(index)
-
-        call_from = data.split(",")[1]
-        doctor = data.split(",")[2]
 
         if (
             self.beep_anywhere == "Y"
@@ -2336,14 +2367,6 @@ class PyMedical(QtWidgets.QMainWindow):
 
         tab = self.ui.tabWidget_window.currentWidget()
 
-        call_from = data.split(",")[1]
-        try:
-            doctor = data.split(",")[2]
-            room = data.split(",")[3]
-        except IndexError:
-            doctor = None
-            room = None
-
         refresh_wait_option = self.system_settings.field("候診名單顯示診別")
         room_no = self.system_settings.field("診療室")
 
@@ -2358,10 +2381,8 @@ class PyMedical(QtWidgets.QMainWindow):
                         or (refresh_wait_option == "所有診別")
                     ):
                         tab.read_wait()
-                        # self._notify_wait_arrive()  # 只在醫師看診作業發出提醒聲音
                 else:
                     tab.read_wait()
-                    # self._notify_wait_arrive()  # 只在醫師看診作業發出提醒聲音
 
                 self.start_flash()
             elif "病歷資料" in current_tab_text:  # 在病歷登錄頁面顯示目前看診人數
@@ -2384,6 +2405,12 @@ class PyMedical(QtWidgets.QMainWindow):
     def _notify_wait_arrive(self):
         if self.no_beep == "Y":
             return
+
+        now = time.monotonic()
+        if now - self._last_beep_time < BEEP_COOLDOWN_SECONDS:
+            return
+
+        self._last_beep_time = now
 
         try:
             mixer.init()

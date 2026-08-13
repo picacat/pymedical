@@ -11,6 +11,7 @@ from libs import (
     cshis_utils,
     date_utils,
     nhi_utils,
+    notification_utils,
     number_utils,
     personnel_utils,
     prescript_utils,
@@ -37,6 +38,11 @@ class Cashier(QtWidgets.QMainWindow):
         self.user_name = system_utils.get_user_name(self.system_settings)
         self.allow_refresh_wait_list = True
         self.socket_client = class_utils.get_socket_client()
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station=self.program_name,
+        )
 
         self._set_ui()
         self._set_signal()
@@ -142,16 +148,17 @@ class Cashier(QtWidgets.QMainWindow):
         self.close_tab()
 
     def _send_socket_data(self, doctor, room):
-        self.socket_client.send_data(
-            ",".join(
-                [
-                    self.system_settings.field("院所名稱"),
-                    self.program_name,
-                    doctor,
-                    room,
-                ]
-            )
+        message = ",".join(
+            [
+                self.system_settings.field("院所名稱"),
+                self.program_name,
+                doctor,
+                room,
+            ]
         )
+
+        self.socket_client.send_data(message)  # 舊管道：UDP
+        self.notification_client.send_data(message)  # 新管道：資料庫
 
     def _set_radio_button_period(self, period):
         if period == "早班":

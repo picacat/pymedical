@@ -1257,9 +1257,7 @@ def get_ins_massage_fee(database, treatment, ins_drug_fee, long_term_care=False)
     if treatment not in nhi_utils.MASSAGE_TREAT:
         return ins_massage_fee
 
-    if (
-        long_term_care and "中度" in treatment and "特殊疾病" not in treatment
-    ):  # 中度傷科才分不分療程
+    if long_term_care and treatment in ["中度複雜性傷科"]:  # 中度傷科才分不分療程
         treatment += "不分療程"
 
     if ins_drug_fee > 0:

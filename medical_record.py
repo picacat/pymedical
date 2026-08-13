@@ -21,6 +21,7 @@ from libs import (
     log_utils,
     module_utils,
     nhi_utils,
+    notification_utils,
     number_utils,
     personnel_utils,
     prescript_utils,
@@ -70,6 +71,11 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self._init_tab()
         self.close_tab_warning = True
         self.socket_client = class_utils.get_socket_client()
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station=self.program_name,
+        )
         self.wait_key = self._get_wait_key()
 
         if not self._read_data():
@@ -3828,16 +3834,17 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self.database.insert_record("caseextend", fields, data)
 
     def _send_socket_data(self):
-        self.socket_client.send_data(
-            ",".join(
-                [
-                    self.system_settings.field("院所名稱"),
-                    self.program_name,
-                    self.user_name,
-                    self.tab_registration.comboBox_room.currentText(),
-                ]
-            )
+        message = ",".join(
+            [
+                self.system_settings.field("院所名稱"),
+                self.program_name,
+                self.user_name,
+                self.tab_registration.comboBox_room.currentText(),
+            ]
         )
+
+        self.socket_client.send_data(message)  # 舊管道：UDP
+        self.notification_client.send_data(message)  # 新管道：資料庫
 
     def _set_doctor_done(self, case_key=None, doctor_done="True"):
         if case_key is None:

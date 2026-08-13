@@ -17,6 +17,7 @@ from libs import (
     dialog_utils,
     log_utils,
     nhi_utils,
+    notification_utils,
     number_utils,
     patient_utils,
     personnel_utils,
@@ -51,6 +52,11 @@ class Registration(QtWidgets.QMainWindow):
             self, self.database, self.system_settings
         )
         self.socket_client = class_utils.get_socket_client()
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station=self.program_name,
+        )
         self.reserve_key = None
         self.user_name = system_utils.get_user_name(self.system_settings)
         self.vhc_ic_card = None
@@ -3301,16 +3307,17 @@ class Registration(QtWidgets.QMainWindow):
         self._send_socket_data(doctor, room)
 
     def _send_socket_data(self, doctor, room):
-        self.socket_client.send_data(
-            ",".join(
-                [
-                    self.system_settings.field("院所名稱"),
-                    self.program_name,
-                    doctor,
-                    room,
-                ]
-            )
+        message = ",".join(
+            [
+                self.system_settings.field("院所名稱"),
+                self.program_name,
+                doctor,
+                room,
+            ]
         )
+
+        self.socket_client.send_data(message)  # 舊管道：UDP
+        self.notification_client.send_data(message)  # 新管道：資料庫
 
     # IC卡退掛
     def cancel_ic_card(self):

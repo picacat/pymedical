@@ -18,7 +18,7 @@ F74--不分療程－未開內服藥   554
 F77--不分療程－另開內服藥   654
 F78--不分療程－未開內服藥   654
 
-高度複雜性針灸合併高度傷科
+高度複雜性針灸合併中度傷科
 F81--不分療程－另開內服藥   754
 F82--不分療程－未開內服藥   754
 
@@ -2625,21 +2625,34 @@ def get_treat_code(database, case_key):
 
     treat_code = None
 
-    if string_utils.xstr(
-        row["RegistType"]
-    ) in LONG_TERM_CARE + TOUR_TYPE and treatment in [
-        "一般針灸合併中度傷科",
-        "電針合併中度傷科",
-        "中度針灸合併中度傷科",
-        "高度針灸合併中度傷科",
-        "中度複雜性傷科",
-    ]:
-        treatment += "不分療程"
-        if pres_days > 0:
-            treat_code = ACUPUNCTURE_DRUG_DICT[treatment]
+    if string_utils.xstr(row["RegistType"]) in LONG_TERM_CARE + TOUR_TYPE:
+        if treatment in [
+            "一般針灸合併中度傷科",
+            "電針合併中度傷科",
+            "中度針灸合併中度傷科",
+            "高度針灸合併中度傷科",
+        ]:
+            treatment += "不分療程"
+            if pres_days > 0:
+                treat_code = ACUPUNCTURE_DRUG_DICT[treatment]
+            else:
+                treat_code = ACUPUNCTURE_DICT[treatment]
+
+            return treat_code
+        elif treatment in [
+            "中度複雜性傷科",
+        ]:
+            treatment += "不分療程"
+            if pres_days > 0:
+                treat_code = MASSAGE_DRUG_DICT[treatment]
+            else:
+                treat_code = MASSAGE_DICT[treatment]
+
+            return treat_code
         else:
-            treat_code = ACUPUNCTURE_DICT[treatment]
-    elif treatment in ACUPUNCTURE_TREAT:
+            pass
+
+    if treatment in ACUPUNCTURE_TREAT:
         if (
             treatment in MERGE_TREAT
             and "合併中度傷科" in treatment

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import datetime
 import json
 
@@ -15,6 +13,7 @@ from libs import (
     dialog_utils,
     hainachuan_utils,
     nhi_utils,
+    notification_utils,
     number_utils,
     patient_utils,
     personnel_utils,
@@ -88,7 +87,7 @@ class WaitingList(QtWidgets.QMainWindow):
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(WaitingList, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -106,6 +105,11 @@ class WaitingList(QtWidgets.QMainWindow):
         )
         self.ring_bell = self.system_settings.field("叫號燈響鈴")
         self.socket_client = class_utils.get_socket_client()
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station=self.program_name,
+        )
 
         self._set_ui()
         self._set_signal()
@@ -397,6 +401,10 @@ class WaitingList(QtWidgets.QMainWindow):
             )
 
         self.voice_client.send_data("refresh_wait")
+        self.notification_client.broadcast(
+            notification_utils.CHANNEL_BULLETIN, "refresh_wait"
+        )
+
         self._refresh_waiting_list_color()
 
     def _refresh_waiting_list_color(self):
@@ -1505,9 +1513,7 @@ class WaitingList(QtWidgets.QMainWindow):
             for row_no in row_list:
                 item = self.ui.tableWidget_statistics_list.item(row_no, col_no)
                 if item is not None:
-                    if row_no in [0]:
-                        item.setForeground(QtGui.QColor("red"))
-                    elif row_no in [16, 18, 20, 22, 24]:
+                    if row_no in [0] or row_no in [16, 18, 20, 22, 24]:
                         item.setForeground(QtGui.QColor("red"))
                     elif row_no in [7, 8, 9, 10, 26, 27, 28, 29]:
                         item.setForeground(QtGui.QColor("green"))
@@ -1738,18 +1744,29 @@ class WaitingList(QtWidgets.QMainWindow):
     def send_voice_data(self, regist_no=None, name=None, room=None):
         voice_dict = self._get_voice_dict(regist_no=regist_no, name=name, room=room)
 
-        if self.system_settings.field("廣播叫號同步所有線上看診號") == "Y":
+        # if self.system_settings.field("廣播叫號同步所有線上看診號") == "Y":
+        #     try:
+        #         regist_no = int(voice_dict["regist_no"])
+        #         self.spinBox_seq_number.setValue(regist_no)
+        #     except Exception:
+        #         pass
+
+        if self.system_settings.field("廣播叫號同步所有線上看診號") == "Y" and hasattr(
+            self, "spinBox_seq_number"
+        ):
             try:
-                regist_no = int(voice_dict["regist_no"])
-                self.spinBox_seq_number.setValue(regist_no)
+                self.spinBox_seq_number.setValue(int(voice_dict["regist_no"]))
             except Exception:
-                return
+                pass  # 診號不是數字，同步不了但叫號照送
 
         sentence = self._get_voice_sentence(voice_dict)
         voice_dict["sentence"] = sentence
 
         broadcast_json = json.dumps(voice_dict)
         self.voice_client.send_data(broadcast_json)
+        self.notification_client.broadcast(
+            notification_utils.CHANNEL_CALL_NUMBER, broadcast_json
+        )
 
         if self.system_settings.field("叫號同時啟動叫號燈") == "Y":
             self._send_led()
@@ -2107,6 +2124,9 @@ class WaitingList(QtWidgets.QMainWindow):
 
         self.read_wait()
         self.voice_client.send_data("refresh_wait")
+        self.notification_client.broadcast(
+            notification_utils.CHANNEL_BULLETIN, "refresh_wait"
+        )
 
     def _cancel_late(self):
         msg_box = dialog_utils.get_message_box(
@@ -2128,6 +2148,9 @@ class WaitingList(QtWidgets.QMainWindow):
 
         if "過號" not in remark:
             self.voice_client.send_data("refresh_wait")
+            self.notification_client.broadcast(
+                notification_utils.CHANNEL_BULLETIN, "refresh_wait"
+            )
             return
 
         remark = remark.replace(LATE_KEYWROD, "")
@@ -2151,6 +2174,9 @@ class WaitingList(QtWidgets.QMainWindow):
 
         self.read_wait()
         self.voice_client.send_data("refresh_wait")
+        self.notification_client.broadcast(
+            notification_utils.CHANNEL_BULLETIN, "refresh_wait"
+        )
 
     def _change_ins_type(self):
         case_key = self.table_widget_waiting_list.field_value(
@@ -2227,16 +2253,17 @@ class WaitingList(QtWidgets.QMainWindow):
     def _send_socket_data(self):
         room = self._get_current_room()
 
-        self.socket_client.send_data(
-            ",".join(
-                [
-                    self.system_settings.field("院所名稱"),
-                    self.program_name,
-                    self.user_name,
-                    string_utils.xstr(room),
-                ]
-            )
+        message = ",".join(
+            [
+                self.system_settings.field("院所名稱"),
+                self.program_name,
+                self.user_name,
+                string_utils.xstr(room),
+            ]
         )
+
+        self.socket_client.send_data(message)  # 舊管道：UDP
+        self.notification_client.send_data(message)  # 新管道：資料庫
 
     def _start_flashing(self, widget):
         """啟動閃爍效果"""
