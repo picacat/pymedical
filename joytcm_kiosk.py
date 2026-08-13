@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
-from libs import class_utils, module_utils, system_utils, ui_utils
+from libs import class_utils, module_utils, notification_utils, system_utils, ui_utils
 
 HOME_WIDGET = 1
 
@@ -254,6 +254,11 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
         self.ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
         self.socket_client = class_utils.get_socket_client()
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station=self.program_name,
+        )
 
         self._set_ui()
         self._set_signal()
@@ -503,16 +508,17 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         return dialog
 
     def send_socket_data(self, doctor, room, call_from):
-        self.socket_client.send_data(
-            ",".join(
-                [
-                    self.system_settings.field("院所名稱"),
-                    call_from,
-                    doctor,
-                    room,
-                ]
-            )
+        message = ",".join(
+            [
+                self.system_settings.field("院所名稱"),
+                call_from,
+                doctor,
+                room,
+            ]
         )
+
+        self.socket_client.send_data(message)  # 舊管道：UDP
+        self.notification_client.send_data(message)  # 新管道：資料庫
 
 
 # 主程式

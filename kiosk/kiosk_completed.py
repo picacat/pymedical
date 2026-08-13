@@ -12,6 +12,7 @@ from libs import (
     date_utils,
     log_utils,
     nhi_utils,
+    notification_utils,
     number_utils,
     patient_utils,
     printer_utils,
@@ -25,7 +26,7 @@ from libs import (
 class KioskCompleted(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(KioskCompleted, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -33,6 +34,11 @@ class KioskCompleted(QtWidgets.QMainWindow):
         self.ui = None
 
         self.socket_client = class_utils.get_socket_client()
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station=self.program_name,
+        )
 
         self._set_ui()
         self._set_signal()
@@ -421,16 +427,17 @@ class KioskCompleted(QtWidgets.QMainWindow):
         else:
             program_name = ""
 
-        self.socket_client.send_data(
-            ",".join(
-                [
-                    self.system_settings.field("院所名稱"),
-                    program_name,
-                    doctor,
-                    string_utils.xstr(room),
-                ]
-            )
+        message = ",".join(
+            [
+                self.system_settings.field("院所名稱"),
+                program_name,
+                doctor,
+                string_utils.xstr(room),
+            ]
         )
+
+        self.socket_client.send_data(message)  # 舊管道：UDP
+        self.notification_client.send_data(message)  # 新管道：資料庫
 
     def _card_removed(self, message):
         self._back_home()

@@ -1,4 +1,3 @@
-
 # -*- coding: UTF-8 -*-
 
 import calendar
@@ -7,15 +6,21 @@ import csv
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPushButton
 
-from libs import (class_utils, date_utils, nhi_utils, string_utils,
-                  system_utils, ui_utils)
+from libs import (
+    class_utils,
+    date_utils,
+    nhi_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 照護機構院民資料 2022-05-20
 class StatisticsNursingHomeData(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsNursingHomeData, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -26,14 +31,14 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
         self.ui = None
 
         last_day = calendar.monthrange(int(self.year), int(self.month))[1]
-        self.start_date = f'{self.year}-{self.month}-1'
-        self.end_date = f'{self.year}-{self.month}-{last_day}'
-        self.clinic_name = self.system_settings.field('院所名稱')
-        self.clinic_id = self.system_settings.field('院所代號')
+        self.start_date = f"{self.year}-{self.month}-1"
+        self.end_date = f"{self.year}-{self.month}-{last_day}"
+        self.clinic_name = self.system_settings.field("院所名稱")
+        self.clinic_id = self.system_settings.field("院所代號")
 
-        if self.nursing_home_data != '全部':
-            self.nursing_home_id = self.nursing_home_data.split(',')[0]
-            self.nursing_home = self.nursing_home_data.split(',')[1]
+        if self.nursing_home_data != "全部":
+            self.nursing_home_id = self.nursing_home_data.split(",")[0]
+            self.nursing_home = self.nursing_home_data.split(",")[1]
         else:
             self.nursing_home_id = self.nursing_home_data
             self.nursing_home = self.nursing_home_data
@@ -60,10 +65,7 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
         self._set_table_width()
 
     def _set_table_width(self):
-        width = [
-            100,
-            100, 300, 300, 120, 120, 200, 200, 120
-        ]
+        width = [100, 100, 300, 300, 120, 120, 200, 200, 120]
         self.table_widget_patient.set_table_heading_width(width)
 
     # 設定信號
@@ -82,15 +84,15 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
 
     def open_patient_record(self):
         patient_key = self.table_widget_patient.field_value(0)
-        self.parent.parent.open_patient_record(patient_key, '照護機構院民資料報表')
+        self.parent.parent.open_patient_record(patient_key, "照護機構院民資料報表")
 
     def refresh_patient_record(self):
         patient_key = self.table_widget_patient.field_value(0)
 
-        if patient_key in ['', None]:
+        if patient_key in ["", None]:
             return
 
-        sql = f'SELECT * FROM patient WHERE PatientKey = {patient_key}'
+        sql = f"SELECT * FROM patient WHERE PatientKey = {patient_key}"
         rows = self.database.select_record(sql)
 
         if len(rows) <= 0:
@@ -101,14 +103,16 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
         self._set_table_data(row_no, row)
 
     def read_data(self):
-        doctor_script = ''
-        nursing_home_script = ''
+        doctor_script = ""
+        nursing_home_script = ""
 
-        if self.doctor not in ['全部', '']:
+        if self.doctor not in ["全部", ""]:
             doctor_script = f'AND cases.Doctor = "{self.doctor}"'
 
-        if self.nursing_home_id not in ['全部', '']:
-            nursing_home_script = f'AND patient.NursingHomeID LIKE "%{self.nursing_home_id}%"'
+        if self.nursing_home_id not in ["全部", ""]:
+            nursing_home_script = (
+                f'AND patient.NursingHomeID LIKE "%{self.nursing_home_id}%"'
+            )
 
         sql = f'''
             SELECT
@@ -127,30 +131,32 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
         self.table_widget_patient.set_db_data(sql, self._set_table_data)
 
     def _set_table_data(self, row_no, row):
-        apply_date = f'{int(self.year)-1911:0>3}{self.month:0>2}'
-        nursing_home = string_utils.xstr(row['NursingHome'])
-        nursing_home_id = string_utils.xstr(row['NursingHomeID'])
-        patient_name = string_utils.xstr(row['Name'])
-        patient_id = string_utils.xstr(row['ID'])
-        birthday = date_utils.west_date_to_nhi_date(row['Birthday'])
+        apply_date = f"{int(self.year) - 1911:0>3}{self.month:0>2}"
+        nursing_home = string_utils.xstr(row["NursingHome"])
+        nursing_home_id = string_utils.xstr(row["NursingHomeID"])
+        patient_name = string_utils.xstr(row["Name"])
+        patient_id = string_utils.xstr(row["ID"])
+        birthday = date_utils.west_date_to_nhi_date(row["Birthday"])
         try:
-            nursing_home_in_date = date_utils.west_date_to_nhi_date(row['NursingHomeInDate'])
+            nursing_home_in_date = date_utils.west_date_to_nhi_date(
+                row["NursingHomeInDate"]
+            )
         except ValueError:
             try:
-                nursing_home_date = string_utils.xstr(row['NursingHomeInDate'])
+                nursing_home_date = string_utils.xstr(row["NursingHomeInDate"])
                 separator = date_utils.get_date_separator(nursing_home_date)
                 year, month, day = nursing_home_date.split(separator)
-                nursing_home_in_date = f'{year}{month}{day}'
+                nursing_home_in_date = f"{year}{month}{day}"
             except Exception:
-                nursing_home_in_date = '入院日期不正確'
+                nursing_home_in_date = "入院日期不正確"
 
         nursing_home_out_date = None
 
         patient_record = [
-            string_utils.xstr(row['PatientKey']),
+            string_utils.xstr(row["PatientKey"]),
             apply_date,
-            f'{self.clinic_id} {self.clinic_name}',
-            f'{nursing_home_id} {nursing_home}',
+            f"{self.clinic_id} {self.clinic_name}",
+            f"{nursing_home_id} {nursing_home}",
             patient_id,
             birthday,
             nursing_home_in_date,
@@ -164,25 +170,23 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
             self.ui.tableWidget_patient.setItem(row_no, col_no, item)
 
             if col_no in [1]:
-                self.ui.tableWidget_patient.item(
-                    row_no, col_no).setTextAlignment(
+                self.ui.tableWidget_patient.item(row_no, col_no).setTextAlignment(
                     QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
                 )
 
     def _export_to_csv(self):
-        filename = f'care_{self.clinic_id}_{int(self.year)-1911:0>3}{self.month:0>2}.csv'
+        filename = (
+            f"care_{self.clinic_id}_{int(self.year) - 1911:0>3}{self.month:0>2}.csv"
+        )
         options = QFileDialog.Options()
 
         csv_file_name, _ = QFileDialog.getSaveFileName(
-            self.parent,
-            "匯出CSV",
-            filename,
-            "CSV檔案 (*.csv)", options=options
+            self.parent, "匯出CSV", filename, "CSV檔案 (*.csv)", options=options
         )
         if not csv_file_name:
             return
 
-        with open(csv_file_name, 'w', newline='', encoding='utf-8') as f:
+        with open(csv_file_name, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             for row_no in range(self.ui.tableWidget_patient.rowCount()):
                 row = []
@@ -190,9 +194,9 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
                     try:
                         data = self.ui.tableWidget_patient.item(row_no, col_no).text()
                         if col_no in [2, 3]:
-                            data = data.split(' ')[0]
+                            data = data.split(" ")[0]
 
-                        row.append(data)
+                        row.append(data.strip())
                     except Exception:
                         row.append(None)
 
@@ -200,9 +204,9 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            f'<h3>{csv_file_name}匯出完成.</h3>',
-            'CSV 格式.'
+            "資料匯出完成",
+            f"<h3>{csv_file_name}匯出完成.</h3>",
+            "CSV 格式.",
         )
 
     def _import_from_csv(self):
@@ -210,9 +214,7 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
 
         options |= QFileDialog.DontUseNativeDialog
         finame, _ = QFileDialog.getOpenFileName(
-            self, "匯入院民資料",
-            '*.csv',
-            "CSV檔案 (*);;csv檔 (*.csv)", options=options
+            self, "匯入院民資料", "*.csv", "CSV檔案 (*);;csv檔 (*.csv)", options=options
         )
         if not finame:
             return
@@ -220,15 +222,15 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
         self._import_csv_data(finame)
 
     def _import_csv_data(self, filename):
-        with open(filename, encoding='big5', newline='') as csv_file:
+        with open(filename, encoding="big5", newline="") as csv_file:
             rows = csv.DictReader(csv_file)
 
             for row in rows:
-                patient_id = row['身分證']
-                if patient_id in ['', None]:
+                patient_id = row["身分證"]
+                if patient_id in ["", None]:
                     continue
 
-                in_nursing_date = row['入住日期']
+                in_nursing_date = row["入住日期"]
                 sql = f'''
                     SELECT PatientKey FROM patient
                     WHERE
@@ -240,7 +242,7 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
                 if len(rows) <= 0:
                     continue
 
-                patient_key = rows[0]['PatientKey']
+                patient_key = rows[0]["PatientKey"]
                 sql = f'''
                     UPDATE patient
                     SET
@@ -252,7 +254,7 @@ class StatisticsNursingHomeData(QtWidgets.QMainWindow):
 
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle('檔案匯入完成')
+        msg_box.setWindowTitle("檔案匯入完成")
         msg_box.setText("<font size='4'><b>院民資料檔匯入完成.</b></font>")
         msg_box.setInformativeText("請按確定鍵結束.")
         msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)

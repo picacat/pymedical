@@ -1,19 +1,24 @@
-# -*- coding: utf-8 -*-
-
 import datetime
 import importlib
 import os
 
-from libs import (
-    string_utils, system_utils, ui_utils, registration_utils, charge_utils, log_utils)
 from PyQt5 import QtCore, QtWidgets
+
+from libs import (
+    charge_utils,
+    log_utils,
+    registration_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 2024.06.24 掛號機掛號頁面
 class KioskRegistration(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(KioskRegistration, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -37,7 +42,9 @@ class KioskRegistration(QtWidgets.QMainWindow):
 
     # 設定GUI
     def _set_ui(self):
-        self.ui = ui_utils.load_ui_file(os.path.join(self.parent.UI_DIR, 'kiosk_home.ui'), self)
+        self.ui = ui_utils.load_ui_file(
+            os.path.join(self.parent.UI_DIR, "kiosk_home.ui"), self
+        )
         self.set_background()
 
     # 刪除所有控件
@@ -48,19 +55,41 @@ class KioskRegistration(QtWidgets.QMainWindow):
 
     def set_background(self):
         label_background = system_utils.set_image(
-            self, os.path.join(self.parent.IMAGE_DIR, 'background.png'), 0, 0)
+            self, os.path.join(self.parent.IMAGE_DIR, "background.png"), 0, 0
+        )
         self._bring_to_front(label_background)
 
         label_header = system_utils.set_label(
-            self, self.parent.clinic_name, 50, 35, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            self.parent.clinic_name,
+            50,
+            35,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
         label_header = system_utils.set_label(
-            self, '掛號繳費系統', 210, 300, self.parent.TEXT_FONT, 84, self.parent.TEXT_COLOR)
+            self,
+            "掛號繳費系統",
+            210,
+            300,
+            self.parent.TEXT_FONT,
+            84,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
         self.label_header = system_utils.set_label(
-            self, '報到後請至候診區等候，謝謝!', 310, 1770, self.parent.TEXT_FONT, 42, self.parent.TEXT_COLOR)
+            self,
+            "報到後請至候診區等候，謝謝!",
+            310,
+            1770,
+            self.parent.TEXT_FONT,
+            42,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(self.label_header)
 
     # 設定信號
@@ -75,8 +104,8 @@ class KioskRegistration(QtWidgets.QMainWindow):
         self.clear_all_widgets()
         self.set_background()
 
-        if identity_type == '讀取健保卡':
-            self.label_header.setText('請別忘了取回健保卡喔!')
+        if identity_type == "讀取健保卡":
+            self.label_header.setText("請別忘了取回健保卡喔!")
 
         patient_row = self._get_patient_row(patient_key)
         if not patient_row:  # 找不到資料
@@ -84,7 +113,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
             self._back_to_home()
             return
 
-        patient_key = patient_row['PatientKey']
+        patient_key = patient_row["PatientKey"]
 
         # 檢查今天是否有預約
         if not self._is_reservation_today(patient_key):
@@ -104,40 +133,54 @@ class KioskRegistration(QtWidgets.QMainWindow):
             self._back_to_home()
             return
 
-        name = string_utils.xstr(patient_row['Name'])
+        name = string_utils.xstr(patient_row["Name"])
         debt_mark = name[-1]
         name = string_utils.remove_not_chinese_character(name)
 
-        debt_hint = ''
-        if debt_mark == '$':
-            debt_hint = '''
+        debt_hint = ""
+        if debt_mark == "$":
+            debt_hint = """
                 <tr>
                     <td colspan="2" style="color: red;">您尚有欠款未結</td>
                 </tr>
                 <tr>
                     <td colspan="2" style="color: red;">請與櫃台聯絡</td>
                 </tr>
-            '''
-        elif debt_mark == '#':
-            debt_hint = '''
+            """
+        elif debt_mark == "#":
+            debt_hint = """
                 <tr>
                     <td colspan="2" style="color: red;">您上次找零未取</td>
                 </tr>
                 <tr>
                     <td colspan="2" style="color: red;">請與櫃台聯絡</td>
                 </tr>
-            '''
+            """
 
         label_header = system_utils.set_label(
-            self, name + ' 您好', 50, 600, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            name + " 您好",
+            50,
+            600,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
         label_header = system_utils.set_label(
-            self, '以下是您今天的預約明細:', 50, 720, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            "以下是您今天的預約明細:",
+            50,
+            720,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
         row = self._get_reserve_row(patient_key)
-        html = f'''
+        html = f"""
             <table width="98%" cellpadding="20" celllspacing="30" border="0" style="font-size: 84px;">
                 <tr>
                     <td>預約班別:</td>
@@ -149,21 +192,22 @@ class KioskRegistration(QtWidgets.QMainWindow):
                 </tr>
                 {debt_hint}
             </table>
-        '''
+        """
 
         label_html = system_utils.set_label(
-            self, html, 200, 850, self.parent.TEXT_FONT, 72, self.parent.TEXT_COLOR)
+            self, html, 200, 850, self.parent.TEXT_FONT, 72, self.parent.TEXT_COLOR
+        )
         self._bring_to_front(label_html)
 
-        self._set_arrival_button('完成報到', patient_key)
-        self._set_back_home_button('取消')
+        self._set_arrival_button("完成報到", patient_key)
+        self._set_back_home_button("取消")
 
     def _bring_to_front(self, widget):
         widget.raise_()
         widget.show()
 
     def _get_current_date(self):
-        return datetime.datetime.today().strftime('%Y-%m-%d')
+        return datetime.datetime.today().strftime("%Y-%m-%d")
 
     def _is_reservation_today(self, patient_key):
         row = self._get_reserve_row(patient_key)
@@ -174,7 +218,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
 
     def _is_arrival(self, patient_key):
         reserve_row = self._get_reserve_row(patient_key)
-        if not reserve_row or reserve_row['Arrival'] == 'False':
+        if not reserve_row or reserve_row["Arrival"] == "False":
             return False
         else:
             return True
@@ -228,7 +272,9 @@ class KioskRegistration(QtWidgets.QMainWindow):
         from kiosk2.dialog import dialog_message_box
 
         module = importlib.reload(dialog_message_box)
-        dialog = module.DialogMessageBox(self.parent, self.database, self.system_settings)
+        dialog = module.DialogMessageBox(
+            self.parent, self.database, self.system_settings
+        )
         dialog.set_no_patient()
         dialog.exec_()
         del dialog
@@ -237,7 +283,9 @@ class KioskRegistration(QtWidgets.QMainWindow):
         from kiosk2.dialog import dialog_message_box
 
         module = importlib.reload(dialog_message_box)
-        dialog = module.DialogMessageBox(self.parent, self.database, self.system_settings)
+        dialog = module.DialogMessageBox(
+            self.parent, self.database, self.system_settings
+        )
         dialog.set_no_reservation()
         dialog.exec_()
         del dialog
@@ -246,7 +294,9 @@ class KioskRegistration(QtWidgets.QMainWindow):
         from kiosk2.dialog import dialog_message_box
 
         module = importlib.reload(dialog_message_box)
-        dialog = module.DialogMessageBox(self.parent, self.database, self.system_settings)
+        dialog = module.DialogMessageBox(
+            self.parent, self.database, self.system_settings
+        )
         dialog.set_already_registed()
         dialog.exec_()
         del dialog
@@ -255,7 +305,9 @@ class KioskRegistration(QtWidgets.QMainWindow):
         from kiosk2.dialog import dialog_message_box
 
         module = importlib.reload(dialog_message_box)
-        dialog = module.DialogMessageBox(self.parent, self.database, self.system_settings)
+        dialog = module.DialogMessageBox(
+            self.parent, self.database, self.system_settings
+        )
         dialog.set_arrival_done()
         dialog.exec_()
         del dialog
@@ -268,7 +320,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
 
         self.push_button_home = QtWidgets.QPushButton(self)
         self.push_button_home.resize(400, 100)
-        self.push_button_home.setText(f'{self.button_text_home}({self.wait_seconds}s)')
+        self.push_button_home.setText(f"{self.button_text_home}({self.wait_seconds}s)")
         self.push_button_home.setStyleSheet(f"""
             QPushButton {{
                 background-color: {color};  /* 正常狀態背景顏色 */
@@ -293,7 +345,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
             return
 
         self.wait_seconds -= 1
-        self.push_button_home.setText(f'{self.button_text_home}({self.wait_seconds}s)')
+        self.push_button_home.setText(f"{self.button_text_home}({self.wait_seconds}s)")
         if self.wait_seconds == 0:
             self._back_to_home()
 
@@ -316,145 +368,181 @@ class KioskRegistration(QtWidgets.QMainWindow):
         system_utils.shadow_widget(self, push_button)
         push_button.raise_()
         push_button.show()
-        push_button.clicked.connect(lambda: self._finish_registration(patient_key=patient_key))
+        push_button.clicked.connect(
+            lambda: self._finish_registration(patient_key=patient_key)
+        )
 
     def _finish_registration(self, patient_key):
         case_row = self._insert_medical_record(patient_key)
         self._insert_wait(case_row)
-        self._update_reserve(case_row['reserve_key'])
+        self._update_reserve(case_row["reserve_key"])
 
         self._write_event_log(case_row)
         self._send_socket_data(case_row)
 
-        self.parent.open_kiosk_completed('預約報到', case_row['case_key'])
+        self.parent.open_kiosk_completed("預約報到", case_row["case_key"])
 
     def _write_event_log(self, case_record):
         log = f"{case_record['name']}於{case_record['case_date']}完成掛號機預約報到"
 
-        if case_record['regist_fee'] != 0:
-            log += f', 掛號費: {case_record["regist_fee"]}'
+        if case_record["regist_fee"] != 0:
+            log += f", 掛號費: {case_record['regist_fee']}"
 
         log_utils.write_event_log(
-            self.database, '掛號機',
-            '掛號機預約報到', '門診掛號', log
+            self.database, "掛號機", "掛號機預約報到", "門診掛號", log
         )
 
     # 新增病歷
     def _insert_medical_record(self, patient_key):
         patient_row = self._get_patient_row(patient_key)
         reserve_row = self._get_reserve_row(patient_key)
-        reserve_key = reserve_row['ReserveKey']
+        reserve_key = reserve_row["ReserveKey"]
 
-        ins_type = '自費'
-        share_type = '基層醫療'
-        treat_type = '內科'
+        ins_type = "自費"
+        share_type = "基層醫療"
+        treat_type = "內科"
         period = registration_utils.get_current_period(self.system_settings)
-        doctor = reserve_row['Doctor']
-        room = reserve_row['Room']
+        doctor = reserve_row["Doctor"]
+        room = reserve_row["Room"]
 
         reg_no = registration_utils.get_reg_no(
-            self.database, self.system_settings, room, doctor, period, reserve_key,
+            self.database,
+            self.system_settings,
+            room,
+            doctor,
+            period,
+            reserve_key,
         )
 
         try:
-            birthday = patient_row['Birthday'].strftime('%Y-%m-%d')
+            birthday = patient_row["Birthday"].strftime("%Y-%m-%d")
         except Exception:
-            birthday = ''
+            birthday = ""
 
         regist_fee = charge_utils.get_regist_fee(
-            self.database, self.system_settings,
+            self.database,
+            self.system_settings,
             birthday,
-            string_utils.xstr(patient_row['DiscountType']),
-            ins_type, share_type, treat_type,
+            string_utils.xstr(patient_row["DiscountType"]),
+            ins_type,
+            share_type,
+            treat_type,
         )
 
         case_row = {
-            'case_date': string_utils.xstr(datetime.datetime.now()),
-            'patient_key': patient_key,
-            'reserve_key': reserve_key,
-            'name': string_utils.xstr(patient_row['Name']),
-            'visit': '複診',
-            'regist_type': '預約門診',
-            'treat_type': treat_type,
-            'share_type': share_type,
-            'injury_type': '普通疾病',
-            'ins_type': ins_type,
-            'card': '免卡',
-            'period': period,
-            'room': room,
-            'regist_no': reg_no,
-            'registrar': '掛號機',
-            'regist_fee': regist_fee,
-            'diag_share_fee': 0,
-            's_diag_share_fee': 0,
-            'deposit_fee': 0,
-            'doctor': doctor,
-            'doctor_done': 'False',
-            'regist_payment_type': '現金',
+            "case_date": string_utils.xstr(datetime.datetime.now()),
+            "patient_key": patient_key,
+            "reserve_key": reserve_key,
+            "name": string_utils.xstr(patient_row["Name"]),
+            "visit": "複診",
+            "regist_type": "預約門診",
+            "treat_type": treat_type,
+            "share_type": share_type,
+            "injury_type": "普通疾病",
+            "ins_type": ins_type,
+            "card": "免卡",
+            "period": period,
+            "room": room,
+            "regist_no": reg_no,
+            "registrar": "掛號機",
+            "regist_fee": regist_fee,
+            "diag_share_fee": 0,
+            "s_diag_share_fee": 0,
+            "deposit_fee": 0,
+            "doctor": doctor,
+            "doctor_done": "False",
+            "regist_payment_type": "現金",
         }
 
         fields = [
-            'CaseDate', 'PatientKey', 'Name', 'Visit', 'RegistType', 'Injury',
-            'TreatType', 'Share', 'InsType', 'Card', 'Room', 'Period', 'RegistNo', 'Register',
-            'RegistFee', 'DiagShareFee', 'SDiagShareFee', 'DepositFee',
-            'Doctor', 'RegistPaymentType', 'DoctorDone',
+            "CaseDate",
+            "PatientKey",
+            "Name",
+            "Visit",
+            "RegistType",
+            "Injury",
+            "TreatType",
+            "Share",
+            "InsType",
+            "Card",
+            "Room",
+            "Period",
+            "RegistNo",
+            "Register",
+            "RegistFee",
+            "DiagShareFee",
+            "SDiagShareFee",
+            "DepositFee",
+            "Doctor",
+            "RegistPaymentType",
+            "DoctorDone",
         ]
 
         data = [
-            case_row['case_date'],
-            case_row['patient_key'],
-            case_row['name'],
-            case_row['visit'],
-            case_row['regist_type'],
-            case_row['injury_type'],
-            case_row['treat_type'],
-            case_row['share_type'],
-            case_row['ins_type'],
-            case_row['card'],
-            case_row['room'],
-            case_row['period'],
-            case_row['regist_no'],
-            case_row['registrar'],
-
-            case_row['regist_fee'],
-            case_row['diag_share_fee'],
-            case_row['s_diag_share_fee'],
-            case_row['deposit_fee'],
-
-            case_row['doctor'],
-            case_row['regist_payment_type'],
-            case_row['doctor_done'],
+            case_row["case_date"],
+            case_row["patient_key"],
+            case_row["name"],
+            case_row["visit"],
+            case_row["regist_type"],
+            case_row["injury_type"],
+            case_row["treat_type"],
+            case_row["share_type"],
+            case_row["ins_type"],
+            case_row["card"],
+            case_row["room"],
+            case_row["period"],
+            case_row["regist_no"],
+            case_row["registrar"],
+            case_row["regist_fee"],
+            case_row["diag_share_fee"],
+            case_row["s_diag_share_fee"],
+            case_row["deposit_fee"],
+            case_row["doctor"],
+            case_row["regist_payment_type"],
+            case_row["doctor_done"],
         ]
 
-        case_key = self.database.insert_record('cases', fields, data)
-        case_row['case_key'] = case_key
+        case_key = self.database.insert_record("cases", fields, data)
+        case_row["case_key"] = case_key
 
         return case_row
 
     def _insert_wait(self, case_row):
         fields = [
-            'CaseKey', 'CaseDate', 'PatientKey', 'Name', 'Visit', 'RegistType',
-            'TreatType', 'Share', 'InsType', 'Card', 'Period',
-            'Room', 'RegistNo', 'Doctor', 'DoctorDone',
+            "CaseKey",
+            "CaseDate",
+            "PatientKey",
+            "Name",
+            "Visit",
+            "RegistType",
+            "TreatType",
+            "Share",
+            "InsType",
+            "Card",
+            "Period",
+            "Room",
+            "RegistNo",
+            "Doctor",
+            "DoctorDone",
         ]
         data = [
-            case_row['case_key'],
-            case_row['case_date'],
-            case_row['patient_key'],
-            case_row['name'],
-            case_row['visit'],
-            case_row['regist_type'],
-            case_row['treat_type'],
-            case_row['share_type'],
-            case_row['ins_type'],
-            case_row['card'],
-            case_row['period'],
-            case_row['room'],
-            case_row['regist_no'],
-            case_row['doctor'],
-            case_row['doctor_done'],
+            case_row["case_key"],
+            case_row["case_date"],
+            case_row["patient_key"],
+            case_row["name"],
+            case_row["visit"],
+            case_row["regist_type"],
+            case_row["treat_type"],
+            case_row["share_type"],
+            case_row["ins_type"],
+            case_row["card"],
+            case_row["period"],
+            case_row["room"],
+            case_row["regist_no"],
+            case_row["doctor"],
+            case_row["doctor_done"],
         ]
-        self.database.insert_record('wait', fields, data)
+        self.database.insert_record("wait", fields, data)
 
     def _update_reserve(self, reserve_key):
         sql = f"""
@@ -468,10 +556,12 @@ class KioskRegistration(QtWidgets.QMainWindow):
 
     def _send_socket_data(self, case_row):
         self.parent.socket_client.send_data(
-            ','.join([
-                self.system_settings.field('院所名稱'),
-                '門診掛號',
-                string_utils.xstr(case_row['doctor']),
-                string_utils.xstr(case_row['room']),
-            ])
+            ",".join(
+                [
+                    self.system_settings.field("院所名稱"),
+                    "門診掛號",
+                    string_utils.xstr(case_row["doctor"]),
+                    string_utils.xstr(case_row["room"]),
+                ]
+            )
         )

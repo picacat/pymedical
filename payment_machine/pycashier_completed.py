@@ -12,6 +12,7 @@ from libs import (
     date_utils,
     log_utils,
     nhi_utils,
+    notification_utils,
     number_utils,
     patient_utils,
     printer_utils,
@@ -26,7 +27,7 @@ class DetectUnplugThread(QtCore.QThread):
     card_unplug = QtCore.pyqtSignal("QString")
 
     def __init__(self, parent, ic_card):
-        super(DetectUnplugThread, self).__init__()
+        super().__init__()
         self.parent = parent
         self.ic_card = ic_card
         self._stop = False
@@ -71,7 +72,7 @@ class DetectUnplugThread(QtCore.QThread):
 class PyCashierCompleted(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(PyCashierCompleted, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -82,6 +83,11 @@ class PyCashierCompleted(QtWidgets.QMainWindow):
         self.detect_unplug_thread.card_unplug.connect(self.card_unplug)
 
         self.socket_client = class_utils.get_socket_client()
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station=self.program_name,
+        )
 
         self._set_ui()
         self._set_signal()
@@ -477,13 +483,14 @@ class PyCashierCompleted(QtWidgets.QMainWindow):
         else:
             program_name = ""
 
-        self.socket_client.send_data(
-            ",".join(
-                [
-                    self.system_settings.field("院所名稱"),
-                    program_name,
-                    doctor,
-                    string_utils.xstr(room),
-                ]
-            )
+        message = ",".join(
+            [
+                self.system_settings.field("院所名稱"),
+                program_name,
+                doctor,
+                string_utils.xstr(room),
+            ]
         )
+
+        self.socket_client.send_data(message)  # 舊管道：UDP
+        self.notification_client.send_data(message)  # 新管道：資料庫
