@@ -5,7 +5,8 @@
 
 流程：
     1. 判定資料庫引擎（全 InnoDB / 全 MyISAM / 混合）
-    2. 取得全域讀鎖 → 逐表 dump → 解鎖（保證跨表一致性）
+    2. 逐表 dump（InnoDB 靠 MVCC 不取鎖，只保單表一致；
+       MyISAM／混合取全域讀鎖換跨表一致性）
     3. 逐檔驗證（存在、非空、有 dump 結束標記）
     4. 匯出非資料表物件（資料庫字元集、檢視表、routines、權限）
     5. 匯出當日病歷 JSON
@@ -392,7 +393,17 @@ class Backup(QtWidgets.QDialog):
 
         table_results = []
         object_results = []
-        locked = self._acquire_global_lock(result)
+
+        # 純 InnoDB 靠 MVCC：mysqldump 一張表就是一句 SELECT，
+        # 該句開始時就固定 read view，單表本身仍然是一致快照。
+        # 犧牲的只有跨表一致性（換取備份期間其他站台不被凍住）。
+        # MyISAM／混合沒有 MVCC，仍然只能靠全域讀鎖。
+        locked = False
+        if self._engine_mode != ENGINE_INNODB:
+            locked = self._acquire_global_lock(result)
+        else:
+            logger.info("純 InnoDB，本次不取全域讀鎖（無跨表一致性）")
+
         try:
             for table_name in table_names:
                 self._set_label(f"正在備份 {table_name} ...")
@@ -484,7 +495,9 @@ class Backup(QtWidgets.QDialog):
             f"--host={self._host}",
             f"--user={self._user}",
             *CHARSET_ARGS,
-            "--skip-lock-tables",  # 全域讀鎖已在外層取得，子行程不要再鎖
+            # InnoDB：完全不鎖，靠 MVCC。
+            # MyISAM／混合：全域讀鎖已在外層取得，子行程不必再鎖。
+            "--skip-lock-tables",
             *extra_args,
         ]
 
