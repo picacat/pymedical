@@ -26,7 +26,7 @@ from libs import (
 class KioskRegistration(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(KioskRegistration, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -294,7 +294,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
                 return
 
         self._save_files(reserve_row, ins_type)
-        self._send_socket_data(reserve_row)
+        self._send_broadcast_data(reserve_row)
         self._show_arrival_done()
 
     def _check_ic_card_basic_data(self, reserve_row):
@@ -665,10 +665,10 @@ class KioskRegistration(QtWidgets.QMainWindow):
         """
         self.database.exec_sql(sql)
 
-    def _send_socket_data(self, reserve_row):
+    def _send_broadcast_data(self, reserve_row):
         doctor = string_utils.xstr(reserve_row["Doctor"])
         room = string_utils.xstr(reserve_row["Room"])
-        self.parent.send_socket_data(doctor, room, "門診掛號")
+        self.parent.send_broadcast_data(doctor, room, "門診掛號")
 
     # 自動連續療程 - 30天內.
     def _auto_completion_course(self, patient_key):

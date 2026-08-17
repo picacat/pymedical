@@ -97,14 +97,12 @@ class WaitingList(QtWidgets.QMainWindow):
         self.tab_name = "候診名單"
         self.user_name = system_utils.get_user_name(self.system_settings)
         self.settings = QSettings("__settings.ini", QSettings.IniFormat)
-        self.voice_client = class_utils.get_voice_client()
         self.led_port = self.system_settings.field("叫號燈連接埠")
         self.led_ip = self.system_settings.field("叫號燈ip")
         self.led_tcp_port = number_utils.get_integer(
             self.system_settings.field("叫號燈port")
         )
         self.ring_bell = self.system_settings.field("叫號燈響鈴")
-        self.socket_client = class_utils.get_socket_client()
         self.notification_client = notification_utils.NotificationClient(
             self,
             database=self.database,
@@ -400,7 +398,6 @@ class WaitingList(QtWidgets.QMainWindow):
                 doctor=self.user_name,
             )
 
-        self.voice_client.send_data("refresh_wait")
         self.notification_client.broadcast(
             notification_utils.CHANNEL_BULLETIN, "refresh_wait"
         )
@@ -1763,7 +1760,6 @@ class WaitingList(QtWidgets.QMainWindow):
         voice_dict["sentence"] = sentence
 
         broadcast_json = json.dumps(voice_dict)
-        self.voice_client.send_data(broadcast_json)
         self.notification_client.broadcast(
             notification_utils.CHANNEL_CALL_NUMBER, broadcast_json
         )
@@ -1779,7 +1775,7 @@ class WaitingList(QtWidgets.QMainWindow):
         else:
             pass
 
-        self._send_socket_data()
+        self._send_broadcast_data()
 
     def _send_com_data(self, custom=False):
         if custom:
@@ -2123,7 +2119,6 @@ class WaitingList(QtWidgets.QMainWindow):
         self.database.exec_sql(sql)
 
         self.read_wait()
-        self.voice_client.send_data("refresh_wait")
         self.notification_client.broadcast(
             notification_utils.CHANNEL_BULLETIN, "refresh_wait"
         )
@@ -2147,7 +2142,6 @@ class WaitingList(QtWidgets.QMainWindow):
         )
 
         if "過號" not in remark:
-            self.voice_client.send_data("refresh_wait")
             self.notification_client.broadcast(
                 notification_utils.CHANNEL_BULLETIN, "refresh_wait"
             )
@@ -2173,7 +2167,6 @@ class WaitingList(QtWidgets.QMainWindow):
         self.database.exec_sql(sql)
 
         self.read_wait()
-        self.voice_client.send_data("refresh_wait")
         self.notification_client.broadcast(
             notification_utils.CHANNEL_BULLETIN, "refresh_wait"
         )
@@ -2250,7 +2243,7 @@ class WaitingList(QtWidgets.QMainWindow):
 
         self.read_wait()
 
-    def _send_socket_data(self):
+    def _send_broadcast_data(self):
         room = self._get_current_room()
 
         message = ",".join(
@@ -2262,7 +2255,6 @@ class WaitingList(QtWidgets.QMainWindow):
             ]
         )
 
-        self.socket_client.send_data(message)  # 舊管道：UDP
         self.notification_client.send_data(message)  # 新管道：資料庫
 
     def _start_flashing(self, widget):

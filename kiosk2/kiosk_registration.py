@@ -7,6 +7,7 @@ from PyQt5 import QtCore, QtWidgets
 from libs import (
     charge_utils,
     log_utils,
+    notification_utils,
     registration_utils,
     string_utils,
     system_utils,
@@ -24,6 +25,11 @@ class KioskRegistration(QtWidgets.QMainWindow):
         self.system_settings = args[1]
 
         self.ui = None
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station=self.program_name,
+        )
 
         self.home_timer = QtCore.QTimer(self)
         self.home_timer.timeout.connect(self._timeout)
@@ -378,7 +384,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
         self._update_reserve(case_row["reserve_key"])
 
         self._write_event_log(case_row)
-        self._send_socket_data(case_row)
+        self._send_broadcast_data(case_row)
 
         self.parent.open_kiosk_completed("預約報到", case_row["case_key"])
 
@@ -554,14 +560,14 @@ class KioskRegistration(QtWidgets.QMainWindow):
         """
         self.database.exec_sql(sql)
 
-    def _send_socket_data(self, case_row):
-        self.parent.socket_client.send_data(
-            ",".join(
-                [
-                    self.system_settings.field("院所名稱"),
-                    "門診掛號",
-                    string_utils.xstr(case_row["doctor"]),
-                    string_utils.xstr(case_row["room"]),
-                ]
-            )
+    def _send_broadcast_data(self, case_row):
+        message = ",".join(
+            [
+                self.system_settings.field("院所名稱"),
+                "門診掛號",
+                string_utils.xstr(case_row["doctor"]),
+                string_utils.xstr(case_row["room"]),
+            ]
         )
+
+        self.notification_client.send_data(message)  # 新管道：資料庫

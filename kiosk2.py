@@ -5,49 +5,49 @@ import importlib
 import os
 import sys
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QDialog
-from libs import class_utils, module_utils, system_utils, ui_utils
+
+from kiosk2.classes.count_dialog import CountDialog, CountPasswordDialog
 from kiosk2.classes.password_dialog import PasswordDialog
-from kiosk2.classes.count_dialog import CountDialog
-from kiosk2.classes.count_dialog import CountPasswordDialog
+from libs import class_utils, module_utils, system_utils, ui_utils
 
 
 # 林胤谷中醫預約報到繳費機 2025.11.25
 class Kiosk(QtWidgets.QMainWindow):
     # BASE_DIR = os.getcwd()
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    UI_DIR = os.path.join(BASE_DIR, 'kiosk2', 'ui')
-    IMAGE_DIR = os.path.join(BASE_DIR, 'kiosk2', 'images')
+    UI_DIR = os.path.join(BASE_DIR, "kiosk2", "ui")
+    IMAGE_DIR = os.path.join(BASE_DIR, "kiosk2", "images")
     TEXT_FONT = "jf open 粉圓 2.1"
     FONT_SIZE = 42
     BUTTON_FONT = "jf open 粉圓 2.1"
     BUTTON_FONT_SIZE = 24
     BUTTON_HEIGHT = 80
     ROOM_DICT = {
-        1: '一診',
-        2: '二診',
-        3: '三診',
-        4: '四診',
-        5: '五診',
-        6: '六診',
-        7: '七診',
-        8: '八診',
-        9: '九診',
-        10: '十診',
+        1: "一診",
+        2: "二診",
+        3: "三診",
+        4: "四診",
+        5: "五診",
+        6: "六診",
+        7: "七診",
+        8: "八診",
+        9: "九診",
+        10: "十診",
     }
 
-    DARK_RED = '#e4442e'
-    RED = '#FF0000'
-    DARK_GREEN = '#1e4f0a'
-    LIGHT_GREEN = '#4bab56'
+    DARK_RED = "#e4442e"
+    RED = "#FF0000"
+    DARK_GREEN = "#1e4f0a"
+    LIGHT_GREEN = "#4bab56"
 
-    LIGHT_TEXT_COLOR = '#333339'
-    TEXT_COLOR = '#000000'
+    LIGHT_TEXT_COLOR = "#333339"
+    TEXT_COLOR = "#000000"
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(Kiosk, self).__init__(parent)
+        super().__init__(parent)
         self.args = args
 
         try:
@@ -58,16 +58,16 @@ class Kiosk(QtWidgets.QMainWindow):
         if config_file is not None:
             self.config_file = config_file
             config_dict = self._parse_config_file(self.config_file)
-            self.host = config_dict['host']
+            self.host = config_dict["host"]
             self.database = class_utils.get_db(
                 host=self.host,
-                user=config_dict['user'],
-                database=config_dict['database'],
-                password=config_dict['password'],
-                charset=config_dict['charset'],
-                buffered=config_dict['buffered'],
+                user=config_dict["user"],
+                database=config_dict["database"],
+                password=config_dict["password"],
+                charset=config_dict["charset"],
+                buffered=config_dict["buffered"],
             )
-            self.server_ip = config_dict['host']
+            self.server_ip = config_dict["host"]
         else:
             self.database = class_utils.get_db()
             self.config_file = self.database.CONFIG_FILE
@@ -76,11 +76,12 @@ class Kiosk(QtWidgets.QMainWindow):
         if not self.database.connected():
             sys.exit(0)
 
-        self.system_settings = class_utils.get_system_settings(self.database, self.config_file)
+        self.system_settings = class_utils.get_system_settings(
+            self.database, self.config_file
+        )
         self.ui = None
-        self.clinic_name = self.system_settings.field('院所名稱')
-        self.clinic_name = self.clinic_name.replace('診所', '')
-        self.socket_client = class_utils.get_socket_client()
+        self.clinic_name = self.system_settings.field("院所名稱")
+        self.clinic_name = self.clinic_name.replace("診所", "")
 
         self._set_ui()
         self._set_signal()
@@ -88,7 +89,7 @@ class Kiosk(QtWidgets.QMainWindow):
 
     # 解構
     def __del__(self):
-        self.socket_client.close()
+        pass
 
     # 設定GUI
     def _set_ui(self):
@@ -122,7 +123,7 @@ class Kiosk(QtWidgets.QMainWindow):
         self.mousePressEvent = self.label_clicked
 
     def label_clicked(self, event):
-        if event.button() == QtCore.Qt.LeftButton: 
+        if event.button() == QtCore.Qt.LeftButton:
             if self.exit_area.contains(event.pos()):
                 self.timer.start()
                 self.click_count += 1
@@ -193,7 +194,7 @@ class Kiosk(QtWidgets.QMainWindow):
         self.clock_timer.start(1000)  # 每 1000 毫秒 (1秒) 觸發一次
 
     def update_clock_ui(self):
-        current_time = datetime.datetime.now().strftime('%Y-%m-%d - %H:%M:%S')
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d - %H:%M:%S")
         self.label_clock.setText(current_time)
 
     # 設定信號
@@ -217,22 +218,26 @@ class Kiosk(QtWidgets.QMainWindow):
 
     def _set_kiosk_home(self):
         self.widget_home = module_utils.get_kiosk2_home(
-            self, self.database, self.system_settings)
+            self, self.database, self.system_settings
+        )
         self.ui.stackedWidget.addWidget(self.widget_home)
 
     def _set_kiosk_identity(self):
         self.widget_identity = module_utils.get_kiosk2_identity(
-            self, self.database, self.system_settings)
+            self, self.database, self.system_settings
+        )
         self.ui.stackedWidget.addWidget(self.widget_identity)
 
     def _set_kiosk_registration(self):
         self.widget_registration = module_utils.get_kiosk2_registration(
-            self, self.database, self.system_settings)
+            self, self.database, self.system_settings
+        )
         self.ui.stackedWidget.addWidget(self.widget_registration)
 
     def _set_kiosk_payment(self):
         self.widget_payment = module_utils.get_kiosk2_payment(
-            self, self.database, self.system_settings)
+            self, self.database, self.system_settings
+        )
         self.ui.stackedWidget.addWidget(self.widget_payment)
 
     def _set_kiosk_completed(self):
@@ -247,7 +252,7 @@ class Kiosk(QtWidgets.QMainWindow):
 
     # === 新增：每次回到首頁時，檢查庫存狀態 ===
     def _refresh_check_inventory_status(self):
-        if hasattr(self, 'widget_home'):
+        if hasattr(self, "widget_home"):
             self.widget_home.check_inventory_status()
 
     def open_kiosk_identity(self, op_type):
@@ -257,12 +262,14 @@ class Kiosk(QtWidgets.QMainWindow):
     def open_kiosk_registration(self, patient_key, identity_type):
         self.ui.stackedWidget.setCurrentIndex(2)
         self.widget_registration.set_registration_data(
-            patient_key=patient_key, identity_type=identity_type)
+            patient_key=patient_key, identity_type=identity_type
+        )
 
     def open_kiosk_payment(self, patient_key, identity_type):
         self.ui.stackedWidget.setCurrentIndex(3)
         self.widget_payment.set_payment_data(
-            patient_key=patient_key, identity_type=identity_type)
+            patient_key=patient_key, identity_type=identity_type
+        )
 
     def open_kiosk_completed(self, op_type, case_key=None, change_due=None):
         self.ui.stackedWidget.setCurrentIndex(4)
@@ -293,5 +300,5 @@ def main():
 
 
 # 程式開始
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

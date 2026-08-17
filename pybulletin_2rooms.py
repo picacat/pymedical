@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import datetime
 import json
 import os
@@ -22,6 +20,7 @@ import vlc
 from libs import (
     class_utils,
     date_utils,
+    notification_utils,
     number_utils,
     registration_utils,
     string_utils,
@@ -50,7 +49,7 @@ class BellThread(QThread):
 class PyBulletin_2rooms(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(PyBulletin_2rooms, self).__init__(parent)
+        super().__init__(parent)
         self.args = args
 
         self._set_db()
@@ -85,9 +84,8 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         self.period3 = self.system_settings.field("晚班時間")
 
         self._set_ui()
-        self._set_udp_server()
+        self._set_notification_server()
         self._set_signal()
-        self._start_udp_server()
         self._init_wait_list()
 
         # 設定 QTimer 讓 QLabel_room 閃爍
@@ -101,13 +99,31 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         monitor_number = self.get_monitor_number()
         monitor = QDesktopWidget().screenGeometry(monitor_number)
         self.move(monitor.left(), monitor.top())
-        self.showMaximized()
+        self.showFullScreen()
         self._show_waiting_records()
         self.ui.label_doctor1.setFocus()
 
-    def _set_udp_server(self):
-        self.socket_server = class_utils.get_socket_server(self, 8880)
-        self.voice_server = class_utils.get_voice_server(self, 9990)
+    def _set_notification_server(self):
+        channels = [
+            notification_utils.CHANNEL_WAITING_LIST,  # 原 8880
+            notification_utils.CHANNEL_BULLETIN,  # 原 9990 的 refresh_wait
+            notification_utils.CHANNEL_CALL_NUMBER,  # UDP 下線後才打開，否則會念兩次
+        ]
+        self.notification_server = notification_utils.NotificationServer(
+            self,
+            database=self.database,
+            station="pybulletin",
+            channels=channels,
+        )
+        self.notification_server.update_signal.connect(self._on_notification)
+
+    def _on_notification(self, channel, message):
+        if channel == notification_utils.CHANNEL_WAITING_LIST:
+            self._show_waiting_list()  # 原本 8880 就是忽略內容直接刷新
+        elif channel == notification_utils.CHANNEL_BULLETIN:
+            self._broadcast_voice(message)  # 內容是 refresh_wait，它自己會分辨
+        elif channel == notification_utils.CHANNEL_CALL_NUMBER:
+            self._broadcast_voice(message)
 
     def _clear_wait_list(self):
         row_count = 8
@@ -196,10 +212,6 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         # self.mediaplayer.stop()
         # self.mediaplayer.release()
 
-    def _close_socket(self):
-        self.socket_server.stop_thread()
-        self.voice_server.stop_thread()
-
     # 設定GUI
     def _set_ui(self):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_PY_BULLETIN_2ROOMS, self)
@@ -240,8 +252,7 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        self.voice_server.update_signal.connect(self._broadcast_voice)
-        self.socket_server.update_signal.connect(lambda: self._show_waiting_list())
+        pass
 
     def _close(self):
         self.close()
@@ -252,10 +263,6 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         system_utils.set_theme(self.ui, self.system_settings)
-
-    def _start_udp_server(self):
-        self.socket_server.start()
-        self.voice_server.start()
 
     def _set_lower_audio(self):
         if self.url in ["", None]:
@@ -289,7 +296,7 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         except json.JSONDecodeError as e:
             print(f"JSON 解析失敗！錯誤訊息: {e}")
             print(
-                f"實際收到的資料內容為: {repr(json_data)}"
+                f"實際收到的資料內容為: {json_data!r}"
             )  # repr 可以看出是不是空字串或夾雜怪字元
             return  # 結束此函式，不往下執行
 

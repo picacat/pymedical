@@ -1,18 +1,20 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, pyqtSignal, QObject
+import datetime
 import os
 import threading
-import datetime
 
-from libs import printer_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import class_utils
-from libs import string_utils
-from libs import registration_utils
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QObject, Qt, pyqtSignal
+
 from classes import jetway
+from libs import (
+    notification_utils,
+    printer_utils,
+    registration_utils,
+    string_utils,
+    system_utils,
+)
 
 
 class Communicate(QObject):
@@ -21,18 +23,22 @@ class Communicate(QObject):
 
 # 2025.11.24 掛號機繳費頁面
 class KioskPay(QtWidgets.QDialog):
-
     finished = pyqtSignal()
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(KioskPay, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent.parent
         self.database = args[0]
         self.system_settings = args[1]
         self.case_key = args[2]
         self.total_amount = args[3]
         self.ui = None
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station=self.program_name,
+        )
 
         self.stop_event = threading.Event()  # <--- 必須添加
         # self.charge_cash_thread = None       # <--- 保持初始化
@@ -47,16 +53,16 @@ class KioskPay(QtWidgets.QDialog):
         if not self.kiosk.connected:
             system_utils.show_message_box(
                 QtWidgets.QMessageBox.Warning,
-                '錯誤',
+                "錯誤",
                 '<font size="5" color="red"><b>收鈔機無法啟動, 請檢查收鈔機是否備妥.</b></font>',
-                '請檢查收鈔機的狀態.'
+                "請檢查收鈔機的狀態.",
             )
             self.close()
             return
 
         self.charge_cash_thread = threading.Thread(
             target=self.kiosk.charge_cash,
-            args=(self.total_amount, self.comm.update_cash_received, self.stop_event)
+            args=(self.total_amount, self.comm.update_cash_received, self.stop_event),
         )
         self._set_ui()
         self._set_signal()
@@ -84,22 +90,44 @@ class KioskPay(QtWidgets.QDialog):
 
     def set_background(self):
         label_background = system_utils.set_image(
-            self, os.path.join(self.parent.IMAGE_DIR, 'background.png'), 0, 0)
+            self, os.path.join(self.parent.IMAGE_DIR, "background.png"), 0, 0
+        )
         self._bring_to_front(label_background)
 
         label_header = system_utils.set_label(
-            self, self.parent.clinic_name, 50, 35, self.parent.TEXT_FONT, 56, self.parent.TEXT_COLOR)
+            self,
+            self.parent.clinic_name,
+            50,
+            35,
+            self.parent.TEXT_FONT,
+            56,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
         label_header = system_utils.set_label(
-            self, '掛號繳費系統', 210, 300, self.parent.TEXT_FONT, 84, self.parent.TEXT_COLOR)
+            self,
+            "掛號繳費系統",
+            210,
+            300,
+            self.parent.TEXT_FONT,
+            84,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
         label_header = system_utils.set_label(
-            self, '請投入紙鈔、50或10元硬幣', 310, 1770, self.parent.TEXT_FONT, 42, self.parent.TEXT_COLOR)
+            self,
+            "請投入紙鈔、50或10元硬幣",
+            310,
+            1770,
+            self.parent.TEXT_FONT,
+            42,
+            self.parent.TEXT_COLOR,
+        )
         self._bring_to_front(label_header)
 
-        self._set_cancel_button('取消繳費')
+        self._set_cancel_button("取消繳費")
 
     def _set_cancel_button(self, button_text):
         color = self.parent.DARK_RED
@@ -149,33 +177,69 @@ class KioskPay(QtWidgets.QDialog):
         self.inserted_cash = 0
 
         header = system_utils.set_label(
-            self, '應付金額: $', x1, LINE1_Y,
-            self.parent.TEXT_FONT, font_size, self.parent.RED)
+            self,
+            "應付金額: $",
+            x1,
+            LINE1_Y,
+            self.parent.TEXT_FONT,
+            font_size,
+            self.parent.RED,
+        )
         self._bring_to_front(header)
 
         label_total_amount = system_utils.set_label(
-            self, str(self.total_amount), x2, LINE1_Y,
-            self.parent.TEXT_FONT, font_size, self.parent.RED)
+            self,
+            str(self.total_amount),
+            x2,
+            LINE1_Y,
+            self.parent.TEXT_FONT,
+            font_size,
+            self.parent.RED,
+        )
         self._bring_to_front(label_total_amount)
 
         header = system_utils.set_label(
-            self, '投入金額: $', x1, LINE2_Y,
-            self.parent.TEXT_FONT, font_size, self.parent.DARK_GREEN)
+            self,
+            "投入金額: $",
+            x1,
+            LINE2_Y,
+            self.parent.TEXT_FONT,
+            font_size,
+            self.parent.DARK_GREEN,
+        )
         self._bring_to_front(header)
 
         self.label_inserted_cash = system_utils.set_label(
-            self, str(self.inserted_cash), x2, LINE2_Y,
-            self.parent.TEXT_FONT, font_size, self.parent.DARK_GREEN)
+            self,
+            str(self.inserted_cash),
+            x2,
+            LINE2_Y,
+            self.parent.TEXT_FONT,
+            font_size,
+            self.parent.DARK_GREEN,
+        )
         self._bring_to_front(self.label_inserted_cash)
 
         header = system_utils.set_label(
-            self, '尚餘金額: $', x1, LINE3_Y,
-            self.parent.TEXT_FONT, font_size, self.parent.LIGHT_GREEN)
+            self,
+            "尚餘金額: $",
+            x1,
+            LINE3_Y,
+            self.parent.TEXT_FONT,
+            font_size,
+            self.parent.LIGHT_GREEN,
+        )
         self._bring_to_front(header)
 
         self.label_remain = system_utils.set_label(
-            self, str(self.total_amount - self.inserted_cash), x2, LINE3_Y,
-            self.parent.TEXT_FONT, font_size, self.parent.LIGHT_GREEN)
+            self,
+            str(self.total_amount - self.inserted_cash),
+            x2,
+            LINE3_Y,
+            self.parent.TEXT_FONT,
+            font_size,
+            self.parent.LIGHT_GREEN,
+        )
         self._bring_to_front(self.label_remain)
 
         self.start_charge_cash()
@@ -186,12 +250,12 @@ class KioskPay(QtWidgets.QDialog):
 
     def start_charge_cash(self):
         self.inserted_cash = 0
-        self.stop_event.clear()     # <--- 必須在連線前清空 event
+        self.stop_event.clear()  # <--- 必須在連線前清空 event
 
         self.charge_cash_thread.start()
 
     def stop_charge_cash(self):
-        if hasattr(self, 'stop_event'):
+        if hasattr(self, "stop_event"):
             self.stop_event.set()
 
         if self.charge_cash_thread is not None:
@@ -204,7 +268,7 @@ class KioskPay(QtWidgets.QDialog):
 
     def _update_cash_received(self, receipt_cash):
         self.inserted_cash = receipt_cash
-        self.label_inserted_cash.setText(f'{self.inserted_cash}')
+        self.label_inserted_cash.setText(f"{self.inserted_cash}")
         self.label_inserted_cash.adjustSize()
 
         if self.inserted_cash >= self.total_amount:
@@ -214,20 +278,20 @@ class KioskPay(QtWidgets.QDialog):
             if self.change_due > 0:
                 self.kiosk.eject_cash(self.change_due)
 
-            self.label_remain.setText(f'{self.total_amount - self.inserted_cash}')
+            self.label_remain.setText(f"{self.total_amount - self.inserted_cash}")
             self.label_remain.adjustSize()
             self.stop_charge_cash()
 
             self.close_kiosk_and_finish()
             self._update_files()
-            self._send_socket()
+            self._send_broadcast_data()
             self._print_receipt()
             self.accept()
 
             return
 
         remain = self.total_amount - self.inserted_cash
-        self.label_remain.setText(f'{remain}')
+        self.label_remain.setText(f"{remain}")
         self.label_remain.adjustSize()
 
     def is_payment_done(self):
@@ -252,29 +316,33 @@ class KioskPay(QtWidgets.QDialog):
 
     def _print_receipt(self):
         printer_utils.print_misc_form(
-            self, self.database, self.system_settings, self.case_key, '列印')
+            self, self.database, self.system_settings, self.case_key, "列印"
+        )
 
-    def _send_socket(self):
-        sql = f'''
+    def _send_broadcast_data(self):
+        sql = f"""
             SELECT Doctor, Room FROM cases
             WHERE
                 CaseKey = {self.case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
         if not rows:
             return
 
         case_row = rows[0]
-        doctor = string_utils.xstr(case_row['Doctor'])
-        room = string_utils.xstr(case_row['Room'])
+        doctor = string_utils.xstr(case_row["Doctor"])
+        room = string_utils.xstr(case_row["Room"])
 
-        self.parent.socket_client.send_data(
-            ','.join([
-                self.system_settings.field('院所名稱'),
-                '批價作業',
-                doctor, room,
-            ])
+        message = ",".join(
+            [
+                self.system_settings.field("院所名稱"),
+                "批價作業",
+                doctor,
+                room,
+            ]
         )
+
+        self.notification_client.send_data(message)  # 新管道：資料庫
 
     def close_kiosk_and_finish(self):
         self.kiosk.close_cash_in_machine()

@@ -253,7 +253,6 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         self.clinic_name = self.system_settings.field("院所名稱")
 
         self.ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
-        self.socket_client = class_utils.get_socket_client()
         self.notification_client = notification_utils.NotificationClient(
             self,
             database=self.database,
@@ -507,7 +506,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
 
         return dialog
 
-    def send_socket_data(self, doctor, room, call_from):
+    def send_broadcast_data(self, doctor, room, call_from):
         message = ",".join(
             [
                 self.system_settings.field("院所名稱"),
@@ -517,7 +516,6 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
             ]
         )
 
-        self.socket_client.send_data(message)  # 舊管道：UDP
         self.notification_client.send_data(message)  # 新管道：資料庫
 
 

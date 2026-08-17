@@ -37,7 +37,6 @@ class Cashier(QtWidgets.QMainWindow):
 
         self.user_name = system_utils.get_user_name(self.system_settings)
         self.allow_refresh_wait_list = True
-        self.socket_client = class_utils.get_socket_client()
         self.notification_client = notification_utils.NotificationClient(
             self,
             database=self.database,
@@ -147,7 +146,7 @@ class Cashier(QtWidgets.QMainWindow):
         self.close_all()
         self.close_tab()
 
-    def _send_socket_data(self, doctor, room):
+    def _send_broadcast_data(self, doctor, room):
         message = ",".join(
             [
                 self.system_settings.field("院所名稱"),
@@ -157,7 +156,6 @@ class Cashier(QtWidgets.QMainWindow):
             ]
         )
 
-        self.socket_client.send_data(message)  # 舊管道：UDP
         self.notification_client.send_data(message)  # 新管道：資料庫
 
     def _set_radio_button_period(self, period):
@@ -638,7 +636,7 @@ class Cashier(QtWidgets.QMainWindow):
         if need_write_ic_card and ic_card is not None:
             ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
 
-        self._send_socket_data(doctor, room)
+        self._send_broadcast_data(doctor, room)
         self.read_wait()
         self.allow_refresh_wait_list = True
 

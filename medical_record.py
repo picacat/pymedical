@@ -70,7 +70,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
         self.user_name = system_utils.get_user_name(self.system_settings)
         self._init_tab()
         self.close_tab_warning = True
-        self.socket_client = class_utils.get_socket_client()
         self.notification_client = notification_utils.NotificationClient(
             self,
             database=self.database,
@@ -2154,7 +2153,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
                 self.database, self.system_settings, self.case_key
             )
 
-        self._send_socket_data()
+        self._send_broadcast_data()
 
     def _get_wait_key(self):
         if self.case_key is None:
@@ -2938,7 +2937,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             self._print_misc2(case_key, "選擇列印")
             self._print_misc3(case_key, "選擇列印")
 
-        self._send_socket_data()
+        self._send_broadcast_data()
 
         self.close_all()
         self.close_tab()
@@ -3749,7 +3748,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
             self._set_doctor_done()
             self._set_charge_done()
             self._set_wait_done()
-            self._send_socket_data()
+            self._send_broadcast_data()
         else:  # 修正病歷存檔 2024.09.04
             # self._set_doctor_done(doctor_done='False')
             # self._set_charge_done(charge_done='False')
@@ -3833,7 +3832,7 @@ class MedicalRecord(QtWidgets.QMainWindow):
         ]
         self.database.insert_record("caseextend", fields, data)
 
-    def _send_socket_data(self):
+    def _send_broadcast_data(self):
         message = ",".join(
             [
                 self.system_settings.field("院所名稱"),
@@ -3843,7 +3842,6 @@ class MedicalRecord(QtWidgets.QMainWindow):
             ]
         )
 
-        self.socket_client.send_data(message)  # 舊管道：UDP
         self.notification_client.send_data(message)  # 新管道：資料庫
 
     def _set_doctor_done(self, case_key=None, doctor_done="True"):

@@ -2672,16 +2672,6 @@ def get_statistics_doctor_sale_summary(
     return widget
 
 
-# 候診叫號系統
-def get_pybulletin3(parent, socket_server, voice_server):
-    import pybulletin3
-
-    module = importlib.reload(pybulletin3)
-    tab_widget = module.PyBulletin3(parent, socket_server, voice_server)
-
-    return tab_widget
-
-
 # 進貨單記錄
 def get_stock_in_list(parent, *args):
     import stock_in_list

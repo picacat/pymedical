@@ -7,7 +7,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from classes import smart_card
 from libs import (
     case_utils,
-    class_utils,
     cshis_utils,
     date_utils,
     log_utils,
@@ -33,11 +32,10 @@ class KioskCompleted(QtWidgets.QMainWindow):
         self.ic_card = args[2]
         self.ui = None
 
-        self.socket_client = class_utils.get_socket_client()
         self.notification_client = notification_utils.NotificationClient(
             self,
             database=self.database,
-            station=self.program_name,
+            station="掛號機",
         )
 
         self._set_ui()
@@ -103,7 +101,7 @@ class KioskCompleted(QtWidgets.QMainWindow):
             self._set_label_message(message, "請取出健保卡", message)
             self._print_receipt_form(**kwargs)
 
-        self._send_socket_data(doctor, room, payment_type)
+        self._send_broadcast_data(doctor, room, payment_type)
 
         QtCore.QCoreApplication.processEvents()
         self.card_observer = smart_card.SmartCardObserver()
@@ -419,7 +417,7 @@ class KioskCompleted(QtWidgets.QMainWindow):
     def _back_home(self):
         self.parent.open_kiosk_home()
 
-    def _send_socket_data(self, doctor, room, payment_type):
+    def _send_broadcast_data(self, doctor, room, payment_type):
         if payment_type == "掛號繳費":
             program_name = "門診掛號"
         elif payment_type == "批價繳費":
@@ -436,7 +434,6 @@ class KioskCompleted(QtWidgets.QMainWindow):
             ]
         )
 
-        self.socket_client.send_data(message)  # 舊管道：UDP
         self.notification_client.send_data(message)  # 新管道：資料庫
 
     def _card_removed(self, message):

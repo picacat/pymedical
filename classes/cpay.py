@@ -1,4 +1,4 @@
-'''
+"""
 收鈔機作業
 清除狀態
 0.{"command":"machine-clear","parmeter":{"fee":0}}
@@ -86,35 +86,31 @@ client端請先連上之後，
     請查看回應字串是否有未找零金額:
     有未找零金額: 請下 清除狀態 跟 RESET 指令 (在下筆交易前須做此動作否則會有資料不正確的情況發生)
 
-'''
+"""
 
-from PyQt5.QtWidgets import QMessageBox
-import socket
 import json
-from time import sleep
-from libs import system_utils
-
+import socket
 
 command = {
-    'machine-clear': {  # 清除狀態
-        'command': 'machine-clear',
-        'parmeter': {'fee': 0},
+    "machine-clear": {  # 清除狀態
+        "command": "machine-clear",
+        "parmeter": {"fee": 0},
     },
-    'machine-state': {  # 偵測收鈔狀態
-        'command': 'machine-state',
-        'parmeter': {'fee': 0},
+    "machine-state": {  # 偵測收鈔狀態
+        "command": "machine-state",
+        "parmeter": {"fee": 0},
     },
-    'machine-deduct': {  # 提供應付金額
-        'command': 'machine-deduct',
-        'parmeter': {'fee': 0},
+    "machine-deduct": {  # 提供應付金額
+        "command": "machine-deduct",
+        "parmeter": {"fee": 0},
     },
-    'machine-stop-deduct': {  # 交易取消
-        'command': 'machine-stop-deduct',
-        'parmeter': {'fee': 0},
+    "machine-stop-deduct": {  # 交易取消
+        "command": "machine-stop-deduct",
+        "parmeter": {"fee": 0},
     },
-    'machine-reset': {  # RESET
-        'command': 'machine-reset',
-        'parmeter': {'fee': 0},
+    "machine-reset": {  # RESET
+        "command": "machine-reset",
+        "parmeter": {"fee": 0},
     },
 }
 
@@ -135,7 +131,7 @@ class CPay:
         self.machine_reset()
 
     def _init_socket(self):
-        host = '127.0.0.1'
+        host = "127.0.0.1"
         port = 6389
         self.server_address = (host, port)
 
@@ -158,55 +154,37 @@ class CPay:
         self.machine_deduct(fee)
 
     def machine_clear(self):
-        json_data = json.dumps(
-                command['machine-clear'],
-                ensure_ascii=True
-        )
+        json_data = json.dumps(command["machine-clear"], ensure_ascii=True)
         self.send_data(json_data, recv_data=True)
 
     def machine_reset(self):
-        json_data = json.dumps(
-            command['machine-reset'],
-            ensure_ascii=True
-        )
+        json_data = json.dumps(command["machine-reset"], ensure_ascii=True)
         self.send_data(json_data, recv_data=True)
 
     def machine_state(self):
-        json_data = json.dumps(
-            command['machine-state'],
-            ensure_ascii=True
-        )
+        json_data = json.dumps(command["machine-state"], ensure_ascii=True)
         status = self.send_data(json_data, recv_data=True)
 
         return status
 
     def machine_deduct(self, fee):
-        command['machine-deduct']['parmeter']['fee'] = fee
-        json_data = json.dumps(
-            command['machine-deduct'],
-            ensure_ascii=True
-        )
+        command["machine-deduct"]["parmeter"]["fee"] = fee
+        json_data = json.dumps(command["machine-deduct"], ensure_ascii=True)
         self.send_data(json_data, recv_data=True)
 
     def machine_stop_deduct(self):
-        json_data = json.dumps(
-            command['machine-stop-deduct'],
-            ensure_ascii=True
-        )
+        json_data = json.dumps(command["machine-stop-deduct"], ensure_ascii=True)
         self.send_data(json_data, recv_data=False)
 
     def eject_coin(self):
-        command['machine-stop-deduct']['parmeter']['needchange'] = 5000
-        json_data = json.dumps(
-            command['machine-clear'],
-            ensure_ascii=True
-        )
+        command["machine-stop-deduct"]["parmeter"]["needchange"] = 5000
+        json_data = json.dumps(command["machine-clear"], ensure_ascii=True)
         self.send_data(json_data, recv_data=True)
 
     def get_paid(self):
         state = self.machine_state()
-        parameter = json.loads(state)['parmeter']
-        paid = parameter['paid']
+        parameter = json.loads(state)["parmeter"]
+        paid = parameter["paid"]
 
         return paid
 
@@ -215,12 +193,12 @@ class CPay:
 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect(self.server_address)
-        cmd = bytes(json_data, 'ascii')
+        cmd = bytes(json_data, "ascii")
         self.client.sendto(cmd, self.server_address)
 
         if recv_data:
             received_data, received_address = self.client.recvfrom(buffer_size)
-            received_data = str(received_data, 'ascii')
+            received_data = str(received_data, "ascii")
 
             return received_data
 

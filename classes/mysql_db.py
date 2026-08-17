@@ -320,6 +320,99 @@ class MySQLDatabase(DatabaseInterface):
 
         return engine
 
+    # def _detect_engine(self):
+    #     """依現有資料表判定本資料庫使用的儲存引擎。
+
+    #     這是引擎的唯一判定來源，設定檔不再參與。理由是設定檔會說謊——
+    #     conf 寫著 InnoDB 而資料表其實還是 MyISAM（或反過來）時，新資料表
+    #     會被建成另一種引擎，形成難以察覺的混合引擎資料庫。資料庫現況不會
+    #     說謊，而且客戶跑完引擎轉換後不需要再去改任何設定檔。
+
+    #     判定規則：取目前資料表中佔多數的引擎；數量相同時偏好 InnoDB，
+    #     避免已經轉換一半的資料庫被判回 MyISAM 而倒退。
+
+    #     前置條件：必須已連上目標資料庫。未連線時直接回傳 FALLBACK_ENGINE
+    #     並明確警告，而不是讓查詢一路失敗後靜默落回預設值——後者會把
+    #     MyISAM 客戶誤判成 InnoDB。
+
+    #     Returns:
+    #         str: 引擎名稱。
+    #     """
+    #     if not self.connected():
+    #         print(
+    #             f"⚠️ 尚未連線，無法判定資料引擎，暫用 {FALLBACK_ENGINE}。"
+    #             "若此訊息出現在正常啟動流程中，代表 _detect_engine() 被"
+    #             "提前呼叫了，請檢查呼叫順序。"
+    #         )
+    #         return FALLBACK_ENGINE
+
+    #     sql = """
+    #         SELECT ENGINE, COUNT(*) AS n
+    #         FROM information_schema.TABLES
+    #         WHERE TABLE_SCHEMA = DATABASE()
+    #           AND TABLE_TYPE = 'BASE TABLE'
+    #           AND ENGINE IS NOT NULL
+    #         GROUP BY ENGINE
+    #     """
+    #     try:
+    #         rows = self.select_record(sql)
+    #     except Exception as e:
+    #         print(f"⚠️ 查詢資料引擎失敗，暫用 {FALLBACK_ENGINE}：{e}")
+    #         return FALLBACK_ENGINE
+
+    #     counts = {}
+    #     for row in rows or []:
+    #         name = row.get("ENGINE")
+    #         if name:
+    #             counts[str(name)] = int(row.get("n") or 0)
+
+    #     if not counts:
+    #         # 兩種截然不同的情況，訊息不能混為一談：
+    #         #
+    #         # (a) 連線根本沒選到資料庫。_initialize_database() 的
+    #         #     CREATE DATABASE IF NOT EXISTS 在「資料庫已存在但使用者
+    #         #     沒有 CREATE 權限」時仍會失敗（權限檢查先於存在檢查），
+    #         #     它的 except 只印訊息，於是後面的 _create_connection
+    #         #     (use_db=True) 不會執行，連線停留在未選定資料庫的狀態。
+    #         #     此時 DATABASE() 是 NULL，查詢自然沒有任何列——若當成
+    #         #     空資料庫處理，MyISAM 客戶就會被靜默誤判成 InnoDB。
+    #         #
+    #         # (b) 資料庫確實是空的（全新安裝），採用預設值才是對的。
+    #         if not self._get_database_name():
+    #             print(
+    #                 f"⚠️ 連線未選定資料庫（`{self.database}` 可能不存在或"
+    #                 f"權限不足），無法判定引擎，暫用 {FALLBACK_ENGINE}。"
+    #                 "請確認資料庫名稱與使用者權限。"
+    #             )
+    #         else:
+    #             print(
+    #                 f"資料庫 `{self.database}` 尚無資料表，"
+    #                 f"新資料表將採用 {FALLBACK_ENGINE}。"
+    #             )
+    #         return FALLBACK_ENGINE
+
+    #     # 數量相同時偏好交易式引擎，讓轉換到一半的資料庫不會被判回 MyISAM
+    #     def _rank(item):
+    #         name, n = item
+    #         return (n, 1 if name.upper() == FALLBACK_ENGINE.upper() else 0)
+
+    #     engine = max(counts.items(), key=_rank)[0]
+
+    #     if len(counts) > 1:
+    #         detail = "、".join(
+    #             f"{k} {v} 張" for k, v in sorted(counts.items(), key=lambda x: -x[1])
+    #         )
+    #         print(
+    #             f"⚠️ 資料庫 `{self.database}` 混合了多種儲存引擎（{detail}），"
+    #             f"新資料表將採用 {engine}。"
+    #             "這通常代表引擎轉換中斷或尚未完成，建議儘快統一。"
+    #         )
+    #     else:
+    #         print(f"資料引擎：{engine}（依現有 {counts[engine]} 張資料表判定）")
+
+    #     return engine
+    # -*- coding: utf-8 -*-
+
     def _detect_engine(self):
         """依現有資料表判定本資料庫使用的儲存引擎。
 
@@ -328,8 +421,10 @@ class MySQLDatabase(DatabaseInterface):
         會被建成另一種引擎，形成難以察覺的混合引擎資料庫。資料庫現況不會
         說謊，而且客戶跑完引擎轉換後不需要再去改任何設定檔。
 
-        判定規則：取目前資料表中佔多數的引擎；數量相同時偏好 InnoDB，
-        避免已經轉換一半的資料庫被判回 MyISAM 而倒退。
+        判定規則：只要還有任何一張 MyISAM 資料表，整個資料庫就算 MyISAM；
+        全部都不是 MyISAM 才算 InnoDB。不用多數決，因為多數決在轉換到一半
+        時會回報 InnoDB，讓人誤以為已經升級完成——「還剩一張沒轉」和
+        「已經轉完」必須是不同的答案。
 
         前置條件：必須已連上目標資料庫。未連線時直接回傳 FALLBACK_ENGINE
         並明確警告，而不是讓查詢一路失敗後靜默落回預設值——後者會把
@@ -347,12 +442,13 @@ class MySQLDatabase(DatabaseInterface):
             return FALLBACK_ENGINE
 
         sql = """
-            SELECT ENGINE, COUNT(*) AS n
+            SELECT
+                COUNT(*) AS total,
+                SUM(UPPER(ENGINE) = 'MYISAM') AS myisam
             FROM information_schema.TABLES
             WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_TYPE = 'BASE TABLE'
-              AND ENGINE IS NOT NULL
-            GROUP BY ENGINE
+            AND TABLE_TYPE = 'BASE TABLE'
+            AND ENGINE IS NOT NULL
         """
         try:
             rows = self.select_record(sql)
@@ -360,13 +456,11 @@ class MySQLDatabase(DatabaseInterface):
             print(f"⚠️ 查詢資料引擎失敗，暫用 {FALLBACK_ENGINE}：{e}")
             return FALLBACK_ENGINE
 
-        counts = {}
-        for row in rows or []:
-            name = row.get("ENGINE")
-            if name:
-                counts[str(name)] = int(row.get("n") or 0)
+        row = (rows or [{}])[0]
+        total = int(row.get("total") or 0)
+        myisam = int(row.get("myisam") or 0)
 
-        if not counts:
+        if total == 0:
             # 兩種截然不同的情況，訊息不能混為一談：
             #
             # (a) 連線根本沒選到資料庫。_initialize_database() 的
@@ -374,7 +468,7 @@ class MySQLDatabase(DatabaseInterface):
             #     沒有 CREATE 權限」時仍會失敗（權限檢查先於存在檢查），
             #     它的 except 只印訊息，於是後面的 _create_connection
             #     (use_db=True) 不會執行，連線停留在未選定資料庫的狀態。
-            #     此時 DATABASE() 是 NULL，查詢自然沒有任何列——若當成
+            #     此時 DATABASE() 是 NULL，查詢自然數不到任何表——若當成
             #     空資料庫處理，MyISAM 客戶就會被靜默誤判成 InnoDB。
             #
             # (b) 資料庫確實是空的（全新安裝），採用預設值才是對的。
@@ -391,26 +485,44 @@ class MySQLDatabase(DatabaseInterface):
                 )
             return FALLBACK_ENGINE
 
-        # 數量相同時偏好交易式引擎，讓轉換到一半的資料庫不會被判回 MyISAM
-        def _rank(item):
-            name, n = item
-            return (n, 1 if name.upper() == FALLBACK_ENGINE.upper() else 0)
+        if myisam:
+            if myisam == total:
+                print(f"資料引擎：MyISAM（{total} 張資料表全部為 MyISAM）")
+            else:
+                print(
+                    f"⚠️ 資料庫 `{self.database}` 共 {total} 張資料表，"
+                    f"其中 {myisam} 張仍是 MyISAM，尚未轉換完成，"
+                    "整個資料庫仍以 MyISAM 處理。"
+                )
+            return "MyISAM"
 
-        engine = max(counts.items(), key=_rank)[0]
+        print(f"資料引擎：InnoDB（{total} 張資料表均已非 MyISAM）")
+        return "InnoDB"
 
-        if len(counts) > 1:
-            detail = "、".join(
-                f"{k} {v} 張" for k, v in sorted(counts.items(), key=lambda x: -x[1])
-            )
-            print(
-                f"⚠️ 資料庫 `{self.database}` 混合了多種儲存引擎（{detail}），"
-                f"新資料表將採用 {engine}。"
-                "這通常代表引擎轉換中斷或尚未完成，建議儘快統一。"
-            )
-        else:
-            print(f"資料引擎：{engine}（依現有 {counts[engine]} 張資料表判定）")
+    def myisam_tables(self):
+        """列出還沒轉換的 MyISAM 資料表，供收尾與驗收。
 
-        return engine
+        Returns:
+            list[dict]: 每筆含 TABLE_NAME；空 list 代表已全部轉換完成。
+                未連線或查詢失敗時回傳 None，以便和「確實沒有」區分。
+        """
+        if not self.connected():
+            print("⚠️ 尚未連線，無法列出資料表引擎。")
+            return None
+
+        sql = """
+            SELECT TABLE_NAME
+            FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_TYPE = 'BASE TABLE'
+            AND UPPER(ENGINE) = 'MYISAM'
+            ORDER BY TABLE_NAME
+        """
+        try:
+            return list(self.select_record(sql) or [])
+        except Exception as e:
+            print(f"⚠️ 查詢 MyISAM 資料表失敗：{e}")
+            return None
 
     def _initialize_database(self):
         """如果資料庫不存在則建立，並重新連線使用該資料庫。"""

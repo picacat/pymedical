@@ -29,7 +29,7 @@ from threading import Thread
 import pygame
 from pygame import mixer
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QCoreApplication, Qt
+from PyQt5.QtCore import QCoreApplication, QDir, QLockFile, Qt
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import (
     QFileDialog,
@@ -228,23 +228,31 @@ class PyMedical(QtWidgets.QMainWindow):
         self.beep_anywhere = self.system_settings.field("候診名單更新發出提示音")
         self._last_beep_time = 0.0
 
-        if sys.platform == "win32" and instance_setting == "獨立執行":
-            self._check_single_instance()
+        if instance_setting == "獨立執行" and not self._acquire_single_instance_lock():
+            if sys.platform == "win32":
+                self._check_single_instance()  # 保留原本「把舊視窗叫到前景」的好體驗
+            sys.exit(0)
 
         self.ui = None
 
         self._init_statistics_dicts()
 
         self._set_ui()
-        self._set_udp_server()
         self._set_notification_server()
 
         self._set_signal()
         self._set_user_name()
 
         self.reset_wait()
-        self._start_udp_server()
         self._set_dealer()
+        voice_utils.cleanup_tts_cache()
+
+    def _acquire_single_instance_lock(self):
+        # 用院所名稱當 key, 讓不同院所 / 不同資料庫仍可各自獨立執行
+        lock_path = os.path.join(QDir.tempPath(), f"pymedical_{self.clinic_name}.lock")
+        self._instance_lock = QLockFile(lock_path)  # 一定要存成 self 屬性!
+        self._instance_lock.setStaleLockTime(30000)  # 30秒, 死鎖自動回收的保險
+        return self._instance_lock.tryLock(100)  # 拿到=True, 已被佔用=False
 
     def _set_dealer(self):
         dealer = "百會資訊"
@@ -445,10 +453,6 @@ class PyMedical(QtWidgets.QMainWindow):
 
         self._deleted = True
 
-    def _close_socket(self):
-        self.socket_server.stop_thread()
-        self.voice_server.stop_thread()
-
     def closeEvent(self, event: QtGui.QCloseEvent):
         """關閉主程式事件."""
         if self._force_close:
@@ -515,7 +519,7 @@ class PyMedical(QtWidgets.QMainWindow):
         backup_process.start_backup()
 
     def _shutdown(self, run_backup=True):
-        """關閉前的清理作業(備份、關資料庫、關socket等)"""
+        """關閉前的清理作業(備份、關資料庫等)"""
         if run_backup:
             self._backup_database()
 
@@ -543,7 +547,6 @@ class PyMedical(QtWidgets.QMainWindow):
                     "system_errors.log", f"關閉封存資料庫時發生錯誤: {e}"
                 )
 
-        self._close_socket()
         self.deactivate_ic_card_reader()
 
     def _turn_off_led(self):
@@ -691,6 +694,9 @@ class PyMedical(QtWidgets.QMainWindow):
             self.ui.menu_massage.menuAction().setVisible(True)
 
     def _set_notification_server(self):
+        notification_utils.ensure_table(self.database)  # ← 先確保表在
+        notification_utils.purge_old_records(self.database)
+
         channels = [notification_utils.CHANNEL_WAITING_LIST]
         if self.system_settings.field("廣播叫號主機") == "Y":
             channels.append(notification_utils.CHANNEL_CALL_NUMBER)
@@ -704,25 +710,10 @@ class PyMedical(QtWidgets.QMainWindow):
         self.notification_server.update_signal.connect(self._on_notification)
 
     def _on_notification(self, channel, message):
-        print(channel, message)
-        # if channel == notification_utils.CHANNEL_WAITING_LIST:
-        #     self._refresh_waiting_data(message)
-        # elif channel == notification_utils.CHANNEL_CALL_NUMBER:
-        #     self._broadcast_speech(message)
-
-    def _set_udp_server(self):
-        self._set_socket_server()
-        self.voice_server = class_utils.get_voice_server()
-
-    def _set_socket_server(self):
-        self.socket_server = class_utils.get_socket_server()
-        if not self.socket_server.connected():
-            if self.system_settings.field("醫療系統執行個體") == "獨立執行":
-                sys.exit(0)
-            else:
-                self.ui.setWindowTitle(
-                    f"{self.clinic_name} 醫療資訊管理系統  (廣播網路已停用)"
-                )
+        if channel == notification_utils.CHANNEL_WAITING_LIST:
+            self._refresh_waiting_data(message)
+        elif channel == notification_utils.CHANNEL_CALL_NUMBER:
+            self._broadcast_speech(message)
 
     def add_separator(self):
         """狀態列增加分隔線."""
@@ -777,10 +768,6 @@ class PyMedical(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        self.socket_server.update_signal.connect(self._refresh_waiting_data)
-        if self.system_settings.field("廣播叫號主機") == "Y":
-            self.voice_server.update_signal.connect(self._broadcast_speech)
-
         self.ui.pushButton_registration.clicked.connect(
             self._open_subroutine
         )  # 掛號作業
@@ -1157,8 +1144,6 @@ class PyMedical(QtWidgets.QMainWindow):
                 CaseDate > "{tonight}"
         '''
         self.database.exec_sql(sql)
-
-        self.notification_server.purge_old_records()
 
     # 設定按鈕權限
     def _set_button_enabled(self):
@@ -1973,10 +1958,6 @@ class PyMedical(QtWidgets.QMainWindow):
             self.ui.action_convert.setEnabled(False)
         else:
             self.ui.action_convert.setEnabled(True)
-
-    def _start_udp_server(self):
-        self.socket_server.start()
-        self.voice_server.start()
 
     def _authorize_all_permission(self):
         action_list = [

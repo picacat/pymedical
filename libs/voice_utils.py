@@ -220,20 +220,41 @@ def _make_tts_mp3(sentence):
     return tmp_filename
 
 
+# def _play_mp3(filename):
+#     try:
+#         if not mixer.get_init():
+#             mixer.init()
+
+#         mixer.music.load(filename)
+#         mixer.music.play()
+
+#         while mixer.music.get_busy():
+#             time.sleep(0.1)
+
+#         mixer.music.unload()  # 釋放檔案, 避免 Windows 檔案被鎖住
+#     except pygame.error:
+#         pass
+
+
 def _play_mp3(filename):
-    try:
-        if not mixer.get_init():
-            mixer.init()
-
-        mixer.music.load(filename)
-        mixer.music.play()
-
-        while mixer.music.get_busy():
-            time.sleep(0.1)
-
-        mixer.music.unload()  # 釋放檔案, 避免 Windows 檔案被鎖住
-    except pygame.error:
-        pass
+    for attempt in range(2):
+        try:
+            if not mixer.get_init():
+                # edge-tts 輸出是 24kHz, 對齊可省掉重新取樣
+                mixer.init()
+            mixer.music.load(filename)
+            mixer.music.play()
+            while mixer.music.get_busy():
+                time.sleep(0.05)
+            mixer.music.unload()
+            return
+        except pygame.error as e:
+            print(f"播放失敗 ({attempt + 1}/2): {e}")
+            try:
+                mixer.quit()  # 丟掉壞掉的裝置, 下一輪重新 init
+            except Exception:
+                pass
+            time.sleep(0.3)
 
 
 _tts_queue = queue.Queue()
@@ -378,3 +399,46 @@ def speak_win32_thread(sentence):
 
     thread = threading.Thread(target=_play_audio, daemon=True)
     thread.start()
+
+
+TTS_CACHE_MAX_AGE_DAYS = 1
+TTS_CACHE_MAX_FILES = 2000
+
+
+def cleanup_tts_cache(
+    max_age_days=TTS_CACHE_MAX_AGE_DAYS, max_files=TTS_CACHE_MAX_FILES
+):
+    """啟動時清一次: 刪過期 mp3、殘留 tmp, 並限制總檔數"""
+    if not os.path.isdir(TTS_CACHE_DIR):
+        return
+    now = time.time()
+    entries = []
+    for name in os.listdir(TTS_CACHE_DIR):
+        path = os.path.join(TTS_CACHE_DIR, name)
+        try:
+            mtime = os.path.getmtime(path)
+        except OSError:
+            continue
+        if name.endswith(".tmp"):  # 殘留 tmp 超過 1 小時就刪
+            if now - mtime > 3600:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+            continue
+        if not name.endswith(".mp3"):
+            continue
+        if now - mtime > max_age_days * 86400:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+        else:
+            entries.append((mtime, path))
+    if len(entries) > max_files:  # 超量就砍最舊的
+        entries.sort()
+        for _, path in entries[: len(entries) - max_files]:
+            try:
+                os.remove(path)
+            except OSError:
+                pass

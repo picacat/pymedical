@@ -51,7 +51,6 @@ class Registration(QtWidgets.QMainWindow):
         self.dialog_history = dialog_utils.get_dialog_past_history(
             self, self.database, self.system_settings
         )
-        self.socket_client = class_utils.get_socket_client()
         self.notification_client = notification_utils.NotificationClient(
             self,
             database=self.database,
@@ -145,7 +144,7 @@ class Registration(QtWidgets.QMainWindow):
 
     # 關閉
     def close_all(self):
-        self.socket_client.close()
+        pass
 
     def close_tab(self):
         current_tab = self._parent.ui.tabWidget_window.currentIndex()
@@ -3304,9 +3303,9 @@ class Registration(QtWidgets.QMainWindow):
         if self.ui.tableWidget_wait_completed.rowCount() <= 0:
             self._set_wait_completed_tool_button(False)
 
-        self._send_socket_data(doctor, room)
+        self._send_broadcast_data(doctor, room)
 
-    def _send_socket_data(self, doctor, room):
+    def _send_broadcast_data(self, doctor, room):
         message = ",".join(
             [
                 self.system_settings.field("院所名稱"),
@@ -3316,7 +3315,6 @@ class Registration(QtWidgets.QMainWindow):
             ]
         )
 
-        self.socket_client.send_data(message)  # 舊管道：UDP
         self.notification_client.send_data(message)  # 新管道：資料庫
 
     # IC卡退掛
@@ -3601,7 +3599,7 @@ class Registration(QtWidgets.QMainWindow):
                         )
 
             self.read_wait()
-            self._send_socket_data(doctor, room)
+            self._send_broadcast_data(doctor, room)
 
             sender_name = self.sender().objectName()
 

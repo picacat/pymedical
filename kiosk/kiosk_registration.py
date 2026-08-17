@@ -10,6 +10,7 @@ from libs import (
     case_utils,
     cshis_utils,
     date_utils,
+    notification_utils,
     number_utils,
     registration_utils,
     string_utils,
@@ -21,7 +22,7 @@ from libs import (
 class KioskRegistration(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(KioskRegistration, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -30,6 +31,11 @@ class KioskRegistration(QtWidgets.QMainWindow):
         self.patient_key = None
         self.ui = None
 
+        self.notification_client = notification_utils.NotificationClient(
+            self,
+            database=self.database,
+            station="掛號機",
+        )
         self._set_ui()
         self._set_signal()
 
@@ -503,7 +509,7 @@ class KioskRegistration(QtWidgets.QMainWindow):
         if self.registration_type == "預約報到":
             self._registration_arrival()
 
-        self.socket_client.send_data("新增掛號資料")
+        self.notification_client.send_data("新增掛號資料")  # 新管道：資料庫
         fees = [
             ["掛號費", self.regist_fee],
             ["門診負擔", self.diag_share_fee],
@@ -640,13 +646,13 @@ class KioskRegistration(QtWidgets.QMainWindow):
         last_treat_date = (today - datetime.timedelta(days=30)).strftime(
             "%Y-%m-%d 00:00:00"
         )
-        sql = """
+        sql = f"""
               SELECT TreatType, Card, Continuance, XCard FROM cases WHERE
-              (CaseDate >= "{0}") AND
-              (PatientKey = {1}) AND
+              (CaseDate >= "{last_treat_date}") AND
+              (PatientKey = {patient_key}) AND
               (InsType = "健保")
               ORDER BY CaseDate DESC LIMIT 1
-          """.format(last_treat_date, patient_key)
+          """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             return None, None, None
@@ -700,16 +706,12 @@ class KioskRegistration(QtWidgets.QMainWindow):
     def _registration_arrival(self):
         start_date = datetime.datetime.now().strftime("%Y-%m-%d 00:00:00")
         end_date = datetime.datetime.now().strftime("%Y-%m-%d 23:59:59")
-        sql = """
+        sql = f"""
             SELECT * FROM reserve
             WHERE
                 ReserveDate BETWEEN "{start_date}" AND "{end_date}" AND
-                PatientKey = {patient_key}
-        """.format(
-            start_date=start_date,
-            end_date=end_date,
-            patient_key=self.patient_key,
-        )
+                PatientKey = {self.patient_key}
+        """
 
         rows = self.database.select_record(sql)
 

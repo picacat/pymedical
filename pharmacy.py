@@ -35,8 +35,6 @@ class Pharmacy(QtWidgets.QMainWindow):
         self.ui = None
 
         self.user_name = system_utils.get_user_name(self.system_settings)
-        self.socket_client = class_utils.get_socket_client()
-        self.voice_client = class_utils.get_voice_client()
         self.notification_client = notification_utils.NotificationClient(
             self,
             database=self.database,
@@ -360,7 +358,7 @@ class Pharmacy(QtWidgets.QMainWindow):
         if self.ui.radioButton_unpaid.isChecked():
             self.read_wait()
 
-        self._send_socket_data()
+        self._send_broadcast_data()
 
     def _set_drug_pickup_done(self):
         current_row_no = self.ui.tableWidget_charge_list.currentRow()
@@ -384,7 +382,7 @@ class Pharmacy(QtWidgets.QMainWindow):
         if self.ui.radioButton_unpaid.isChecked():
             self.read_wait()
 
-        self._send_socket_data()
+        self._send_broadcast_data()
 
     def _pharmacy_list_changed(self):
         case_key = self.table_widget_charge_list.field_value(1)
@@ -629,9 +627,8 @@ class Pharmacy(QtWidgets.QMainWindow):
         voice_dict["sentence"] = sentence
 
         broadcast_json = json.dumps(voice_dict)
-        self.voice_client.send_data(broadcast_json)
         self.notification_client.broadcast(
-            notification_utils.CHANNEL_BULLETIN, "refresh_wait"
+            notification_utils.CHANNEL_CALL_NUMBER, broadcast_json
         )
 
     def _get_voice_sentence(self, voice_dict=None):
@@ -656,7 +653,7 @@ class Pharmacy(QtWidgets.QMainWindow):
 
         return sentence
 
-    def _send_socket_data(self):
+    def _send_broadcast_data(self):
         message = ",".join(
             [
                 self.system_settings.field("院所名稱"),
@@ -666,5 +663,4 @@ class Pharmacy(QtWidgets.QMainWindow):
             ]
         )
 
-        self.socket_client.send_data(message)  # 舊管道：UDP
         self.notification_client.send_data(message)  # 新管道：資料庫

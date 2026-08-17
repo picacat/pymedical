@@ -399,10 +399,10 @@ class Backup(QtWidgets.QDialog):
         # 犧牲的只有跨表一致性（換取備份期間其他站台不被凍住）。
         # MyISAM／混合沒有 MVCC，仍然只能靠全域讀鎖。
         locked = False
-        if self._engine_mode != ENGINE_INNODB:
-            locked = self._acquire_global_lock(result)
-        else:
-            logger.info("純 InnoDB，本次不取全域讀鎖（無跨表一致性）")
+        # if self._engine_mode != ENGINE_INNODB:
+        #     locked = self._acquire_global_lock(result)
+        # else:
+        #     logger.info("純 InnoDB，本次不取全域讀鎖（無跨表一致性）")
 
         try:
             for table_name in table_names:

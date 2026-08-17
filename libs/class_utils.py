@@ -32,46 +32,6 @@ def get_system_settings(database, config_file, station_no=None):
     return object
 
 
-# 訊息廣播設定-伺服器
-def get_socket_server(parent=None, default_port=None):
-    from classes import udp_socket_server
-
-    module = importlib.reload(udp_socket_server)
-    object = module.UDPSocketServer(parent, default_port)
-
-    return object
-
-
-# 訊息廣播設定-客戶端
-def get_socket_client():
-    from classes import udp_socket_client
-
-    module = importlib.reload(udp_socket_client)
-    object = module.UDPSocketClient()
-
-    return object
-
-
-# 語音廣播設定-伺服端
-def get_voice_server(parent=None, default_port=None):
-    from classes import udp_socket_server
-
-    module = importlib.reload(udp_socket_server)
-    object = module.VoiceServer(parent, default_port)
-
-    return object
-
-
-# 語音廣播設定-客戶端
-def get_voice_client():
-    from classes import udp_socket_client
-
-    module = importlib.reload(udp_socket_client)
-    object = module.VoiceClient()
-
-    return object
-
-
 # 讀卡機控制軟體
 def get_cshis(parent, database, system_settings):
     if system_settings.field("使用讀卡機") != "Y":

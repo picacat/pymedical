@@ -92,21 +92,13 @@ class PyPharmacy(QtWidgets.QMainWindow):
         if self.scale_time == 0:
             self.scale_time = 1.5
 
-        self.socket_server = class_utils.get_socket_server()
-        self.socket_server.start()
-
-        self.socket_client = class_utils.get_socket_client()
-        self.notification_client = notification_utils.NotificationClient(
-            self,
-            database=self.database,
-            station=self.program_name,
-        )
         self.qrcode = ""
 
         self.com_port = self.system_settings.field("電子秤連接埠")
 
         self._set_ui()
         self._set_signal()
+        self._set_notification_server()
         self._set_permission()
 
         self.read_wait()
@@ -168,6 +160,20 @@ class PyPharmacy(QtWidgets.QMainWindow):
         # self.ui.tableWidget_pharmacy_list.setStyleSheet(selection_style)
         # self.ui.tableWidget_prescript.setStyleSheet(selection_style)
 
+    def _set_notification_server(self):
+        channels = [notification_utils.CHANNEL_WAITING_LIST]
+        self.notification_server = notification_utils.NotificationServer(
+            self,
+            database=self.database,
+            station="pymedical",
+            channels=channels,
+        )
+        self.notification_server.update_signal.connect(self._on_notification)
+
+    def _on_notification(self, channel, message):
+        if channel == notification_utils.CHANNEL_WAITING_LIST:
+            self._refresh_waiting_data(message)
+
     # 設定 status bar
     def _set_status_bar(self):
         self.label_scale_time = QtWidgets.QLabel()
@@ -196,7 +202,6 @@ class PyPharmacy(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        self.socket_server.update_signal.connect(self._refresh_waiting_data)
         self.ui.action_close.triggered.connect(self.close_app)
         self.ui.action_print_receipt.triggered.connect(
             lambda: self._print_receipt(None)
@@ -473,25 +478,8 @@ class PyPharmacy(QtWidgets.QMainWindow):
             return
 
     def close_app(self):
-        self._close_socket()
         self.close_all()
         self.close()
-
-    def _close_socket(self):
-        self.socket_server.stop_thread()
-
-    def _send_socket_data(self, doctor, room):
-        message = ",".join(
-            [
-                self.system_settings.field("院所名稱"),
-                self.program_name,
-                doctor,
-                room,
-            ]
-        )
-
-        self.socket_client.send_data(message)  # 舊管道：UDP
-        self.notification_client.send_data(message)  # 新管道：資料庫
 
     def _set_radio_button_period(self):
         period = registration_utils.get_current_period(self.system_settings)

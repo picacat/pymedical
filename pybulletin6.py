@@ -22,6 +22,7 @@ import vlc
 from libs import (
     class_utils,
     date_utils,
+    notification_utils,
     number_utils,
     registration_utils,
     string_utils,
@@ -49,7 +50,7 @@ class BellThread(QThread):
 class PyBulletin6(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(PyBulletin6, self).__init__(parent)
+        super().__init__(parent)
         self.args = args
 
         self._set_db()
@@ -84,9 +85,8 @@ class PyBulletin6(QtWidgets.QMainWindow):
         self.period3 = self.system_settings.field("晚班時間")
 
         self._set_ui()
-        self._set_udp_server()
+        self._set_notification_server()
         self._set_signal()
-        self._start_udp_server()
 
         # 設定 QTimer 讓 QLabel_room 閃爍
         self.blink_state = False
@@ -98,11 +98,30 @@ class PyBulletin6(QtWidgets.QMainWindow):
         monitor_number = self.get_monitor_number()
         monitor = QDesktopWidget().screenGeometry(monitor_number)
         self.move(monitor.left(), monitor.top())
-        self.showMaximized()
+        self.showFullScreen()
 
-    def _set_udp_server(self):
-        self.socket_server = class_utils.get_socket_server(self, 8880)
-        self.voice_server = class_utils.get_voice_server(self, 9990)
+    def _set_notification_server(self):
+        channels = [
+            notification_utils.CHANNEL_WAITING_LIST,  # 原 8880
+            notification_utils.CHANNEL_BULLETIN,  # 原 9990 的 refresh_wait
+            notification_utils.CHANNEL_CALL_NUMBER,  # UDP 下線後才打開，否則會念兩次
+        ]
+        self.notification_server = notification_utils.NotificationServer(
+            self,
+            database=self.database,
+            station="pybulletin",
+            channels=channels,
+        )
+        self.notification_server.update_signal.connect(self._on_notification)
+
+    def _on_notification(self, channel, message):
+        print(channel, message)
+        if channel == notification_utils.CHANNEL_WAITING_LIST:
+            self._show_waiting_list()  # 原本 8880 就是忽略內容直接刷新
+        elif channel == notification_utils.CHANNEL_BULLETIN:
+            self._broadcast_speech(message)  # 內容是 refresh_wait，它自己會分辨
+        elif channel == notification_utils.CHANNEL_CALL_NUMBER:
+            self._broadcast_speech(message)
 
     def get_monitor_number(self):
         return number_utils.get_integer(
@@ -159,10 +178,6 @@ class PyBulletin6(QtWidgets.QMainWindow):
         self.mediaplayer.stop()
         self.mediaplayer.release()
 
-    def _close_socket(self):
-        self.socket_server.stop_thread()
-        self.voice_server.stop_thread()
-
     # 設定GUI
     def _set_ui(self):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_PY_BULLETIN6, self)
@@ -199,7 +214,7 @@ class PyBulletin6(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        self.voice_server.update_signal.connect(self._broadcast_speech)
+        pass
 
     def _close(self):
         self.close()
@@ -210,10 +225,6 @@ class PyBulletin6(QtWidgets.QMainWindow):
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         system_utils.set_theme(self.ui, self.system_settings)
-
-    def _start_udp_server(self):
-        self.socket_server.start()
-        self.voice_server.start()
 
     def _set_lower_audio(self):
         if self.url in ["", None]:
@@ -255,7 +266,7 @@ class PyBulletin6(QtWidgets.QMainWindow):
         self._show_waiting_list(room)
 
         self._set_lower_audio()
-        QtWidgets.qApp.processEvents()
+        # QtWidgets.qApp.processEvents()
         self.ring_bell()
 
     def ring_bell(self):

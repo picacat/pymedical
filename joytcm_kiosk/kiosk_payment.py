@@ -39,7 +39,7 @@ class KioskPayment(QtWidgets.QMainWindow):
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(KioskPayment, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -581,39 +581,6 @@ class KioskPayment(QtWidgets.QMainWindow):
 
         return ins_type, doctor, room
 
-    # def _ready_to_payment(self):
-    #     from joytcm_kiosk.dialog import dialog_payment
-
-    #     self.button_cancel.setVisible(False)
-
-    #     module = importlib.reload(dialog_payment)
-    #     dialog = module.DialogPayment(
-    #         self.parent,
-    #         self.database,
-    #         self.system_settings,
-    #         self.ic_card,
-    #         self.case_key,
-    #         self.total_amount,
-    #     )
-    #     dialog.exec_()
-    #     is_payment_done = dialog.is_payment_done()
-    #     del dialog
-
-    #     if is_payment_done:
-    #         ins_type, doctor, room = self._get_case_data(self.case_key)
-    #         if ins_type == "健保":
-    #             dialog = self.parent.show_in_progress()
-    #             self._write_ic_card(self.case_key)
-    #             dialog.close()
-
-    #         self._print_receipt(self.case_key)
-    #         self._set_data(self.case_key)
-    #         self._show_payment_done()
-    #         self.parent.send_socket_data(doctor, room, "批價作業")
-    #         self._back_to_home()
-
-    #     self.button_cancel.setVisible(True)
-
     def _ready_to_payment(self):
         from joytcm_kiosk.dialog import dialog_payment
 
@@ -645,7 +612,7 @@ class KioskPayment(QtWidgets.QMainWindow):
             self._print_receipt(self.case_key)
             self._set_data(self.case_key)
             self._show_payment_done()
-            self.parent.send_socket_data(doctor, room, "批價作業")
+            self.parent.send_broadcast_data(doctor, room, "批價作業")
             self._back_to_home()
 
         self.button_cancel.setVisible(True)

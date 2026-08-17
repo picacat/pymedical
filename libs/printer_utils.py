@@ -8184,6 +8184,9 @@ def get_case_html_23(
     """
 
     share_type = string_utils.xstr(row["Share"])
+    if share_type == "低收入戶":
+        share_type = "福保"
+
     if ins_type == "健保":
         html += f"""
             <tr>

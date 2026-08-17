@@ -1,15 +1,22 @@
-import sys
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QPushButton, QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QSpacerItem, QSizePolicy
-from PyQt5.QtCore import Qt
+import datetime
 import importlib
 import os
-import datetime
+import sys
 
-from libs import class_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import module_utils
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QVBoxLayout,
+)
+
+from libs import class_utils, module_utils, system_utils, ui_utils
 
 HOME_WIDGET = 1
 
@@ -24,6 +31,7 @@ HOME_WIDGET = 1
 #             self.update_time.emit(current_time)  # 發送信號更新界面
 #             QtCore.QThread.sleep(1)  # 讓線程每秒鐘執行一次
 
+
 class ClockWorker(QtCore.QObject):
     update_time = QtCore.pyqtSignal(str)
     stop_signal = QtCore.pyqtSignal()  # 用於停止執行緒的信號
@@ -35,7 +43,7 @@ class ClockWorker(QtCore.QObject):
     def run(self):
         while self.running:  # 檢查標誌位
             # 獲取當前時間
-            current_time = datetime.datetime.now().strftime('%Y-%m-%d - %H:%M:%S')
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d - %H:%M:%S")
             self.update_time.emit(current_time)  # 發送信號更新界面
             QtCore.QThread.sleep(1)  # 讓線程每秒鐘執行一次
 
@@ -52,9 +60,9 @@ class PasswordDialog(QDialog):
     BUTTON_FONT_SIZE = 24
     BUTTON_HEIGHT = 80
 
-    RED = '#e4442e'
-    DARK_GREEN = '#1e4f0a'
-    LIGHT_GREEN = '#4bab56'
+    RED = "#e4442e"
+    DARK_GREEN = "#1e4f0a"
+    LIGHT_GREEN = "#4bab56"
     BUTTON_FONT_COLOR = DARK_GREEN
 
     STYLE_SHEET = f"""
@@ -107,10 +115,10 @@ class PasswordDialog(QDialog):
         # 定義數字鍵盤佈局
         grid_layout = QVBoxLayout()
         numbers = [
-            ('1', '2', '3'),
-            ('4', '5', '6'),
-            ('7', '8', '9'),
-            ('清除', '0', '確定')
+            ("1", "2", "3"),
+            ("4", "5", "6"),
+            ("7", "8", "9"),
+            ("清除", "0", "確定"),
         ]
 
         for row in numbers:
@@ -124,12 +132,16 @@ class PasswordDialog(QDialog):
 
             # 增加行與行之間的垂直間隔
             grid_layout.addLayout(row_layout)
-            grid_layout.addItem(QSpacerItem(10, 10, QSizePolicy.Expanding, QSizePolicy.Minimum))  # 修改間隔大小
+            grid_layout.addItem(
+                QSpacerItem(10, 10, QSizePolicy.Expanding, QSizePolicy.Minimum)
+            )  # 修改間隔大小
 
         self.keyboard_layout.addLayout(grid_layout)
 
         # 使用 spacer來確保數字鍵盤和取消按鈕的間距
-        self.keyboard_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.keyboard_layout.addItem(
+            QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        )
 
         # 取消按鈕
         cancel_button = QPushButton("取消", self)
@@ -139,9 +151,13 @@ class PasswordDialog(QDialog):
 
         # 創建一個新的水平佈局來放置取消按鈕
         cancel_layout = QHBoxLayout()
-        cancel_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        cancel_layout.addItem(
+            QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        )
         cancel_layout.addWidget(cancel_button)
-        cancel_layout.addItem(QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        cancel_layout.addItem(
+            QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        )
 
         # 添加取消按鈕到鍵盤佈局
         self.keyboard_layout.addLayout(cancel_layout)
@@ -162,16 +178,16 @@ class PasswordDialog(QDialog):
         self.eject_coin10 = False
         self.eject_coin50 = False
 
-        if self.password_input.text() == '16888':
+        if self.password_input.text() == "16888":
             self.eject_coins = True
             self.accept()  # 正確密碼，關閉對話框
-        elif self.password_input.text() == '168885':
+        elif self.password_input.text() == "168885":
             self.eject_coin5 = True
             self.accept()  # 正確密碼，關閉對話框
-        elif self.password_input.text() == '1688810':
+        elif self.password_input.text() == "1688810":
             self.eject_coin10 = True
             self.accept()  # 正確密碼，關閉對話框
-        elif self.password_input.text() == '1688850':
+        elif self.password_input.text() == "1688850":
             self.eject_coin50 = True
             self.accept()  # 正確密碼，關閉對話框
         elif self.password_input.text() == self.correct_password:
@@ -184,37 +200,37 @@ class PasswordDialog(QDialog):
 # 悅兒親子中醫預約報到繳費機 2024.08.11
 class Kiosk(QtWidgets.QMainWindow):
     BASE_DIR = os.getcwd()
-    UI_DIR = os.path.join(BASE_DIR, 'kiosk1', 'ui')
-    IMAGE_DIR = os.path.join(BASE_DIR, 'kiosk1', 'images')
+    UI_DIR = os.path.join(BASE_DIR, "kiosk1", "ui")
+    IMAGE_DIR = os.path.join(BASE_DIR, "kiosk1", "images")
     TEXT_FONT = "jf open 粉圓 2.1"
     FONT_SIZE = 42
     BUTTON_FONT = "jf open 粉圓 2.1"
     BUTTON_FONT_SIZE = 24
     BUTTON_HEIGHT = 80
     ROOM_DICT = {
-        1: '一診',
-        2: '二診',
-        3: '三診',
-        4: '四診',
-        5: '五診',
-        6: '六診',
-        7: '七診',
-        8: '八診',
-        9: '九診',
-        10: '十診',
+        1: "一診",
+        2: "二診",
+        3: "三診",
+        4: "四診",
+        5: "五診",
+        6: "六診",
+        7: "七診",
+        8: "八診",
+        9: "九診",
+        10: "十診",
     }
 
-    DARK_RED = '#e4442e'
-    RED = '#FF0000'
-    DARK_GREEN = '#1e4f0a'
-    LIGHT_GREEN = '#4bab56'
+    DARK_RED = "#e4442e"
+    RED = "#FF0000"
+    DARK_GREEN = "#1e4f0a"
+    LIGHT_GREEN = "#4bab56"
 
-    LIGHT_TEXT_COLOR = '#333339'
-    TEXT_COLOR = '#000000'
+    LIGHT_TEXT_COLOR = "#333339"
+    TEXT_COLOR = "#000000"
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(Kiosk, self).__init__(parent)
+        super().__init__(parent)
         self.args = args
 
         try:
@@ -225,16 +241,16 @@ class Kiosk(QtWidgets.QMainWindow):
         if config_file is not None:
             self.config_file = config_file
             config_dict = self._parse_config_file(self.config_file)
-            self.host = config_dict['host']
+            self.host = config_dict["host"]
             self.database = class_utils.get_db(
                 host=self.host,
-                user=config_dict['user'],
-                database=config_dict['database'],
-                password=config_dict['password'],
-                charset=config_dict['charset'],
-                buffered=config_dict['buffered'],
+                user=config_dict["user"],
+                database=config_dict["database"],
+                password=config_dict["password"],
+                charset=config_dict["charset"],
+                buffered=config_dict["buffered"],
             )
-            self.server_ip = config_dict['host']
+            self.server_ip = config_dict["host"]
         else:
             self.database = class_utils.get_db()
             self.config_file = self.database.CONFIG_FILE
@@ -243,14 +259,15 @@ class Kiosk(QtWidgets.QMainWindow):
         if not self.database.connected():
             sys.exit(0)
 
-        self.system_settings = class_utils.get_system_settings(self.database, self.config_file)
+        self.system_settings = class_utils.get_system_settings(
+            self.database, self.config_file
+        )
         self.ui = None
-        self.clinic_name = self.system_settings.field('院所名稱')
-        self.clinic_name = self.clinic_name.replace('診所', '')
+        self.clinic_name = self.system_settings.field("院所名稱")
+        self.clinic_name = self.clinic_name.replace("診所", "")
 
         # os.system('C:\\NHI\\UTILITY\\csResetFsim.exe')
         self.ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
-        self.socket_client = class_utils.get_socket_client()
 
         self._set_ui()
         self._set_signal()
@@ -283,7 +300,9 @@ class Kiosk(QtWidgets.QMainWindow):
         self.mousePressEvent = self.label_clicked
 
     def label_clicked(self, event):
-        if event.button() == QtCore.Qt.LeftButton and self.exit_area.contains(event.pos()):
+        if event.button() == QtCore.Qt.LeftButton and self.exit_area.contains(
+            event.pos()
+        ):
             self.timer.start()
             self.click_count += 1
             if self.click_count >= 5:
@@ -361,7 +380,9 @@ class Kiosk(QtWidgets.QMainWindow):
         self._set_kiosk_completed()
 
     def _set_kiosk_home(self):
-        self.widget_home = module_utils.get_kiosk1_home(self, self.database, self.system_settings, self.ic_card)
+        self.widget_home = module_utils.get_kiosk1_home(
+            self, self.database, self.system_settings, self.ic_card
+        )
         self.ui.stackedWidget.addWidget(self.widget_home)
 
     def _set_kiosk_registration(self):
@@ -391,10 +412,13 @@ class Kiosk(QtWidgets.QMainWindow):
         self.ui.stackedWidget.setCurrentIndex(1)
         self.widget_registration.set_registration_data(treat_type=treat_type)
 
-    def open_kiosk_payment(self, patient_key, treat_type, card, course, regist_fee, diag_share_fee):
+    def open_kiosk_payment(
+        self, patient_key, treat_type, card, course, regist_fee, diag_share_fee
+    ):
         self.ui.stackedWidget.setCurrentIndex(2)
         self.widget_payment.set_payment_data(
-            patient_key, treat_type, card, course, regist_fee, diag_share_fee)
+            patient_key, treat_type, card, course, regist_fee, diag_share_fee
+        )
 
     def open_kiosk_completed(self, treat_type):
         self.close_kiosk_slot()
@@ -435,5 +459,5 @@ def main():
 
 
 # 程式開始
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

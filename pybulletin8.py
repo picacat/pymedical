@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import configparser
 import datetime
 import json
@@ -13,6 +11,7 @@ from PyQt5.QtWidgets import QDesktopWidget
 from libs import (
     class_utils,
     date_utils,
+    notification_utils,
     number_utils,
     registration_utils,
     string_utils,
@@ -710,7 +709,7 @@ class PyBulletin8(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None, *args):
         """初始化."""
-        super(PyBulletin8, self).__init__(parent)
+        super().__init__(parent)
         self.args = args
 
         self._set_db()
@@ -723,14 +722,13 @@ class PyBulletin8(QtWidgets.QMainWindow):
         self.ui = None
 
         self._set_ui()
-        self._set_udp_server()
+        self._set_notification_server()
         self._set_signal()
-        self._start_udp_server()
 
         monitor_number = self.get_monitor_number()
         monitor = QDesktopWidget().screenGeometry(monitor_number)
         self.move(monitor.left(), monitor.top())
-        self.showMaximized()
+        self.showFullScreen()
 
     def show_bulletin(self):
         """顯示候診看板."""
@@ -823,9 +821,27 @@ class PyBulletin8(QtWidgets.QMainWindow):
         if getattr(self, "marquee_auto_bounds", True) and hasattr(self, "marquee"):
             self.marquee.set_bounds(52, self.marquee_x)
 
-    def _set_udp_server(self):
-        self.socket_server = class_utils.get_socket_server(self, 8880)
-        self.voice_server = class_utils.get_voice_server(self, 9990)
+    def _set_notification_server(self):
+        channels = [
+            notification_utils.CHANNEL_WAITING_LIST,  # 原 8880
+            notification_utils.CHANNEL_BULLETIN,  # 原 9990 的 refresh_wait
+            notification_utils.CHANNEL_CALL_NUMBER,  # UDP 下線後才打開，否則會念兩次
+        ]
+        self.notification_server = notification_utils.NotificationServer(
+            self,
+            database=self.database,
+            station="pybulletin",
+            channels=channels,
+        )
+        self.notification_server.update_signal.connect(self._on_notification)
+
+    def _on_notification(self, channel, message):
+        if channel == notification_utils.CHANNEL_WAITING_LIST:
+            self._show_waiting_list()  # 原本 8880 就是忽略內容直接刷新
+        elif channel == notification_utils.CHANNEL_BULLETIN:
+            self._broadcast_speech(message)  # 內容是 refresh_wait，它自己會分辨
+        elif channel == notification_utils.CHANNEL_CALL_NUMBER:
+            self._broadcast_speech(message)
 
     def get_monitor_number(self):
         """取得候診系統顯示器編號."""
@@ -876,11 +892,6 @@ class PyBulletin8(QtWidgets.QMainWindow):
 
     def __del__(self):
         """解構."""
-        pass
-
-    def _close_socket(self):
-        self.socket_server.stop_thread()
-        self.voice_server.stop_thread()
 
     # 設定GUI
     def _set_ui(self):
@@ -896,15 +907,10 @@ class PyBulletin8(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        self.voice_server.update_signal.connect(self._broadcast_speech)
-        self.socket_server.update_signal.connect(self._show_waiting_list)
+        pass
 
     def _close(self):
         self.close()
-
-    def _start_udp_server(self):
-        self.socket_server.start()
-        self.voice_server.start()
 
     # 廣播叫號
     def _broadcast_speech(self, json_data):
