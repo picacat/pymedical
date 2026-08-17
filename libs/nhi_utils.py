@@ -2673,10 +2673,9 @@ def get_treat_code(database, case_key):
         else:
             treat_code = ACUPUNCTURE_DICT[treatment]
     elif treatment in MASSAGE_TREAT:
-        if (
-            string_utils.xstr(row["RegistType"]) in LONG_TERM_CARE + TOUR_TYPE
-            and "中度" in treatment
-        ):
+        if string_utils.xstr(
+            row["RegistType"]
+        ) in LONG_TERM_CARE + TOUR_TYPE and treatment in ["中度複雜性傷科"]:
             treatment += "不分療程"
 
         if pres_days > 0:
