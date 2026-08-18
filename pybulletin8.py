@@ -19,6 +19,10 @@ from libs import (
     voice_utils,
 )
 
+# 版面設計基準解析度（所有寫死的座標都以此為準）
+DESIGN_WIDTH = 1920
+DESIGN_HEIGHT = 1080
+
 
 class ClockOverlay(QtWidgets.QWidget):
     """
@@ -193,6 +197,11 @@ class Marquee(QtWidgets.QWidget):
         self.x1, self.x2 = int(x1), int(x2)
         self.setGeometry(self.x1, self.y, max(10, self.x2 - self.x1), self._line_h)
 
+    def set_y(self, y):
+        """單獨調整垂直位置，維持目前的 [x1, x2]。"""
+        self.y = int(y)
+        self.setGeometry(self.x1, self.y, max(10, self.x2 - self.x1), self._line_h)
+
     def set_speed(self, px_per_sec):
         self.speed = float(px_per_sec)
 
@@ -259,6 +268,11 @@ class WaitingRoom(QtCore.QObject):
         self.items_per_page = int(items_per_page)
         self.interval_ms = int(interval_sec * 1000)
 
+        # 各標題列的 y 座標（集中管理，方便日後調整）
+        self._doctor_y = 100
+        self._header_y = 260
+        self._regist_no_y = 240
+
         # 狀態
         self._labels: list[QtWidgets.QLabel] = []
         self._items: list[str] = []
@@ -276,7 +290,7 @@ class WaitingRoom(QtCore.QObject):
         self._build_waiting_list_labels()
 
     # -----------------------------
-    # 建立 UI 元件k
+    # 建立 UI 元件
     # -----------------------------
     def _get_doctor_text(self):
         if self.doctor is None:
@@ -298,8 +312,7 @@ class WaitingRoom(QtCore.QObject):
             }
         """)
 
-        y = 100
-        self.label_doctor.move(self.x - 30, y)
+        self.label_doctor.move(self.x - 30, self._doctor_y)
         self.label_doctor.adjustSize()
         self.label_doctor.show()
         self.label_doctor.raise_()
@@ -316,10 +329,7 @@ class WaitingRoom(QtCore.QObject):
             }
         """)
 
-        x1 = self.x - 10
-        y = 260
-
-        self.label_regist_no_header.move(x1, y)
+        self.label_regist_no_header.move(self.x - 10, self._header_y)
         self.label_regist_no_header.adjustSize()
         self.label_regist_no_header.show()
         self.label_regist_no_header.raise_()
@@ -335,10 +345,7 @@ class WaitingRoom(QtCore.QObject):
             }
         """)
 
-        x1 = self.x + 150
-        y = 240
-
-        self.label_regist_no.move(x1, y)
+        self.label_regist_no.move(self.x + 150, self._regist_no_y)
         self.label_regist_no.adjustSize()
         self.label_regist_no.show()
         self.label_regist_no.raise_()
@@ -360,15 +367,33 @@ class WaitingRoom(QtCore.QObject):
                     font-weight: bold;
                 }
             """)
-            lbl.move(
-                self.x,
-                self.y_list[i]
-                if i < len(self.y_list)
-                else self.y_list[-1] + (i - len(self.y_list) + 1) * 80,
-            )
+            lbl.move(self.x, self._y_of(i))
             lbl.show()
             lbl.raise_()
             self._labels.append(lbl)
+
+    def _y_of(self, i):
+        if i < len(self.y_list):
+            return self.y_list[i]
+
+        return self.y_list[-1] + (i - len(self.y_list) + 1) * 80
+
+    # -----------------------------
+    # 版面調整
+    # -----------------------------
+    def set_layout(self, x=None, y_list=None):
+        """重新指定水平位置與各列 y 座標。"""
+        if x is not None:
+            self.x = int(x)
+        if y_list:
+            self.y_list = list(y_list)
+
+        self.label_doctor.move(self.x - 30, self._doctor_y)
+        self.label_regist_no_header.move(self.x - 10, self._header_y)
+        self.label_regist_no.move(self.x + 150, self._regist_no_y)
+
+        for i, lbl in enumerate(self._labels):
+            lbl.move(self.x, self._y_of(i))
 
     # -----------------------------
     # 資料讀取
@@ -454,6 +479,9 @@ class WaitingRoom(QtCore.QObject):
 
     def bring_to_front(self):
         """將所有 QLabel 疊到最上層"""
+        self.label_doctor.raise_()
+        self.label_regist_no_header.raise_()
+        self.label_regist_no.raise_()
         for lbl in self._labels:
             lbl.raise_()
 
@@ -512,7 +540,7 @@ class WaitingRoom(QtCore.QObject):
 
 class Pharmacy(QtCore.QObject):
     """
-    候診名單顯示器：一次讀取資料庫，顯示診號與姓名，每次顯示 N 筆，定時換頁循環播放。
+    可領藥名單顯示器：一次讀取資料庫，顯示藥號，每次顯示 N 筆，定時換頁循環播放。
     呼叫 refresh() 可重新抓取資料。
     """
 
@@ -537,6 +565,8 @@ class Pharmacy(QtCore.QObject):
         self.items_per_page = int(items_per_page)
         self.interval_ms = int(interval_sec * 1000)
 
+        self._title_y = 100
+
         # 狀態
         self._labels: list[QtWidgets.QLabel] = []
         self._items: list[str] = []
@@ -553,7 +583,7 @@ class Pharmacy(QtCore.QObject):
         self._build_pharmacy_list_labels()
 
     # -----------------------------
-    # 建立 UI 元件k
+    # 建立 UI 元件
     # -----------------------------
     def _build_pharmacy_labels(self):
         self.label_pharmacy = QtWidgets.QLabel(self.parent)
@@ -567,8 +597,7 @@ class Pharmacy(QtCore.QObject):
             }
         """)
 
-        y = 100
-        self.label_pharmacy.move(self.x - 30, y)
+        self.label_pharmacy.move(self.x - 30, self._title_y)
         self.label_pharmacy.setText("可領藥")
         self.label_pharmacy.adjustSize()
         self.label_pharmacy.show()
@@ -591,21 +620,36 @@ class Pharmacy(QtCore.QObject):
                     font-weight: bold;
                 }
             """)
-            lbl.move(
-                self.x,
-                self.y_list[i]
-                if i < len(self.y_list)
-                else self.y_list[-1] + (i - len(self.y_list) + 1) * 80,
-            )
+            lbl.move(self.x, self._y_of(i))
             lbl.show()
             lbl.raise_()
             self._labels.append(lbl)
+
+    def _y_of(self, i):
+        if i < len(self.y_list):
+            return self.y_list[i]
+
+        return self.y_list[-1] + (i - len(self.y_list) + 1) * 80
+
+    # -----------------------------
+    # 版面調整
+    # -----------------------------
+    def set_layout(self, x=None, y_list=None):
+        """重新指定水平位置與各列 y 座標。"""
+        if x is not None:
+            self.x = int(x)
+        if y_list:
+            self.y_list = list(y_list)
+
+        self.label_pharmacy.move(self.x - 30, self._title_y)
+        for i, lbl in enumerate(self._labels):
+            lbl.move(self.x, self._y_of(i))
 
     # -----------------------------
     # 資料讀取
     # -----------------------------
     def _load_from_db(self):
-        """從資料庫讀取候診名單"""
+        """從資料庫讀取可領藥名單"""
         sql = """
             SELECT wait.Name, cases.DrugNo FROM wait
                 LEFT JOIN cases ON cases.CaseKey = wait.CaseKey
@@ -655,6 +699,7 @@ class Pharmacy(QtCore.QObject):
 
     def bring_to_front(self):
         """將所有 QLabel 疊到最上層"""
+        self.label_pharmacy.raise_()
         for lbl in self._labels:
             lbl.raise_()
 
@@ -705,12 +750,25 @@ class Pharmacy(QtCore.QObject):
 
 
 class PyBulletin8(QtWidgets.QMainWindow):
-    """候診資訊系統 三診間及藥局版."""
+    """候診資訊系統 三診間及藥局版（固定全螢幕）."""
+
+    # 版面座標（1920x1080 基準）
+    ROOM_X_LIST = [90, 600, 1100]
+    ROOM_Y_LIST = [410, 510, 610, 710, 800]
+    PHARMACY_X = 1630
+    PHARMACY_Y_LIST = [240, 350, 457, 565, 674, 777]
+    BOTTOM_Y = 936  # 時鐘與跑馬燈的垂直位置
 
     def __init__(self, parent=None, *args):
         """初始化."""
         super().__init__(parent)
         self.args = args
+
+        # 版面位置預設值（resizeEvent 會再更新一次；先給值避免 AttributeError）
+        self.clock_x = DESIGN_WIDTH - 300
+        self.marquee_x = DESIGN_WIDTH - 400
+        self.marquee_y = self.BOTTOM_Y
+        self.marquee_auto_bounds = True
 
         self._set_db()
         if not self.database.connected():
@@ -727,13 +785,34 @@ class PyBulletin8(QtWidgets.QMainWindow):
 
         monitor_number = self.get_monitor_number()
         monitor = QDesktopWidget().screenGeometry(monitor_number)
+        self._check_screen_resolution(monitor)
+
+        # 先 move 再 show()，讓 windowHandle 綁到正確的螢幕，最後才全螢幕
         self.move(monitor.left(), monitor.top())
+        self.show()
         self.showFullScreen()
+
+    @staticmethod
+    def _check_screen_resolution(monitor):
+        """版面以 1920x1080 設計，解析度不符時提出警告（不中斷執行）."""
+        if (monitor.width(), monitor.height()) == (DESIGN_WIDTH, DESIGN_HEIGHT):
+            return
+
+        print(
+            f"警告：候診看板螢幕解析度為 {monitor.width()}x{monitor.height()}，"
+            f"版面以 {DESIGN_WIDTH}x{DESIGN_HEIGHT} 設計，顯示位置可能偏移"
+        )
+
+    def _canvas(self):
+        """所有 overlay 一律掛在同一個 widget 上，避免座標基準不一致."""
+        return self.ui if self.ui is not None else self
 
     def show_bulletin(self):
         """顯示候診看板."""
+        canvas = self._canvas()
+
         self.marquee = Marquee(
-            parent=self,
+            parent=canvas,
             database=self.database,
             system_settings=self.system_settings,
             y=self.marquee_y,
@@ -741,48 +820,63 @@ class PyBulletin8(QtWidgets.QMainWindow):
         )
         self.marquee.play()
 
-        self.clock = ClockOverlay(self)
+        self.clock = ClockOverlay(canvas)
 
         self.refresh_waiting_room_info()
-
-        if sys.platform == "win32":
-            y_list = [415, 515, 615, 715, 805]
-        else:
-            y_list = [400, 500, 600, 700, 792]
 
         self.waiting_room = [None, None, None]
         for i in range(len(self.waiting_room)):
             self.waiting_room[i] = WaitingRoom(
-                parent=self.ui,
+                parent=canvas,
                 database=self.database,
                 system_settings=self.system_settings,
                 room=self.waiting_room_info[i][0],
                 doctor=self.waiting_room_info[i][1],
                 x=self.waiting_room_info[i][2],
-                y_list=y_list,
+                y_list=self.ROOM_Y_LIST,
                 items_per_page=5,
                 interval_sec=5,
             )
             self.waiting_room[i].start()
 
         self.pharmacy = Pharmacy(
-            parent=self.ui,
+            parent=canvas,
             database=self.database,
             system_settings=self.system_settings,
-            x=1630,
-            y_list=[240, 350, 457, 565, 674, 777],
+            x=self.PHARMACY_X,
+            y_list=self.PHARMACY_Y_LIST,
             items_per_page=6,
             interval_sec=5,
         )
         self.pharmacy.start()
 
+        # 元件建立完成後主動套一次版面
+        # （__init__ 的 showFullScreen 早於這裡，那次 resizeEvent 抓不到這些元件）
+        self._relayout()
+
         self._show_waiting_list()
+
+    def _relayout(self):
+        """依目前視窗尺寸重新定位時鐘與跑馬燈."""
+        if not hasattr(self, "clock"):
+            return
+
+        canvas = self._canvas()
+        self.clock_x = canvas.width() - 300
+        self.marquee_x = canvas.width() - 400
+        self.marquee_y = self.BOTTOM_Y
+
+        self.clock.set_position(self.clock_x, self.marquee_y)
+
+        if self.marquee_auto_bounds:
+            self.marquee.set_y(self.marquee_y)
+            self.marquee.set_bounds(52, self.marquee_x)
 
     def refresh_waiting_room_info(self):
         self.waiting_room_info = [
-            [None, None, 90],
-            [None, None, 600],
-            [None, None, 1100],
+            [None, None, self.ROOM_X_LIST[0]],
+            [None, None, self.ROOM_X_LIST[1]],
+            [None, None, self.ROOM_X_LIST[2]],
         ]
 
         weekday = date_utils.WEEK_DAY_LIST[datetime.datetime.now().weekday()]
@@ -811,15 +905,7 @@ class PyBulletin8(QtWidgets.QMainWindow):
 
     def resizeEvent(self, e):
         super().resizeEvent(e)
-        self.clock_x = self.width() - 300
-        self.marquee_x = self.width() - 400
-        self.marquee_y = 936
-
-        if hasattr(self, "clock"):
-            self.clock.set_position(self.clock_x, self.marquee_y)
-
-        if getattr(self, "marquee_auto_bounds", True) and hasattr(self, "marquee"):
-            self.marquee.set_bounds(52, self.marquee_x)
+        self._relayout()
 
     def _set_notification_server(self):
         channels = [
@@ -936,6 +1022,10 @@ class PyBulletin8(QtWidgets.QMainWindow):
 
 # 主程式
 def main():
+    # 看板座標全部寫死為實體像素，關掉 High DPI 縮放才不會整片偏移
+    # （必須在建立 QApplication 之前設定）
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_DisableHighDpiScaling, True)
+
     app = QtWidgets.QApplication(sys.argv)
     py_bulletin = PyBulletin8(None, sys.argv)
     py_bulletin.show_bulletin()
