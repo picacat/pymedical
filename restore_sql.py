@@ -1135,7 +1135,8 @@ class SqlRestoreWindow(QWidget):
         cs_label.setFixedWidth(90)
         self.charset_combo = QComboBox()
         self.charset_combo.addItems(CHARSET_CHOICES)
-        self.charset_combo.setCurrentText("自動偵測")
+        # self.charset_combo.setCurrentText("自動偵測")
+        self.charset_combo.setCurrentText("utf8mb4")
         self.charset_combo.setToolTip(
             "須與備份檔匯出時的編碼一致。\n"
             "新版 backup.py 以 binary 匯出（不轉碼、原樣保留位元組），\n"
@@ -1145,7 +1146,7 @@ class SqlRestoreWindow(QWidget):
         eng_label = QLabel("資料引擎:")
         self.engine_combo = QComboBox()
         self.engine_combo.addItems(ENGINE_CHOICES)
-        self.engine_combo.setCurrentText(ENGINE_FOLLOW_FILE)
+        self.engine_combo.setCurrentText("InnoDB")
         self.engine_combo.setToolTip(
             "備份檔的 CREATE TABLE 已帶 ENGINE=xxx。\n"
             "選「依備份檔」表示照原樣還原（建議）。\n"
