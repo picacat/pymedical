@@ -1,17 +1,17 @@
 # -*- coding: UTF-8 -*-
 
-
 from PyQt5 import QtCore, QtWidgets
 
 try:
-    from PyPDF2 import PdfWriter
+    from PyPDF2 import PdfWriter as _PdfMergerClass
 except Exception:
-    from PyPDF2 import PdfFileMerger
+    from PyPDF2 import PdfFileMerger as _PdfMergerClass
 
 import datetime
 import os
 import shutil
 import subprocess
+import traceback
 
 from lxml import etree as ET
 
@@ -39,14 +39,21 @@ class InsUploadEMR(QtWidgets.QMainWindow):
         self.clinic_id = args[5]
         self.apply_upload_date = args[6]
         self.months = args[7]
+
         self.ui = None
         self.start_no = 1
-
         self.apply_type_code = nhi_utils.APPLY_TYPE_CODE[self.apply_type]
         self.apply_year = int(self.apply_date[:3]) + 1911
         self.apply_month = int(self.apply_date[3:5])
+
         export_dir = nhi_utils.get_dir(self.system_settings, "申報路徑")
         self.EXPORT_DIR = f"{export_dir}/emr{self.apply_date}"
+
+        # 整批作業共用同一個時間戳記, 避免跨午夜時 ATT 與 XML 檔名日期不一致
+        self.now = None  # 西元 yyyymmdd
+        self.nhi_now = None  # 民國日期
+
+        self.errors = []  # 記錄每一筆的失敗原因
 
         self._set_ui()
         self._set_signal()
@@ -67,6 +74,31 @@ class InsUploadEMR(QtWidgets.QMainWindow):
     def _set_signal(self):
         pass
 
+    # 設定整批作業共用的時間戳記
+    def _init_timestamp(self):
+        if self.now is None:
+            now = datetime.datetime.now()
+            self.now = now.strftime("%Y%m%d")
+            self.nhi_now = date_utils.west_date_to_nhi_date(now)
+
+    # 執行 7z, 回傳 (returncode, output)
+    @staticmethod
+    def _run_7z(cmd):
+        kwargs = {
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.STDOUT,
+        }
+        # Windows 下不要閃出黑色主控台視窗
+        if hasattr(subprocess, "CREATE_NO_WINDOW"):
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+        sp = subprocess.Popen(cmd, **kwargs)
+        out, _ = sp.communicate()
+        if isinstance(out, bytes):
+            out = out.decode("utf-8", errors="replace")
+
+        return sp.returncode, string_utils.xstr(out)
+
     def create_emr_files(self):
         self._generate_emr_files()
 
@@ -86,6 +118,16 @@ class InsUploadEMR(QtWidgets.QMainWindow):
 
         type_code = "15"  # 費用抽審批次上傳
         zip_file = self._get_zip_file_name()
+
+        if not os.path.isfile(zip_file) or os.path.getsize(zip_file) <= 0:
+            system_utils.show_message_box(
+                QtWidgets.QMessageBox.Critical,
+                "壓縮檔建立失敗",
+                '<font size="5" color="red"><b>上傳用的壓縮檔未建立成功, 已中止上傳.</b></font>',
+                f"檔案: {zip_file}",
+            )
+            return
+
         nhi_utils.NHI_SendB(self.system_settings, type_code, zip_file)
 
         generate_date = datetime.date.today().strftime("%Y-%m-%d")
@@ -94,7 +136,36 @@ class InsUploadEMR(QtWidgets.QMainWindow):
         self.database.insert_record("system_log", fields, data)
 
     def _generate_emr_files(self):
+        self.now = None
+        self._init_timestamp()
+        self.errors = []
+
         shutil.rmtree(self.EXPORT_DIR, ignore_errors=True)
+        try:
+            os.makedirs(self.EXPORT_DIR, exist_ok=True)
+        except OSError as e:
+            system_utils.show_message_box(
+                QtWidgets.QMessageBox.Critical,
+                "無法建立輸出目錄",
+                '<font size="5" color="red"><b>無法建立抽審檔輸出目錄.</b></font>',
+                f"{self.EXPORT_DIR}\n{e}",
+            )
+            return False
+
+        # 上一輪若有檔案被鎖住, rmtree 會靜默失敗, 這裡確認目錄確實是空的
+        leftovers = [
+            f
+            for f in os.listdir(self.EXPORT_DIR)
+            if os.path.isfile(os.path.join(self.EXPORT_DIR, f))
+        ]
+        if leftovers:
+            system_utils.show_message_box(
+                QtWidgets.QMessageBox.Critical,
+                "輸出目錄未清空",
+                '<font size="5" color="red"><b>輸出目錄殘留舊檔案, 無法清除, 請關閉佔用該目錄的程式後再執行.</b></font>',
+                f"{self.EXPORT_DIR}\n殘留 {len(leftovers)} 個檔案: {', '.join(leftovers[:10])}",
+            )
+            return False
 
         sql = f'''
             SELECT
@@ -109,9 +180,7 @@ class InsUploadEMR(QtWidgets.QMainWindow):
             ORDER BY CaseType, Sequence
         '''
         rows = self.database.select_record(sql)
-
         row_count = len(rows)
-
         if row_count <= 0:
             system_utils.show_message_box(
                 QtWidgets.QMessageBox.Critical,
@@ -124,22 +193,57 @@ class InsUploadEMR(QtWidgets.QMainWindow):
         progress_dialog = QtWidgets.QProgressDialog(
             "正在產生電子抽審檔中, 請稍後...", "取消", 0, row_count, self
         )
-
         progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
         progress_dialog.setValue(0)
 
-        for row_no, row in enumerate(rows):
-            progress_dialog.setValue(row_no)
-            if progress_dialog.wasCanceled():
-                break
+        canceled = False
+        try:
+            for row_no, row in enumerate(rows):
+                progress_dialog.setValue(row_no)
+                if progress_dialog.wasCanceled():
+                    canceled = True
+                    break
 
-            pdf_file = self._create_pdf_files(row)
-            self._zip_pdf_file(row_no, pdf_file)
-            self._create_xml_files(row_no, row, pdf_file)
+                case_type = string_utils.xstr(row["CaseType"])
+                sequence = string_utils.xstr(row["Sequence"])
+                try:
+                    pdf_file = self._create_pdf_files(row)
+                    self._zip_pdf_file(row_no, pdf_file)
+                    self._create_xml_files(row_no, row, pdf_file)
+                except Exception as e:
+                    self.errors.append(f"{case_type}-{sequence}: {e}")
+                    traceback.print_exc()
+                    continue
 
-        progress_dialog.setValue(row_count)
-        progress_dialog.deleteLater()
-        self._zip_all_files()
+            progress_dialog.setValue(row_count)
+        finally:
+            progress_dialog.close()
+            progress_dialog.deleteLater()
+
+        if canceled:
+            system_utils.show_message_box(
+                QtWidgets.QMessageBox.Warning,
+                "已取消",
+                '<font size="5" color="red"><b>抽審檔產生作業已被取消, 未產生上傳檔.</b></font>',
+                "請重新執行抽審上傳作業.",
+            )
+            return False
+
+        # 只要有任何一筆失敗就中止, 不要送出殘缺的批次
+        if self.errors:
+            detail = "\n".join(self.errors[:20])
+            if len(self.errors) > 20:
+                detail += f"\n... 其餘 {len(self.errors) - 20} 筆"
+            system_utils.show_message_box(
+                QtWidgets.QMessageBox.Critical,
+                "抽審檔產生失敗",
+                f'<font size="5" color="red"><b>有 {len(self.errors)} 筆資料產生失敗, 已中止上傳.</b></font>',
+                detail,
+            )
+            return False
+
+        if not self._zip_all_files():
+            return False
 
         return True
 
@@ -157,8 +261,9 @@ class InsUploadEMR(QtWidgets.QMainWindow):
             self.apply_month,
             month_range=self.months,
         )
-        case_type = string_utils.xstr(row["CaseType"])
-        sequence = string_utils.xstr(row["Sequence"])
+
+        case_type = string_utils.xstr(row["CaseType"]).strip()
+        sequence = string_utils.xstr(row["Sequence"]).strip()
 
         printer_utils.print_form_medical_chart(
             self,
@@ -215,60 +320,110 @@ class InsUploadEMR(QtWidgets.QMainWindow):
             )
             pdfs += [ins_order_file]
 
-        try:
-            merger = PdfWriter()
-        except Exception:
-            merger = PdfFileMerger()
-
-        pdf_files_stream = []
+        # 合併前先確認每一支來源檔都真的印出來了
         for pdf in pdfs:
-            pdf_file = open(pdf, "rb")
-            merger.append(pdf_file)
-            pdf_files_stream.append(pdf_file)
+            if not os.path.isfile(pdf):
+                raise FileNotFoundError(f"來源PDF未產生: {os.path.basename(pdf)}")
+            if os.path.getsize(pdf) <= 0:
+                raise ValueError(f"來源PDF為空檔: {os.path.basename(pdf)}")
 
         filename = f"14A{case_type}{sequence:0>6}001.pdf"
         merged_pdf = f"{self.EXPORT_DIR}/{filename}"
 
-        with open(merged_pdf, "wb") as f_out:
-            merger.write(f_out)
+        merger = _PdfMergerClass()
+        pdf_files_stream = []
+        try:
+            for pdf in pdfs:
+                # 舊版 PdfFileMerger 需要 stream 保持開啟到 write() 之後
+                pdf_file = open(pdf, "rb")
+                pdf_files_stream.append(pdf_file)
+                merger.append(pdf_file)
 
-        for pdf, pdf_stream in zip(pdfs, pdf_files_stream):
-            pdf_stream.close()
-            os.remove(pdf)
+            with open(merged_pdf, "wb") as f_out:
+                merger.write(f_out)
+        finally:
+            # 不論成功失敗都要關檔, 否則 Windows 會留下鎖住的 handle
+            try:
+                merger.close()
+            except Exception:
+                pass
+            for pdf_stream in pdf_files_stream:
+                try:
+                    pdf_stream.close()
+                except Exception:
+                    pass
+
+        if not os.path.isfile(merged_pdf) or os.path.getsize(merged_pdf) <= 0:
+            raise RuntimeError(f"合併後PDF未產生或為空檔: {filename}")
+
+        # 來源檔刪不掉不該中斷整個流程
+        for pdf in pdfs:
+            try:
+                os.remove(pdf)
+            except OSError:
+                pass
 
         return filename
 
     def _get_sequence(self, row_no):
         # self.start_no = 8000  # 測試用, 用完要comment
         sequence = row_no + self.start_no  # 應該是 +1, 暫時的，for 抽審測試
-
         return sequence
 
     def _zip_pdf_file(self, row_no, pdf_file):
-        now = datetime.datetime.now().strftime("%Y%m%d")
-        sequence = self._get_sequence(row_no)
-        att_file = f"ATT{self.clinic_id}_{now}{sequence:0>8}.7z"
+        self._init_timestamp()
 
+        sequence = self._get_sequence(row_no)
+        att_file = f"ATT{self.clinic_id}_{self.now}{sequence:0>8}.7z"
         zip_file = f"{self.EXPORT_DIR}/{att_file}"
         source_file = f"{self.EXPORT_DIR}/{pdf_file}"
 
-        cmd = ["7z", "a", zip_file, source_file, f"-o{self.EXPORT_DIR}"]
-        sp = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-        sp.communicate()
+        # 7z 在來源檔不存在時仍會產生一個合法但空的壓縮檔(exit code 1),
+        # 所以壓縮前後都要自己檢查
+        if not os.path.isfile(source_file):
+            raise FileNotFoundError(f"待壓縮PDF不存在: {pdf_file}")
+        if os.path.getsize(source_file) <= 0:
+            raise ValueError(f"待壓縮PDF為空檔: {pdf_file}")
+
+        if os.path.isfile(zip_file):
+            try:
+                os.remove(zip_file)  # 7z a 是「追加」, 舊檔要先清掉
+            except OSError as e:
+                raise RuntimeError(f"無法移除舊的壓縮檔 {att_file}: {e}")
+
+        cmd = ["7z", "a", "-y", zip_file, source_file]
+        returncode, output = self._run_7z(cmd)
+        if returncode != 0:
+            raise RuntimeError(
+                f"7z 壓縮失敗({returncode}) {att_file}: {output.strip()}"
+            )
+
+        if not os.path.isfile(zip_file) or os.path.getsize(zip_file) <= 0:
+            raise RuntimeError(f"7z 壓縮檔未建立: {att_file}")
+
+        # 回頭驗證壓縮檔內容確實含有該 pdf
+        returncode, listing = self._run_7z(["7z", "l", zip_file])
+        if returncode != 0 or pdf_file not in listing:
+            raise RuntimeError(
+                f"壓縮檔 {att_file} 內找不到 {pdf_file}: {listing.strip()}"
+            )
 
         return att_file
 
     # 建立抽審用xml檔
     def _create_xml_files(self, row_no, row, pdf_file):
-        now = datetime.datetime.now().strftime("%Y%m%d")
-        sequence = self._get_sequence(row_no)
+        self._init_timestamp()
 
-        xml_file_name = f"{self.EXPORT_DIR}/XML{self.clinic_id}_{now}{sequence:0>8}.XML"
+        sequence = self._get_sequence(row_no)
+        xml_file_name = (
+            f"{self.EXPORT_DIR}/XML{self.clinic_id}_{self.now}{sequence:0>8}.XML"
+        )
 
         root = ET.Element("feereview")
         tree = ET.ElementTree(root)
 
         cdata = ET.SubElement(root, "cdata")
+
         chead = ET.SubElement(cdata, "chead")
         c1 = ET.SubElement(chead, "c1")
         # c1.text = "2"  # 1=當期送審 2=事後審查 3=補件
@@ -306,14 +461,28 @@ class InsUploadEMR(QtWidgets.QMainWindow):
 
         xml_utils.write_big5_xml(root, xml_file_name)
 
-    def _get_zip_file_name(self):
-        now = date_utils.west_date_to_nhi_date(datetime.datetime.now())
-        zip_file_name = f"{self.EXPORT_DIR}/{self.clinic_id}_{now}_001.zip"
+        if not os.path.isfile(xml_file_name) or os.path.getsize(xml_file_name) <= 0:
+            raise RuntimeError(f"XML未產生: {os.path.basename(xml_file_name)}")
 
+    def _get_zip_file_name(self):
+        self._init_timestamp()
+        zip_file_name = f"{self.EXPORT_DIR}/{self.clinic_id}_{self.nhi_now}_001.zip"
         return zip_file_name
 
     def _zip_all_files(self):
         zip_file = self._get_zip_file_name()
+
+        if os.path.isfile(zip_file):
+            try:
+                os.remove(zip_file)
+            except OSError as e:
+                system_utils.show_message_box(
+                    QtWidgets.QMessageBox.Critical,
+                    "無法移除舊的上傳檔",
+                    '<font size="5" color="red"><b>無法移除上一次產生的上傳壓縮檔.</b></font>',
+                    f"{zip_file}\n{e}",
+                )
+                return False
 
         list_files = [
             f
@@ -321,15 +490,38 @@ class InsUploadEMR(QtWidgets.QMainWindow):
             if os.path.isfile(os.path.join(self.EXPORT_DIR, f))
         ]
         list_files.sort()
+
+        added = 0
         for file in list_files:
-            ext_file_name = file.split(".")[1]
-            if ext_file_name not in ["XML", "7z"]:
+            ext_file_name = os.path.splitext(file)[1].lstrip(".").upper()
+            if ext_file_name not in ["XML", "7Z"]:
                 continue
 
             source_file = f"{self.EXPORT_DIR}/{file}"
+            cmd = ["7z", "a", "-tzip", "-y", zip_file, source_file]
+            returncode, output = self._run_7z(cmd)
+            if returncode != 0:
+                system_utils.show_message_box(
+                    QtWidgets.QMessageBox.Critical,
+                    "壓縮失敗",
+                    '<font size="5" color="red"><b>建立上傳壓縮檔時失敗, 已中止.</b></font>',
+                    f"{file}\n{output.strip()}",
+                )
+                return False
 
-            cmd = ["7z", "a", "-tzip", zip_file, source_file, f"-o{self.EXPORT_DIR}"]
-            sp = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-            sp.communicate()
+            added += 1
+            try:
+                os.remove(source_file)
+            except OSError:
+                pass
 
-            os.remove(source_file)
+        if added <= 0 or not os.path.isfile(zip_file) or os.path.getsize(zip_file) <= 0:
+            system_utils.show_message_box(
+                QtWidgets.QMessageBox.Critical,
+                "壓縮失敗",
+                '<font size="5" color="red"><b>上傳壓縮檔沒有任何內容.</b></font>',
+                f"{zip_file}",
+            )
+            return False
+
+        return True
