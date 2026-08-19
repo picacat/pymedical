@@ -186,7 +186,7 @@ class PasswordDialog(QDialog):
             self.password_label.setText("密碼錯誤，請重試！")
 
 
-# 悅兒親子中醫預約報到繳費機 2024.08.11
+# 悅兒親子中醫預約報到繳費機 2026.08.19 v2
 class JOYTCM_Kiosk(QtWidgets.QMainWindow):
     program_name = "掛號機"
     BASE_DIR = os.getcwd()
