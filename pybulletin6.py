@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 import sys
+import threading
 
 from pygame import mixer
 from PyQt5 import QtCore, QtWidgets
@@ -433,21 +434,35 @@ class PyBulletin6(QtWidgets.QMainWindow):
 
         return stream_url
 
+    # def _on_end_reached(self, event):
+    #     self.stream_index += 1
+    #     if self.stream_index >= len(self.stream_list):
+    #         self.stream_index = 0
+
+    #     stream_url = self._get_stream_url(self.stream_index)
+
+    #     def restart_media():
+    #         self.vlc_player.stop()
+    #         self.media = self.vlc_instance.media_new(stream_url)
+    #         self.vlc_player.set_media(self.media)
+    #         self.vlc_player.play()
+
+    #     # 在新线程中執行停止和重新播放操作
+    #     threading.Thread(target=restart_media).start()
+
     def _on_end_reached(self, event):
-        self.stream_index += 1
-        if self.stream_index >= len(self.stream_list):
-            self.stream_index = 0
-
-        stream_url = self._get_stream_url(self.stream_index)
-
         def restart_media():
+            self.stream_index += 1
+            if self.stream_index >= len(self.stream_list):
+                self.stream_index = 0
+            stream_url = self._get_stream_url(self.stream_index)
             self.vlc_player.stop()
             self.media = self.vlc_instance.media_new(stream_url)
             self.vlc_player.set_media(self.media)
             self.vlc_player.play()
+            self.vlc_player.audio_set_volume(self.volume)
 
-        # 在新线程中執行停止和重新播放操作
-        threading.Thread(target=restart_media).start()
+        threading.Thread(target=restart_media, daemon=True).start()
 
     def _set_marquee_list(self):
         self.marquee_list = []
