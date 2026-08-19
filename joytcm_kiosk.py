@@ -188,6 +188,7 @@ class PasswordDialog(QDialog):
 
 # 悅兒親子中醫預約報到繳費機 2024.08.11
 class JOYTCM_Kiosk(QtWidgets.QMainWindow):
+    program_name = "掛號機"
     BASE_DIR = os.getcwd()
     UI_DIR = os.path.join(BASE_DIR, "joytcm_kiosk", "ui")
     IMAGE_DIR = os.path.join(BASE_DIR, "joytcm_kiosk", "images")
@@ -267,7 +268,6 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         self.ic_card.verify_sam(show_message=False)
 
         self.disable_ranges = self._build_ranges()
-        self._set_clock()
 
     def _build_ranges(self):
         time_list = [
@@ -368,7 +368,7 @@ class JOYTCM_Kiosk(QtWidgets.QMainWindow):
         self.click_count = 0
         self.timer.stop()
 
-    def _set_clock(self):
+    def set_clock(self):
         color = "#1e4f0a"
         x, y = 696, 424
         self.label_clock = QtWidgets.QLabel(self)
@@ -528,6 +528,7 @@ def main():
     kiosk = JOYTCM_Kiosk(None, sys.argv)
     kiosk.showFullScreen()
     kiosk.open_kiosk_home()
+    kiosk.set_clock()
 
     sys.exit(app.exec_())
 
