@@ -98,7 +98,7 @@ class PrintRegistrationForm10:
         try:
             birth_date = string_utils.xstr(row["Birthday"])
             birth_date = date_utils.west_date_to_nhi_date(birth_date)
-            birth_date = f"{birth_date[:3]}.{birth_date[3:5]}.{birth_date[5:]}"
+            birth_date = f"{birth_date[:3]}.{birth_date[3:5]}.**"
         except Exception:
             birth_date = ""
 
