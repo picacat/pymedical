@@ -129,6 +129,15 @@ class PrintRegistrationForm10:
 
         total_fee = (string_utils.xstr(regist_fee + diag_share_fee + deposit_fee),)
 
+        room = string_utils.xstr(row["Room"])
+        doctor = string_utils.xstr(row["InsType"])
+        registrar = string_utils.xstr(row["Register"])
+
+        if clinic_name == "啟新中醫診所":
+            room = ""
+            doctor = ""
+            registrar = ""
+
         medical_record = dict()
         medical_record["patient_key"] = string_utils.xstr(row["PatientKey"])
         medical_record["gender"] = string_utils.xstr(row["Gender"])
@@ -138,13 +147,13 @@ class PrintRegistrationForm10:
         )
         medical_record["registration_no"] = string_utils.xstr(row["RegistNo"])
         medical_record["share"] = string_utils.xstr(row["Share"])
-        medical_record["room"] = string_utils.xstr(row["Room"])
+        medical_record["room"] = room
         medical_record["massager"] = string_utils.xstr(row["Doctor"])
         medical_record["visit"] = string_utils.xstr(row["Visit"])
-        medical_record["ins_type"] = string_utils.xstr(row["InsType"])
+        medical_record["ins_type"] = doctor
         medical_record["treat_type"] = string_utils.xstr(row["TreatType"])
         medical_record["discount_type"] = string_utils.xstr(row["DiscountType"])
-        medical_record["registrar"] = string_utils.xstr(row["Register"])
+        medical_record["registrar"] = registrar
 
         medical_record["clinic_name"] = clinic_name
         medical_record["case_date"] = case_date
