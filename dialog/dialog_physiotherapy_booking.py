@@ -1,28 +1,29 @@
-
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox
-
-import re
 import datetime
+import re
 
-from libs import system_utils
-from libs import ui_utils
-from libs import validator_utils
-from libs import patient_utils
-from libs import string_utils
-from libs import date_utils
-from libs import number_utils
-from libs import dialog_utils
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox
+
+from libs import (
+    date_utils,
+    dialog_utils,
+    number_utils,
+    patient_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+    validator_utils,
+)
 
 
 # 新增物理治療預約
 class DialogPhysiotherapyBooking(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogPhysiotherapyBooking, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -39,9 +40,9 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
 
         row = self._read_data()
         if row is None:
-            self.update_type = 'insert'
+            self.update_type = "insert"
         else:
-            self.update_type = 'update'
+            self.update_type = "update"
             self._set_data(row)
 
     # 解構
@@ -58,23 +59,25 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         self.setFixedSize(self.size())  # non resizable dialog
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('存檔')
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("存檔")
         self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText('取消')
-        self.ui.lineEdit_physiotherapy_date.setText(f'{self.physiotherapy_date} {self.physiotherapy_time}')
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText("取消")
+        self.ui.lineEdit_physiotherapy_date.setText(
+            f"{self.physiotherapy_date} {self.physiotherapy_time}"
+        )
         self.ui.lineEdit_physiotherapy.setText(self.physiotherapy)
         try:
-            hour = int(self.physiotherapy_time.split(':')[0])
-            minute = int(self.physiotherapy_time.split(':')[1])
+            hour = int(self.physiotherapy_time.split(":")[0])
+            minute = int(self.physiotherapy_time.split(":")[1])
             self.ui.timeEdit_arrival_time.setTime(QtCore.QTime(hour, minute))
         except Exception:
             pass
 
         ui_utils.set_completer(
             self.database,
-            'SELECT Name FROM patient GROUP BY Name ORDER BY Name',
-            'Name',
-            self.ui.lineEdit_query
+            "SELECT Name FROM patient GROUP BY Name ORDER BY Name",
+            "Name",
+            self.ui.lineEdit_query,
         )
         self._clear_patient_data()
         # self._set_patient_read_only(True)
@@ -110,22 +113,28 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
         self.ui.lineEdit_birthday.setText(west_date)
 
     def _set_validator(self):
-        self.ui.lineEdit_birthday.setValidator(validator_utils.set_validator('日期格式'))
+        self.ui.lineEdit_birthday.setValidator(
+            validator_utils.set_validator("日期格式")
+        )
 
     def check_validation(self):
         if self.ui.spinBox_treat_fee.value() == 0:
             self.ui.spinBox_treat_fee.setValue(self.default_treat_fee)
 
-        if self.ui.lineEdit_patient_key.text() in ['', None] and \
-                '(初診)' not in self.ui.lineEdit_remark.text():
-            self.ui.lineEdit_remark.setText(self.ui.lineEdit_remark.text() + '(初診)')
+        if (
+            self.ui.lineEdit_patient_key.text() in ["", None]
+            and "(初診)" not in self.ui.lineEdit_remark.text()
+        ):
+            self.ui.lineEdit_remark.setText(self.ui.lineEdit_remark.text() + "(初診)")
 
-        if self.ui.lineEdit_name.text().strip() != '':
+        if self.ui.lineEdit_name.text().strip() != "":
             button_enabled = True
         else:
             button_enabled = False
 
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(button_enabled)
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(
+            button_enabled
+        )
 
     def _clear_patient_data(self):
         self.ui.lineEdit_patient_key.setText(None)
@@ -158,15 +167,17 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
             self.close()
             return
 
-        if self.lineEdit_name.isModified() or \
-                self.lineEdit_id.isModified() or \
-                self.lineEdit_birthday.isModified() or \
-                self.lineEdit_telephone.isModified() or \
-                self.lineEdit_cellphone.isModified() or \
-                self.lineEdit_address.isModified():
+        if (
+            self.lineEdit_name.isModified()
+            or self.lineEdit_id.isModified()
+            or self.lineEdit_birthday.isModified()
+            or self.lineEdit_telephone.isModified()
+            or self.lineEdit_cellphone.isModified()
+            or self.lineEdit_address.isModified()
+        ):
             self._save_patient()
 
-        if self.update_type == 'update':
+        if self.update_type == "update":
             self._update_physiotherapy_record()
         else:
             self._insert_physiotherapy_record()
@@ -176,11 +187,12 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
         treat_fee = self.ui.spinBox_treat_fee.value()
         receipt_fee = self.ui.spinBox_receipt_fee.value()
         remark = self.ui.lineEdit_remark.text()
-        if receipt_fee > 0 and '(已報到)' not in self.ui.lineEdit_remark.text():
-            if '(初診)' in self.ui.lineEdit_remark.text():
+        if receipt_fee > 0 and "(已報到)" not in self.ui.lineEdit_remark.text():
+            if "(初診)" in self.ui.lineEdit_remark.text():
                 self._insert_patient()
+                remark = remark.replace("(初診)", "")
 
-            remark += '(已報到)'
+            remark += "(已報到)"
 
         sql = f'''
             UPDATE physiotherapy_schedule
@@ -197,7 +209,7 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
         self.database.exec_sql(sql)
 
     def _insert_patient(self):
-        fields = ['Name', 'ID', 'Birthday', 'Telephone', 'Cellphone', 'Address']
+        fields = ["Name", "ID", "Birthday", "Telephone", "Cellphone", "Address"]
 
         name = self.ui.lineEdit_name.text()
         sql = f'''
@@ -207,7 +219,7 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
         '''
         rows = self.database.select_record(sql)
         if len(rows) > 0:
-            patient_key = rows[0]['PatientKey']
+            patient_key = rows[0]["PatientKey"]
         else:
             data = [
                 name,
@@ -217,7 +229,7 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
                 self.ui.lineEdit_cellphone.text(),
                 self.ui.lineEdit_address.text(),
             ]
-            patient_key = self.database.insert_record('patient', fields, data)
+            patient_key = self.database.insert_record("patient", fields, data)
 
         sql = f'''
             UPDATE physiotherapy_schedule
@@ -232,8 +244,14 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
 
     def _insert_physiotherapy_record(self):
         fields = [
-            'PhysiotherapyDate', 'PhysiotherapyTime', 'Physiotherapy',
-            'PatientKey', 'ArrivalTime', 'TreatFee', 'ReceiptFee', 'Remark'
+            "PhysiotherapyDate",
+            "PhysiotherapyTime",
+            "Physiotherapy",
+            "PatientKey",
+            "ArrivalTime",
+            "TreatFee",
+            "ReceiptFee",
+            "Remark",
         ]
         physiotherapy_date = date_utils.str_to_date(self.physiotherapy_date)
         physiotherapy_time = self.physiotherapy_time
@@ -245,46 +263,60 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
         remark = self.ui.lineEdit_remark.text()
 
         data = [
-            physiotherapy_date, physiotherapy_time, physiotherapy,
-            patient_key, arrival_time, treat_fee, receipt_fee, remark,
+            physiotherapy_date,
+            physiotherapy_time,
+            physiotherapy,
+            patient_key,
+            arrival_time,
+            treat_fee,
+            receipt_fee,
+            remark,
         ]
 
-        self.database.insert_record('physiotherapy_schedule', fields, data)
+        self.database.insert_record("physiotherapy_schedule", fields, data)
 
     def _save_patient(self):
         patient_key = self.ui.lineEdit_patient_key.text()
         remark = self.ui.lineEdit_remark.text()
-        if patient_key in ['', None]:
+        if patient_key in ["", None]:
             patient_key = self._insert_temp_patient()
             self.ui.lineEdit_patient_key.setText(str(patient_key))
             self.ui.lineEdit_remark.setText(remark)
-        elif '(初診)' not in remark:  # 複診病人要更改修改的資料
+        elif "(初診)" not in remark:  # 複診病人要更改修改的資料
             self._update_patient()
 
     def _insert_temp_patient(self):
-        fields = ['Name', 'ID', 'Birthday', 'PhoneNo', 'Cellphone', 'Address']
+        fields = ["Name", "ID", "Birthday", "PhoneNo", "Cellphone", "Address"]
         data = [
-            self.ui.lineEdit_name.text(), self.ui.lineEdit_id.text(), self.ui.lineEdit_birthday.text(),
-            self.ui.lineEdit_telephone.text(), self.ui.lineEdit_cellphone.text(), self.ui.lineEdit_address.text(),
+            self.ui.lineEdit_name.text(),
+            self.ui.lineEdit_id.text(),
+            self.ui.lineEdit_birthday.text(),
+            self.ui.lineEdit_telephone.text(),
+            self.ui.lineEdit_cellphone.text(),
+            self.ui.lineEdit_address.text(),
         ]
-        temp_patient_key = self.database.insert_record('temp_patient', fields, data)
+        temp_patient_key = self.database.insert_record("temp_patient", fields, data)
 
         return temp_patient_key
 
     def _update_patient(self):
         patient_key = self.ui.lineEdit_patient_key.text()
 
-        fields = ['Name', 'ID', 'Birthday', 'Telephone', 'Cellphone', 'Address']
+        fields = ["Name", "ID", "Birthday", "Telephone", "Cellphone", "Address"]
         data = [
-            self.ui.lineEdit_name.text(), self.ui.lineEdit_id.text(), self.ui.lineEdit_birthday.text(),
-            self.ui.lineEdit_telephone.text(), self.ui.lineEdit_cellphone.text(), self.ui.lineEdit_address.text(),
+            self.ui.lineEdit_name.text(),
+            self.ui.lineEdit_id.text(),
+            self.ui.lineEdit_birthday.text(),
+            self.ui.lineEdit_telephone.text(),
+            self.ui.lineEdit_cellphone.text(),
+            self.ui.lineEdit_address.text(),
         ]
-        self.database.update_record('patient', fields, 'PatientKey', patient_key, data)
+        self.database.update_record("patient", fields, "PatientKey", patient_key, data)
 
     # 開始查詢病患資料
     def _query_patient(self):
         keyword = string_utils.xstr(self.ui.lineEdit_query.text())
-        if keyword == '':
+        if keyword == "":
             return
 
         pattern = re.compile(validator_utils.DATE_REGEXP)
@@ -296,17 +328,24 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
         self._get_patient(keyword)
 
     def _get_patient(self, keyword, ic_card=None):
-        rows = patient_utils.search_patient(self.ui, self.database, self.system_settings, keyword)
+        rows = patient_utils.search_patient(
+            self.ui, self.database, self.system_settings, keyword
+        )
         if rows is None:  # 找不到資料
             dialog = dialog_utils.get_dialog_select_patient(
-                self, self.database, self.system_settings, 'patient', 'PatientKey', keyword
+                self,
+                self.database,
+                self.system_settings,
+                "patient",
+                "PatientKey",
+                keyword,
             )
             if dialog.table_widget_patient_list.row_count() <= 0:
                 system_utils.show_message_box(
                     QMessageBox.Critical,
-                    '查無資料',
+                    "查無資料",
                     '<font size="5" color="red"><b>找不到有關的病患資料, 請檢查關鍵字是否有誤.</b></font>',
-                    '請確定輸入資料的正確性, 生日請輸入YYYY-MM-DD.'
+                    "請確定輸入資料的正確性, 生日請輸入YYYY-MM-DD.",
                 )
                 self.ui.lineEdit_query.setFocus()
                 return
@@ -331,16 +370,16 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
         except Exception:
             row = rows
 
-        patient_key = row['PatientKey']
-        name = string_utils.xstr(row['Name'])  # 病歷號可能會跟網路初診病歷號重複
-        telephone = string_utils.xstr(row['Telephone'])
-        cellphone = string_utils.xstr(row['Cellphone'])
-        address = string_utils.xstr(row['Address'])
+        patient_key = row["PatientKey"]
+        name = string_utils.xstr(row["Name"])  # 病歷號可能會跟網路初診病歷號重複
+        telephone = string_utils.xstr(row["Telephone"])
+        cellphone = string_utils.xstr(row["Cellphone"])
+        address = string_utils.xstr(row["Address"])
 
         self.ui.lineEdit_patient_key.setText(string_utils.xstr(patient_key))
         self.ui.lineEdit_name.setText(name)
-        self.ui.lineEdit_birthday.setText(string_utils.xstr(row['Birthday']))
-        self.ui.lineEdit_id.setText(string_utils.xstr(row['ID']))
+        self.ui.lineEdit_birthday.setText(string_utils.xstr(row["Birthday"]))
+        self.ui.lineEdit_id.setText(string_utils.xstr(row["ID"]))
         self.ui.lineEdit_telephone.setText(telephone)
         self.ui.lineEdit_cellphone.setText(cellphone)
         self.ui.lineEdit_address.setText(address)
@@ -366,20 +405,22 @@ class DialogPhysiotherapyBooking(QtWidgets.QDialog):
         self.ui.pushButton_query.setEnabled(False)
         self.ui.lineEdit_query.setEnabled(False)
 
-        arrival_time = string_utils.xstr(row['ArrivalTime'])
-        arrival_time = datetime.datetime.strptime(arrival_time, '%H:%M').time()
-        treat_fee = number_utils.get_integer(row['TreatFee'])
-        receipt_fee = number_utils.get_integer(row['ReceiptFee'])
-        remark = string_utils.xstr(row['Remark'])
+        arrival_time = string_utils.xstr(row["ArrivalTime"])
+        arrival_time = datetime.datetime.strptime(arrival_time, "%H:%M").time()
+        treat_fee = number_utils.get_integer(row["TreatFee"])
+        receipt_fee = number_utils.get_integer(row["ReceiptFee"])
+        remark = string_utils.xstr(row["Remark"])
 
-        patient_key = string_utils.xstr(row['PatientKey'])
+        patient_key = string_utils.xstr(row["PatientKey"])
         patient_row = patient_utils.get_patient_row(self.database, patient_key)
-        if '(初診)' in remark and '(已到到)' not in remark:
-            temp_patient_row = patient_utils.get_temp_patient(self.database, patient_key, '*')
+        if "(初診)" in remark and "(已到到)" not in remark:
+            temp_patient_row = patient_utils.get_temp_patient(
+                self.database, patient_key, "*"
+            )
             if temp_patient_row is not None:
                 patient_row = temp_patient_row
-                patient_row['PatientKey'] = patient_row['TempPatientKey']
-                patient_row['Telephone'] = patient_row['PhoneNo']
+                patient_row["PatientKey"] = patient_row["TempPatientKey"]
+                patient_row["Telephone"] = patient_row["PhoneNo"]
 
         self._set_patient_data(patient_row)
 
