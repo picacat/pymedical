@@ -1,5 +1,38 @@
-# 藥局作業 2024.08.25
+# 藥局作業 2026.08.19
 # -*- coding: UTF-8 -*-
+#
+# 本版針對「配藥時不定時凍住、畫面反白」所做的修正：
+#
+#   1. NotificationServer 使用獨立的資料庫連線（self.notification_db），
+#      不再與 GUI 共用 self.database。輪詢的 SELECT 與畫面上的查詢
+#      在同一條 MySQL 連線上交錯，會造成連線狀態錯亂，接著觸發
+#      _reconnect()，而重連是在主執行緒阻塞的 —— 這是畫面反白的主因。
+#
+#   2. 改用 handler 而不是 update_signal 交付訊息。PyQt5 對「從 C++
+#      呼叫的 Python 程式碼中逃出的例外」會呼叫 qFatal() 直接中止程序，
+#      emit() 外面包 try/except 攔不到。handler 是純 Python 呼叫，
+#      接收端出錯最多就是這一則沒處理到。
+#
+#   3. 調劑中暫停通知處理：只記錄 _pending_reload，不重建表格；
+#      配藥結束回到等待狀態時再補做一次。游標照常前進，不會漏訊息。
+#      （waiting_list 是失效通知，處理方式是回頭查現況，合併不影響正確性）
+#
+#   4. _read_pharmacy_list() 加重入旗標。這支流程很重（大查詢 + 每列
+#      N+1 的 get_pres_extend_value），中途只要有 processEvents，
+#      就可能在表格重建到一半時被要求再重建一次。
+#
+#   5. 配藥狀態改用布林旗標 self._processing，label_status 只是它的顯示。
+#      原本讀 label 文字判斷，dialog 中途例外跳出就會永遠卡在「調劑中」，
+#      而且不會有任何錯誤訊息。open_dialog_pharmacy 整段包 try/finally。
+#
+#   6. 保底重讀：閒置時每分鐘重讀一次名單。電腦休眠、DB 短暫斷線、
+#      AUTO_INCREMENT 歸零等狀況下，讓「名單卡住不動」最多延遲一分鐘自己好。
+#
+#   7. _is_scale_reset_to_zero() 加絕對逾時。原本 decode 失敗與讀到 'No.'
+#      這兩條 continue 都不累加 time_out，理論上可以永久空轉；
+#      序列埠開啟失敗時 ser 未定義也會 NameError。
+#
+#   8. 若干 None / row_no == -1 的防護（_set_row_color、_read_prescript）。
 
 import configparser
 import datetime
@@ -36,6 +69,16 @@ if sys.platform == "win32":
         import pyuac
     except Exception:
         system_utils.pip3_install("pyuac")
+
+
+# 通知去抖動間隔（毫秒）：短時間內連續多則通知只重載一次
+RELOAD_DEBOUNCE_INTERVAL = 400
+
+# 閒置保底重讀間隔（毫秒）
+IDLE_REFRESH_INTERVAL = 60000
+
+# 電子秤讀值的絕對逾時（秒）
+SCALE_READ_TIMEOUT = 5.0
 
 
 # 藥局作業 2024-05-20 邵秉家
@@ -80,6 +123,17 @@ class PyPharmacy(QtWidgets.QMainWindow):
         self.version = system_utils.get_system_version()
         self.ui = None
 
+        # 配藥狀態與重載控制旗標。必須在任何 UI 動作之前設定，
+        # 因為 _is_pharmacy_processing() 可能在初始化途中被呼叫。
+        self._processing = False  # 是否正在配藥（含掃碼前的檢查）
+        self._reloading = False  # _read_pharmacy_list 是否正在執行
+        self._pending_reload = False  # 暫停期間是否有待處理的名單更新
+
+        self.notification_db = None
+        self.notification_server = None
+        self._reload_timer = None
+        self._idle_refresh_timer = None
+
         self.system_settings = class_utils.get_system_settings(
             self.database, self.config_file
         )
@@ -120,7 +174,12 @@ class PyPharmacy(QtWidgets.QMainWindow):
 
     # 關閉
     def close_all(self):
-        pass
+        self._stop_notification()
+
+    def closeEvent(self, event):
+        # 直接按視窗右上角關閉時，close_app() 不會被呼叫
+        self._stop_notification()
+        super().closeEvent(event)
 
     # 設定GUI
     def _set_ui(self):
@@ -148,31 +207,122 @@ class PyPharmacy(QtWidgets.QMainWindow):
         self._set_status_bar()
         self._set_font_size()
 
-        # highlight_color = self.ui.tableWidget_prescript.palette().color(QtGui.QPalette.Highlight)
-        # highlight_color_str = highlight_color.name()
-        # selection_style = f'''
-        #     QTableWidget::item:selected {{
-        #         color: white;  /* 设置选中的文字颜色为白色 */
-        #         background-color: {highlight_color_str};  /* 设置选中的背景色为蓝色 */
-        #         font-size: 24pt;
-        #     }}
-        # '''
-        # self.ui.tableWidget_pharmacy_list.setStyleSheet(selection_style)
-        # self.ui.tableWidget_prescript.setStyleSheet(selection_style)
-
+    # ------------------------------------------------------------------
+    # 站台通知
+    # ------------------------------------------------------------------
     def _set_notification_server(self):
-        channels = [notification_utils.CHANNEL_WAITING_LIST]
-        self.notification_server = notification_utils.NotificationServer(
-            self,
-            database=self.database,
-            station="pymedical",
-            channels=channels,
-        )
-        self.notification_server.update_signal.connect(self._on_notification)
+        """建立通知接收端。
+
+        重點一：輪詢必須使用自己的資料庫連線。
+        NotificationServer 的 QTimer 跑在主執行緒，每 500ms 下一句
+        SELECT。若與 GUI 共用 self.database，這句會插進畫面查詢的
+        cursor 之間，造成連線狀態錯亂，接著 select_record() 內部重試
+        失敗 → _reconnect()，而重連是主執行緒阻塞，畫面就白掉了。
+
+        重點二：用 handler 而非 update_signal，理由見 notification_utils
+        的 _deliver() 說明（slot 逃出的例外會讓 PyQt5 直接 abort）。
+        """
+        # 去抖動計時器：多則通知合併成一次重載
+        self._reload_timer = QtCore.QTimer(self)
+        self._reload_timer.setSingleShot(True)
+        self._reload_timer.setInterval(RELOAD_DEBOUNCE_INTERVAL)
+        self._reload_timer.timeout.connect(self._read_pharmacy_list)
+
+        # 保底重讀：即使通知完全失效，名單最多延遲一分鐘也會自己更新
+        self._idle_refresh_timer = QtCore.QTimer(self)
+        self._idle_refresh_timer.setInterval(IDLE_REFRESH_INTERVAL)
+        self._idle_refresh_timer.timeout.connect(self._idle_refresh)
+        self._idle_refresh_timer.start()
+
+        try:
+            self.notification_db = class_utils.get_db(self.config_file)
+            if not self.notification_db.connected():
+                self.notification_db = None
+        except Exception as e:
+            print(f"（通知連線建立失敗：{e}）")
+            self.notification_db = None
+
+        if self.notification_db is None:
+            # 降級運作：沒有通知，但保底重讀仍在，名單不會卡住
+            print("（通知連線無法建立，改由定時重讀維持名單更新）")
+            return
+
+        try:
+            self.notification_server = notification_utils.NotificationServer(
+                self,
+                database=self.notification_db,
+                station="pymedical",
+                channels=[notification_utils.CHANNEL_WAITING_LIST],
+                handler=self._on_notification,
+            )
+        except Exception as e:
+            print(f"（通知接收端建立失敗：{e}）")
+            self.notification_server = None
 
     def _on_notification(self, channel, message):
-        if channel == notification_utils.CHANNEL_WAITING_LIST:
-            self._refresh_waiting_data(message)
+        """收到通知。這裡只決定「要不要重載」，絕不直接動表格。"""
+        if channel != notification_utils.CHANNEL_WAITING_LIST:
+            return
+
+        try:
+            fields = message.split(",")
+            if fields[0] != self.clinic_name:  # 其他分院呼叫
+                return
+            if fields[1] != "醫師看診作業":  # 與舊 UDP 版行為一致
+                return
+        except (AttributeError, IndexError):
+            # 訊息格式不如預期，忽略即可，不要讓例外往外傳
+            return
+
+        if self._is_pharmacy_processing():
+            # 配藥中：只記下來，等回到等待狀態再補做
+            self._pending_reload = True
+            return
+
+        self._reload_timer.start()
+
+    def _idle_refresh(self):
+        """閒置時的保底重讀"""
+        if self._is_pharmacy_processing() or self._reloading:
+            return
+
+        self._read_pharmacy_list()
+
+    def _resume_notification(self):
+        """配藥結束，回到等待狀態並補做暫停期間累積的更新"""
+        self._set_pharmacy_processing(False)
+
+        if self._pending_reload:
+            self._pending_reload = False
+            self._reload_timer.start()
+
+    def _stop_notification(self):
+        """關閉流程中呼叫，絕不可拋例外"""
+        for timer in (
+            getattr(self, "_reload_timer", None),
+            getattr(self, "_idle_refresh_timer", None),
+        ):
+            if timer is None:
+                continue
+            try:
+                timer.stop()
+            except Exception:
+                pass
+
+        server = getattr(self, "notification_server", None)
+        if server is not None:
+            try:
+                server.stop()
+            except Exception:
+                pass
+
+        database = getattr(self, "notification_db", None)
+        if database is not None:
+            try:
+                database.close()
+            except Exception:
+                pass
+            self.notification_db = None
 
     # 設定 status bar
     def _set_status_bar(self):
@@ -273,6 +423,8 @@ class PyPharmacy(QtWidgets.QMainWindow):
             break
 
     def _get_com_port(self):
+        com_port = None
+
         if sys.platform == "win32":
             com_port = f"COM{self.com_port}"
         elif sys.platform == "linux":
@@ -281,6 +433,15 @@ class PyPharmacy(QtWidgets.QMainWindow):
         return com_port
 
     def _is_scale_reset_to_zero(self):
+        """電子秤是否已歸零。
+
+        原版的 while True 有兩條 continue（decode 失敗、讀到 'No.'）
+        都不累加 time_out，理論上可以永久空轉，而這一段跑在主執行緒，
+        空轉就是畫面反白。這裡加上絕對逾時作為硬上限。
+
+        另外原版在 serial.Serial() 失敗時只跳訊息就往下走，
+        ser 未定義會 NameError，這裡改為直接回傳 False。
+        """
         com_port = self._get_com_port()
         try:
             ser = serial.Serial(
@@ -295,10 +456,18 @@ class PyPharmacy(QtWidgets.QMainWindow):
                 "<h1>無法連線至電子秤，請檢查電子秤的電源是否開啟或連接線是否接妥。</h1>",
                 "無法連接至電子秤.",
             )
+            return False
 
+        weight = None
         time_out = 0
-        while True:  # 只在running為True時執行
-            try:
+        start_time = time.time()
+
+        try:
+            while True:
+                # 絕對逾時：任何一條路徑都不可能無限迴圈
+                if time.time() - start_time > SCALE_READ_TIMEOUT:
+                    break
+
                 try:
                     data = ser.readline().decode("ascii").strip()
                 except Exception:
@@ -307,27 +476,46 @@ class PyPharmacy(QtWidgets.QMainWindow):
                 if "No." in data:
                     continue
 
-                data = data.replace("g", "")
-                weight = round(number_utils.get_float(data), 1)
+                # 讀取逾時會得到空字串，視同 0（維持原版行為）
+                weight = round(number_utils.get_float(data.replace("g", "")), 1)
                 if weight == 0 or time_out > 10:
                     break
 
                 time_out += 1
                 time.sleep(0.2)
-            except serial.SerialException as e:
-                print(f"init com port failed: {e}")
-                continue
+        except serial.SerialException as e:
+            print(f"init com port failed: {e}")
+        finally:
+            try:
+                ser.close()
+            except Exception:
+                pass
 
-        ser.close()
+        return weight == 0
 
-        weight = round(number_utils.get_float(data), 1)
-        if weight > 0:
-            return False
-        else:
-            return True
-
+    # ------------------------------------------------------------------
+    # 配藥
+    # ------------------------------------------------------------------
     def open_dialog_pharmacy(self, data):
+        """掃碼配藥的進入點。
+
+        整段包 try/finally，是因為前面幾道檢查（不需調劑、已調劑完成、
+        查無此藥、電子秤未歸零）都是 return，而 _is_scale_reset_to_zero()
+        最長會阻塞數秒。這段期間若讓通知重建表格，使用者手上這筆的
+        case_key 就換掉了。用 finally 一次涵蓋所有離開路徑，
+        不必逐條補、也不怕日後新增分支時漏掉。
+        """
+        self._set_pharmacy_processing(True)
+        try:
+            self._open_dialog_pharmacy(data)
+        finally:
+            self._resume_notification()
+
+    def _open_dialog_pharmacy(self, data):
         case_key = self.table_widget_charge_list.field_value(1)
+        if case_key in [None, ""]:
+            return
+
         medicine_set = self._get_medicine_set()
         if not self._ready_to_serve(case_key, medicine_set):
             system_utils.show_message_box(
@@ -385,7 +573,7 @@ class PyPharmacy(QtWidgets.QMainWindow):
         medicine_key = string_utils.xstr(row["MedicineKey"])
         medicine_code = string_utils.xstr(row["MedicineCode"])
 
-        prescript_key, current_medicine_key = None, None
+        prescript_key, medicine_name = None, ""
         for row_no in range(self.ui.tableWidget_prescript.rowCount()):
             current_medicine_key = self.ui.tableWidget_prescript.item(row_no, 1)
             if current_medicine_key is None:
@@ -395,12 +583,15 @@ class PyPharmacy(QtWidgets.QMainWindow):
             if current_medicine_key != medicine_key:
                 continue
 
-            prescript_key = self.ui.tableWidget_prescript.item(row_no, 0)
-            if prescript_key is None:
+            prescript_item = self.ui.tableWidget_prescript.item(row_no, 0)
+            if prescript_item is None:
                 continue
 
-            prescript_key = prescript_key.text()
-            medicine_name = self.ui.tableWidget_prescript.item(row_no, 2).text()
+            prescript_key = prescript_item.text()
+            medicine_name_item = self.ui.tableWidget_prescript.item(row_no, 2)
+            if medicine_name_item is not None:
+                medicine_name = medicine_name_item.text()
+
             self.ui.tableWidget_prescript.setCurrentCell(row_no, 0)
             break
 
@@ -425,7 +616,6 @@ class PyPharmacy(QtWidgets.QMainWindow):
             )
             return
 
-        self.ui.label_status.setText("調劑中")
         dialog = dialog_utils.get_dialog_pharmacy_dosage(
             self,
             self.database,
@@ -437,32 +627,31 @@ class PyPharmacy(QtWidgets.QMainWindow):
             self.scale_time,
         )
 
-        dialog.exec_()
-        del dialog
+        try:
+            dialog.exec_()
+        finally:
+            del dialog
 
-        # self.activateWindow()
         self.raise_()
 
         case_key = self.table_widget_charge_list.field_value(1)
         self._read_prescript(case_key)
         self.ui.tableWidget_prescript.setFocus()
-        QtCore.QTimer.singleShot(0, lambda: self._focus_prescript())
+        QtCore.QTimer.singleShot(0, self._focus_prescript)
 
         if not self._is_one_pharmacy_processing() or self._is_pharmacy_done():
-            self.ui.label_status.setText("等待中")
             self._filter_pharmacy_list()
             self._read_pharmacy_list()
             case_key = self.table_widget_charge_list.field_value(1)
             self._read_prescript(case_key)
+            # 剛剛已經重載過，暫停期間累積的更新視同已滿足
+            self._pending_reload = False
 
-        # self.activateWindow()
         self.raise_()
         self.ui.tableWidget_prescript.setFocus()
-        QtCore.QTimer.singleShot(0, lambda: self._focus_prescript())
+        QtCore.QTimer.singleShot(0, self._focus_prescript)
 
     def _focus_prescript(self):
-        # 如果需要帶理由：
-        # self.ui.tableWidget_prescript.setFocus(QtCore.Qt.OtherFocusReason)
         self.activateWindow()  # 若跨視窗切換，建議打開
         self.raise_()
         self.ui.tableWidget_prescript.setFocus()
@@ -478,6 +667,7 @@ class PyPharmacy(QtWidgets.QMainWindow):
             return
 
     def close_app(self):
+        self._stop_notification()
         self.close_all()
         self.close()
 
@@ -530,30 +720,50 @@ class PyPharmacy(QtWidgets.QMainWindow):
         return period_script
 
     def _read_pharmacy_list(self):
-        period_script = self._get_period_script("cases")
+        """重讀候診名單。
 
-        order_script = "ORDER BY prescript.PrescriptKey DESC"
-
-        sql = f"""
-            SELECT wait.WaitKey, wait.PatientKey, wait.Name,
-                   cases.CaseKey, cases.CaseDate, cases.InsType,
-                   cases.RegistNo, cases.Doctor, cases.TotalFee, cases.DrugDone,
-                   patient.Gender, patient.Birthday, patient.DiscountType,
-                   prescript.MedicineSet
-            FROM wait
-                LEFT JOIN patient ON patient.PatientKey = wait.PatientKey
-                LEFT JOIN cases ON cases.CaseKey = wait.CaseKey
-                LEFT JOIN prescript ON prescript.CaseKey = wait.CaseKey
-            WHERE
-                cases.DoctorDone = "True" AND
-                prescript.MedicineType NOT IN ("穴道", "處置")
-                {period_script}
-            GROUP BY wait.CaseKey, prescript.MedicineSet
-            {order_script}
+        重入防護：這支流程包含一次大查詢，加上每一列的
+        _set_pharmacy_ok() → _is_prescript_done() → 每筆處方一次
+        get_pres_extend_value()（N+1，一頁可能上百次查詢）。
+        中途只要有任何 processEvents()，計時器或選取變更就有機會
+        在表格重建到一半時再叫一次，此時外層迴圈的 row_no 會指向
+        已經被換掉的列，item() 回 None，畫面就停在半成品狀態。
         """
+        if self._reloading:
+            self._pending_reload = True
+            if self._reload_timer is not None:
+                self._reload_timer.start()  # 稍後再試
+            return
 
-        self.table_widget_charge_list.set_db_data(sql, self._set_pharmacy_list)
-        self._pharmacy_list_changed()
+        self._reloading = True
+        try:
+            period_script = self._get_period_script("cases")
+
+            order_script = "ORDER BY prescript.PrescriptKey DESC"
+
+            sql = f"""
+                SELECT wait.WaitKey, wait.PatientKey, wait.Name,
+                       cases.CaseKey, cases.CaseDate, cases.InsType,
+                       cases.RegistNo, cases.Doctor, cases.TotalFee, cases.DrugDone,
+                       patient.Gender, patient.Birthday, patient.DiscountType,
+                       prescript.MedicineSet
+                FROM wait
+                    LEFT JOIN patient ON patient.PatientKey = wait.PatientKey
+                    LEFT JOIN cases ON cases.CaseKey = wait.CaseKey
+                    LEFT JOIN prescript ON prescript.CaseKey = wait.CaseKey
+                WHERE
+                    cases.DoctorDone = "True" AND
+                    prescript.MedicineType NOT IN ("穴道", "處置")
+                    {period_script}
+                GROUP BY wait.CaseKey, prescript.MedicineSet
+                {order_script}
+            """
+
+            self.table_widget_charge_list.set_db_data(sql, self._set_pharmacy_list)
+            self._pharmacy_list_changed()
+            self._pending_reload = False
+        finally:
+            self._reloading = False
 
     def _filter_pharmacy_list(self):
         if self.ui.radioButton_not_dispensing.isChecked():
@@ -631,6 +841,9 @@ class PyPharmacy(QtWidgets.QMainWindow):
         return ready_to_reserve
 
     def _set_pharmacy_ok(self, case_key, medicine_set, row_no, col_no):
+        if row_no is None or row_no < 0:
+            return
+
         if not self._ready_to_serve(case_key, medicine_set):
             image_file = "./icons/gtk-close.svg"
             self._set_table_widget_image(
@@ -652,6 +865,9 @@ class PyPharmacy(QtWidgets.QMainWindow):
         )
 
     def _is_prescript_done(self, case_key, medicine_set):
+        if case_key in [None, ""] or medicine_set is None:
+            return False
+
         sql = f"""
             SELECT PrescriptKey FROM prescript
             WHERE
@@ -675,8 +891,6 @@ class PyPharmacy(QtWidgets.QMainWindow):
         return pharmacy_done
 
     def _set_drug_done(self, drug_done=False):
-        current_row_no = self.ui.tableWidget_pharmacy_list.currentRow()
-
         wait_key = self.table_widget_charge_list.field_value(0)
         case_key = self.table_widget_charge_list.field_value(1)
 
@@ -692,7 +906,7 @@ class PyPharmacy(QtWidgets.QMainWindow):
 
     def _read_dosage(self, case_key):
         medicine_set = self._get_medicine_set()
-        if medicine_set is None:
+        if medicine_set is None or case_key in [None, ""]:
             self.ui.label_patient.setText(None)
             self.ui.tableWidget_prescript.setRowCount(0)
             return
@@ -764,7 +978,7 @@ class PyPharmacy(QtWidgets.QMainWindow):
 
     def _read_prescript(self, case_key):
         medicine_set = self._get_medicine_set()
-        if medicine_set is None:
+        if medicine_set is None or case_key in [None, ""]:
             return
 
         sql = f"""
@@ -790,7 +1004,9 @@ class PyPharmacy(QtWidgets.QMainWindow):
                 )
         elif self._is_prescript_done(case_key, medicine_set):
             row_no = self.ui.tableWidget_pharmacy_list.currentRow()
-            self._set_pharmacy_ok(case_key, medicine_set, row_no, 9)
+            # currentRow() 在名單為空或剛重建時會是 -1
+            if row_no >= 0:
+                self._set_pharmacy_ok(case_key, medicine_set, row_no, 9)
 
     def _is_one_pharmacy_processing(self):
         pharmacy_processing = False
@@ -814,6 +1030,9 @@ class PyPharmacy(QtWidgets.QMainWindow):
 
     def _set_pharmacy_done(self):
         case_key = self.table_widget_charge_list.field_value(1)
+        if case_key in [None, ""]:
+            return
+
         sql = f"""
             SELECT DrugDone FROM cases
             WHERE
@@ -868,17 +1087,19 @@ class PyPharmacy(QtWidgets.QMainWindow):
                 self.ui.tableWidget_prescript.item(row_no, col_no).setTextAlignment(
                     QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
                 )
-            # elif col_no in [3]:
-            #     self.ui.tableWidget_prescript.item(
-            #         row_no, col_no).setTextAlignment(
-            #         QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
-            #     )
 
         self._set_prescript_ok(prescript_key, row_no, 6)
 
     def _set_row_color(self, in_table_widget, row_no, color):
+        if row_no is None or row_no < 0:
+            return
+
         for col_no in range(in_table_widget.columnCount()):
-            in_table_widget.item(row_no, col_no).setForeground(QtGui.QColor(color))
+            item = in_table_widget.item(row_no, col_no)
+            if item is None:  # 表格重建途中該列可能還沒有 item
+                continue
+
+            item.setForeground(QtGui.QColor(color))
 
     def _set_prescript_ok(self, prescript_key, row_no, col_no):
         is_druged = prescript_utils.get_pres_extend_value(
@@ -895,6 +1116,9 @@ class PyPharmacy(QtWidgets.QMainWindow):
         )
 
     def _set_table_widget_image(self, in_table_widget, row_no, col_no, image_file):
+        if row_no is None or row_no < 0:
+            return
+
         if image_file is None:
             in_table_widget.setCellWidget(row_no, col_no, None)
             return
@@ -971,25 +1195,35 @@ class PyPharmacy(QtWidgets.QMainWindow):
             self, self.database, self.system_settings, case_key, print_type
         )
 
-    # 重新顯示已就診候診名單
+    # 重新顯示已就診候診名單（保留給外部呼叫者，例如 refresh_wait）
     def _refresh_waiting_data(self, data):
         if self._is_pharmacy_processing():  # 如果正在調劑，不要重新顯示名單
+            self._pending_reload = True
             return
 
-        clinic_name = data.split(",")[0]
-        if clinic_name != self.clinic_name:  # 其他分院呼叫
+        try:
+            fields = data.split(",")
+            if fields[0] != self.clinic_name:  # 其他分院呼叫
+                return
+            if fields[1] != "醫師看診作業":
+                return
+        except (AttributeError, IndexError):
             return
 
-        call_from = data.split(",")[1]
-        if call_from == "醫師看診作業":
-            self._read_pharmacy_list()
+        self._read_pharmacy_list()
 
-    # 是否正在調劑
+    # 配藥狀態
+    def _set_pharmacy_processing(self, processing):
+        """配藥狀態改用布林旗標，label 只是它的顯示。
+
+        原本讀 label_status 的文字判斷，只要 dialog 中途例外跳出，
+        狀態就永遠停在「調劑中」，通知從此不再運作，而且沒有任何錯誤。
+        """
+        self._processing = bool(processing)
+        self.ui.label_status.setText("調劑中" if self._processing else "等待中")
+
     def _is_pharmacy_processing(self):
-        if self.ui.label_status.text() == "調劑中":
-            return True
-        else:
-            return False
+        return getattr(self, "_processing", False)
 
     # 重新顯示狀態列
     def refresh_status_bar(self):
