@@ -133,7 +133,9 @@ class PrintRegistrationForm10:
         medical_record["patient_key"] = string_utils.xstr(row["PatientKey"])
         medical_record["gender"] = string_utils.xstr(row["Gender"])
         medical_record["birthday"] = birth_date
-        medical_record["patient_name"] = string_utils.xstr(row["Name"])
+        medical_record["patient_name"] = string_utils.get_mask_name(
+            string_utils.xstr(row["Name"]), mask_character="＊"
+        )
         medical_record["registration_no"] = string_utils.xstr(row["RegistNo"])
         medical_record["share"] = string_utils.xstr(row["Share"])
         medical_record["room"] = string_utils.xstr(row["Room"])
