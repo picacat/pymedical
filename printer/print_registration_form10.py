@@ -133,7 +133,7 @@ class PrintRegistrationForm10:
         doctor = string_utils.xstr(row["InsType"])
         registrar = string_utils.xstr(row["Register"])
 
-        if clinic_name == "啟新中醫診所":
+        if self.system_settings.field("院所名稱") == "啟新中醫診所":
             room = ""
             doctor = ""
             registrar = ""
