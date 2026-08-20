@@ -8166,7 +8166,7 @@ def get_case_html_23(
     patient_key = get_patient_key(row)
     patient_key_header = get_patient_key_header(row, "病號")
     name = string_utils.xstr(row["Name"])
-    name = string_utils.get_mask_name(name, mask_character="＊")
+    name = string_utils.get_mask_name(name, mask_character="＊")  # 遮蔽字元可以自行設定
     gender = string_utils.xstr(row["Gender"])
     birthday_str = string_utils.xstr(birthday)
     html = f"""
