@@ -1,40 +1,39 @@
-# 藥局配藥秤重 2026.08.19
+# 藥局配藥秤重 2026.08.21
 # -*- coding: UTF-8 -*-
 #
-# 本版針對「配藥時對話框反白凍住」所做的修正。
+# 沿革
+# ----
+# 2026.08.19  worker 執行緒不再直接呼叫 GUI 與資料庫，改用 signal 回主執行緒。
+#             （原本 _get_weight() 在背景執行緒裡呼叫 accept()、setEnabled()
+#              與 save_pres_extend()，是配藥時畫面反白凍住的根因）
 #
-# 原版的 _get_weight() 跑在 threading.Thread 裡，卻直接做了三件
-# 只能在主執行緒做的事：
+# 2026.08.21  兩個「秤對了卻沒記錄到」的漏洞：
 #
-#   1. self.accept() —— 從外部執行緒終止主執行緒正在跑的 exec_()
-#      巢狀事件迴圈。Qt 對此的行為是未定義的，偶爾主執行緒就卡在
-#      裡面出不來，視窗停止重繪 → 白畫面。
+#   一、_closing 把已完成的訊號吃掉
+#       worker 發出 dosage_ready_signal 之後、主執行緒還沒處理到之前，
+#       若對話框先因任何原因進入關閉流程（按取消、按 Esc、視窗被關），
+#       _on_dosage_ready() 就被 _closing 擋掉，那一味藥秤是對的，
+#       但「調劑完成」沒有寫進資料庫。
 #
-#   2. self.ui.buttonBox.button(...).setEnabled(True) —— 同上，
-#      Qt widget 一律只能在建立它的執行緒操作。
+#       改法：把「寫入」從訊號處理中獨立出來成 _commit_dosage()，
+#       由 _on_dosage_ready() 和 close_all() 兩條路徑共同呼叫，
+#       用 _saved 旗標保證只寫一次。worker 一旦判定合格就先設
+#       _dosage_ready，之後不管走哪條路關閉，都會補上這一筆。
 #
-#   3. save_pres_extend() —— 在 worker 執行緒用共用的 self.database
-#      下 DELETE/INSERT。過去主執行緒在 exec_() 裡不碰資料庫，這條
-#      連線實際上只有 worker 在用，所以僥倖沒事；改用 notification
-#      之後主執行緒每 500ms 也在同一條連線上輪詢，兩邊就撞上了。
+#   二、序列埠緩衝區積壓，判定用的是過期的秤值
+#       原本迴圈每 10ms 只 readline() 一行，但電子秤送得比這更快時，
+#       緩衝區會越積越多，拿到的是幾秒前的重量——穩定判定和誤差比對
+#       全建立在過期資料上。30 味藥連續配下來，越後面越嚴重。
 #
-# 修正方式：worker 只做序列埠讀取，其餘一律用 signal 丟回主執行緒。
+#       改法：每一輪把緩衝區抽乾，只取最新一行。
+#       同時穩定判定從「數到 scale_time*10 次」改成「連續穩定
+#       scale_time 秒」——前者會隨電子秤的送出頻率浮動，送得越快
+#       就越早判定為穩定（提早通過），後者不會。
 #
-#   * weight_signal        每次讀到重量 → 主執行緒更新畫面
-#   * dosage_ready_signal  重量穩定且誤差合格 → 主執行緒寫資料庫、關對話框
-#   * scale_error_signal   序列埠異常 → 主執行緒顯示訊息並關閉
-#
-# 其他一併修正：
-#   * serial.Serial() 失敗時 self.ser 未指派，下一行 self.ser.read(10)
-#     會 AttributeError
-#   * close_all() 直接 ser.close()，此時 worker 可能正卡在 readline()，
-#     Windows 上關閉有未完成讀取的序列埠 handle 會阻塞 → 先 join 再關
-#   * mixer.init() 失敗時 self.sound_played 未定義，_update_dosage_label
-#     讀到就 AttributeError（在 slot 裡逃出的例外會讓 PyQt5 直接 abort）
-#   * _set_data() 中途 return 時 self.total_dosage 未定義
-#   * 穩定判斷改用 worker 自己算出的重量，不再回頭讀主執行緒才會更新的
-#     self.current_weight（signal 是佇列傳遞，讀回來的值會落後一輪）
+#       另外 __init__ 的 self.ser.read(10) 可能停在某一行中間，
+#       之後第一次 readline() 會拿到半行殘料，因此開場先 reset。
 
+import datetime
 import sys
 import threading
 import time
@@ -61,6 +60,23 @@ POLL_INTERVAL = 0.01
 
 # 關閉時等待 worker 收工的時間（秒）
 THREAD_JOIN_TIMEOUT = 2.0
+
+# 除錯記錄檔。確認穩定後可以把 DEBUG_LOG 設成 None 關掉。
+DEBUG_LOG = "pharmacy_debug.log"
+
+
+def _log(message):
+    """永不拋例外的記錄。pythonw.exe 下 sys.stdout 是 None，print 會炸。"""
+    if not DEBUG_LOG:
+        return
+
+    try:
+        with open(DEBUG_LOG, "a", encoding="utf-8") as log_file:
+            log_file.write(
+                f"{datetime.datetime.now():%Y-%m-%d %H:%M:%S.%f} {message}\n"
+            )
+    except Exception:
+        pass
 
 
 # 配藥秤重
@@ -93,6 +109,8 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
         self.total_dosage = 0
         self.case_key = None
         self._closing = False  # 避免 close_all() 重入
+        self._dosage_ready = False  # worker 判定合格（可能還沒寫入）
+        self._saved = False  # 已寫入資料庫，保證只寫一次
 
         # mixer.init() 失敗也必須有這個屬性，否則主執行緒的 slot 會炸
         self.sound_played = False
@@ -111,6 +129,7 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
         if not self._open_serial():
             return
 
+        _log(f"open prescript={self.prescript_key} target={self.total_dosage}")
         self._start_worker()
 
     # ------------------------------------------------------------------
@@ -128,11 +147,7 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
         return com_port
 
     def _open_serial(self):
-        """開啟電子秤。失敗時排程關閉對話框並回傳 False。
-
-        原版在 serial.Serial() 失敗時只跳訊息就往下走，self.ser 從未
-        指派，下一行 self.ser.read(10) 直接 AttributeError。
-        """
+        """開啟電子秤。失敗時排程關閉對話框並回傳 False。"""
         com_port = self._get_com_port()
 
         try:
@@ -141,7 +156,8 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
                 baudrate=9600,  # 波特率，根據你的設備進行設定
                 timeout=1,  # 讀取超時時間
             )
-        except Exception:
+        except Exception as e:
+            _log(f"open serial failed prescript={self.prescript_key}: {e}")
             self.ser = None
 
         if self.ser is None:
@@ -154,8 +170,15 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
             response = b""
 
         if len(response) == 0:
+            _log(f"scale no response prescript={self.prescript_key}")
             self._show_scale_error()
             return False
+
+        # read(10) 可能停在某一行中間，殘料會讓第一次 readline() 取到半行
+        try:
+            self.ser.reset_input_buffer()
+        except Exception:
+            pass
 
         return True
 
@@ -289,19 +312,29 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
     # ------------------------------------------------------------------
     # worker 執行緒：只讀序列埠，不碰 GUI、不碰資料庫
     # ------------------------------------------------------------------
+    def _read_latest(self):
+        """把緩衝區抽乾，只回傳最新一行。
+
+        原本每輪只讀一行，電子秤送得比 100Hz 快時緩衝區會持續累積，
+        取到的是幾秒前的重量。連續配藥時越後面越嚴重。
+        """
+        data = None
+
+        while self.ser and self.ser.in_waiting:
+            line = self.ser.readline().decode("utf-8", errors="ignore").strip()
+            if line and "No." not in line:
+                data = line
+
+        return data
+
     def _get_weight(self):
         last_weight = None
-        stable_count = 0
-        stable_target = max(1, int(self.scale_time * 10))
-        tolerance_target = number_utils.get_float(self.total_dosage)
+        stable_since = None
+        target = number_utils.get_float(self.total_dosage)
 
         while self.running:
             try:
-                if not self.ser or not self.ser.in_waiting:
-                    time.sleep(POLL_INTERVAL)
-                    continue
-
-                data = self.ser.readline().decode("utf-8", errors="ignore").strip()
+                data = self._read_latest()
             except serial.SerialException as e:
                 # 關閉對話框時主執行緒會 close() 這個 port，屬正常結束
                 if self.running:
@@ -311,7 +344,8 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
                 time.sleep(POLL_INTERVAL)
                 continue
 
-            if "No." in data:
+            if data is None:
+                time.sleep(POLL_INTERVAL)
                 continue
 
             data = data.replace("g", "")
@@ -322,21 +356,28 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
 
             self.update_dosage_signal.emit(data)
 
+            # 穩定判定改用時間基準。原本數固定次數，會隨電子秤的送出
+            # 頻率浮動：送得越快就越早判定為穩定，等於提早通過。
             if last_weight is not None and current_weight == last_weight:
-                stable_count += 1
+                if stable_since is None:
+                    stable_since = time.monotonic()
+                elif time.monotonic() - stable_since >= self.scale_time:
+                    deviation = current_weight - target
+                    if abs(round(deviation, 1)) <= DOSAGE_TOLERANCE:
+                        # 先立旗標再發訊號：訊號萬一沒被處理到（對話框
+                        # 同時被關閉），close_all() 會據此補寫
+                        self._dosage_ready = True
+                        self.running = False
+                        _log(
+                            f"stable prescript={self.prescript_key} "
+                            f"weight={current_weight} target={target}"
+                        )
+                        self.dosage_ready_signal.emit()
+                        break
+
+                    stable_since = None
             else:
-                stable_count = 0
-
-            # 穩定 scale_time 秒（sleep 0.01 要加上運算損耗，約等於 0.1）
-            if stable_count >= stable_target:
-                deviation = current_weight - tolerance_target
-                if abs(round(deviation, 1)) <= DOSAGE_TOLERANCE:
-                    # 寫資料庫、關對話框一律交給主執行緒
-                    self.running = False
-                    self.dosage_ready_signal.emit()
-                    break
-
-                stable_count = 0
+                stable_since = None
 
             last_weight = current_weight
 
@@ -345,21 +386,46 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
     # ------------------------------------------------------------------
     # 主執行緒：接收 worker 的通知
     # ------------------------------------------------------------------
-    def _on_dosage_ready(self):
-        """重量合格。這裡是主執行緒，才可以寫資料庫、關對話框。"""
-        if self._closing:
-            return
+    def _commit_dosage(self):
+        """寫入調劑完成。唯一的寫入點，保證只寫一次。
 
+        由兩條路徑呼叫：
+          * _on_dosage_ready()：正常流程
+          * close_all()：訊號還沒送達就關閉時的補救
+
+        必須在主執行緒執行（資料庫連線與 GUI 共用），因此 __del__
+        觸發時直接放棄——那時 Qt 物件多半已經在拆了。
+        """
+        if self._saved or not self._dosage_ready:
+            return False
+
+        if threading.current_thread() is not threading.main_thread():
+            _log(f"commit skipped (not main thread) prescript={self.prescript_key}")
+            return False
+
+        self._saved = True
         self.save_pres_extend()
-        self._beep()
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
-        self.accept()
+        return True
+
+    def _on_dosage_ready(self):
+        _log(
+            f"ready prescript={self.prescript_key} weight={self.current_weight} "
+            f"closing={self._closing} saved={self._saved}"
+        )
+
+        committed = self._commit_dosage()
+        if committed:
+            self._beep()
+
+        if not self._closing:
+            self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+            self.accept()
 
     def _on_scale_error(self, message):
         if self._closing:
             return
 
-        print(f"scale error: {message}")
+        _log(f"scale error prescript={self.prescript_key}: {message}")
         self._show_scale_error()
 
     def _update_dosage_label(self, data):
@@ -450,9 +516,16 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
     def close_all(self):
         """停止執行緒後才關閉序列埠。
 
-        原版直接 ser.close()，此時 worker 可能正卡在 readline() 裡，
-        Windows 上關閉一個有未完成讀取的序列埠 handle 會阻塞主執行緒。
+        先補寫可能遺漏的調劑記錄：worker 已判定合格、但 dosage_ready
+        訊號還沒被主執行緒處理到就走到這裡的情況（按取消、按 Esc、
+        視窗被關），原本會整筆丟失。
         """
+        try:
+            if self._commit_dosage():
+                _log(f"commit on close prescript={self.prescript_key}")
+        except Exception as e:
+            _log(f"commit on close failed prescript={self.prescript_key}: {e}")
+
         if self._closing:
             return
 
@@ -463,6 +536,8 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
         if thread is not None and thread.is_alive():
             if thread is not threading.current_thread():
                 thread.join(THREAD_JOIN_TIMEOUT)
+                if thread.is_alive():
+                    _log(f"thread join timeout prescript={self.prescript_key}")
         self.serial_thread = None
 
         if self.ser is not None:
@@ -471,6 +546,11 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
             except Exception:
                 pass
             self.ser = None
+
+        _log(
+            f"close prescript={self.prescript_key} "
+            f"ready={self._dosage_ready} saved={self._saved}"
+        )
 
     def closeEvent(self, event):
         self.close_all()
@@ -498,11 +578,23 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
                 self.database, self.prescript_key, "調劑完成"
             )
         except Exception as e:
-            print(f"remove_pres_extend_row failed: {e}")
+            _log(f"remove failed prescript={self.prescript_key}: {e}")
 
         try:
             prescript_utils.insert_pres_extend_row(
                 self.database, self.prescript_key, "調劑完成", "是"
             )
         except Exception as e:
-            print(f"insert_pres_extend_row failed: {e}")
+            _log(f"insert failed prescript={self.prescript_key}: {e}")
+
+        # 回讀驗證：寫進去了沒有，當下就知道，不必等藥師發現
+        try:
+            value = prescript_utils.get_pres_extend_value(
+                self.database, self.prescript_key, "調劑完成"
+            )
+            if value != "是":
+                _log(f"*** WRITE LOST prescript={self.prescript_key} value={value}")
+            else:
+                _log(f"verify ok prescript={self.prescript_key}")
+        except Exception as e:
+            _log(f"verify failed prescript={self.prescript_key}: {e}")
