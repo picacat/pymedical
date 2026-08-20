@@ -130,7 +130,10 @@ class PrintRegistrationForm10:
         total_fee = (string_utils.xstr(regist_fee + diag_share_fee + deposit_fee),)
 
         room = string_utils.xstr(row["Room"])
-        doctor = string_utils.xstr(row["InsType"])
+        doctor = string_utils.xstr(row["Doctor"])
+        if doctor == "":
+            doctor = string_utils.xstr(row["CaseDoctor"])
+
         registrar = string_utils.xstr(row["Register"])
 
         if self.system_settings.field("院所名稱") == "啟新中醫診所":
@@ -148,9 +151,9 @@ class PrintRegistrationForm10:
         medical_record["registration_no"] = string_utils.xstr(row["RegistNo"])
         medical_record["share"] = string_utils.xstr(row["Share"])
         medical_record["room"] = room
-        medical_record["massager"] = string_utils.xstr(row["Doctor"])
+        medical_record["doctor"] = doctor
         medical_record["visit"] = string_utils.xstr(row["Visit"])
-        medical_record["ins_type"] = doctor
+        medical_record["ins_type"] = string_utils.xstr(row["InsType"])
         medical_record["treat_type"] = string_utils.xstr(row["TreatType"])
         medical_record["discount_type"] = string_utils.xstr(row["DiscountType"])
         medical_record["registrar"] = registrar
@@ -164,9 +167,6 @@ class PrintRegistrationForm10:
         medical_record["deposit_fee"] = deposit_fee
         medical_record["total_fee"] = total_fee
         medical_record["return_card_note"] = return_card_note
-
-        if medical_record["massager"] == "":
-            medical_record["massager"] = string_utils.xstr(row["CaseDoctor"])
 
         return row, medical_record
 
@@ -249,8 +249,18 @@ class PrintRegistrationForm10:
         except Exception:
             pass
 
-        painter.drawText(40, lines[2] - 5, f"{medical_record['room']}診")
-        painter.drawText(15, lines[2] + 10, f"{medical_record['massager']}醫師")
+        if medical_record["room"] == "":
+            room_label = ""
+        else:
+            room_label = f"{medical_record['room']}診"
+
+        if medical_record["doctor"] == "":
+            doctor_label = ""
+        else:
+            doctor_label = f"{medical_record['doctor']}醫師"
+
+        painter.drawText(40, lines[2] - 5, room_label)
+        painter.drawText(15, lines[2] + 10, doctor_label)
         painter.drawText(120, lines[2], medical_record["ins_type"])
         painter.drawText(210, lines[2], string_utils.xstr(medical_record["regist_fee"]))
         painter.drawText(
