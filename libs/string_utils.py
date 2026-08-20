@@ -251,13 +251,13 @@ def remove_not_chinese_character(s):
     return re.sub(r"[^\u4e00-\u9fff]", "", s)
 
 
-def get_mask_name(name):
+def get_mask_name(name, mask_character="〇"):
     name = xstr(name)
     if name == "":
         return ""
 
     mask_name_list = list(name)
-    mask_name_list[1] = "〇"
+    mask_name_list[1] = mask_character
 
     mask_name = "".join(mask_name_list)
 
@@ -282,8 +282,7 @@ def get_mask_id(patient_id, length):
 
 
 def remove_bom(string):
-    if string.startswith("\ufeff"):
-        string = string[1:]
+    string = string.removeprefix("\ufeff")
 
     return string
 
@@ -336,9 +335,7 @@ def get_formatted_str(field_type, raw_value):
     try:
         if field_type in ["日劑量", "總量"]:
             value = f"{raw_value:.1f}"
-        elif field_type == "次劑量":
-            value = f"{raw_value:.2f}"
-        elif field_type == "單價":
+        elif field_type == "次劑量" or field_type == "單價":
             value = f"{raw_value:.2f}"
         else:
             value = f"{raw_value:.1f}"
