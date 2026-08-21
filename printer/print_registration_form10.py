@@ -138,7 +138,7 @@ class PrintRegistrationForm10:
 
         registrar = string_utils.xstr(row["Register"])
 
-        if self.clinic_name == "啟新中醫診所":
+        if self.clinic_name == "啟新中醫診所":  # 2026-08-21
             patient_name = string_utils.get_mask_name(patient_name, mask_character="＊")
             try:
                 birth_date = birth_date[:6] + ".**"
