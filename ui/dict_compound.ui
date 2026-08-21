@@ -267,6 +267,13 @@
                </property>
               </spacer>
              </item>
+             <item>
+              <widget class="QLabel" name="label_total_dosage">
+               <property name="text">
+                <string>總量:0.0</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
@@ -343,7 +350,7 @@
      <x>0</x>
      <y>0</y>
      <width>1114</width>
-     <height>32</height>
+     <height>33</height>
     </rect>
    </property>
   </widget>
