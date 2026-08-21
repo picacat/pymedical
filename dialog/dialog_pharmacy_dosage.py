@@ -1,4 +1,4 @@
-# 藥局配藥秤重 2026.08.21
+# 藥局配藥秤重 2026.08.22
 # -*- coding: UTF-8 -*-
 #
 # 沿革
@@ -32,6 +32,11 @@
 #
 #       另外 __init__ 的 self.ser.read(10) 可能停在某一行中間，
 #       之後第一次 readline() 會拿到半行殘料，因此開場先 reset。
+#
+# 2026.08.22  視窗標題加上病人姓名。
+#             主程式已修好「配到一半名單跳走」的問題，但配錯人的代價
+#             太高，值得讓藥師自己也能發現：萬一以後又有任何原因讓
+#             選取列跳掉，抬頭就會看到名字不對。
 
 import datetime
 import sys
@@ -308,6 +313,36 @@ class DialogPharmacyDosage(QtWidgets.QDialog):
         self.ui.label_dosage.setText(string_utils.xstr(self.total_dosage))
         self.ui.progressBar_scale.setMaximum(int(self.total_dosage * 100))
         self.ui.progressBar_scale.setValue(0)
+
+        self._set_window_title(medicine_name)
+
+    def _get_patient_name(self):
+        """取得這張處方的病人姓名。查不到就回傳空字串，不影響配藥。"""
+        if self.case_key in [None, ""]:
+            return ""
+
+        sql = f"""
+            SELECT patient.Name FROM cases
+                LEFT JOIN patient ON patient.PatientKey = cases.PatientKey
+            WHERE
+                cases.CaseKey = {self.case_key}
+        """
+        try:
+            rows = self.database.select_record(sql)
+            if len(rows) > 0:
+                return string_utils.xstr(rows[0]["Name"])
+        except Exception as e:
+            _log(f"patient name failed case={self.case_key}: {e}")
+
+        return ""
+
+    def _set_window_title(self, medicine_name):
+        """標題放病人姓名，讓藥師一眼就能確認配的是誰的藥"""
+        patient_name = self._get_patient_name()
+        if patient_name:
+            self.setWindowTitle(f"{patient_name} — {medicine_name}")
+        else:
+            self.setWindowTitle(medicine_name)
 
     # ------------------------------------------------------------------
     # worker 執行緒：只讀序列埠，不碰 GUI、不碰資料庫
