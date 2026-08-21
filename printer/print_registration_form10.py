@@ -32,6 +32,7 @@ class PrintRegistrationForm10:
             self.system_settings, "門診掛號單印表機"
         )
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
+        self.clinic_name = self.system_settings.field("院所名稱")
         self.return_card = None
 
         self._set_ui()
@@ -98,7 +99,7 @@ class PrintRegistrationForm10:
         try:
             birth_date = string_utils.xstr(row["Birthday"])
             birth_date = date_utils.west_date_to_nhi_date(birth_date)
-            birth_date = f"{birth_date[:3]}.{birth_date[3:5]}.**"
+            birth_date = f"{birth_date[:3]}.{birth_date[3:5]}.{birth_date[5:]}"
         except Exception:
             birth_date = ""
 
@@ -129,6 +130,7 @@ class PrintRegistrationForm10:
 
         total_fee = (string_utils.xstr(regist_fee + diag_share_fee + deposit_fee),)
 
+        patient_name = string_utils.xstr(row["Name"])
         room = string_utils.xstr(row["Room"])
         doctor = string_utils.xstr(row["Doctor"])
         if doctor == "":
@@ -136,7 +138,13 @@ class PrintRegistrationForm10:
 
         registrar = string_utils.xstr(row["Register"])
 
-        if self.system_settings.field("院所名稱") == "啟新中醫診所":
+        if self.clinic_name == "啟新中醫診所":
+            patient_name = string_utils.get_mask_name(patient_name, mask_character="＊")
+            try:
+                birth_date = birth_date[:6] + ".**"
+            except Exception:
+                birth_date = ""
+
             room = ""
             doctor = ""
             registrar = ""
@@ -145,9 +153,7 @@ class PrintRegistrationForm10:
         medical_record["patient_key"] = string_utils.xstr(row["PatientKey"])
         medical_record["gender"] = string_utils.xstr(row["Gender"])
         medical_record["birthday"] = birth_date
-        medical_record["patient_name"] = string_utils.get_mask_name(
-            string_utils.xstr(row["Name"]), mask_character="＊"
-        )
+        medical_record["patient_name"] = patient_name
         medical_record["registration_no"] = string_utils.xstr(row["RegistNo"])
         medical_record["share"] = string_utils.xstr(row["Share"])
         medical_record["room"] = room
