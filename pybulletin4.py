@@ -30,7 +30,7 @@ from libs import (
 )
 
 MAX_ROOM = 10
-MAX_WAITING_ROWS = 5
+MAX_WAITING_ROWS = 7
 ROTATION_SECONDS = 5000
 
 
