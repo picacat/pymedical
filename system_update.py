@@ -2,7 +2,7 @@
 """
 醫療系統更新模組 (system_update.py)
 
-重寫版本 2026-08-04 v9
+重寫版本 2026-08-04
 主要修正：
   1. _locate_git()      解壓 PortableGit 後重新掃描路徑（原版永遠回傳 False）
   2. _run_git()         加上 timeout、None 防呆、錯誤訊息保留
@@ -224,8 +224,6 @@ class SystemUpdate(QtWidgets.QDialog):
 
         self.ui = None
         self.restart_pymedical = False
-        self.db_engine = self.database.db_engine()
-        print(self.db_engine)
 
         # === 修正：base_path 必須在 _set_ui() 之前就定義好 ===
         # 原版把它放在 _set_ui() 之後，任何 UI 初始化流程一旦用到就會 AttributeError
@@ -347,6 +345,14 @@ class SystemUpdate(QtWidgets.QDialog):
         self.git_exe 仍然是 None，接著 os.path.exists(None) 拋 TypeError，
         被 except 吃掉後回傳 False，導致永遠退回 Dropbox 模式。
         """
+        # 非 Windows（開發機 Linux／FreeBSD）用系統安裝的 git。
+        # 直接執行 PortableGit/bin/git.exe 會得到 Errno 13 拒絕不符權限的操作，
+        # 因為那是 Windows 執行檔。
+        if not IS_WINDOWS:
+            system_git = shutil.which("git")
+            self.git_exe = system_git if system_git else None
+            return bool(system_git)
+
         candidates = [
             os.path.join(self.base_path, "PortableGit", "bin", "git.exe"),
             os.path.join(self.base_path, "PortableGit", "cmd", "git.exe"),
@@ -381,7 +387,15 @@ class SystemUpdate(QtWidgets.QDialog):
             env = os.environ.copy()
             env["GIT_TERMINAL_PROMPT"] = "0"  # 禁用互動式提示，避免無人值守時卡住
             env["GIT_ASKPASS"] = "echo"  # 同上，擋掉帳密輸入視窗
-            env["GIT_CONFIG_NOSYSTEM"] = "1"  # 隔離使用者電腦既有的 git 設定
+            # === 不可設定 GIT_CONFIG_NOSYSTEM ===
+            # PortableGit 的 etc/gitconfig 裡有：
+            #     [http] sslBackend = openssl
+            #            sslCAInfo  = .../ssl/certs/ca-bundle.crt
+            # 這指定用 OpenSSL 搭配自帶的憑證包驗證 TLS。
+            # 一旦設了 NOSYSTEM，這些設定被屏蔽，git 退回 Windows 原生的
+            # schannel 並改用 Windows 憑證存放區，在根憑證過期或被防毒
+            # 攔截的機器上就會失敗：
+            #     schannel: SEC_E_UNTRUSTED_ROOT (0x80090325)
             env["LC_ALL"] = "C"  # 固定錯誤訊息語系，方便比對
 
             kwargs = {
@@ -611,6 +625,7 @@ class SystemUpdate(QtWidgets.QDialog):
         self._run_git(["config", "core.autocrlf", "false"])
         self._run_git(["config", "core.filemode", "false"])
         self._run_git(["config", "http.postBuffer", "524288000"])
+        self._configure_ssl()
 
         # 5. 執行 Fetch
         self._set_status("正在同步雲端資料 (第一次較久)...")
@@ -648,6 +663,48 @@ class SystemUpdate(QtWidgets.QDialog):
         """
         self._set_status("正在校正檔案索引...")
         self._run_git(["update-index", "-q", "--refresh"], GIT_TIMEOUT_LOCAL)
+
+    def _configure_ssl(self):
+        """明確指定用 PortableGit 自帶的憑證包驗證 TLS
+
+        即使 system config 遺失或被覆蓋，也不會退回 Windows 的 schannel。
+        找不到憑證包就不動，讓 git 走預設行為。
+        """
+        if not IS_WINDOWS or not self.git_exe:
+            return
+
+        git_root = os.path.dirname(os.path.dirname(self.git_exe))
+        candidates = [
+            os.path.join(git_root, "ssl", "certs", "ca-bundle.crt"),
+            os.path.join(git_root, "mingw64", "ssl", "certs", "ca-bundle.crt"),
+            os.path.join(git_root, "mingw32", "ssl", "certs", "ca-bundle.crt"),
+            os.path.join(
+                self.base_path,
+                "PortableGit",
+                "mingw64",
+                "ssl",
+                "certs",
+                "ca-bundle.crt",
+            ),
+            os.path.join(
+                self.base_path,
+                "PortableGit",
+                "mingw32",
+                "ssl",
+                "certs",
+                "ca-bundle.crt",
+            ),
+        ]
+
+        for path in candidates:
+            if not os.path.exists(path):
+                continue
+            self._run_git(["config", "http.sslBackend", "openssl"])
+            self._run_git(["config", "http.sslCAInfo", path.replace("\\", "/")])
+            self._log(f"已指定 TLS 憑證包: {path}")
+            return
+
+        self._log("找不到 PortableGit 憑證包，TLS 驗證沿用 git 預設設定")
 
     def _fetch(self):
         """--depth 1 淺層抓取，大幅縮短第一次執行的時間與失敗機率"""
@@ -1500,15 +1557,14 @@ class SystemUpdate(QtWidgets.QDialog):
             new_query = """
                 REPLACE INTO update_logs
                 (clinic_name, pc_name, login_user, current_version, os_version,
-                 ip_address, update_status, error_msg, update_time, db_engine)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
+                 ip_address, update_status, error_msg, update_time)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
             """
-
             legacy_query = """
                 REPLACE INTO update_logs
                 (clinic_name, pc_name, login_user, current_version, os_version,
-                 ip_address, update_time, db_engine)
-                VALUES (%s, %s, %s, %s, %s, %s, NOW(), %s)
+                 ip_address, update_time)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW())
             """
 
             try:
@@ -1523,7 +1579,6 @@ class SystemUpdate(QtWidgets.QDialog):
                         ip_address,
                         update_status,
                         (error_msg or "")[:500],
-                        self.db_engine,
                     ),
                 )
             except mysql.connector.Error:
@@ -1536,7 +1591,6 @@ class SystemUpdate(QtWidgets.QDialog):
                         commit_msg,
                         os_info,
                         ip_address,
-                        self.db_engine,
                     ),
                 )
 

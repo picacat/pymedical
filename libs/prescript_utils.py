@@ -117,39 +117,44 @@ def get_instruction_code(instruction):
 
 # 檢查是否重複開立處方
 def check_prescript_duplicates(
-    in_table_widget, medicine_type, col_no, check_value, duplicate_warning=True
+    in_table_widget,
+    medicine_type,
+    col_no,
+    check_value,
+    duplicate_warning=True,
+    current_row=None,
 ):
+    if check_value in ["", None]:  # 特殊處方或處置不檢查
+        return False
+
+    if current_row is None:
+        current_row = in_table_widget.currentRow()
+
+    if medicine_type in PRESCRIPT_TREAT:
+        backup_col = INS_TREAT_COL_NO["BackupMedicineName"]
+        name_col = INS_TREAT_COL_NO["MedicineName"]
+    else:
+        backup_col = INS_PRESCRIPT_COL_NO["BackupMedicineName"]
+        name_col = INS_PRESCRIPT_COL_NO["MedicineName"]
+
     exists = False
-
-    if check_value == "":  # 特殊處方或處置不檢查 (波形, 頻率, 時間)
-        return exists
-
-    row_count = in_table_widget.rowCount()
-    field_value = None
     in_table_widget.blockSignals(True)
-    for row_no in range(row_count):
-        field = in_table_widget.item(row_no, col_no)
-        if field is not None:
-            field_value = field.text()
+    try:
+        for row_no in range(in_table_widget.rowCount()):
+            if row_no == current_row:  # 自己不算重複 → 允許只改藥名
+                continue
 
-        if check_value == field_value:
-            row_no = in_table_widget.currentRow()
+            field = in_table_widget.item(row_no, col_no)
+            field_value = field.text() if field is not None else None
+            if field_value is None or field_value != check_value:
+                continue
 
-            if medicine_type in PRESCRIPT_TREAT:
-                backup_medicine_name = INS_TREAT_COL_NO["BackupMedicineName"]
-                medicine_name = INS_TREAT_COL_NO["MedicineName"]
-            else:
-                backup_medicine_name = INS_PRESCRIPT_COL_NO["BackupMedicineName"]
-                medicine_name = INS_PRESCRIPT_COL_NO["MedicineName"]
-
-            previous_medicine_item = in_table_widget.item(row_no, backup_medicine_name)
-
-            in_table_widget.setItem(
-                row_no,
-                medicine_name,
-                QtWidgets.QTableWidgetItem(previous_medicine_item),
-            )
-
+            # 真的和「別的列」重複 → 才還原目前列的藥名
+            previous_item = in_table_widget.item(current_row, backup_col)
+            if previous_item is not None:
+                in_table_widget.setItem(
+                    current_row, name_col, QtWidgets.QTableWidgetItem(previous_item)
+                )
             if duplicate_warning:
                 system_utils.show_message_box(
                     QMessageBox.Critical,
@@ -157,11 +162,10 @@ def check_prescript_duplicates(
                     '<font size="5" color="red"><b>處方或處置重複開立, 請檢查.</b></font>',
                     "處方或處置重複輸入.",
                 )
-
             exists = True
             break
-
-    in_table_widget.blockSignals(False)
+    finally:
+        in_table_widget.blockSignals(False)
 
     return exists
 
@@ -899,13 +903,7 @@ def get_infectious_drug_factory(infectious_drug):
             "(勝昌)台灣清冠一號濃縮顆粒",
             30,
         ]
-    elif "華佗" in infectious_drug:
-        ins_code, medicine_name, dosage = [
-            "1100028108",
-            "(華陀)台灣清冠一號濃縮顆粒",
-            30,
-        ]
-    elif "華陀" in infectious_drug:
+    elif "華佗" in infectious_drug or "華陀" in infectious_drug:
         ins_code, medicine_name, dosage = [
             "1100028108",
             "(華陀)台灣清冠一號濃縮顆粒",

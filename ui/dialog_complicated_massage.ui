@@ -245,7 +245,7 @@
              <string notr="true">color:red</string>
             </property>
             <property name="text">
-             <string>至少擇一部位</string>
+             <string>至少選擇兩個以上的部位</string>
             </property>
            </widget>
           </item>
@@ -291,6 +291,19 @@
             </property>
             <property name="text">
              <string>提示訊息</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLabel" name="label_position_count">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>合計部位: 0個</string>
             </property>
            </widget>
           </item>

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import datetime
 import json
 
@@ -28,7 +26,7 @@ from libs import (
 class InsPrescriptRecord(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsPrescriptRecord, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -257,7 +255,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
                 self.remove_treat()
 
         try:
-            return super(InsPrescriptRecord, self).eventFilter(source, event)
+            return super().eventFilter(source, event)
         except TypeError:
             return False
 
@@ -1396,12 +1394,22 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         if duplicate_warning is None:
             duplicate_warning = self.duplicate_warning
 
+        # if prescript_utils.check_prescript_duplicates(
+        #     self.ui.tableWidget_prescript,
+        #     medicine_type,
+        #     prescript_utils.INS_PRESCRIPT_COL_NO["MedicineKey"],
+        #     medicine_key,
+        #     duplicate_warning=duplicate_warning,
+        # ):
+        #     return False
+
         if prescript_utils.check_prescript_duplicates(
             self.ui.tableWidget_prescript,
             medicine_type,
             prescript_utils.INS_PRESCRIPT_COL_NO["MedicineKey"],
             medicine_key,
             duplicate_warning=duplicate_warning,
+            current_row=self.ui.tableWidget_prescript.currentRow(),
         ):
             return False
 
@@ -3521,9 +3529,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         elif (
             treatment in nhi_utils.COMPLICATED_MASSAGE_TREAT + nhi_utils.DISLOCATE_TREAT
             and self.copy_from != "病歷拷貝"
-        ):
-            self._open_complicated_massage_dialog(treatment, second_treatment)
-        elif (
+        ) or (
             second_treatment
             in nhi_utils.COMPLICATED_MASSAGE_TREAT + nhi_utils.DISLOCATE_TREAT
             and self.copy_from != "病歷拷貝"
@@ -4338,9 +4344,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
                 self.database, "病歷資料", "病歷修正", self.user_name
             )
             != "Y"
-        ):
-            enabled = False
-        elif (
+        ) or (
             self.ui.tableWidget_prescript.item(
                 0, prescript_utils.INS_PRESCRIPT_COL_NO["MedicineName"]
             )
