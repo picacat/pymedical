@@ -1,3 +1,6 @@
 [tool.flake8]
 ignore = ["E501", "D101", "D102"]
 max-line-length = 88
+
+[project]
+requires-python = ">=3.8"
