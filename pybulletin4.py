@@ -30,7 +30,7 @@ from libs import (
 )
 
 MAX_ROOM = 10
-MAX_WAITING_ROWS = 7
+MAX_WAITING_ROWS = 7  # 候診一頁顯示人數
 ROTATION_SECONDS = 5000
 
 
