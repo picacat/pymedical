@@ -282,10 +282,10 @@ def get_mask_id(patient_id, length):
 
 
 def remove_bom(string):
-    string = string.removeprefix("\ufeff")
+    if string.startswith("\ufeff"):
+        string = string[1:]
 
     return string
-
 
 def remove_mb4(text):
     """移除 utf8mb3 存不了的 4-byte 字元（emoji 等）"""
