@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-
 import logging
 
 from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
@@ -17,12 +16,17 @@ from libs import (
     ui_utils,
 )
 
+# 進度對話框更新頻率: 每 N 列更新一次, 避免每列都觸發事件迴圈與重繪
+PROGRESS_STEP = 50
+# IN (...) 子句一次帶入的 key 數量上限
+CHUNK_SIZE = 1000
 
-# 醫師自費銷售統計 2019.05.28
+
+# 醫師自費銷售統計 2019.08.27
 class StatisticsDoctorSale(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsDoctorSale, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -34,6 +38,12 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         self.weekday_list = args[7]
         self.ui = None
         self.clinic_name = self.system_settings.field("院所名稱")
+        self.progress_dialog = None
+
+        # ------- 效能快取 (每次 start_calculate 會重設) -------
+        self.case_cache = {}  # "CaseKey" -> cases 資料列
+        self.pres_days_cache = {}  # (CaseKey, MedicineSet) -> Days
+        self.commission_cache = {}  # (MedicineKey, Doctor) -> 抽成率
 
         self._set_ui()
         self._set_signal()
@@ -63,7 +73,6 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
     def _set_table_width(self):
         width = [100, 130, 70, 85, 200, 50, 50, 50, 60, 100, 70, 70, 85]
         self.table_widget_doctor_sale.set_table_heading_width(width)
-
         width = [270, 70, 120, 80]
         self.table_widget_sale_summary.set_table_heading_width(width)
 
@@ -81,15 +90,114 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         self.close_tab()
 
     def start_calculate(self):
+        self._reset_caches()
         self.ui.tableWidget_doctor_sale.setRowCount(0)
-        self._read_data()
-        self._insert_return_goods()
-
-        self._calculate_total()
+        # 填表期間關閉重繪, 全部填完再一次更新畫面
+        self.ui.tableWidget_doctor_sale.setUpdatesEnabled(False)
+        try:
+            self._read_data()
+            self._insert_return_goods()
+            self._calculate_total()
+        finally:
+            self.ui.tableWidget_doctor_sale.setUpdatesEnabled(True)
         self._list_sales_summary()
         self._calculate_summary_total()
         self._plot_chart()
 
+    # ------------------------------------------------------------------
+    # 快取
+    # ------------------------------------------------------------------
+    def _reset_caches(self):
+        self.case_cache = {}
+        self.pres_days_cache = {}
+        self.commission_cache = {}
+
+    @staticmethod
+    def _chunked(items, size=CHUNK_SIZE):
+        for i in range(0, len(items), size):
+            yield items[i : i + size]
+
+    def _preload_caches(self, rows):
+        """由主查詢結果取出所有 CaseKey, 一次把 cases 與 dosage 撈進記憶體."""
+        case_keys = []
+        seen = set()
+        for row in rows:
+            case_key = row["CaseKey"]
+            if case_key is None or case_key in seen:
+                continue
+            seen.add(case_key)
+            case_keys.append(case_key)
+
+        self._preload_case_cache(case_keys)
+        self._preload_pres_days(case_keys)
+
+    def _preload_case_cache(self, case_keys):
+        for chunk in self._chunked(case_keys):
+            key_list = ",".join(str(number_utils.get_integer(k)) for k in chunk)
+            sql = f"""
+                SELECT CaseKey, CaseDate, PatientKey, Name, Doctor, DiscountFee, TotalFee
+                FROM cases
+                WHERE CaseKey IN ({key_list})
+            """
+            try:
+                case_rows = self.database.select_record(sql)
+            except Exception as e:
+                logging.error(f"預載病歷資料失敗: {e}")
+                return
+            for row in case_rows:
+                self.case_cache[string_utils.xstr(row["CaseKey"])] = row
+
+    def _preload_pres_days(self, case_keys):
+        for chunk in self._chunked(case_keys):
+            key_list = ",".join(str(number_utils.get_integer(k)) for k in chunk)
+            sql = f"""
+                SELECT CaseKey, MedicineSet, Days
+                FROM dosage
+                WHERE CaseKey IN ({key_list})
+            """
+            try:
+                dosage_rows = self.database.select_record(sql)
+            except Exception as e:
+                logging.error(f"預載給藥日數失敗: {e}")
+                return
+            for row in dosage_rows:
+                key = (
+                    number_utils.get_integer(row["CaseKey"]),
+                    number_utils.get_integer(row["MedicineSet"]),
+                )
+                # 對應原本 get_pres_days 的 LIMIT 1: 同一組只取第一筆
+                if key not in self.pres_days_cache:
+                    self.pres_days_cache[key] = number_utils.get_integer(row["Days"])
+
+    def _get_pres_days(self, case_key, medicine_set):
+        """取代 case_utils.get_pres_days, 純記憶體查表."""
+        if medicine_set is None:
+            return 0
+        key = (
+            number_utils.get_integer(case_key),
+            number_utils.get_integer(medicine_set),
+        )
+        return self.pres_days_cache.get(key, 0)
+
+    def _get_commission_rate(self, medicine_key, doctor):
+        """charge_utils.get_commission_rate 一次要跑 3~4 個查詢, 這裡以
+        (MedicineKey, Doctor) 為 key 記憶結果, 相同組合只查一次."""
+        key = (medicine_key, doctor)
+        if key not in self.commission_cache:
+            self.commission_cache[key] = charge_utils.get_commission_rate(
+                self.database, medicine_key, doctor
+            )
+        return self.commission_cache[key]
+
+    def _cell_text(self, row_no, col_no):
+        item = self.ui.tableWidget_doctor_sale.item(row_no, col_no)
+        if item is None:
+            return ""
+        return item.text()
+
+    # ------------------------------------------------------------------
+    # 讀取資料
+    # ------------------------------------------------------------------
     def _read_data(self):
         period_condition = ""
         if self.period != "全部":
@@ -107,13 +215,17 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
 
         regist_condition = case_utils.get_regist_type_exclude_sql(self.option)
 
+        # 註: 原本的 LEFT JOIN 因 WHERE 帶有 cases.CaseDate 條件, 語意上等同 INNER JOIN,
+        #     改成 INNER JOIN 可確保優化器以 cases (約 1 萬列) 為驅動表.
+        #     原本的 GROUP BY prescript.PrescriptKey 是多餘的 (PrescriptKey 為 PRIMARY KEY),
+        #     只會多做一次暫存表與排序, 已移除.
         sql = f'''
             SELECT
                 prescript.*,
                 cases.CaseKey, cases.PatientKey, cases.Name, cases.CaseDate, cases.Doctor, cases.TotalFee
             FROM
                 prescript
-            LEFT JOIN cases
+            INNER JOIN cases
                 ON prescript.CaseKey = cases.CaseKey
             WHERE
                 prescript.MedicineSet >= 2 AND
@@ -124,26 +236,30 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
                 {weekday_condition}
                 {regist_condition}
                 {doctor_condition}
-            GROUP BY prescript.PrescriptKey
             ORDER BY cases.CaseKey, prescript.PrescriptKey
         '''
+
         rows = self.database.select_record(sql)
         row_count = len(rows)
         if row_count <= 0:
             return
 
+        # 先把 cases 與 dosage 一次撈進記憶體, 後面所有迴圈都不再連資料庫
+        self._preload_caches(rows)
+
         self.progress_dialog = QtWidgets.QProgressDialog(
             "自費銷售統計中, 請稍後...", "取消", 0, row_count, self
         )
-
         self.progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
         self.progress_dialog.setValue(0)
 
         self.table_widget_doctor_sale.set_db_data(sql, self._set_table_data)
         self._insert_discount()
         self._insert_balance()
+
         self.progress_dialog.setValue(row_count)
         self.progress_dialog.deleteLater()
+        self.progress_dialog = None
 
     def _read_return_goods_rows(self):
         period_condition = ""
@@ -165,7 +281,6 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             ORDER BY ReturnGoodsDate DESC, ReturnGoodsKey DESC
         """
         params = (self.start_date, self.end_date)
-
         try:
             return self.database.select_record(sql, params)
         except mysql.connector.Error as e:
@@ -188,10 +303,8 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
 
     def _insert_return_goods_row(self, row_no, return_date, row):
         self.ui.tableWidget_doctor_sale.insertRow(row_no)
-
         item_name = string_utils.xstr(row["ItemName"])
         amount = number_utils.get_integer(row["Amount"])
-
         row_data = [
             "",
             return_date,
@@ -211,12 +324,10 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             item = QtWidgets.QTableWidgetItem()
             item.setData(QtCore.Qt.EditRole, row_data[col_no])
             self.ui.tableWidget_doctor_sale.setItem(row_no, col_no, item)
-
             if col_no in [2, 6, 9]:
                 align = QtCore.Qt.AlignRight
             else:
                 align = QtCore.Qt.AlignLeft
-
             item.setTextAlignment(align | QtCore.Qt.AlignVCenter)
             item.setForeground(QtGui.QColor("red"))
 
@@ -226,28 +337,27 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             case_date_item = self.ui.tableWidget_doctor_sale.item(row_no, 1)
             if case_date_item is None:
                 continue
-
             if case_date_item.text() > return_date:
                 return row_no
-
         return self.ui.tableWidget_doctor_sale.rowCount()
 
     def _set_table_data(self, row_no, row):
-        self.progress_dialog.setValue(row_no)
+        # 進度條節流: 每 PROGRESS_STEP 列才更新一次
+        if self.progress_dialog is not None and row_no % PROGRESS_STEP == 0:
+            self.progress_dialog.setValue(row_no)
 
         case_key = row["CaseKey"]
         medicine_key = row["MedicineKey"]
         medicine_set = row["MedicineSet"]
         medicine_name = row["MedicineName"]
 
-        pres_days = case_utils.get_pres_days(self.database, case_key, medicine_set)
+        pres_days = self._get_pres_days(case_key, medicine_set)
         if pres_days == 0:
             pres_days = 1
 
         doctor = string_utils.xstr(row["Doctor"])
         quantity = number_utils.get_float(row["Dosage"])
         price = number_utils.get_float(row["Price"])
-        # amount = number_utils.round_up(number_utils.get_float(row['Amount'])) * pres_days
 
         if (
             self.clinic_name == "專嘉中醫診所"
@@ -264,11 +374,8 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         if number_utils.get_integer(row["TotalFee"]) == 0:
             amount = 0
 
-        commission_rate = charge_utils.get_commission_rate(
-            self.database, medicine_key, doctor
-        )
+        commission_rate = self._get_commission_rate(medicine_key, doctor)
         commission = charge_utils.calc_commission(quantity, amount, commission_rate)
-
         if commission_rate != "" and "%" not in commission_rate:
             commission_rate = f"${commission_rate}"
 
@@ -292,163 +399,59 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             item = QtWidgets.QTableWidgetItem()
             item.setData(QtCore.Qt.EditRole, sale_row[col_no])
             self.ui.tableWidget_doctor_sale.setItem(row_no, col_no, item)
-
             if col_no in [2, 5, 6, 8, 9, 10, 11]:
                 align = QtCore.Qt.AlignRight
             elif col_no in [7]:
                 align = QtCore.Qt.AlignCenter
             else:
                 align = QtCore.Qt.AlignLeft
-
-            self.ui.tableWidget_doctor_sale.item(row_no, col_no).setTextAlignment(
-                align | QtCore.Qt.AlignVCenter
-            )
+            item.setTextAlignment(align | QtCore.Qt.AlignVCenter)
             if price < 0:
-                self.ui.tableWidget_doctor_sale.item(row_no, col_no).setForeground(
-                    QtGui.QColor("red")
-                )
-
+                item.setForeground(QtGui.QColor("red"))
             if medicine_name == "差額":
-                self.ui.tableWidget_doctor_sale.item(row_no, col_no).setForeground(
-                    QtGui.QColor("darkgreen")
-                )
+                item.setForeground(QtGui.QColor("darkgreen"))
 
-    def _insert_balance(self):
+    # ------------------------------------------------------------------
+    # 折扣
+    # ------------------------------------------------------------------
+    def _insert_discount(self):
+        """兩階段處理:
+        1. 唯讀掃描, 收集每個病患群組結束的位置與對應的 CaseKey
+        2. 由後往前插入, 插入點不會被前面的插入動作位移
+
+        原版靠 rowCount + _get_discount_count() 預先算出擴張後的迴圈上界,
+        _get_discount_count() 會對每一列各發一次查詢; 改成兩階段之後
+        該函式已無存在必要, 直接刪除.
+        """
         row_count = self.ui.tableWidget_doctor_sale.rowCount()
         if row_count <= 0:
             return
 
-        # 第一階段：純讀取，收集每個 case 的 amount 和插入位置
-        case_data = {}  # case_key -> {'amount': float, 'insert_row': int}
-        last_case_key = self.ui.tableWidget_doctor_sale.item(0, 0).text()
+        pending = []  # [(插入位置, CaseKey)]
+        last_patient_key = self._cell_text(0, 2)
+        last_case_key = self._cell_text(0, 0)
 
         for row_no in range(row_count):
-            case_key_item = self.ui.tableWidget_doctor_sale.item(row_no, 0)
-            case_key = case_key_item.text() if case_key_item is not None else ""
-
-            medicine_item = self.ui.tableWidget_doctor_sale.item(row_no, 4)
-            medicine_name = medicine_item.text() if medicine_item is not None else ""
-
-            if case_key != "" and case_key != last_case_key:
-                # 記錄上一個 case 的插入位置（在它最後一行的下一行）
-                case_data[last_case_key]["insert_row"] = row_no
-                last_case_key = case_key
-                case_data[case_key] = {"amount": 0, "insert_row": row_no}
-
-            if last_case_key not in case_data:
-                case_data[last_case_key] = {"amount": 0, "insert_row": 0}
-
-            if medicine_name != "差額":
-                amount_item = self.ui.tableWidget_doctor_sale.item(row_no, 9)
-                if amount_item is not None:
-                    case_data[last_case_key]["amount"] += number_utils.get_float(
-                        amount_item.text()
-                    )
-
-        # 最後一個 case
-        case_data[last_case_key]["insert_row"] = row_count
-
-        # 第二階段：從後往前插入，避免 index 錯位
-        for case_key in reversed(list(case_data.keys())):
-            data = case_data[case_key]
-            self._check_balance_row(data["insert_row"], case_key, data["amount"])
-
-    def _check_balance_row(self, row_no, case_key, amount):
-        sql = f"""
-            SELECT CaseKey, CaseDate, PatientKey, Name, Doctor, TotalFee FROM cases
-            WHERE
-                CaseKey = {case_key}
-        """
-        rows = self.database.select_record(sql)
-        if len(rows) <= 0:
-            return
-
-        row = rows[0]
-        total_fee = number_utils.get_float(rows[0]["TotalFee"])
-        if amount != total_fee:
-            balance = amount - total_fee
-            self._insert_balance_row(row_no, row, balance)
-
-    def _insert_balance_row(self, row_no, row, balance):
-        self.ui.tableWidget_doctor_sale.insertRow(row_no)
-        discount_row = {
-            "CaseKey": row["CaseKey"],
-            "CaseDate": row["CaseDate"],
-            "PatientKey": row["PatientKey"],
-            "Name": row["Name"],
-            "MedicineName": "差額",
-            "MedicineSet": 0,
-            "PresDays": 1,
-            "Dosage": 1,
-            "Unit": "次",
-            "Price": -balance,
-            "Amount": -balance,
-            "MedicineKey": None,
-            "Doctor": row["Doctor"],
-            "TotalFee": -balance,
-        }
-        self._set_table_data(row_no, discount_row)
-
-    def _insert_discount(self):
-        row_count = (
-            self.ui.tableWidget_doctor_sale.rowCount() + self._get_discount_count()
-        )
-        if row_count <= 0:
-            return
-
-        last_patient_key = self.ui.tableWidget_doctor_sale.item(0, 2).text()
-        last_case_key = self.ui.tableWidget_doctor_sale.item(0, 0).text()
-
-        for row_no in range(row_count):
-            if self.ui.tableWidget_doctor_sale.item(row_no, 2) is None:
-                patient_key = 0
-            else:
-                patient_key = self.ui.tableWidget_doctor_sale.item(row_no, 2).text()
-
+            patient_key = self._cell_text(row_no, 2)
             if patient_key != last_patient_key:
-                self._check_discount_row(row_no, last_case_key)
+                # 病患換人, 上一個群組結束於 row_no - 1
+                pending.append((row_no, last_case_key))
+                last_patient_key = patient_key
+            case_key = self._cell_text(row_no, 0)
+            if case_key != "":
+                last_case_key = case_key
+        pending.append((row_count, last_case_key))  # 最後一個群組
 
-            last_patient_key = patient_key
-            last_case_key = self.ui.tableWidget_doctor_sale.item(row_no, 0)
-            if last_case_key is not None:
-                last_case_key = last_case_key.text()
-
-    # 計算要插入的折扣rows
-    def _get_discount_count(self):
-        discount_count = 0
-        discount_list = []
-        for row_no in range(
-            self.ui.tableWidget_doctor_sale.rowCount()
-        ):  # 計算要插入的折扣rows count
-            case_key = self.ui.tableWidget_doctor_sale.item(row_no, 0)
-            if case_key is None:
-                continue
-
-            sql = f"""
-                SELECT CaseKey, DiscountFee, TotalFee FROM cases
-                WHERE
-                    CaseKey = {case_key.text()} and
-                    DiscountFee > 0
-            """
-            rows = self.database.select_record(sql)
-            if len(rows) > 0:
-                case_key = rows[0]["CaseKey"]
-                if case_key not in discount_list:
-                    discount_list.append(case_key)
-                    discount_count += 1
-
-        return discount_count
+        for insert_row, case_key in reversed(pending):
+            self._check_discount_row(insert_row, case_key)
 
     def _check_discount_row(self, row_no, case_key):
-        sql = f"""
-            SELECT CaseKey, PatientKey, CaseDate, Name, Doctor, DiscountFee, TotalFee FROM cases
-            WHERE
-                CaseKey = {case_key}
-        """
-        rows = self.database.select_record(sql)
-        discount_fee = number_utils.get_integer(rows[0]["DiscountFee"])
+        row = self.case_cache.get(string_utils.xstr(case_key))
+        if row is None:
+            return
+        discount_fee = number_utils.get_integer(row["DiscountFee"])
         if discount_fee > 0:  # 有折扣
-            self._insert_discount_row(row_no, rows[0], discount_fee)
+            self._insert_discount_row(row_no, row, discount_fee)
 
     def _insert_discount_row(self, row_no, row, discount_fee):
         self.ui.tableWidget_doctor_sale.insertRow(row_no)
@@ -470,9 +473,81 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         }
         self._set_table_data(row_no, discount_row)
 
+    # ------------------------------------------------------------------
+    # 差額
+    # ------------------------------------------------------------------
+    def _insert_balance(self):
+        row_count = self.ui.tableWidget_doctor_sale.rowCount()
+        if row_count <= 0:
+            return
+
+        # 第一階段: 唯讀掃描, 累計每個 case 的金額與插入位置
+        case_amount = {}  # CaseKey -> 金額小計
+        case_insert = {}  # CaseKey -> 插入位置
+        case_order = []  # 保持出現順序 (等同列號由小到大)
+        last_case_key = None
+
+        for row_no in range(row_count):
+            case_key = self._cell_text(row_no, 0)
+            if case_key != "" and case_key != last_case_key:
+                if last_case_key is not None:
+                    case_insert[last_case_key] = row_no
+                last_case_key = case_key
+                if case_key not in case_amount:
+                    case_amount[case_key] = 0
+                    case_order.append(case_key)
+            if last_case_key is None:
+                continue
+            if self._cell_text(row_no, 4) != "差額":
+                case_amount[last_case_key] += number_utils.get_float(
+                    self._cell_text(row_no, 9)
+                )
+
+        if last_case_key is not None:
+            case_insert[last_case_key] = row_count
+
+        # 第二階段: 由後往前插入, 避免 index 錯位
+        for case_key in reversed(case_order):
+            self._check_balance_row(
+                case_insert[case_key], case_key, case_amount[case_key]
+            )
+
+    def _check_balance_row(self, row_no, case_key, amount):
+        row = self.case_cache.get(string_utils.xstr(case_key))
+        if row is None:
+            return
+        total_fee = number_utils.get_float(row["TotalFee"])
+        if amount != total_fee:
+            balance = amount - total_fee
+            self._insert_balance_row(row_no, row, balance)
+
+    def _insert_balance_row(self, row_no, row, balance):
+        self.ui.tableWidget_doctor_sale.insertRow(row_no)
+        balance_row = {
+            "CaseKey": row["CaseKey"],
+            "CaseDate": row["CaseDate"],
+            "PatientKey": row["PatientKey"],
+            "Name": row["Name"],
+            "MedicineName": "差額",
+            "MedicineSet": 0,
+            "PresDays": 1,
+            "Dosage": 1,
+            "Unit": "次",
+            "Price": -balance,
+            "Amount": -balance,
+            "MedicineKey": None,
+            "Doctor": row["Doctor"],
+            "TotalFee": -balance,
+        }
+        self._set_table_data(row_no, balance_row)
+
+    # ------------------------------------------------------------------
+    # 匯出 / 統計
+    # ------------------------------------------------------------------
     def _export_to_excel(self):
         start_date = self.start_date[:10]
         end_date = self.end_date[:10]
+
         options = QFileDialog.Options()
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
@@ -487,7 +562,6 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         export_utils.export_table_widget_to_excel(
             excel_file_name, self.ui.tableWidget_doctor_sale, [0], [2, 5, 6, 8, 9, 11]
         )
-
         system_utils.show_message_box(
             QMessageBox.Information,
             "資料匯出完成",
@@ -498,13 +572,11 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
     def _calculate_total(self):
         total_amount = 0
         total_commission = 0
-
         row_count = self.ui.tableWidget_doctor_sale.rowCount()
         for row_no in range(row_count):
             amount = self.ui.tableWidget_doctor_sale.item(row_no, 9)
             if amount is not None:
                 total_amount += number_utils.get_float(amount.text())
-
             commission = self.ui.tableWidget_doctor_sale.item(row_no, 11)
             if commission is not None:
                 total_commission += number_utils.get_float(commission.text())
@@ -582,7 +654,6 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
             total_commission = commission + number_utils.get_float(
                 self.ui.tableWidget_sale_summary.item(row_no, 3).text()
             )
-
             summary_row = [
                 medicine_name,
                 number_utils.get_integer(total_quantity),
@@ -608,7 +679,6 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
         if not medicine_exists:
             summary_row = [medicine_name, quantity, amount, commission]
             self.ui.tableWidget_sale_summary.insertRow(row_count)
-
             for col_no in range(len(summary_row)):
                 item = QtWidgets.QTableWidgetItem()
                 item.setData(QtCore.Qt.EditRole, summary_row[col_no])
@@ -621,13 +691,11 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
     def _calculate_summary_total(self):
         total_amount = 0
         total_commission = 0
-
         row_count = self.ui.tableWidget_sale_summary.rowCount()
         for row_no in range(row_count):
             amount = self.ui.tableWidget_sale_summary.item(row_no, 2)
             if amount is not None:
                 total_amount += number_utils.get_float(amount.text())
-
             commission = self.ui.tableWidget_sale_summary.item(row_no, 3)
             if commission is not None:
                 total_commission += number_utils.get_float(commission.text())
@@ -666,7 +734,6 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
                 self.ui.tableWidget_sale_summary.item(row_no, 2).text()
             )
             total_amount -= amount
-
             if row_no >= 10 or medicine_name == "總計":
                 break
 
@@ -689,7 +756,6 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
 
         self.chartView = QtChart.QChartView(chart)
         self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
-
         self.chartView.setFixedHeight(400)
         self.ui.verticalLayout_chart.addWidget(self.chartView)
 
