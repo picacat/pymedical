@@ -416,31 +416,31 @@ class StatisticsDoctorSale(QtWidgets.QMainWindow):
     # ------------------------------------------------------------------
     def _insert_discount(self):
         """兩階段處理:
-        1. 唯讀掃描, 收集每個病患群組結束的位置與對應的 CaseKey
+        1. 唯讀掃描, 收集每一份病歷結束的位置與對應的 CaseKey
         2. 由後往前插入, 插入點不會被前面的插入動作位移
 
-        原版靠 rowCount + _get_discount_count() 預先算出擴張後的迴圈上界,
-        _get_discount_count() 會對每一列各發一次查詢; 改成兩階段之後
-        該函式已無存在必要, 直接刪除.
+        註 1: 原版靠 rowCount + _get_discount_count() 預先算出擴張後的迴圈上界,
+              而 _get_discount_count() 會對每一列各發一次查詢. 改成兩階段之後
+              該函式已無存在必要, 直接刪除.
+        註 2: 原版以 PatientKey 換人作為分組界線, 但折扣是掛在病歷 (CaseKey) 上.
+              同一位病患若有兩份相鄰的病歷 (同日重複掛號), 前一份的折扣會被跳過,
+              最後由 _insert_balance 以「差額」的名義補上 -- 金額正確, 但名稱與
+              顏色錯誤. 這裡改以 CaseKey 分組, 與 _insert_balance 一致.
         """
         row_count = self.ui.tableWidget_doctor_sale.rowCount()
         if row_count <= 0:
             return
 
         pending = []  # [(插入位置, CaseKey)]
-        last_patient_key = self._cell_text(0, 2)
         last_case_key = self._cell_text(0, 0)
 
         for row_no in range(row_count):
-            patient_key = self._cell_text(row_no, 2)
-            if patient_key != last_patient_key:
-                # 病患換人, 上一個群組結束於 row_no - 1
-                pending.append((row_no, last_case_key))
-                last_patient_key = patient_key
             case_key = self._cell_text(row_no, 0)
-            if case_key != "":
+            if case_key != "" and case_key != last_case_key:
+                # 換一份病歷, 上一份結束於 row_no - 1
+                pending.append((row_no, last_case_key))
                 last_case_key = case_key
-        pending.append((row_count, last_case_key))  # 最後一個群組
+        pending.append((row_count, last_case_key))  # 最後一份病歷
 
         for insert_row, case_key in reversed(pending):
             self._check_discount_row(insert_row, case_key)
