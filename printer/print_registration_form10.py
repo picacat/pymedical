@@ -75,6 +75,7 @@ class PrintRegistrationForm10:
             cases.CaseKey, cases.PatientKey, cases.Name, cases.CaseDate, cases.RegistNo, cases.Room,
             cases.InsType, cases.Share, cases.TreatType, cases.RegistFee, cases.SDiagShareFee,
             cases.DepositFee, cases.Card, cases.Continuance, cases.Visit, cases.Register,
+            cases.Massager,
             cases.Doctor as CaseDoctor, wait.Doctor,
             patient.DiscountType, patient.Gender, patient.Birthday
         FROM cases
@@ -163,6 +164,7 @@ class PrintRegistrationForm10:
         medical_record["treat_type"] = string_utils.xstr(row["TreatType"])
         medical_record["discount_type"] = string_utils.xstr(row["DiscountType"])
         medical_record["registrar"] = registrar
+        medical_record["massager"] = string_utils.xstr(row["Massager"])
 
         medical_record["clinic_name"] = clinic_name
         medical_record["case_date"] = case_date
@@ -199,9 +201,9 @@ class PrintRegistrationForm10:
         self.printer.setPaperSize(QtCore.QSizeF(5, 3), QPrinter.Inch)
 
         if sys.platform == "win32":
-            lines = [20, 110, 170, 230]
+            lines = [20, 110, 170, 230, 255]
         else:
-            lines = [0, 95, 155, 215]
+            lines = [0, 95, 155, 215, 240]
 
         tradtional_health_care_fee = self._get_traditional_health_care_fee()
         if tradtional_health_care_fee > 0:
@@ -287,5 +289,10 @@ class PrintRegistrationForm10:
         painter.drawText(190, lines[3], medical_record["card"])
         painter.drawText(250, lines[3], remark)
         painter.drawText(340, lines[3], medical_record["registrar"])
+
+        if self.system_settings.field("列印推拿師父") == "Y":
+            massager = medical_record["massager"]
+            if massager not in ["", None]:
+                painter.drawText(340, lines[4], f"推拿師:{massager}")
 
         painter.end()

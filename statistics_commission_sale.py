@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
@@ -15,11 +13,11 @@ from libs import (
 )
 
 
-# 自費銷售抽成統計 2025.03.01
+# 自費銷售抽成統計 2026.08.29
 class StatisticsCommissionSale(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsCommissionSale, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -104,7 +102,10 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         if self.seller != "全部":
             doctor_condition = f'''
                 AND (cases.Doctor = "{self.seller}" OR
-                    (cases.Doctor IS NULL AND cases.Register = "{self.seller}"))
+                    (cases.Doctor IS NULL AND
+                     cases.Massager IS NULL AND
+                     cases.Register = "{self.seller}") OR
+                    (cases.Massager = "{self.seller}"))
             '''
 
         regist_condition = case_utils.get_regist_type_exclude_sql(self.option)
@@ -158,7 +159,10 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
             pres_days = 1
 
         doctor = string_utils.xstr(row["Doctor"])
-        seller = doctor
+        if self.seller != "全部":
+            seller = self.seller
+        else:
+            seller = doctor
 
         try:
             ins_type = string_utils.xstr(row["InsType"])
@@ -170,6 +174,9 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         except Exception:
             discount_fee = 0
             seller = doctor
+
+        if seller in ["", None]:
+            seller = "自購"
 
         quantity = number_utils.get_float(row["Dosage"])
         price = number_utils.get_float(row["Price"])
