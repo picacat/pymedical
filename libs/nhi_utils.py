@@ -574,7 +574,15 @@ INJURY_TYPE = (  # 2023.03.20 停止
 #     GENERAL_INJURY_TYPE + OCCUPATIONAL_INJURY_TYPE
 # )
 
-INSURED_TYPE = ["基層醫療", "榮民", "低收入戶", "重大傷病", "中低收入戶", "災民"]
+INSURED_TYPE = [
+    "基層醫療",
+    "榮民",
+    "低收入戶",
+    "重大傷病",
+    "中低收入戶",
+    "災民",
+    "油症",
+]
 NON_SHARE_TYPE = [  # 2023.03.20 停止
     "榮民",
     "低收入戶",
@@ -588,6 +596,7 @@ NON_SHARE_TYPE = [  # 2023.03.20 停止
     "愛滋病",
     "替代役男",
     "天然災害",
+    "油症",
 ]
 
 SHARE_TYPE = INSURED_TYPE + NON_SHARE_TYPE
@@ -2795,6 +2804,9 @@ def get_final_share_code(share_code, diag_share_fee, drug_share_fee):
 def get_diag_share_code(
     database, share_type, treatment, course, drug_fee, case_row=None
 ):
+    if share_type == "油症":  # 2026-09-01 均安
+        return "901"
+
     if share_type == "中低收入戶":
         share_type = "基層醫療"
 
