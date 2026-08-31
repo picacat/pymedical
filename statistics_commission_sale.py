@@ -133,7 +133,6 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
                 {doctor_condition}
             ORDER BY cases.CaseKey, prescript.PrescriptKey
         '''
-        print(sql)
         rows = self.database.select_record(sql)
         row_count = len(rows)
         if row_count <= 0:
