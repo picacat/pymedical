@@ -36,7 +36,7 @@ rem     password=xxxxxxxx
 rem and swap the AUTH line below for:
 rem     set "AUTH=--defaults-extra-file=C:\MariaDB 11.7\backup.cnf"
 set "DB_USER=root"
-set "DB_PASS=CHANGE_ME"
+set "DB_PASS=153fish"
 set "AUTH=-u %DB_USER% -p%DB_PASS%"
 rem If the password contains  ^ & | < > ( )  escape each with a caret,
 rem e.g.  abc^&def   . A  %  must be doubled:  abc%%def
@@ -45,7 +45,7 @@ rem Backup destination
 set "BACKUP_DIR=D:\auto_backup"
 
 rem Keep this many days
-set "KEEP_DAYS=7"
+set "KEEP_DAYS=30"
 
 rem 7-Zip executable
 set "SEVENZIP=C:\Program Files\7-Zip\7z.exe"
