@@ -105,6 +105,9 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
                     (cases.Doctor IS NULL AND
                      cases.Massager IS NULL AND
                      cases.Cashier = "{self.seller}") OR
+                    (cases.Doctor IS NULL AND
+                     cases.Massager IS NULL AND
+                     cases.NursingAssistant = "{self.seller}") OR
                     (cases.Massager = "{self.seller}"))
             '''
 
@@ -113,7 +116,8 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         sql = f'''
             SELECT
                 prescript.*,
-                cases.CaseKey, cases.PatientKey, cases.Name, cases.CaseDate, cases.Doctor, cases.Cashier,
+                cases.CaseKey, cases.PatientKey, cases.Name, cases.CaseDate,
+                cases.Doctor, cases.Cashier, cases.Register, cases.Massager,
                 cases.InsType, cases.TreatType, cases.DiscountFee
             FROM
                 prescript
@@ -159,25 +163,22 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         if pres_days == 0:
             pres_days = 1
 
-        doctor = string_utils.xstr(row["Doctor"])
+        try:
+            discount_fee = number_utils.get_integer(row["DiscountFee"])
+        except Exception:
+            discount_fee = 0
+
         if self.seller != "全部":
             seller = self.seller
         else:
-            seller = doctor
+            seller = string_utils.xstr(row["Doctor"])
 
-        try:
-            ins_type = string_utils.xstr(row["InsType"])
-            treat_type = string_utils.xstr(row["TreatType"])
-            discount_fee = number_utils.get_integer(row["DiscountFee"])
-
-            if ins_type == "自費" and treat_type == "自購" and doctor == "":
+            if seller in ["", None]:
+                seller = string_utils.xstr(row["Massager"])
+            if seller in ["", None]:
+                seller = string_utils.xstr(row["Cashier"])
+            if seller in ["", None]:
                 seller = string_utils.xstr(row["Register"])
-        except Exception:
-            discount_fee = 0
-            seller = doctor
-
-        if seller in ["", None]:
-            seller = "自購"
 
         quantity = number_utils.get_float(row["Dosage"])
         price = number_utils.get_float(row["Price"])
