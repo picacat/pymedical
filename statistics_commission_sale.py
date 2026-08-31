@@ -59,7 +59,7 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         width = [100, 130, 70, 85, 230, 50, 50, 50, 60, 70, 70, 70, 85]
         self.table_widget_doctor_sale.set_table_heading_width(width)
 
-        width = [200, 150, 150]
+        width = [200, 100, 100]
         self.table_widget_sale_summary.set_table_heading_width(width)
 
     # 設定信號
@@ -118,6 +118,7 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
                 prescript.*,
                 cases.CaseKey, cases.PatientKey, cases.Name, cases.CaseDate,
                 cases.Doctor, cases.Cashier, cases.Register, cases.Massager,
+                cases.NursingAssistant,
                 cases.InsType, cases.TreatType, cases.DiscountFee
             FROM
                 prescript
@@ -167,17 +168,15 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         except Exception:
             discount_fee = 0
 
-        if self.seller != "全部":
-            seller = self.seller
-        else:
-            seller = string_utils.xstr(row["Doctor"])
+        seller = string_utils.xstr(row["Doctor"])
+        if seller in ["", None]:
+            seller = string_utils.xstr(row["Massager"])
+        if seller in ["", None]:
+            seller = string_utils.xstr(row["Cashier"])
+        if seller in ["", None]:
+            seller = string_utils.xstr(row["Register"])
 
-            if seller in ["", None]:
-                seller = string_utils.xstr(row["Massager"])
-            if seller in ["", None]:
-                seller = string_utils.xstr(row["Cashier"])
-            if seller in ["", None]:
-                seller = string_utils.xstr(row["Register"])
+        seller2 = string_utils.xstr(row["NursingAssistant"])
 
         quantity = number_utils.get_float(row["Dosage"])
         price = number_utils.get_float(row["Price"])
@@ -239,6 +238,7 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
             commission_rate,
             commission,
             seller,
+            seller2,
         ]
 
         for col_no in range(len(sale_row)):
@@ -418,6 +418,12 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
                 continue
 
             seller = seller.text()
+
+            seller2 = self.ui.tableWidget_doctor_sale.item(row_no, 13)
+            if seller2 is not None:
+                seller2 = seller2.text()
+                if seller2 != "":
+                    seller += "/" + seller2
 
             amount = self.ui.tableWidget_doctor_sale.item(row_no, 9)
             if amount is None:

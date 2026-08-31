@@ -235,18 +235,22 @@ rem --------------------------------------------------------------
 echo.
 echo Started at %TIME%
 echo Dropping %DB_NAME%...
-"%MARIADB_EXE%" %AUTH% -e "DROP DATABASE IF EXISTS \`%DB_NAME%\`"
+rem Backticks need NO escaping in cmd - a backslash here would be passed
+rem through to the client verbatim and rejected as Unknown command.
+"%MARIADB_EXE%" %AUTH% -e "DROP DATABASE IF EXISTS `%DB_NAME%`"
 if errorlevel 1 (
-    echo [FAIL] Could not drop the database. Something is still connected to it.
+    echo.
+    echo [FAIL] DROP DATABASE failed - see the client error above.
+    echo        Usual causes: another client is still connected to it,
+    echo        or %DB_USER% lacks the DROP privilege.
+    echo        Nothing was imported.
     goto :ABORT
 )
 
 echo Importing - this takes a few minutes, do not close this window...
-"%MARIADB_EXE%" %AUTH% ^
-  --default-character-set=binary ^
-  --max-allowed-packet=1G ^
-  --init-command="SET unique_checks=0, foreign_key_checks=0" ^
-  < "%SQL_FILE%"
+rem Keep the redirection on the same physical line as the command.
+rem cmd handles  <  badly when it lands on a caret-continued line.
+"%MARIADB_EXE%" %AUTH% --default-character-set=binary --max-allowed-packet=1G --init-command="SET unique_checks=0, foreign_key_checks=0" < "%SQL_FILE%"
 
 if errorlevel 1 (
     echo.
