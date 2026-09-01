@@ -34,3 +34,8 @@ history/
 PortableGit/
 venv/
 _old_files/
+python/
+python64/
+Lib/
+Scripts/
+share/
