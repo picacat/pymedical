@@ -28,23 +28,23 @@ def get_default_browser():
         return None
 
 
-def find_browser_exe(browser: str):
-    """
-    尋找指定瀏覽器的執行檔路徑（Windows 常見安裝路徑）。
-    browser: "edge" 或 "chrome"
-    """
-    candidates = {
-        "edge": [
-            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-        ],
-        "chrome": [
-            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-            os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
-        ],
-    }
-    return next((p for p in candidates.get(browser, []) if os.path.exists(p)), None)
+# def find_browser_exe(browser: str):
+#     """
+#     尋找指定瀏覽器的執行檔路徑（Windows 常見安裝路徑）。
+#     browser: "edge" 或 "chrome"
+#     """
+#     candidates = {
+#         "edge": [
+#             r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+#             r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+#         ],
+#         "chrome": [
+#             r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+#             r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+#             os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+#         ],
+#     }
+#     return next((p for p in candidates.get(browser, []) if os.path.exists(p)), None)
 
 
 def open_with_clean_cache(exe_path: str, address: str, profile_key: str):
