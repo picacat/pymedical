@@ -67,40 +67,76 @@ def open_with_clean_cache(exe_path: str, address: str, profile_key: str):
     )
 
 
+def find_browser_exe(kind: str) -> str | None:
+    exe_name = {"chrome": "chrome.exe", "edge": "msedge.exe"}.get(kind)
+    if not exe_name:
+        return None
+    sub = rf"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{exe_name}"
+    for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+        try:
+            with winreg.OpenKey(hive, sub) as key:
+                path, _ = winreg.QueryValueEx(key, "")
+                path = path.strip('"')
+                if os.path.isfile(path):
+                    return path
+        except OSError:
+            continue
+    return None
+
+
 def open_nhi_medcloud(use_virtual_card: bool = False):
     card_type = "vhc" if use_virtual_card else "icc"
+    card_name = "虛擬卡" if use_virtual_card else "實體卡"
     address = f"https://medcloud2.nhi.gov.tw/imu/imue1000?type={card_type}&_t={int(time.time())}"
 
     if sys.platform == "win32":
-        default_browser = get_default_browser() or ""
-
-        if "Edge" in default_browser:
-            edge_exe = find_browser_exe("edge")
-            if edge_exe:
-                open_with_clean_cache(edge_exe, address, "edge")
-                print(
-                    f"偵測到預設瀏覽器為 Edge，已強制清空快取並開啟 ({'虛擬卡' if use_virtual_card else '實體卡'})。"
-                )
+        for kind in ("chrome", "edge"):
+            exe = find_browser_exe(kind)
+            if exe:
+                open_with_clean_cache(exe, address, kind)
+                print(f"已用 {kind} 強制清空快取並開啟 ({card_name})。")
                 return
-            print(
-                "【警告】偵測到預設瀏覽器為 Edge，但找不到 msedge.exe，將改用系統預設方式開啟。"
-            )
+        print("【警告】找不到 Chrome 或 Edge，改用系統預設方式開啟。")
 
-        elif "Chrome" in default_browser:
-            chrome_exe = find_browser_exe("chrome")
-            if chrome_exe:
-                open_with_clean_cache(chrome_exe, address, "chrome")
-                print(
-                    f"偵測到預設瀏覽器為 Chrome，已強制清空快取並開啟 ({'虛擬卡' if use_virtual_card else '實體卡'})。"
-                )
-                return
-            print(
-                "【警告】偵測到預設瀏覽器為 Chrome，但找不到 chrome.exe，將改用系統預設方式開啟。"
-            )
-
-    # 非 Windows / 非 Edge / 非 Chrome / 找不到執行檔，一律退回系統預設瀏覽器開啟
     webbrowser.open(address, new=2)
-    print(f"已用系統預設瀏覽器開啟 ({'虛擬卡' if use_virtual_card else '實體卡'})。")
+    print(f"已用系統預設瀏覽器開啟 ({card_name})。")
+
+
+# def open_nhi_medcloud(use_virtual_card: bool = False):
+#     card_type = "vhc" if use_virtual_card else "icc"
+#     address = f"https://medcloud2.nhi.gov.tw/imu/imue1000?type={card_type}&_t={int(time.time())}"
+
+#     if sys.platform == "win32":
+#         default_browser = get_default_browser() or ""
+#         print(repr(get_default_browser()))
+
+#         if "Edge" in default_browser:
+#             edge_exe = find_browser_exe("edge")
+#             if edge_exe:
+#                 open_with_clean_cache(edge_exe, address, "edge")
+#                 print(
+#                     f"偵測到預設瀏覽器為 Edge，已強制清空快取並開啟 ({'虛擬卡' if use_virtual_card else '實體卡'})。"
+#                 )
+#                 return
+#             print(
+#                 "【警告】偵測到預設瀏覽器為 Edge，但找不到 msedge.exe，將改用系統預設方式開啟。"
+#             )
+
+#         elif "Chrome" in default_browser:
+#             chrome_exe = find_browser_exe("chrome")
+#             if chrome_exe:
+#                 open_with_clean_cache(chrome_exe, address, "chrome")
+#                 print(
+#                     f"偵測到預設瀏覽器為 Chrome，已強制清空快取並開啟 ({'虛擬卡' if use_virtual_card else '實體卡'})。"
+#                 )
+#                 return
+#             print(
+#                 "【警告】偵測到預設瀏覽器為 Chrome，但找不到 chrome.exe，將改用系統預設方式開啟。"
+#             )
+
+#     # 非 Windows / 非 Edge / 非 Chrome / 找不到執行檔，一律退回系統預設瀏覽器開啟
+#     webbrowser.open(address, new=2)
+#     print(f"已用系統預設瀏覽器開啟 ({'虛擬卡' if use_virtual_card else '實體卡'})。")
 
 
 def open_address(address):

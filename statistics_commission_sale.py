@@ -313,7 +313,8 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
 
     def _check_discount_row(self, row_no, case_key):
         sql = f"""
-            SELECT CaseKey, PatientKey, CaseDate, Name, Doctor, DiscountFee FROM cases
+            SELECT CaseKey, PatientKey, CaseDate, Name,
+                Doctor, DiscountFee, Massager, Register, Cashier, NursingAssistant FROM cases
             WHERE
                 CaseKey = {case_key}
         """
@@ -338,6 +339,10 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
             "Amount": -discount_fee,
             "MedicineKey": None,
             "Doctor": row["Doctor"],
+            "Massager": row["Massager"],
+            "Register": row["Register"],
+            "Cashier": row["Cashier"],
+            "NursingAssistant": row["NursingAssistant"],
         }
         self._set_table_data(row_no, discount_row)
 
