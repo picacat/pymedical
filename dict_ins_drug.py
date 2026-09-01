@@ -426,7 +426,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
             self.table_widget_medicine.field_value(self.col_no["medicine_name"])
         )
         ins_code = self.table_widget_medicine.field_value(self.col_no["ins_code"])
-        self._read_drug(medicine_name, medicine_type)
+        self._read_drug(medicine_name, medicine_type, ins_code=ins_code)
 
         for row_no in range(self.ui.tableWidget_drug.rowCount()):
             current_ins_code = self.ui.tableWidget_drug.item(row_no, 1).text()
@@ -436,7 +436,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
                     if item is not None:
                         item.setForeground(QtGui.QColor("blue"))
 
-    def _read_drug(self, drug_name, medicine_type=None):
+    def _read_drug(self, drug_name, medicine_type=None, ins_code=None):
         if drug_name == "":
             self.ui.tableWidget_drug.setRowCount(0)
             return
@@ -451,6 +451,9 @@ class DictInsDrug(QtWidgets.QMainWindow):
             medicine_type_condition = ""
         else:
             medicine_type_condition = f' (MedicineType = "{medicine_type}") AND'
+
+        if ins_code is None:
+            ins_code = drug_name
 
         # 定義廠商排序的權重
         supplier_order_logic = """
@@ -470,7 +473,7 @@ class DictInsDrug(QtWidgets.QMainWindow):
             SELECT * FROM drug
             WHERE
                 {medicine_type_condition}
-                (DrugName LIKE "%{drug_name}%" OR InsCode = "{drug_name}")
+                (DrugName LIKE "%{drug_name}%" OR InsCode = "{ins_code}")
                 {supplier_script}
             ORDER BY
                 ValidDate DESC,
