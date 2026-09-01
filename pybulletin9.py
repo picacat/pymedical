@@ -154,7 +154,7 @@ class ClockOverlay(QtWidgets.QWidget):
         h = Layout.CLOCK_Y2 - Layout.CLOCK_Y1
         self.setGeometry(x, y, w, h)
 
-        self.label = make_label(self, (0, 0, w, h), 88)
+        self.label = make_label(self, (0, 0, w, h), 96)
 
         self.show()
         self.raise_()
@@ -245,7 +245,7 @@ class WaitingRoom(QtCore.QObject):
                 w - 32,
                 Layout.ROOM_HEADER_Y - Layout.ROOM_TOP - 30,
             ),
-            46,
+            72,
             min_font_size=30,
         )
 
@@ -254,7 +254,7 @@ class WaitingRoom(QtCore.QObject):
             self.parent, (x + 20, 180, 110, 130), 38
         )
         self.label_regist_no = make_label(
-            self.parent, (x + 140, 176, w - 160, 140), 104
+            self.parent, (x + 140, 176, w - 160, 140), 128
         )
 
         # 候診名單（診號右對齊、姓名左對齊）
@@ -263,7 +263,7 @@ class WaitingRoom(QtCore.QObject):
             seq = make_label(
                 self.parent,
                 (x + inset, row_top + 8, 120, Layout.ROOM_ROW_H - 18),
-                50,
+                72,
                 QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter,
             )
             name = make_label(
@@ -274,7 +274,7 @@ class WaitingRoom(QtCore.QObject):
                     w - inset * 2 - 140,
                     Layout.ROOM_ROW_H - 18,
                 ),
-                50,
+                72,
                 QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter,
             )
             self._seq_labels.append(seq)
@@ -458,7 +458,7 @@ class PharmacyBar(QtCore.QObject):
                 Layout.PHARM_TITLE_X2 - Layout.PHARM_X1,
                 h,
             ),
-            52,
+            64,
         )
         set_label_text(self.label_title, "可領藥號")
 
@@ -468,7 +468,7 @@ class PharmacyBar(QtCore.QObject):
             label = make_label(
                 self.parent,
                 (x, Layout.PHARM_Y1, Layout.PHARM_CELL_W, h),
-                88,
+                128,
                 min_font_size=46,
             )
             self._labels.append(label)
