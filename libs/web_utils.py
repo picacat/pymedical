@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 import webbrowser
+from typing import Optional
 
 if sys.platform == "win32":
     import winreg
@@ -48,7 +49,7 @@ def open_with_clean_cache(exe_path: str, address: str, profile_key: str):
     )
 
 
-def find_browser_exe(kind: str) -> str | None:
+def find_browser_exe(kind: str) -> Optional[str]:
     exe_name = {"chrome": "chrome.exe", "edge": "msedge.exe"}.get(kind)
     if not exe_name:
         return None
