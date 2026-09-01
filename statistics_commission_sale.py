@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
@@ -15,11 +13,11 @@ from libs import (
 )
 
 
-# 自費銷售抽成統計 2025.03.01
+# 自費銷售抽成統計 2026.08.29
 class StatisticsCommissionSale(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsCommissionSale, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -61,7 +59,7 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         width = [100, 130, 70, 85, 230, 50, 50, 50, 60, 70, 70, 70, 85]
         self.table_widget_doctor_sale.set_table_heading_width(width)
 
-        width = [200, 150, 150]
+        width = [200, 100, 100]
         self.table_widget_sale_summary.set_table_heading_width(width)
 
     # 設定信號
@@ -104,7 +102,13 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         if self.seller != "全部":
             doctor_condition = f'''
                 AND (cases.Doctor = "{self.seller}" OR
-                    (cases.Doctor IS NULL AND cases.Register = "{self.seller}"))
+                    (cases.Doctor IS NULL AND
+                     cases.Massager IS NULL AND
+                     cases.Cashier = "{self.seller}") OR
+                    (cases.Doctor IS NULL AND
+                     cases.Massager IS NULL AND
+                     cases.NursingAssistant = "{self.seller}") OR
+                    (cases.Massager = "{self.seller}"))
             '''
 
         regist_condition = case_utils.get_regist_type_exclude_sql(self.option)
@@ -112,7 +116,9 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         sql = f'''
             SELECT
                 prescript.*,
-                cases.CaseKey, cases.PatientKey, cases.Name, cases.CaseDate, cases.Doctor, cases.Register,
+                cases.CaseKey, cases.PatientKey, cases.Name, cases.CaseDate,
+                cases.Doctor, cases.Cashier, cases.Register, cases.Massager,
+                cases.NursingAssistant,
                 cases.InsType, cases.TreatType, cases.DiscountFee
             FROM
                 prescript
@@ -157,19 +163,20 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
         if pres_days == 0:
             pres_days = 1
 
-        doctor = string_utils.xstr(row["Doctor"])
-        seller = doctor
-
         try:
-            ins_type = string_utils.xstr(row["InsType"])
-            treat_type = string_utils.xstr(row["TreatType"])
             discount_fee = number_utils.get_integer(row["DiscountFee"])
-
-            if ins_type == "自費" and treat_type == "自購" and doctor == "":
-                seller = string_utils.xstr(row["Register"])
         except Exception:
             discount_fee = 0
-            seller = doctor
+
+        seller = string_utils.xstr(row["Doctor"])
+        if seller in ["", None]:
+            seller = string_utils.xstr(row["Massager"])
+        if seller in ["", None]:
+            seller = string_utils.xstr(row["Cashier"])
+        if seller in ["", None]:
+            seller = string_utils.xstr(row["Register"])
+
+        seller2 = string_utils.xstr(row["NursingAssistant"])
 
         quantity = number_utils.get_float(row["Dosage"])
         price = number_utils.get_float(row["Price"])
@@ -231,6 +238,7 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
             commission_rate,
             commission,
             seller,
+            seller2,
         ]
 
         for col_no in range(len(sale_row)):
@@ -410,6 +418,12 @@ class StatisticsCommissionSale(QtWidgets.QMainWindow):
                 continue
 
             seller = seller.text()
+
+            seller2 = self.ui.tableWidget_doctor_sale.item(row_no, 13)
+            if seller2 is not None:
+                seller2 = seller2.text()
+                if seller2 != "":
+                    seller += "/" + seller2
 
             amount = self.ui.tableWidget_doctor_sale.item(row_no, 9)
             if amount is None:

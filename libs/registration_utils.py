@@ -264,6 +264,51 @@ def get_odd_seqauence(
     return reg_no
 
 
+# def get_reg_no_on_site(database, system_settings, doctor, period):
+#     start_date = datetime.datetime.now().strftime("%Y-%m-%d 00:00:00")
+#     end_date = datetime.datetime.now().strftime("%Y-%m-%d 23:59:59")
+#     start_no = number_utils.get_integer(system_settings.field(f"{period}起始號"))
+#     site_no_mode = system_settings.field("現場掛號給號模式")
+
+#     sql = f'''
+#         SELECT RegistNo FROM cases
+#         WHERE
+#             CaseDate BETWEEN "{start_date}" AND "{end_date}"
+#     '''
+
+#     if system_settings.field("分班") == "Y":
+#         sql += f' AND Period = "{period}"'
+
+#     if system_settings.field("分診") == "Y":
+#         sql += f' AND Doctor = "{doctor}"'
+
+#     sql += "ORDER BY RegistNo DESC LIMIT 1"
+
+#     rows = database.select_record(sql)
+#     if len(rows) <= 0:
+#         regist_no = start_no
+#         # if regist_no % 2 == 1:
+#         #     regist_no += 1
+#     else:
+#         last_reg_no = rows[0]["RegistNo"]
+#         if site_no_mode == "連續號":
+#             regist_no = last_reg_no + 1
+#         elif site_no_mode == "單號":
+#             if last_reg_no % 2 == 1:
+#                 regist_no = last_reg_no + 2
+#             else:
+#                 regist_no = last_reg_no + 1
+#         elif site_no_mode == "雙號":
+#             if last_reg_no % 2 == 1:
+#                 regist_no = last_reg_no + 1
+#             else:
+#                 regist_no = last_reg_no + 2
+#         else:
+#             regist_no += 1
+
+#     return regist_no
+
+
 def get_reg_no_on_site(database, system_settings, doctor, period):
     start_date = datetime.datetime.now().strftime("%Y-%m-%d 00:00:00")
     end_date = datetime.datetime.now().strftime("%Y-%m-%d 23:59:59")
@@ -275,36 +320,38 @@ def get_reg_no_on_site(database, system_settings, doctor, period):
         WHERE
             CaseDate BETWEEN "{start_date}" AND "{end_date}"
     '''
-
     if system_settings.field("分班") == "Y":
         sql += f' AND Period = "{period}"'
-
     if system_settings.field("分診") == "Y":
         sql += f' AND Doctor = "{doctor}"'
-
-    sql += "ORDER BY RegistNo DESC LIMIT 1"
+    sql += " ORDER BY RegistNo DESC LIMIT 1"
 
     rows = database.select_record(sql)
+
     if len(rows) <= 0:
+        # 今日尚無掛號紀錄，以起始號為第一號，並依模式校正奇偶
         regist_no = start_no
-        # if regist_no % 2 == 1:
-        #     regist_no += 1
-    else:
-        last_reg_no = rows[0]["RegistNo"]
-        if site_no_mode == "連續號":
-            regist_no = last_reg_no + 1
-        elif site_no_mode == "單號":
-            if last_reg_no % 2 == 1:
-                regist_no = last_reg_no + 2
-            else:
-                regist_no = last_reg_no + 1
-        elif site_no_mode == "雙號":
-            if last_reg_no % 2 == 1:
-                regist_no = last_reg_no + 1
-            else:
-                regist_no = last_reg_no + 2
-        else:
+        if (
+            site_no_mode == "單號"
+            and regist_no % 2 == 0
+            or site_no_mode == "雙號"
+            and regist_no % 2 == 1
+        ):
             regist_no += 1
+    else:
+        last_reg_no = number_utils.get_integer(rows[0]["RegistNo"])
+        if site_no_mode == "單號":
+            # 取下一個奇數
+            regist_no = last_reg_no + 2 if last_reg_no % 2 == 1 else last_reg_no + 1
+        elif site_no_mode == "雙號":
+            # 取下一個偶數
+            regist_no = last_reg_no + 1 if last_reg_no % 2 == 1 else last_reg_no + 2
+        else:
+            # 「連續號」或未設定 / 未知模式，一律視為連續號
+            regist_no = last_reg_no + 1
+
+        # 保險：若當日最大號小於起始號（例如中途調整起始號），仍不得低於起始號
+        regist_no = max(regist_no, start_no)
 
     return regist_no
 

@@ -72,6 +72,27 @@
      白花時間，而步驟 4 只處理 BASE TABLE，永遠不會真的去 ALTER 它。
   O. 開始前比對 00_manifest.txt：檔案缺漏、大小不符、或備份當下就已
      標記 FAIL，都在確認對話框中明確列出。
+
+本版（有損字元的門檻式處理）再新增：
+  P. 「有損資料處理」三選一，預設「自動」：
+       自動 — 有損筆數 <= LOSSY_AUTO_LIMIT（預設 10 筆）就直接取代
+              並繼續轉換；超過門檻視為系統性問題，停止並要求人工判斷。
+       停止 — 一律停止（本版之前的行為）。
+       強制 — 不論多少筆一律取代。
+     門檻的意義：少數幾筆是「個案」（造字、截斷的半個字），人工補得
+     完；成千上萬筆代表編碼判斷本身就錯了（例如把雙重編碼的資料當成
+     big5 匯入），這時取代成問號等於把錯誤沖進資料裡，絕不能自動做。
+  Q. 取代分兩階段，因為目標字元在原編碼裡不一定存在：
+       階段一（ALTER 之前）：以 SQL 的來回 CONVERT 把無法對應的字換成
+              ASCII 問號。問號在任何字元集裡都合法，這步一定成功。
+              整批 UPDATE 失敗時（來源位元組結構本身壞掉，CONVERT 直接
+              報錯），退回用主鍵逐列修正，值在 Python 端解碼產生。
+       階段二（ALTER 之後）：欄位已是 utf8mb4，才把問號換成 LOSSY_MARKER
+              （預設 '〇'）。用問號當最終值太危險——它跟真正的問號無法
+              區分，日後沒人看得出那裡原本有字。
+  R. 取代前一律把原始位元組（HEX）、主鍵、轉換結果寫成
+     charset_lossy_*.tsv 存證。資料庫裡的原始位元組被覆蓋後就再也回不
+     來了，這個檔案是唯一的還原依據，務必隨備份一起保存。
 """
 
 import configparser
@@ -151,6 +172,85 @@ TARGET_COLLATION = "utf8mb4_general_ci"
 
 # 一次 SELECT 內最多併入幾個欄位的檢查運算式（避免單句過於龐大）
 CHECK_COLS_PER_QUERY = 20
+
+# ---------------------------------------------------------------------------
+# 有損字元的處理策略
+# ---------------------------------------------------------------------------
+
+# 「自動」模式下，全庫有損筆數在這個數字以內就直接取代並繼續轉換。
+#
+# 這個數字不是效能考量，是【性質判斷】的分界線：
+#   個位數  → 個案。多半是 big5 造字區的罕用姓名字，或被 VARCHAR 截斷
+#             留下的半個字。人工補得完，取代成標記字是合理的止血。
+#   數百以上 → 系統性問題。幾乎一定是編碼判斷本身錯了（把雙重編碼、
+#             或已經是 utf8 的資料當成 big5 匯入）。這時候取代成標記字
+#             等於把錯誤永久沖進資料庫，而且會蓋掉「編碼選錯了」這個
+#             唯一的線索。絕對不能自動做。
+# 落在中間（十幾到上百）的情況少見，一律當成後者處理——停下來讓人看一眼
+# 的成本，遠低於事後才發現一批病患姓名壞掉。
+LOSSY_AUTO_LIMIT = 10
+
+# 每個欄位最多存證幾筆原始資料（強制模式下有損筆數可能很多）
+LOSSY_SAMPLE_LIMIT = 1000
+
+# 階段一的中繼字元。ASCII 問號在任何字元集裡都是合法的單一位元組，
+# 這是它唯一被選中的理由——不可拿它當最終值。
+LOSSY_PLACEHOLDER = "?"
+
+# 階段二的最終標記字元（欄位已轉成 utf8mb4 之後才寫入）。
+#
+# 用 '〇' 而不是問號：問號跟使用者自己打的問號無法區分，日後沒有任何人
+# 看得出那個位置原本有字。'〇' 在病歷欄位裡幾乎不會自然出現，一眼可辨，
+# 也方便日後 WHERE Name LIKE '%〇%' 撈出來補正。
+# 若不想要兩階段，把這個值改成 LOSSY_PLACEHOLDER 即可自動跳過階段二。
+LOSSY_MARKER = "〇"
+
+LOSSY_STOP = "停止（預設，交由人工處理）"
+LOSSY_AUTO = f"自動（{LOSSY_AUTO_LIMIT} 筆以內直接取代）"
+LOSSY_FORCE = "強制取代（不論筆數）"
+LOSSY_CHOICES = [LOSSY_AUTO, LOSSY_STOP, LOSSY_FORCE]
+
+# 逐列修正時，把 HEX 解回文字用的 Python 編解碼器（讀取用，寬鬆）。
+# big5 一律用 cp950：它是 Big5 的 Windows 超集，涵蓋範圍較大，
+# 用純 big5 解碼反而會把一些正常的字判成錯誤。
+CHARSET_CODECS = {
+    "big5": "cp950",
+    "big5hkscs": "big5hkscs",
+    "cp950": "cp950",
+    "gbk": "gbk",
+    "gb2312": "gbk",
+    "latin1": "latin-1",
+    "ascii": "ascii",
+    "utf8": "utf-8",
+    "utf8mb3": "utf-8",
+    "utf8mb4": "utf-8",
+}
+
+# 寫回時用的編解碼器（嚴格）。
+#
+# 【這張表存在的理由，別把它跟上面那張合併】
+# 讀取要寬鬆、寫回要嚴格，兩者不能是同一個。cp950 認得一些 MariaDB 的
+# big5 字元集沒有的字——最經典的是歐元符號 €（cp950 的 0xA3E1）。
+# 用 cp950 解出 € 再原封不動送回伺服器，而欄位在階段一時還是 big5，
+# 伺服器就直接拋 1366 Incorrect string value，整個還原被中斷。
+# 所以寫回前一定要再用嚴格編解碼器來回一次，把欄位裝不下的字元
+# 換成問號。
+STRICT_CODECS = {
+    "big5": "big5",
+    "cp950": "big5",
+    "big5hkscs": "big5hkscs",
+    "gbk": "gbk",
+    "gb2312": "gb2312",
+    "latin1": "latin-1",
+    "ascii": "ascii",
+    "utf8": "utf-8",
+    "utf8mb3": "utf-8",
+    "utf8mb4": "utf-8",
+}
+
+# 部分舊版伺服器不認得 utf8mb3 這個名稱（10.6 以後才有），
+# 在 SQL 的 CONVERT ... USING 裡改用 utf8。
+SQL_CHARSET_ALIASES = {"utf8mb3": "utf8"}
 
 # 匯入每個 .sql 檔時前後加掛的語句
 IMPORT_PROLOGUE = (
@@ -411,6 +511,88 @@ def scan_dump_engines(folder, sql_files, head_bytes=64 * 1024):
     return dict(engine_counts), myisam_files
 
 
+def to_ascii_safe(text):
+    """把所有非 ASCII 字元換成中繼問號。最後的保險，任何字元集都存得下。"""
+    return "".join(ch if ord(ch) < 128 else LOSSY_PLACEHOLDER for ch in text or "")
+
+
+def sanitize_hex(hex_value, charset):
+    """
+    把原始位元組（HEX 字串）在 Python 端解碼成【欄位存得下】的文字。
+
+    只在伺服器端的整批 CONVERT 失敗時才用得到——那代表位元組結構本身
+    就壞掉（例如被 VARCHAR 截斷、只剩半個 Big5 字），MariaDB 的 CONVERT
+    會直接報錯而不是給你問號。Python 的 errors='replace' 沒有這個問題，
+    壞掉的位元組變成 U+FFFD，再統一換成中繼問號。
+
+    兩道轉換缺一不可：
+      讀取（寬鬆，cp950）— 盡量把還救得回來的字解出來。
+      寫回（嚴格，big5）— 確保每個字元在【欄位目前的字元集】裡都存在。
+                          少了這道，cp950 才有的字（€ 等）會原封不動送給
+                          伺服器，寫進 big5 欄位時直接噴 1366。
+    """
+    key = (charset or "").lower()
+    read_codec = CHARSET_CODECS.get(key, "utf-8")
+    write_codec = STRICT_CODECS.get(key, read_codec)
+
+    try:
+        raw = bytes.fromhex(hex_value or "")
+    except (ValueError, TypeError):
+        return LOSSY_PLACEHOLDER
+
+    try:
+        text = raw.decode(read_codec, errors="replace")
+    except LookupError:  # 認不得的編碼名稱
+        text = raw.decode("utf-8", errors="replace")
+    text = text.replace("\ufffd", LOSSY_PLACEHOLDER)
+
+    try:
+        text = text.encode(write_codec, errors="replace").decode(
+            write_codec, errors="replace"
+        )
+    except LookupError:
+        pass
+    return text.replace("\ufffd", LOSSY_PLACEHOLDER)
+
+
+def write_lossy_evidence(folder, rows):
+    """
+    把被取代前的原始位元組寫成 TSV 存證，回傳檔案路徑。
+
+    這個檔案是唯一的還原依據：資料庫裡的原始位元組一旦被覆蓋，
+    就再也回不來了。優先寫在備份目錄，不可寫時退回程式所在目錄。
+    """
+    if not rows:
+        return ""
+
+    name = f"charset_lossy_{time.strftime('%Y%m%d_%H%M%S')}.tsv"
+    header = "資料表\t欄位\t主鍵\t原字元集\t原始HEX\t轉換後\n"
+    body = "\n".join(
+        "\t".join(
+            [
+                item["table"],
+                item["column"],
+                item["pk_text"],
+                item["charset"],
+                item["hex"] or "",
+                (item["converted"] or "").replace("\t", " ").replace("\n", " "),
+            ]
+        )
+        for item in rows
+    )
+
+    for base in (folder, os.path.dirname(os.path.abspath(__file__))):
+        path = os.path.join(base, name)
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(header)
+                f.write(body + "\n")
+            return path
+        except OSError:
+            continue
+    return ""
+
+
 def run_import(cmd, env, full_path):
     """
     以管線方式送出 prologue + 檔案內容 + COMMIT。
@@ -472,6 +654,7 @@ class RestoreWorker(QObject):
     def __init__(self, params):
         super().__init__()
         self.p = params
+        self._pk_cache = {}
 
     def log(self, msg):
         self.sig_log.emit(msg)
@@ -517,6 +700,143 @@ class RestoreWorker(QObject):
                 f"SET GLOBAL sync_binlog={saved['sync']};"
             )
 
+    # -- 有損字元的強制取代 ---------------------------------------------
+    def _pk_columns(self, cur, db, table):
+        """回傳資料表的主鍵欄位（依序），沒有主鍵則回傳空清單。"""
+        key = (db, table)
+        if key in self._pk_cache:
+            return self._pk_cache[key]
+
+        cur.execute(
+            """SELECT COLUMN_NAME FROM information_schema.STATISTICS
+               WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
+                 AND INDEX_NAME = 'PRIMARY'
+               ORDER BY SEQ_IN_INDEX""",
+            (db, table),
+        )
+        cols = [r[0] for r in cur.fetchall()]
+        self._pk_cache[key] = cols
+        return cols
+
+    def _force_lossy_convert(self, cur, db, table, col, cs, condition, evidence):
+        """
+        階段一：把無法無損轉換的資料原地換成中繼問號，換之前先存證。
+
+        用來回 CONVERT 一次完成：內層轉 utf8mb4 時無法對應的字變成問號，
+        外層轉回原字元集就是合法的 0x3F，同一欄裡其他正常的字原封不動。
+
+        回傳 (實際更動筆數, 說明字串)。
+        """
+        pk_cols = self._pk_columns(cur, db, table)
+        pk_select = "".join(f"`{c}`, " for c in pk_cols)
+        start_index = len(evidence)
+
+        # 先存證。原始位元組被覆蓋後就再也回不來了，這步不能省。
+        cur.execute(
+            f"SELECT {pk_select}HEX(`{col}`), CONVERT(`{col}` USING utf8mb4) "
+            f"FROM `{db}`.`{table}` WHERE {condition} "
+            f"LIMIT {LOSSY_SAMPLE_LIMIT}"
+        )
+        for row in cur.fetchall():
+            pk_values = list(row[: len(pk_cols)])
+            evidence.append(
+                {
+                    "table": table,
+                    "column": col,
+                    "charset": cs,
+                    "pk_cols": pk_cols,
+                    "pk_values": pk_values,
+                    "pk_text": (
+                        ", ".join(f"{c}={v}" for c, v in zip(pk_cols, pk_values))
+                        or "（此表無 PRIMARY KEY）"
+                    ),
+                    "hex": row[len(pk_cols)],
+                    "converted": row[len(pk_cols) + 1],
+                }
+            )
+        sampled = evidence[start_index:]
+
+        sql_cs = SQL_CHARSET_ALIASES.get((cs or "").lower(), cs)
+        try:
+            cur.execute(
+                f"UPDATE `{db}`.`{table}` SET `{col}` = "
+                f"CONVERT(CONVERT(`{col}` USING utf8mb4) USING {sql_cs}) "
+                f"WHERE {condition}"
+            )
+            return cur.rowcount, ""
+        except Exception as e:
+            # 位元組結構本身壞掉時 CONVERT 會直接報錯，退回逐列修正
+            if not pk_cols:
+                raise RuntimeError(
+                    f"{table}.{col} 整批取代失敗，且該表沒有 PRIMARY KEY，"
+                    f"無法逐列修正：{e}"
+                ) from e
+            self.log(f"  ⚠ {table}.{col} 整批取代失敗（{e}），改用主鍵逐列修正 …")
+
+        # 逐列修正：單列失敗只記錄、不中斷。這整個功能的目的就是
+        # 「不要讓幾筆資料毀掉整鍋粥」，錯誤處理本身當然也要遵守。
+        where = " AND ".join(f"`{c}` <=> %s" for c in pk_cols)
+        update_sql = f"UPDATE `{db}`.`{table}` SET `{col}` = %s WHERE {where}"
+        changed = 0
+        unresolved = []
+        for item in sampled:
+            value = sanitize_hex(item["hex"], cs)
+            last_error = None
+            # 第二次嘗試把非 ASCII 全部拿掉：字會少得多，但保證存得進去。
+            for candidate in (value, to_ascii_safe(value)):
+                try:
+                    cur.execute(update_sql, [candidate, *item["pk_values"]])
+                    changed += cur.rowcount
+                    last_error = None
+                    break
+                except Exception as e:  # noqa: BLE001
+                    last_error = e
+            if last_error is not None:
+                unresolved.append(item["pk_text"])
+                self.log(f"    ✗ {item['pk_text']} 無法修正：{last_error}")
+
+        note = "逐列修正"
+        if unresolved:
+            note += f"，{len(unresolved)} 筆仍未修正"
+        if len(sampled) >= LOSSY_SAMPLE_LIMIT:
+            note += f"（僅處理前 {LOSSY_SAMPLE_LIMIT} 筆，可能仍有殘留）"
+        return changed, note
+
+    def _apply_lossy_marker(self, cur, db, evidence, skip_tables):
+        """
+        階段二：欄位已轉成 utf8mb4 之後，把中繼問號換成最終標記字元。
+
+        必須排在 ALTER 之後——欄位還是 big5 的時候寫不進 '〇'，
+        寫進去只會又變成一個問號。
+
+        回傳 (更動筆數, 略過的欄位清單)。
+        """
+        if LOSSY_MARKER == LOSSY_PLACEHOLDER:
+            return 0, []
+
+        updated = 0
+        skipped = []
+        for item in evidence:
+            table, col = item["table"], item["column"]
+            if table in skip_tables or not item["pk_cols"]:
+                label = f"{table}.{col}"
+                if label not in skipped:
+                    skipped.append(label)
+                continue
+            where = " AND ".join(f"`{c}` <=> %s" for c in item["pk_cols"])
+            try:
+                cur.execute(
+                    f"UPDATE `{db}`.`{table}` SET `{col}` = "
+                    f"REPLACE(`{col}`, %s, %s) WHERE {where}",
+                    [LOSSY_PLACEHOLDER, LOSSY_MARKER, *item["pk_values"]],
+                )
+                updated += cur.rowcount
+            except Exception as e:
+                label = f"{table}.{col}（{e}）"
+                if label not in skipped:
+                    skipped.append(label)
+        return updated, skipped
+
     # -- 主流程 -----------------------------------------------------------
     def run(self):
         conn = None
@@ -529,6 +849,7 @@ class RestoreWorker(QObject):
             engine_choice = p["engine"]
             follow_file_engine = engine_choice == ENGINE_FOLLOW_FILE
             to_utf8mb4 = p["to_utf8mb4"]
+            lossy_mode = p["lossy_mode"]
 
             t_start = time.time()
             t_import = t_check = t_alter = t_analyze = 0.0
@@ -582,6 +903,7 @@ class RestoreWorker(QObject):
                 f"目標資料庫：{db}；備份檔編碼：{file_charset}；"
                 f"引擎：{engine_choice}；"
                 f"轉換為 utf8mb4：{'是' if to_utf8mb4 else '否'}"
+                + (f"；有損資料：{lossy_mode}" if to_utf8mb4 else "")
             )
 
             conn = mysql.connector.connect(
@@ -701,6 +1023,9 @@ class RestoreWorker(QObject):
 
             # ---------- 3. 字元集無損檢查（可選） ----------
             normalized = []
+            forced = []
+            lossy_evidence = []
+            evidence_path = ""
             tables_need_rebuild = set()  # 有非 utf8mb4 文字欄位 → 需重建
             skipped_empty = 0
             if to_utf8mb4:
@@ -728,8 +1053,6 @@ class RestoreWorker(QObject):
                 for table, col, cs in text_cols:
                     cols_by_table[table].append((col, cs))
 
-                # tables_need_rebuild = set(cols_by_table.keys())
-
                 # 原本是 tables_need_rebuild = set(cols_by_table.keys())，
                 # 也就是「字元集不是 utf8mb4」的表才重建。那會漏掉
                 # 「字元集已是 utf8mb4、但 collation 不是目標值」的表——
@@ -751,6 +1074,8 @@ class RestoreWorker(QObject):
                 )
                 tables_need_rebuild = {r[0] for r in cur.fetchall()}
 
+                # lossy 的每一項：(表, 欄, 原字元集, 筆數, WHERE 條件)
+                # 條件要一起留著，強制取代時才知道要更新哪些列。
                 lossy = []
                 n_tables_to_check = len(cols_by_table)
                 for idx, table in enumerate(sorted(cols_by_table.keys()), start=1):
@@ -767,6 +1092,7 @@ class RestoreWorker(QObject):
                     for start in range(0, len(cols), CHECK_COLS_PER_QUERY):
                         chunk = cols[start : start + CHECK_COLS_PER_QUERY]
                         selects = []
+                        conditions = []
                         for col, cs in chunk:
                             # 第一級：嚴格位元組來回比對（NULL 視為相等）
                             strict_ne = (
@@ -789,6 +1115,7 @@ class RestoreWorker(QObject):
                             )
                             selects.append(f"SUM({strict_ne})")
                             selects.append(f"SUM(({strict_ne}) AND ({truly}))")
+                            conditions.append(f"({strict_ne}) AND ({truly})")
 
                         # 整張表只掃一次，所有欄位的計數一次算完
                         cur.execute(
@@ -803,7 +1130,7 @@ class RestoreWorker(QObject):
                                 continue
                             if truly_lossy:
                                 lossy.append(
-                                    f"{table}.{col}（{truly_lossy} 筆，原字元集 {cs}）"
+                                    (table, col, cs, truly_lossy, conditions[j])
                                 )
                                 self.log(
                                     f"  ✗ {table}.{col}：{truly_lossy} 筆無法無損轉換"
@@ -824,22 +1151,80 @@ class RestoreWorker(QObject):
 
                 t_check = time.time() - t0_phase
 
+                # ----- 有損資料的處置 -----
                 if lossy:
-                    raise RuntimeError(
-                        "以下欄位含有無法無損轉換為 utf8mb4 的資料"
-                        "（轉換後字元會遺失或變成 '?'，常見原因："
-                        "big5 造字區的罕用字），已停止字元集轉換：\n  "
-                        + "\n  ".join(lossy)
-                        + f"\n資料已完整還原為原編碼（{file_charset}），"
-                        "可直接使用。請先確認並處理上述資料，"
-                        "或取消勾選轉換選項後重新執行。"
+                    total_lossy = sum(n for _t, _c, _cs, n, _w in lossy)
+                    detail = "\n  ".join(
+                        f"{t}.{c}（{n} 筆，原字元集 {cs}）" for t, c, cs, n, _w in lossy
                     )
+
+                    if lossy_mode == LOSSY_FORCE:
+                        do_force = True
+                    elif lossy_mode == LOSSY_STOP:
+                        do_force = False
+                    else:  # 自動：只有少量個案才自行處理
+                        do_force = total_lossy <= LOSSY_AUTO_LIMIT
+
+                    if not do_force:
+                        over_limit = (
+                            lossy_mode != LOSSY_STOP and total_lossy > LOSSY_AUTO_LIMIT
+                        )
+                        raise RuntimeError(
+                            "以下欄位含有無法無損轉換為 utf8mb4 的資料"
+                            f"（共 {total_lossy} 筆；轉換後字元會遺失或變成 '?'，"
+                            "常見原因：big5 造字區的罕用字），"
+                            "已停止字元集轉換：\n  "
+                            + detail
+                            + (
+                                f"\n筆數超過自動處理上限（{LOSSY_AUTO_LIMIT} 筆）。"
+                                "這麼多筆通常代表「備份檔編碼」選錯了"
+                                "（例如把已是 utf8 或雙重編碼的資料當成 big5 匯入），"
+                                "而不是真的有這麼多罕用字——"
+                                "請先確認編碼設定，不要直接改用強制取代。"
+                                if over_limit
+                                else ""
+                            )
+                            + f"\n資料已完整還原為原編碼（{file_charset}），"
+                            "可直接使用。請先確認並處理上述資料，"
+                            "或取消勾選轉換選項後重新執行。"
+                        )
+
+                    self.log(
+                        f"\n⚠ 共 {total_lossy} 筆無法無損轉換"
+                        + (
+                            f"（未超過 {LOSSY_AUTO_LIMIT} 筆，依「自動」模式處理）"
+                            if lossy_mode == LOSSY_AUTO
+                            else "（依「強制取代」模式處理）"
+                        )
+                        + f"，將以 '{LOSSY_MARKER}' 取代，原始位元組先存證。"
+                    )
+                    for table, col, cs, _n, condition in lossy:
+                        changed, note = self._force_lossy_convert(
+                            cur, db, table, col, cs, condition, lossy_evidence
+                        )
+                        forced.append(f"{table}.{col}（{changed} 筆）")
+                        self.log(
+                            f"  → {table}.{col}：{changed} 筆已取代"
+                            + (f"（{note}）" if note else "")
+                        )
+
+                    evidence_path = write_lossy_evidence(
+                        p["sql_folder"], lossy_evidence
+                    )
+                    if evidence_path:
+                        self.log(f"  原始資料存證：{evidence_path}")
+                    else:
+                        self.log(
+                            "  ⚠ 存證檔寫入失敗！原始位元組已無其他備份，"
+                            "請立即從備份檔重新確認這些資料。"
+                        )
 
                 if n_tables_to_check:
                     self.log(
-                        f"檢查通過：{len(text_cols)} 個文字欄位"
+                        f"檢查完成：{len(text_cols)} 個文字欄位"
                         f"（分佈於 {n_tables_to_check} 張表，"
-                        f"其中 {skipped_empty} 張為空表已略過）皆可無損轉換"
+                        f"其中 {skipped_empty} 張為空表已略過）"
+                        + ("已處理有損資料" if forced else "皆可無損轉換")
                         + (
                             f"；{len(normalized)} 個欄位含同義異碼，將正規化"
                             if normalized
@@ -875,7 +1260,6 @@ class RestoreWorker(QObject):
                             f"COLLATE {TARGET_COLLATION}"
                         )
                         notes.append("字元集")
-                    # elif not (tbl_coll or "").startswith("utf8mb4"):
                     # 原本判斷 startswith("utf8mb4")——但 utf8mb4_uca1400_ai_ci
                     # 也是 utf8mb4 開頭，會被判定成「已經正確」而完全不處理。
                     elif (tbl_coll or "") != TARGET_COLLATION:
@@ -924,6 +1308,24 @@ class RestoreWorker(QObject):
                         )
                     except Exception as e:
                         self.log(f"  ⚠ 資料庫預設字元集設定失敗：{e}")
+
+            # 階段二：欄位已是 utf8mb4，把中繼問號換成最終標記字元。
+            # ALTER 失敗的表要跳過——它的欄位還是舊字元集，寫不進標記字。
+            marker_skipped = []
+            if lossy_evidence:
+                failed_tables = {t for t, _n, _e in alter_failed}
+                n_marked, marker_skipped = self._apply_lossy_marker(
+                    cur, db, lossy_evidence, failed_tables
+                )
+                if n_marked:
+                    self.log(
+                        f"  · 已將 {n_marked} 筆的取代字元標記為 '{LOSSY_MARKER}'。"
+                    )
+                if marker_skipped:
+                    self.log(
+                        f"  ⚠ {len(marker_skipped)} 個欄位無法標記"
+                        f"（維持 '{LOSSY_PLACEHOLDER}'）：" + "、".join(marker_skipped)
+                    )
             t_alter = time.time() - t0_phase
 
             # ---------- 5. 更新統計資訊 + 結構體檢 ----------
@@ -1029,6 +1431,32 @@ class RestoreWorker(QObject):
 
             ok = True
 
+            # 有損取代放在最前面。這是整份摘要裡唯一「資料被永久改掉」的
+            # 事情，不能埋在耗時統計後面。
+            if forced:
+                lines.insert(
+                    0,
+                    f"⚠ {len(forced)} 個欄位含無法轉換的字元，已取代為"
+                    f" '{LOSSY_MARKER}'："
+                    + "、".join(forced)
+                    + (
+                        f"\n　原始位元組存證：{evidence_path}"
+                        if evidence_path
+                        else "\n　⚠ 存證檔寫入失敗，請立即從備份檔重新確認這些資料。"
+                    )
+                    + f"\n　這些字在資料庫內已無法復原。可用"
+                    f" LIKE '%{LOSSY_MARKER}%' 撈出來人工補正；"
+                    "若是病患姓名，請優先處理（會影響健保申報與 IC 卡對照）。",
+                )
+                if marker_skipped:
+                    lines.insert(
+                        1,
+                        f"　（其中 {len(marker_skipped)} 個欄位無法標記，"
+                        f"仍為 '{LOSSY_PLACEHOLDER}'："
+                        + "、".join(marker_skipped)
+                        + "）",
+                    )
+
             # 還原結果仍含 MyISAM：多半來自轉換前產生的舊備份檔。
             # 這是靜默的退步，一定要讓使用者看到。
             if n_myisam:
@@ -1102,7 +1530,7 @@ class SqlRestoreWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("SQL 備份還原工具")
-        self.resize(620, 620)
+        self.resize(620, 660)
         self._thread = None
         self._worker = None
         self._setup_ui()
@@ -1135,7 +1563,6 @@ class SqlRestoreWindow(QWidget):
         cs_label.setFixedWidth(90)
         self.charset_combo = QComboBox()
         self.charset_combo.addItems(CHARSET_CHOICES)
-        # self.charset_combo.setCurrentText("自動偵測")
         self.charset_combo.setCurrentText("utf8mb4")
         self.charset_combo.setToolTip(
             "須與備份檔匯出時的編碼一致。\n"
@@ -1165,6 +1592,26 @@ class SqlRestoreWindow(QWidget):
         )
         self.utf8mb4_checkbox.setChecked(True)
         layout.addWidget(self.utf8mb4_checkbox)
+
+        # 有損資料的處理策略
+        lossy_row = QHBoxLayout()
+        lossy_label = QLabel("有損資料:")
+        lossy_label.setFixedWidth(90)
+        self.lossy_combo = QComboBox()
+        self.lossy_combo.addItems(LOSSY_CHOICES)
+        self.lossy_combo.setCurrentText(LOSSY_AUTO)
+        self.lossy_combo.setToolTip(
+            f"遇到無法無損轉換為 utf8mb4 的資料時怎麼辦。\n\n"
+            f"自動：{LOSSY_AUTO_LIMIT} 筆以內視為個案（造字、截斷的半個字），\n"
+            f"　　　直接取代為 '{LOSSY_MARKER}' 並繼續；超過則停止。\n"
+            f"停止：一律停止，交由人工判斷。\n"
+            f"強制：不論多少筆一律取代——請先確認「備份檔編碼」沒選錯。\n\n"
+            f"取代前會把原始位元組寫成 charset_lossy_*.tsv 存證，\n"
+            f"但資料庫裡的原始資料無法復原。"
+        )
+        lossy_row.addWidget(lossy_label)
+        lossy_row.addWidget(self.lossy_combo)
+        layout.addLayout(lossy_row)
 
         self.durability_checkbox = QCheckBox(
             "還原期間暫時放寬 InnoDB 持久性設定以加速（需 SUPER 權限，結束後自動還原）"
@@ -1356,6 +1803,23 @@ class SqlRestoreWindow(QWidget):
                 "不建議用於正式資料。"
             )
 
+        to_utf8mb4 = self.utf8mb4_checkbox.isChecked()
+        lossy_mode = self.lossy_combo.currentText()
+
+        if to_utf8mb4 and lossy_mode == LOSSY_FORCE:
+            warn += (
+                f"\n\n⚠ 有損資料設為「強制取代」。無法轉換的字會全部變成 "
+                f"'{LOSSY_MARKER}'，不論多少筆，資料庫內無法復原。\n"
+                f"若筆數異常地多，通常是「備份檔編碼」選錯了——"
+                f"請先確認編碼，不要用強制取代蓋過去。"
+            )
+        elif to_utf8mb4 and lossy_mode == LOSSY_AUTO:
+            warn += (
+                f"\n\n· 有損資料設為「自動」：{LOSSY_AUTO_LIMIT} 筆以內會直接取代為 "
+                f"'{LOSSY_MARKER}' 並繼續（原始位元組另存 tsv），"
+                f"超過則停止讓你判斷。"
+            )
+
         # 非資料表檔案的處理方式，讓使用者一眼看到，不必猜
         object_note = ""
         if last_files:
@@ -1365,7 +1829,6 @@ class SqlRestoreWindow(QWidget):
         if GRANTS_FILE in os.listdir(folder):
             object_note += f"\n權限檔案（全為註解，不匯入）：{GRANTS_FILE}"
 
-        to_utf8mb4 = self.utf8mb4_checkbox.isChecked()
         answer = QMessageBox.question(
             self,
             "還原前確認",
@@ -1376,6 +1839,7 @@ class SqlRestoreWindow(QWidget):
             f"資料引擎：{engine_choice}"
             + (f"（備份檔宣告：{engine_note}）\n" if engine_note else "\n")
             + f"轉換為 utf8mb4：{'是（含無損檢查）' if to_utf8mb4 else '否'}"
+            + (f"\n有損資料：{lossy_mode}" if to_utf8mb4 else "")
             + warn
             + "\n\n要開始嗎？",
             QMessageBox.Yes | QMessageBox.No,
@@ -1394,6 +1858,7 @@ class SqlRestoreWindow(QWidget):
             "file_charset": self.charset_combo.currentText(),
             "engine": engine_choice,
             "to_utf8mb4": to_utf8mb4,
+            "lossy_mode": lossy_mode,
             "relax_durability": self.durability_checkbox.isChecked(),
             "mysql": self.mysql_path,
         }

@@ -31,7 +31,7 @@ class Purchase(QtWidgets.QMainWindow):
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(Purchase, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -453,12 +453,13 @@ class Purchase(QtWidgets.QMainWindow):
         if patient_key in [None, ""]:
             return
 
-        sql = f"""
+        sql = """
             SELECT * FROM patient
             WHERE
-                PatientKey = {patient_key}
+                PatientKey = %s
         """
-        rows = self.database.select_record(sql)
+        params = (patient_key,)
+        rows = self.database.select_record(sql, params=params)
         if len(rows) <= 0:
             self.ui.lineEdit_name.setText("")
             return
