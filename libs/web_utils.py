@@ -79,7 +79,7 @@ def open_nhi_medcloud(use_virtual_card: bool = False):
                 return
         print("【警告】找不到 Chrome 或 Edge，改用系統預設方式開啟。")
 
-    webbrowser.open(address, new=2)
+    webbrowser.open(address, new=2)  # 2: open in a new tab, if possible
     print(f"已用系統預設瀏覽器開啟 ({card_name})。")
 
 
