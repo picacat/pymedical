@@ -9,7 +9,7 @@ from libs import nhi_utils, number_utils, personnel_utils, string_utils
 class InsApplyCalculate(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsApplyCalculate, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -194,8 +194,7 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
         '''
         rows = self.database.select_record(sql)
         diag_days = len(rows)
-        if diag_days > nhi_utils.MAX_DIAG_DAYS:
-            diag_days = nhi_utils.MAX_DIAG_DAYS
+        diag_days = min(diag_days, nhi_utils.MAX_DIAG_DAYS)
         return diag_days
 
     # def _get_total_count(self, in_doctor_name):
@@ -337,7 +336,7 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
                 ApplyType = "{self.apply_type_code}" AND
                 ApplyPeriod = "{self.period}" AND
                 ClinicID = "{self.clinic_id}" AND
-                CaseType NOT IN ("21", "C5")
+                CaseType IN ("29")
         '''
         rows = self.database.select_record(sql)
         for row in rows:
@@ -351,6 +350,7 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
                 doctor_name = self._get_doctor_name(case_key)
                 if doctor_name == in_doctor_name:
                     treat_drug += 1
+
         return treat_drug
 
     def _get_doctor_name(self, case_key):
@@ -545,9 +545,11 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
         highly_acupuncture,
     ):
         treat_section1 = treat_count
-        treat_section1_limit = (diag_days * nhi_utils.TREAT_SECTION1) - treat_drug
-        if treat_section1 > treat_section1_limit:
-            treat_section1 = treat_section1_limit
+        # treat_section1_limit = (diag_days * nhi_utils.TREAT_SECTION1) - treat_drug
+        treat_section1_limit = max(
+            0, (diag_days * nhi_utils.TREAT_SECTION1) - treat_drug
+        )
+        treat_section1 = min(treat_section1, treat_section1_limit)
         return treat_section1
 
     def _get_treat_section2(self, diag_days, treat_count, treat_section1):
@@ -555,8 +557,7 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
         treat_section2_limit = diag_days * (
             nhi_utils.TREAT_SECTION2 - nhi_utils.TREAT_SECTION1
         )
-        if treat_section2 > treat_section2_limit:
-            treat_section2 = treat_section2_limit
+        treat_section2 = min(treat_section2, treat_section2_limit)
         return treat_section2
 
     def _get_treat_section3(self, treat_count, treat_section1, treat_section2):
