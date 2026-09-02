@@ -456,6 +456,7 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
     #                         self.database, ins_apply_key, course, treat_percent
     #                     )
 
+    # 2026-09-03 優化排序版本，金額高的處置放在treat_section1，金額低的放在後面
     def _adjust_treat_fee(self):
         for ins_calculated_row in self.ins_calculated_table:
             doctor_name = ins_calculated_row["doctor_name"]
