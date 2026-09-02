@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QPushButton
 
@@ -25,7 +23,7 @@ from libs import (
 class SelfPrescriptRecord(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(SelfPrescriptRecord, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -165,7 +163,7 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 self.remove_medicine()
 
         try:
-            return super(SelfPrescriptRecord, self).eventFilter(source, event)
+            return super().eventFilter(source, event)
         except Exception:
             return False
 
@@ -772,9 +770,7 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
         self,
         row,
         dosage=None,
-        set_valuation=True,
-        set_dosage_percent=True,
-        duplicate_warning=None,
+        duplicate_warning=True,
     ):
         old_dosage = self.table_widget_prescript.field_value(
             prescript_utils.SELF_PRESCRIPT_COL_NO["Dosage"]
@@ -820,10 +816,8 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
 
                 return False
 
-        if not duplicate_warning or self.dict_dialog == "彈出式視窗":
+        if self.dict_dialog == "彈出式視窗":
             duplicate_warning = False
-        else:
-            duplicate_warning = True
 
         if prescript_utils.check_prescript_duplicates(
             self.ui.tableWidget_prescript,
@@ -1952,9 +1946,7 @@ class SelfPrescriptRecord(QtWidgets.QMainWindow):
                 self.database, "病歷資料", "病歷修正", self.user_name
             )
             != "Y"
-        ):
-            enabled = False
-        elif self.ui.tableWidget_prescript.rowCount() <= 0:
+        ) or self.ui.tableWidget_prescript.rowCount() <= 0:
             enabled = False
         else:
             enabled = True
