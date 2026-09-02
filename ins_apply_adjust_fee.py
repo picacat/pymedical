@@ -426,15 +426,15 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                     if treat_code in nhi_utils.TREAT_DRUG_CODE:  # 針傷給藥不調整
                         continue
 
-                    if (
-                        treat_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE
-                    ):  # 2023-05-09 中度複針不調整, 只調整一般針灸比較划算
-                        continue
+                    # if (
+                    #     treat_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE
+                    # ):  # 2023-05-09 中度複針不調整, 只調整一般針灸比較划算
+                    #     continue
 
-                    if (
-                        treat_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE
-                    ):  # 高度複針不調整
-                        continue
+                    # if (
+                    #     treat_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE
+                    # ):  # 高度複針不調整
+                    #     continue
 
                     treat_fee = number_utils.get_integer(row[f"TreatFee{course}"])
                     if treat_code == "" or treat_fee <= 0:
@@ -443,8 +443,9 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                     treat_count += 1
 
                     ins_apply_key = row["InsApplyKey"]
+                    treat_percent = 100
                     if treat_count <= treat_section1:
-                        treat_percent = 100
+                        pass
                     elif treat_count <= treat_section2:
                         treat_percent = 90
                     elif treat_count <= treat_section3:
