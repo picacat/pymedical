@@ -447,9 +447,6 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                         treat_percent = 100
                     elif treat_count <= treat_section2:
                         treat_percent = 90
-                        charge_utils.update_treat_fee(
-                            self.database, ins_apply_key, course, treat_percent
-                        )
                     elif treat_count <= treat_section3:
                         treat_percent = 0
 
