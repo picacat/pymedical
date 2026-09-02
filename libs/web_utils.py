@@ -84,4 +84,4 @@ def open_nhi_medcloud(use_virtual_card: bool = False):
 
 
 def open_address(address):
-    webbrowser.open(address, new=2)
+    webbrowser.open(address, new=2)  # 2: open in a new tab, if possible
