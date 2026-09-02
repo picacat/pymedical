@@ -375,6 +375,87 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                 "insapply", fields, "InsApplyKey", ins_apply_key, data
             )
 
+    # def _adjust_treat_fee(self):
+    #     for ins_calculated_row in self.ins_calculated_table:
+    #         doctor_name = ins_calculated_row["doctor_name"]
+    #         sql = f'''
+    #             SELECT *
+    #             FROM insapply
+    #             WHERE
+    #                 ApplyDate = "{self.apply_date}" AND
+    #                 ApplyType = "{self.apply_type_code}" AND
+    #                 ApplyPeriod = "{self.period}" AND
+    #                 ClinicID = "{self.clinic_id}" AND
+    #                 CaseType = "29"
+    #                 ORDER BY Sequence
+    #         '''
+    #         rows = self.database.select_record(sql)
+
+    #         treat_section1 = ins_calculated_row["treat_section1"]
+    #         treat_section2 = (
+    #             ins_calculated_row["treat_section1"]
+    #             + ins_calculated_row["treat_section2"]
+    #         )
+    #         treat_section3 = (
+    #             ins_calculated_row["treat_section1"]
+    #             + ins_calculated_row["treat_section2"]
+    #             + ins_calculated_row["treat_section3"]
+    #         )
+
+    #         treat_count = 0
+    #         for row in rows:
+    #             for course in range(1, nhi_utils.MAX_COURSE + 1):
+    #                 case_key = row[f"CaseKey{course}"]
+    #                 if case_key in ["", None]:
+    #                     continue
+
+    #                 sql = f'''
+    #                     SELECT CaseKey FROM cases
+    #                     WHERE
+    #                         CaseKey = {case_key} AND
+    #                         Doctor = "{doctor_name}"
+    #                 '''
+    #                 case_rows = self.database.select_record(sql)
+    #                 if len(case_rows) <= 0:
+    #                     continue
+
+    #                 treat_code = string_utils.xstr(row[f"TreatCode{course}"])
+    #                 if treat_code not in nhi_utils.TREAT_ALL_CODE:  # 針傷處置才調整
+    #                     continue
+
+    #                 if treat_code in nhi_utils.TREAT_DRUG_CODE:  # 針傷給藥不調整
+    #                     continue
+
+    #                 # if (
+    #                 #     treat_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE
+    #                 # ):  # 2023-05-09 中度複針不調整, 只調整一般針灸比較划算
+    #                 #     continue
+
+    #                 # if (
+    #                 #     treat_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE
+    #                 # ):  # 高度複針不調整
+    #                 #     continue
+
+    #                 treat_fee = number_utils.get_integer(row[f"TreatFee{course}"])
+    #                 if treat_code == "" or treat_fee <= 0:
+    #                     continue
+
+    #                 treat_count += 1
+
+    #                 ins_apply_key = row["InsApplyKey"]
+    #                 treat_percent = 100
+    #                 if treat_count <= treat_section1:
+    #                     pass
+    #                 elif treat_count <= treat_section2:
+    #                     treat_percent = 90
+    #                 elif treat_count <= treat_section3:
+    #                     treat_percent = 0
+
+    #                 if treat_percent < 100:
+    #                     charge_utils.update_treat_fee(
+    #                         self.database, ins_apply_key, course, treat_percent
+    #                     )
+
     def _adjust_treat_fee(self):
         for ins_calculated_row in self.ins_calculated_table:
             doctor_name = ins_calculated_row["doctor_name"]
@@ -390,7 +471,6 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                     ORDER BY Sequence
             '''
             rows = self.database.select_record(sql)
-
             treat_section1 = ins_calculated_row["treat_section1"]
             treat_section2 = (
                 ins_calculated_row["treat_section1"]
@@ -402,13 +482,14 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                 + ins_calculated_row["treat_section3"]
             )
 
-            treat_count = 0
+            # 第一階段: 收集這位醫師所有應納入合理門診量的針傷件數
+            # 篩選條件必須與 ins_apply_calculate._get_treat_count() 一致
+            treat_list = []
             for row in rows:
                 for course in range(1, nhi_utils.MAX_COURSE + 1):
                     case_key = row[f"CaseKey{course}"]
                     if case_key in ["", None]:
                         continue
-
                     sql = f'''
                         SELECT CaseKey FROM cases
                         WHERE
@@ -418,43 +499,53 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                     case_rows = self.database.select_record(sql)
                     if len(case_rows) <= 0:
                         continue
-
                     treat_code = string_utils.xstr(row[f"TreatCode{course}"])
                     if treat_code not in nhi_utils.TREAT_ALL_CODE:  # 針傷處置才調整
                         continue
-
                     if treat_code in nhi_utils.TREAT_DRUG_CODE:  # 針傷給藥不調整
                         continue
-
-                    # if (
-                    #     treat_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE
-                    # ):  # 2023-05-09 中度複針不調整, 只調整一般針灸比較划算
-                    #     continue
-
-                    # if (
-                    #     treat_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE
-                    # ):  # 高度複針不調整
-                    #     continue
-
                     treat_fee = number_utils.get_integer(row[f"TreatFee{course}"])
                     if treat_code == "" or treat_fee <= 0:
                         continue
+                    treat_list.append(
+                        {
+                            "ins_apply_key": row["InsApplyKey"],
+                            "course": course,
+                            "treat_code": treat_code,
+                            "treat_fee": treat_fee,
+                        }
+                    )
 
-                    treat_count += 1
+            # 第二階段: 點數高的排前面, 讓它們落在 treat_section1 全額給付
+            # 被調整的件數不變, 但砍到的都是點數低的, 總損失最小
+            # sort 為穩定排序, 點數相同者維持原本的 Sequence 順序
+            treat_list.sort(key=lambda item: item["treat_fee"], reverse=True)
 
-                    ins_apply_key = row["InsApplyKey"]
-                    treat_percent = 100
-                    if treat_count <= treat_section1:
-                        pass
-                    elif treat_count <= treat_section2:
-                        treat_percent = 90
-                    elif treat_count <= treat_section3:
-                        treat_percent = 0
+            # 第三階段: 依序套用遞減分段
+            treat_count = 0
+            for item in treat_list:
+                treat_count += 1
+                treat_percent = 100
+                if treat_count <= treat_section1:
+                    pass
+                elif treat_count <= treat_section2:
+                    treat_percent = 90
+                elif treat_count <= treat_section3:
+                    treat_percent = 0
+                if treat_percent < 100:
+                    charge_utils.update_treat_fee(
+                        self.database,
+                        item["ins_apply_key"],
+                        item["course"],
+                        treat_percent,
+                    )
 
-                    if treat_percent < 100:
-                        charge_utils.update_treat_fee(
-                            self.database, ins_apply_key, course, treat_percent
-                        )
+            # 對帳哨兵: 調整件數應等於分段計算的基準件數, 不一致代表兩邊篩選條件漂開了
+            expected_count = number_utils.get_integer(ins_calculated_row["treat_count"])
+            if treat_count != expected_count:
+                print(
+                    f"[合理門診量] {doctor_name} 調整件數 {treat_count} != 基準 {expected_count}"
+                )
 
     # 計算針灸傷科給藥上限 (每位醫師平均 專任醫師數 * 120)
     def _adjust_treat_drug_fee(self):
