@@ -17,7 +17,7 @@ from libs import (
 class InsApplyAdjustFee(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsApplyAdjustFee, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -420,6 +420,9 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                         continue
 
                     treat_code = string_utils.xstr(row[f"TreatCode{course}"])
+                    if treat_code not in nhi_utils.TREAT_ALL_CODE:  # 針傷處置才調整
+                        continue
+
                     if treat_code in nhi_utils.TREAT_DRUG_CODE:  # 針傷給藥不調整
                         continue
 
@@ -441,15 +444,16 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
 
                     ins_apply_key = row["InsApplyKey"]
                     if treat_count <= treat_section1:
-                        pass
+                        treat_percent = 100
                     elif treat_count <= treat_section2:
-                        if treat_code in nhi_utils.TREAT_CODE:  # 針傷未開藥才調整
-                            treat_percent = 90
-                            charge_utils.update_treat_fee(
-                                self.database, ins_apply_key, course, treat_percent
-                            )
+                        treat_percent = 90
+                        charge_utils.update_treat_fee(
+                            self.database, ins_apply_key, course, treat_percent
+                        )
                     elif treat_count <= treat_section3:
                         treat_percent = 0
+
+                    if treat_percent < 100:
                         charge_utils.update_treat_fee(
                             self.database, ins_apply_key, course, treat_percent
                         )
