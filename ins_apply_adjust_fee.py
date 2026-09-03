@@ -550,63 +550,8 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                 print(
                     f"[合理門診量] {doctor_name} 調整件數 {treat_count} != 基準 {expected_count}"
                 )
-                # self._debug_treat_count(doctor_name)  # ← 臨時診斷, 查完移除
 
-    def _debug_treat_count(self, doctor_name):
-        print("MAX_COURSE =", nhi_utils.MAX_COURSE)
-        sql = f'''
-            SELECT * FROM insapply
-            WHERE
-                ApplyDate = "{self.apply_date}" AND
-                ApplyType = "{self.apply_type_code}" AND
-                ApplyPeriod = "{self.period}" AND
-                ClinicID = "{self.clinic_id}" AND
-                CaseType = "29"
-        '''
-        rows = self.database.select_record(sql)
-
-        a_count = 0  # 基準口徑: 29 + TREAT_ALL_CODE, course 1~6 (含給藥)
-        drug_in_29 = 0  # 其中屬於針傷給藥
-        fee_zero = 0  # TreatFee <= 0
-        name_comma = 0  # 醫師名要去逗號才對得上
-        over_course6 = 0  # course 7 以後才有的
-        for row in rows:
-            for course in range(1, nhi_utils.MAX_COURSE + 1):
-                treat_code = string_utils.xstr(row[f"TreatCode{course}"])
-                if treat_code not in nhi_utils.TREAT_ALL_CODE:
-                    continue
-                case_key = number_utils.get_integer(row[f"CaseKey{course}"])
-                if case_key <= 0:
-                    continue
-                case_rows = self.database.select_record(
-                    f"SELECT Doctor FROM cases WHERE CaseKey = {case_key}"
-                )
-                if len(case_rows) <= 0:
-                    continue
-                raw_name = string_utils.xstr(case_rows[0]["Doctor"])
-                if raw_name.replace(",", "") != doctor_name:
-                    continue
-                if raw_name != doctor_name:
-                    name_comma += 1
-                if course > 6:
-                    over_course6 += 1
-                    continue
-                a_count += 1
-                if treat_code in nhi_utils.TREAT_DRUG_CODE:
-                    drug_in_29 += 1
-                if number_utils.get_integer(row[f"TreatFee{course}"]) <= 0:
-                    fee_zero += 1
-
-        treat_drug = self._get_treat_drug(doctor_name)
-        print(
-            f"A(29含給藥)={a_count}  給藥在29內={drug_in_29}  treat_drug基準扣的={treat_drug}"
-        )
-        print(
-            f"TreatFee<=0={fee_zero}  名字帶逗號={name_comma}  course>6={over_course6}"
-        )
-        print(f"基準 = {a_count} - {treat_drug} = {a_count - treat_drug}")
-
-    # 計算針灸傷科給藥上限 (每位醫師平均 專任醫師數 * 120)
+    # 計算針灸傷科給藥上限 (每位醫師平均 專任醫師數 * 150)
     def _adjust_treat_drug_fee(self):
         max_full_time_doctor = 0
         for ins_calculated_row in self.ins_calculated_table:  # 取得專任醫師數

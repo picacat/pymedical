@@ -2626,7 +2626,8 @@ def get_treat_code(database, case_key):
     sql = f"""
         SELECT * FROM dosage
         WHERE
-            CaseKey = {case_key}
+            CaseKey = {case_key} AND
+            MedicineSet = 1
     """
     rows = database.select_record(sql)
 
