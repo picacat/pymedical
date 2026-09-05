@@ -1,28 +1,61 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore, QtGui, QtChart
+import os.path
+
+from lxml import etree as ET
+from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-import os.path
-from lxml import etree as ET
+from libs import (
+    charge_utils,
+    class_utils,
+    export_utils,
+    nhi_utils,
+    number_utils,
+    personnel_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+    xml_utils,  # noqa: F401  保留匯入，避免其他模組相依中斷
+)
 
-from libs import class_utils
-from libs import ui_utils
-from libs import system_utils
-from libs import string_utils
-from libs import nhi_utils
-from libs import number_utils
-from libs import personnel_utils
-from libs import export_utils
-from libs import xml_utils
-from libs import charge_utils
+# 進度對話盒最多更新幾次（資料量再大也不會被重繪拖慢）
+PROGRESS_UPDATES = 100
+
+# 進度對話盒延遲顯示的毫秒數
+# Qt 預設 4000：作業不到 4 秒就整個不顯示，速度變快後看起來像沒反應
+# 0 = 一定顯示；若不想讓小月份閃一下，可改成 500
+PROGRESS_MINIMUM_DURATION = 0
+
+# IN (...) 一次帶幾個值
+CHUNK_SIZE = 500
+
+# 跟診護理費：有護士 / 沒護士的診察費代碼配對
+NURSE_DIAG_CODE_PAIR = {
+    "A01": "A02",
+    "A03": "A04",
+    "A05": "A06",
+    "A09": "A10",
+}
+
+SPECIAL_TREAT_TYPE = [
+    "視訊門診",
+    "法定傳染病通報隔離",
+    "巡迴山地",
+    "巡迴偏遠",
+    "巡迴離島",
+    "前往資源不足地區",
+    "照護機構中醫照護",
+    "矯正機關內門診",
+]
 
 
-# 醫師申報金額業績 2019.08.01
+# 醫師申報金額業績 2026-09-05
 class InsApplyFeePerformance(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsApplyFeePerformance, self).__init__(parent)
+        super().__init__(parent)
+
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -35,13 +68,22 @@ class InsApplyFeePerformance(QtWidgets.QMainWindow):
         self.apply_type = args[8]
         self.exclude_c5 = args[9]
         self.ui = None
-        self.user_name = system_utils.get_user_name(self.system_settings)
 
+        self.user_name = system_utils.get_user_name(self.system_settings)
         self.apply_date = nhi_utils.get_apply_date(self.apply_year, self.apply_month)
         self.apply_type_code = nhi_utils.APPLY_TYPE_CODE[self.apply_type]
-
         self.doctor_id = personnel_utils.get_person_field_value(
-            self.database, self.doctor, 'ID')
+            self.database, self.doctor, "ID"
+        )
+
+        # ---- 快取 ----
+        self._xml_loaded = False
+        self._xml_root = None
+        self._person_name_cache = {}
+        self._nurse_fee_cache = {}
+        self._clinic_id = None
+        # 醫師業績表最後一列是不是「合計」（篩選單一醫師時會被刪掉）
+        self._doctor_total_row = False
 
         self._set_ui()
         self._set_signal()
@@ -69,19 +111,33 @@ class InsApplyFeePerformance(QtWidgets.QMainWindow):
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         self.ui.tableWidget_doctor_xml.setAlternatingRowColors(True)
-        self.table_widget_doctor_xml = class_utils.get_table_widget(self.ui.tableWidget_doctor_xml, self.database)
-        self.table_widget_case_xml = class_utils.get_table_widget(self.ui.tableWidget_case_xml, self.database)
-        self.table_widget_nurse_list = class_utils.get_table_widget(self.ui.tableWidget_nurse_list, self.database)
-        self.table_widget_special_fee = class_utils.get_table_widget(self.ui.tableWidget_special_fee, self.database)
+
+        self.table_widget_doctor_xml = class_utils.get_table_widget(
+            self.ui.tableWidget_doctor_xml, self.database
+        )
+        self.table_widget_case_xml = class_utils.get_table_widget(
+            self.ui.tableWidget_case_xml, self.database
+        )
+        self.table_widget_nurse_list = class_utils.get_table_widget(
+            self.ui.tableWidget_nurse_list, self.database
+        )
+        self.table_widget_special_fee = class_utils.get_table_widget(
+            self.ui.tableWidget_special_fee, self.database
+        )
+
         self._set_table_width()
-        if personnel_utils.get_permission(self.database, '系統作業', '關閉匯出功能', self.user_name) == 'Y':
+
+        if (
+            personnel_utils.get_permission(
+                self.database, "系統作業", "關閉匯出功能", self.user_name
+            )
+            == "Y"
+        ):
             self.ui.toolButton_export_doctor_excel.setEnabled(False)
             self.ui.toolButton_export_case_type_excel.setEnabled(False)
 
     def _set_table_width(self):
-        width = [
-            130, 100, 100, 100, 100, 100, 100, 100, 100, 150, 150
-        ]
+        width = [130, 100, 100, 100, 100, 100, 100, 100, 100, 150, 150]
         self.table_widget_doctor_xml.set_table_heading_width(width)
         self.table_widget_case_xml.set_table_heading_width(width)
         self.table_widget_nurse_list.set_table_heading_width([130, 120, 120])
@@ -89,12 +145,147 @@ class InsApplyFeePerformance(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        self.ui.toolButton_export_doctor_excel.clicked.connect(self.export_doctor_to_excel)
-        self.ui.toolButton_export_case_type_excel.clicked.connect(self.export_case_to_excel)
+        self.ui.toolButton_export_doctor_excel.clicked.connect(
+            self.export_doctor_to_excel
+        )
+        self.ui.toolButton_export_case_type_excel.clicked.connect(
+            self.export_case_to_excel
+        )
 
+    # -----------------------------------------------------------------------
+    # 共用小工具
+    # -----------------------------------------------------------------------
+    def _get_progress_dialog(self, message, record_count, cancel_text="取消"):
+        """建立進度對話盒，回傳 (dialog, step)。
+
+        step: 每隔幾列才呼叫一次 setValue，讓更新次數固定在 PROGRESS_UPDATES 次
+              左右——資料量再大也不會被重繪拖慢，資料量小也還是會動。
+        """
+        dialog = QtWidgets.QProgressDialog(message, cancel_text, 0, record_count, self)
+        dialog.setWindowModality(QtCore.Qt.WindowModal)
+        dialog.setMinimumDuration(PROGRESS_MINIMUM_DURATION)
+        dialog.setValue(0)
+        dialog.show()
+        QtWidgets.QApplication.processEvents()
+
+        return dialog, max(1, record_count // PROGRESS_UPDATES)
+
+    @staticmethod
+    def _chunks(values, size=CHUNK_SIZE):
+        values = list(values)
+        for i in range(0, len(values), size):
+            yield values[i : i + size]
+
+    @staticmethod
+    def _text_of(node, tag):
+        """取直接子節點的字串，不做整棵子樹的 dict 轉換。"""
+        if node is None:
+            return ""
+
+        return node.findtext(tag, "") or ""
+
+    @staticmethod
+    def _int_of(node, tag, default=0):
+        if node is None:
+            return default
+
+        text = node.findtext(tag, "") or ""
+        if text.strip() == "":
+            return default
+
+        return number_utils.get_integer(text)
+
+    @staticmethod
+    def _date_text(value):
+        """把 DATE / DATETIME / 字串統一成 yyyy-MM-dd。"""
+        if value is None:
+            return ""
+
+        if hasattr(value, "strftime"):
+            return value.strftime("%Y-%m-%d")
+
+        return string_utils.xstr(value)[:10]
+
+    def _get_clinic_id(self):
+        if self._clinic_id is None:
+            try:
+                self._clinic_id = self.parent.clinic_id
+            except AttributeError:
+                self._clinic_id = self.system_settings.field("院所代號")
+
+        return self._clinic_id
+
+    def _person_id_to_name(self, person_id):
+        if person_id in self._person_name_cache:
+            return self._person_name_cache[person_id]
+
+        name = personnel_utils.person_id_to_name(self.database, person_id)
+        self._person_name_cache[person_id] = name
+
+        return name
+
+    @staticmethod
+    def _set_row(table_widget, row_no, data, start_col=0):
+        """一次把一整列寫進表格；data 內為 None 的欄位不建立 item。"""
+        for offset, value in enumerate(data):
+            if value is None:
+                continue
+
+            item = QtWidgets.QTableWidgetItem()
+            item.setData(QtCore.Qt.EditRole, value)
+            table_widget.setItem(row_no, start_col + offset, item)
+
+    @staticmethod
+    def _align_right(table_widget, first_col=1):
+        for row_no in range(table_widget.rowCount()):
+            for col_no in range(first_col, table_widget.columnCount()):
+                item = table_widget.item(row_no, col_no)
+                if item is not None:
+                    item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
+    # -----------------------------------------------------------------------
+    # XML：整份檔案只 parse 一次
+    # -----------------------------------------------------------------------
+    def _load_xml_root(self):
+        if self._xml_loaded:
+            return self._xml_root
+
+        self._xml_loaded = True
+
+        xml_file_name = nhi_utils.get_ins_xml_file_name(
+            self.system_settings, self.apply_type_code, self.apply_date
+        )
+        if not os.path.isfile(xml_file_name):
+            return None
+
+        self._xml_root = ET.parse(xml_file_name).getroot()
+
+        return self._xml_root
+
+    @staticmethod
+    def _iter_ddata(root):
+        """回傳 [(dhead, dbody), ...]，沒有 dbody 的略過。"""
+        # 申報 XML 的根節點就是 <outpatient>，ddata 是它的直接子節點；
+        # 萬一外面又包了一層，再退回去用 descendant 找一次
+        ddata_nodes = root.findall("ddata")
+        if not ddata_nodes:
+            ddata_nodes = root.findall(".//outpatient/ddata")
+
+        ddata_list = []
+        for ddata in ddata_nodes:
+            dbody = ddata.find("dbody")
+            if dbody is None:
+                continue
+
+            ddata_list.append((ddata.find("dhead"), dbody))
+
+        return ddata_list
+
+    # -----------------------------------------------------------------------
     def _check_ins_apply_fee(self):
         self._check_ins_apply_fee_doctor()
-        if self.doctor == '全部':
+
+        if self.doctor == "全部":
             self._check_ins_apply_fee_case_type()
             self._check_ins_apply_fee_nurse()
             try:
@@ -109,114 +300,169 @@ class InsApplyFeePerformance(QtWidgets.QMainWindow):
 
         self._plot_chart()
 
+    # -----------------------------------------------------------------------
+    # 醫師申報業績
+    # -----------------------------------------------------------------------
     def _check_ins_apply_fee_doctor(self):
-        self.ui.tableWidget_doctor_xml.setRowCount(0)
+        table_widget = self.ui.tableWidget_doctor_xml
+        table_widget.setRowCount(0)
+        self._doctor_total_row = False
 
-        xml_file_name = nhi_utils.get_ins_xml_file_name(
-            self.system_settings, self.apply_type_code, self.apply_date
-        )
-        if not os.path.isfile(xml_file_name):
+        root = self._load_xml_root()
+        if root is None:
             return
 
-        tree = ET.parse(xml_file_name)
+        doctor_data = self._collect_doctor_data(root)
+        self._list_doctor_data(doctor_data)
 
-        root = tree.getroot()
-        self._parse_doctor_ddata(root)
-        self._calculate_ins_apply_fee_doctor()
-        self.ui.tableWidget_doctor_xml.sortItems(7, QtCore.Qt.DescendingOrder)
-        self._calculate_total(self.ui.tableWidget_doctor_xml)
+        table_widget.sortItems(7, QtCore.Qt.DescendingOrder)
+        self._calculate_total(table_widget)
+        self._doctor_total_row = True
 
-        for row_no in range(self.ui.tableWidget_doctor_xml.rowCount()):
-            for col_no in range(1, self.ui.tableWidget_doctor_xml.columnCount()):
-                item = self.ui.tableWidget_doctor_xml.item(row_no, col_no)
-                if item is not None:
-                    item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-
+        self._align_right(table_widget)
         self._filter_doctor_data()
 
-    def _filter_doctor_data(self):
-        for row_no in range(self.ui.tableWidget_doctor_xml.rowCount()-1, -1, -1):
-            current_doctor = self.ui.tableWidget_doctor_xml.item(row_no, 0).text()
-            if self.doctor != '全部' and (current_doctor != self.doctor or current_doctor == '合計'):
-                self.ui.tableWidget_doctor_xml.removeRow(row_no)
+    def _collect_doctor_data(self, root):
+        """把 XML 一次掃完，累加在 dict 裡（不再拿 QTableWidget 當累加器）。
 
-    def _calculate_ins_apply_fee_doctor(self):
-        for row_no in range(self.ui.tableWidget_doctor_xml.rowCount()):
-            doctor_item = self.ui.tableWidget_doctor_xml.item(row_no, 0)
-            if doctor_item is None:
-                doctor_name = '空白'
-                total_fee, share_fee, ins_apply_fee = 0, 0, 0
-            else:
-                doctor_name = personnel_utils.person_id_to_name(self.database, doctor_item.text())
+        口徑與原程式相同：
+            醫令（pdata）掛在 p16（執行的醫事人員），
+            部分負擔（d40）掛在 d30（診治醫師）。
+        """
+        ddata_list = self._iter_ddata(root)
+        record_count = len(ddata_list)
 
-                total_fee = number_utils.get_integer(self.ui.tableWidget_doctor_xml.item(row_no, 6).text())
-                share_fee = number_utils.get_integer(self.ui.tableWidget_doctor_xml.item(row_no, 7).text())
-                ins_apply_fee = total_fee - share_fee
+        doctor_data = {}
 
-            data = [
-                [0, doctor_name],
-                [8, ins_apply_fee],
-            ]
+        def bucket(doctor_id):
+            data = doctor_data.get(doctor_id)
+            if data is None:
+                data = {
+                    "has_pdata": False,
+                    "total_count": 0,
+                    "diag_fee": 0,
+                    "drug_fee": 0,
+                    "pharmacy_fee": 0,
+                    "treat_fee": 0,
+                    "share_fee": 0,
+                    "new_patient_count": 0,
+                    "integrate_count": 0,
+                }
+                doctor_data[doctor_id] = data
 
-            for col_no in range(len(data)):
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, data[col_no][1])
-                self.ui.tableWidget_doctor_xml.setItem(
-                    row_no, data[col_no][0], item,
+            return data
+
+        progress_dialog, progress_step = self._get_progress_dialog(
+            "正在統計醫師申報業績, 請稍後...", record_count
+        )
+
+        try:
+            for row_no, (dhead, dbody) in enumerate(ddata_list):
+                if row_no % progress_step == 0:
+                    progress_dialog.setValue(row_no)
+                    if progress_dialog.wasCanceled():
+                        break
+
+                case_type = self._text_of(dhead, "d1")
+                if self.exclude_c5 and case_type == "C5":
+                    continue
+
+                for pdata in dbody.findall("pdata"):
+                    data = bucket(self._text_of(pdata, "p16"))
+                    data["has_pdata"] = True
+                    data["total_count"] += 1
+
+                    price = self._int_of(pdata, "p12")
+                    order_type = self._text_of(pdata, "p3")
+                    if order_type == "0":
+                        data["diag_fee"] += price
+                    elif order_type == "1":
+                        data["drug_fee"] += price
+                    elif order_type == "2":
+                        data["treat_fee"] += price
+                    elif order_type == "9":
+                        data["pharmacy_fee"] += price
+
+                    ins_code = self._text_of(pdata, "p4")
+                    if ins_code == "A90":
+                        data["new_patient_count"] += 1
+                    elif ins_code == "A91":
+                        data["integrate_count"] += 1
+
+                bucket(self._text_of(dbody, "d30"))["share_fee"] += self._int_of(
+                    dbody, "d40"
                 )
+
+            progress_dialog.setValue(record_count)
+        finally:
+            progress_dialog.deleteLater()
+
+        return doctor_data
+
+    def _list_doctor_data(self, doctor_data):
+        """把累加結果一次寫進表格（每位醫師只寫一次）。"""
+        table_widget = self.ui.tableWidget_doctor_xml
+        table_widget.setRowCount(len(doctor_data))
+
+        for row_no, (doctor_id, data) in enumerate(doctor_data.items()):
+            if not data["has_pdata"]:
+                # 只出現在 d30、從未出現在任何 p16 的醫事人員：
+                # 維持原程式的行為——顯示「空白」、申報金額 0、不計入合計
+                self._set_row(table_widget, row_no, ["空白"])
+                self._set_row(table_widget, row_no, [data["share_fee"], 0], 7)
+                continue
+
+            total_fee = (
+                data["diag_fee"]
+                + data["drug_fee"]
+                + data["treat_fee"]
+                + data["pharmacy_fee"]
+            )
+            self._set_row(
+                table_widget,
+                row_no,
+                [
+                    self._person_id_to_name(doctor_id),
+                    data["total_count"],
+                    data["diag_fee"],
+                    data["drug_fee"],
+                    data["pharmacy_fee"],
+                    data["treat_fee"],
+                    total_fee,
+                    data["share_fee"],
+                    total_fee - data["share_fee"],
+                    data["new_patient_count"],
+                    data["integrate_count"],
+                ],
+            )
+
+    def _filter_doctor_data(self):
+        if self.doctor == "全部":
+            return
+
+        table_widget = self.ui.tableWidget_doctor_xml
+        for row_no in range(table_widget.rowCount() - 1, -1, -1):
+            item = table_widget.item(row_no, 0)
+            current_doctor = "" if item is None else item.text()
+            if current_doctor != self.doctor or current_doctor == "合計":
+                table_widget.removeRow(row_no)
+
+        # 合計列已經被刪掉了，畫圓餅圖時不能再扣一列
+        self._doctor_total_row = False
 
     def _calculate_total(self, table_widget):
         row_count = table_widget.rowCount()
+        table_widget.setRowCount(row_count + 1)
 
-        table_widget.setRowCount(row_count+1)
-
-        total_count = 0
-        total_diag_fee = 0
-        total_drug_fee = 0
-        total_pharmacy_fee = 0
-        total_treat_fee = 0
-        total_ins_total_fee = 0
-        total_share_fee = 0
-        total_ins_apply_fee = 0
+        total = [0] * 8
         for row_no in range(row_count):
-            ord_item = table_widget.item(row_no, 1)
-            if ord_item is None:
+            if table_widget.item(row_no, 1) is None:
                 continue
 
-            ord_count = number_utils.get_integer(ord_item.text())
-            diag_fee = number_utils.get_integer(table_widget.item(row_no, 2).text())
-            drug_fee = number_utils.get_integer(table_widget.item(row_no, 3).text())
-            pharmacy_fee = number_utils.get_integer(table_widget.item(row_no, 4).text())
-            treat_fee = number_utils.get_integer(table_widget.item(row_no, 5).text())
-            ins_total_fee = number_utils.get_integer(table_widget.item(row_no, 6).text())
-            share_fee = number_utils.get_integer(table_widget.item(row_no, 7).text())
-            ins_apply_fee = number_utils.get_integer(table_widget.item(row_no, 8).text())
+            for index in range(8):
+                total[index] += self._get_cell_value(table_widget, row_no, index + 1)
 
-            total_count += ord_count
-            total_diag_fee += diag_fee
-            total_drug_fee += drug_fee
-            total_pharmacy_fee += pharmacy_fee
-            total_treat_fee += treat_fee
-            total_ins_total_fee += ins_total_fee
-            total_share_fee += share_fee
-            total_ins_apply_fee += ins_apply_fee
-
-        data = [
-            '合計',
-            total_count,
-            total_diag_fee,
-            total_drug_fee,
-            total_pharmacy_fee,
-            total_treat_fee,
-            total_ins_total_fee,
-            total_share_fee,
-            total_ins_apply_fee,
-        ]
-
-        for col_no in range(len(data)):
-            item = QtWidgets.QTableWidgetItem()
-            item.setData(QtCore.Qt.EditRole, data[col_no])
-            table_widget.setItem(row_count, col_no, item)
+        self._set_row(table_widget, row_count, ["合計"] + total)
 
     def _get_cell_value(self, table_widget, row_no, col_no):
         item = table_widget.item(row_no, col_no)
@@ -225,172 +471,103 @@ class InsApplyFeePerformance(QtWidgets.QMainWindow):
 
         return number_utils.get_integer(item.text())
 
-    def _parse_doctor_ddata(self, root):
-        dhead = root.xpath('//outpatient/ddata/dhead')
-        dbody = root.xpath('//outpatient/ddata/dbody')
-
-        record_count = len(dbody)
-        progress_dialog = QtWidgets.QProgressDialog(
-            '正在統計醫師申報業績, 請稍後...', '取消', 0, record_count, self
-        )
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
-
-        for xml_row_no, hdata, ddata in zip(range(record_count), dhead, dbody):
-            progress_dialog.setValue(xml_row_no)
-
-            xhdata = xml_utils.convert_node_to_dict(hdata)
-            case_type = xhdata['d1']
-            if self.exclude_c5 and case_type == 'C5':
-                continue
-
-            self._parse_pdata(ddata, self.ui.tableWidget_doctor_xml)
-
-            xdata = xml_utils.convert_node_to_dict(ddata)
-            doctor_id = xdata['d30']
-
-            table_widget_row_no = None
-            for i in range(self.ui.tableWidget_doctor_xml.rowCount()):
-                item = self.ui.tableWidget_doctor_xml.item(i, 0)
-                if item is None:
-                    break
-
-                if item.text() == doctor_id:
-                    table_widget_row_no = i
-                    break
-
-            if table_widget_row_no is None:
-                table_widget_row_no = self.ui.tableWidget_doctor_xml.rowCount()
-                self.ui.tableWidget_doctor_xml.setRowCount(table_widget_row_no+1)
-
-            last_share_fee = self._get_cell_value(self.ui.tableWidget_doctor_xml, table_widget_row_no, 7)
-            share_fee = number_utils.get_integer(xdata['d40']) + last_share_fee
-
-            item = QtWidgets.QTableWidgetItem()
-            item.setData(QtCore.Qt.EditRole, share_fee)
-            self.ui.tableWidget_doctor_xml.setItem(
-                table_widget_row_no, 7, item,
-            )
-
-        progress_dialog.setValue(record_count)
-        progress_dialog.deleteLater()
-
-    def _parse_pdata(self, ddata, table_widget):
-        pdata = ddata.xpath('./pdata')
-
-        for row in pdata:
-            xdata = xml_utils.convert_node_to_dict(row)
-            doctor_id = xdata['p16']
-
-            table_widget_row_no = None
-            for i in range(table_widget.rowCount()):
-                item = table_widget.item(i, 0)
-                if item is None:
-                    break
-
-                if item.text() == doctor_id:
-                    table_widget_row_no = i
-                    break
-
-            if table_widget_row_no is None:
-                table_widget_row_no = table_widget.rowCount()
-                table_widget.setRowCount(table_widget_row_no+1)
-
-            last_total_count = self._get_cell_value(table_widget, table_widget_row_no, 1)
-            last_diag_fee = self._get_cell_value(table_widget, table_widget_row_no, 2)
-            last_drug_fee = self._get_cell_value(table_widget, table_widget_row_no, 3)
-            last_pharmacy_fee = self._get_cell_value(table_widget, table_widget_row_no, 4)
-            last_treat_fee = self._get_cell_value(table_widget, table_widget_row_no, 5)
-            last_total_fee = self._get_cell_value(table_widget, table_widget_row_no, 6)
-            last_share_fee = self._get_cell_value(table_widget, table_widget_row_no, 7)
-            last_apply_fee = self._get_cell_value(table_widget, table_widget_row_no, 8)
-            last_new_patient_count = self._get_cell_value(table_widget, table_widget_row_no, 9)
-            last_integrate_count = self._get_cell_value(table_widget, table_widget_row_no, 10)
-
-            pdata_fee = {
-                'total_count': last_total_count,
-                'diag_fee': last_diag_fee,
-                'drug_fee': last_drug_fee,
-                'pharmacy_fee': last_pharmacy_fee,
-                'treat_fee': last_treat_fee,
-                'total_fee': last_total_fee,
-                'share_fee': last_share_fee,
-                'apply_fee': last_apply_fee,
-                'new_patient_count': last_new_patient_count,
-                'integrate_count': last_integrate_count,
-            }
-            try:
-                price = number_utils.get_integer(xdata['p12'])
-            except Exception:
-                price = 0
-
-            pdata_fee['total_count'] = last_total_count + 1
-            if string_utils.xstr(xdata['p3']) == '0':
-                pdata_fee['diag_fee'] = price + last_diag_fee
-            elif string_utils.xstr(xdata['p3']) == '1':
-                pdata_fee['drug_fee'] = price + last_drug_fee
-            elif string_utils.xstr(xdata['p3']) == '2':
-                pdata_fee['treat_fee'] = price + last_treat_fee
-            elif string_utils.xstr(xdata['p3']) == '9':
-                pdata_fee['pharmacy_fee'] = price + last_pharmacy_fee
-
-            if string_utils.xstr(xdata['p4']) == 'A90':
-                pdata_fee['new_patient_count'] = last_new_patient_count + 1
-            elif string_utils.xstr(xdata['p4']) == 'A91':
-                pdata_fee['integrate_count'] = last_integrate_count + 1
-
-            pdata_fee['total_fee'] = (
-                pdata_fee['diag_fee'] +
-                pdata_fee['drug_fee'] +
-                pdata_fee['treat_fee'] +
-                pdata_fee['pharmacy_fee']
-            )
-
-            data = [
-                doctor_id,
-                pdata_fee['total_count'],
-                pdata_fee['diag_fee'],
-                pdata_fee['drug_fee'],
-                pdata_fee['pharmacy_fee'],
-                pdata_fee['treat_fee'],
-                pdata_fee['total_fee'],
-                pdata_fee['share_fee'],
-                pdata_fee['apply_fee'],
-                pdata_fee['new_patient_count'],
-                pdata_fee['integrate_count'],
-            ]
-
-            for col_no in range(len(data)):
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, data[col_no])
-                table_widget.setItem(
-                    table_widget_row_no, col_no, item,
-                )
-
+    # -----------------------------------------------------------------------
+    # 案件分類申報業績
+    # -----------------------------------------------------------------------
     def _check_ins_apply_fee_case_type(self):
-        self.ui.tableWidget_case_xml.setRowCount(0)
+        table_widget = self.ui.tableWidget_case_xml
+        table_widget.setRowCount(0)
 
-        xml_file_name = nhi_utils.get_ins_xml_file_name(
-            self.system_settings, self.apply_type_code, self.apply_date
-        )
-        if not os.path.isfile(xml_file_name):
+        root = self._load_xml_root()
+        if root is None:
             return
 
-        tree = ET.parse(xml_file_name)
+        case_type_data = self._collect_case_type_data(root)
+        self._list_case_type_data(case_type_data)
 
-        root = tree.getroot()
-        self._parse_case_ddata(root)
-        self._calculate_ins_apply_fee_case_type()
-        self._calculate_total(self.ui.tableWidget_case_xml)
+        self._calculate_total(table_widget)
+        self._align_right(table_widget)
 
-        for row in range(self.ui.tableWidget_case_xml.rowCount()):
-            for column in range(1, self.ui.tableWidget_case_xml.columnCount()):
-                item = self.ui.tableWidget_case_xml.item(row, column)
-                if item is not None:
-                    item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+    def _collect_case_type_data(self, root):
+        ddata_list = self._iter_ddata(root)
+        record_count = len(ddata_list)
 
+        case_type_data = {}
+        filter_doctor = self.doctor != "全部"
+
+        progress_dialog, progress_step = self._get_progress_dialog(
+            "正在統計案件分類申報業績, 請稍後...", record_count
+        )
+
+        try:
+            for row_no, (dhead, dbody) in enumerate(ddata_list):
+                if row_no % progress_step == 0:
+                    progress_dialog.setValue(row_no)
+                    if progress_dialog.wasCanceled():
+                        break
+
+                # 註：原程式在此並未套用 exclude_c5（該行是註解掉的），維持不變
+                if filter_doctor and self._text_of(dbody, "d30") != self.doctor_id:
+                    continue
+
+                case_type = self._text_of(dhead, "d1")
+                data = case_type_data.get(case_type)
+                if data is None:
+                    data = {
+                        "total_count": 0,
+                        "diag_fee": 0,
+                        "drug_fee": 0,
+                        "pharmacy_fee": 0,
+                        "treat_fee": 0,
+                        "total_fee": 0,
+                        "share_fee": 0,
+                    }
+                    case_type_data[case_type] = data
+
+                data["total_count"] += 1
+                data["diag_fee"] += self._int_of(dbody, "d36")
+                data["drug_fee"] += self._int_of(dbody, "d32")
+                data["pharmacy_fee"] += self._int_of(dbody, "d38")
+                data["treat_fee"] += self._int_of(dbody, "d33")
+                data["total_fee"] += self._int_of(dbody, "d39")
+                data["share_fee"] += self._int_of(dbody, "d40")
+
+            progress_dialog.setValue(record_count)
+        finally:
+            progress_dialog.deleteLater()
+
+        return case_type_data
+
+    def _list_case_type_data(self, case_type_data):
+        table_widget = self.ui.tableWidget_case_xml
+        table_widget.setRowCount(len(case_type_data))
+
+        for row_no, (case_type, data) in enumerate(case_type_data.items()):
+            self._set_row(
+                table_widget,
+                row_no,
+                [
+                    case_type,
+                    data["total_count"],
+                    data["diag_fee"],
+                    data["drug_fee"],
+                    data["pharmacy_fee"],
+                    data["treat_fee"],
+                    data["total_fee"],
+                    data["share_fee"],
+                    data["total_fee"] - data["share_fee"],
+                ],
+            )
+
+    # -----------------------------------------------------------------------
+    # 摘要
+    # -----------------------------------------------------------------------
     def _list_summary(self):
-        patient_count = self._get_ins_apply_patient_count()
+        total_row_no = self._get_total_row_no()
+
+        patient_count = self._get_apply_data_value(total_row_no, 4)
+        diag_count = self._get_apply_data_value(total_row_no, 5)
+
         period_count = self._get_period_count()
         try:
             period_patient_count = patient_count // period_count
@@ -399,7 +576,6 @@ class InsApplyFeePerformance(QtWidgets.QMainWindow):
 
         days = self._get_days()
         case_count = self._get_case_count()
-        diag_count = self._get_ins_apply_diag_count()
         ins_apply_fee = self._get_ins_apply_fee()
         try:
             day_apply_fee = ins_apply_fee // days
@@ -418,465 +594,357 @@ class InsApplyFeePerformance(QtWidgets.QMainWindow):
         ]
 
         self.ui.tableWidget_summary.setRowCount(1)
-        for col_no in range(len(row_data)):
-            item = QtWidgets.QTableWidgetItem()
-            item.setData(QtCore.Qt.EditRole, row_data[col_no])
-
-            self.ui.tableWidget_summary.setItem(0, col_no, item)
-            self.ui.tableWidget_summary.item(
-                0, col_no).setTextAlignment(
-                QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-            )
+        self._set_row(self.ui.tableWidget_summary, 0, row_data)
+        self._align_right(self.ui.tableWidget_summary, first_col=0)
 
     def _get_total_row_no(self):
-        table_widget_apply = self.parent.tab_ins_apply_calculated_data.tableWidget_ins_apply_data
+        table_widget_apply = (
+            self.parent.tab_ins_apply_calculated_data.tableWidget_ins_apply_data
+        )
 
-        current_row_no = None
         for row_no in range(table_widget_apply.rowCount()):
             item = table_widget_apply.item(row_no, 0)
             if item is None:
                 continue
 
-            if item.text() == '合計':
-                current_row_no = row_no
-                break
+            if item.text() == "合計":
+                return row_no
 
-        if current_row_no is None:
+        # 找不到合計列就回 None，不要退回第 0 列（那是某一位醫師的資料）
+        return None
+
+    def _get_apply_data_value(self, row_no, col_no):
+        if row_no is None:
             return 0
 
-        return current_row_no
-
-    def _get_ins_apply_patient_count(self):
-        current_row_no = self._get_total_row_no()
-        if current_row_no is None:
+        table_widget_apply = (
+            self.parent.tab_ins_apply_calculated_data.tableWidget_ins_apply_data
+        )
+        item = table_widget_apply.item(row_no, col_no)
+        if item is None:
             return 0
 
-        table_widget_apply = self.parent.tab_ins_apply_calculated_data.tableWidget_ins_apply_data
-        item = table_widget_apply.item(current_row_no, 4)
-        try:
-            patient_count = number_utils.get_integer(item.text())
-        except AttributeError:
-            patient_count = 0
-
-        return patient_count
-
-    def _get_ins_apply_diag_count(self):
-        current_row_no = self._get_total_row_no()
-        if current_row_no is None:
-            return 0
-
-        table_widget_apply = self.parent.tab_ins_apply_calculated_data.tableWidget_ins_apply_data
-        item = table_widget_apply.item(current_row_no, 5)
-        try:
-            diag_count = number_utils.get_integer(item.text())
-        except AttributeError:
-            diag_count = 0
-
-        return diag_count
+        return number_utils.get_integer(item.text())
 
     def _get_period_count(self):
-        start_date = self.start_date.toString('yyyy-MM-dd 00:00:00')
-        end_date = self.end_date.toString('yyyy-MM-dd 23:59:59')
+        start_date = self.start_date.toString("yyyy-MM-dd 00:00:00")
+        end_date = self.end_date.toString("yyyy-MM-dd 23:59:59")
+
         sql = f'''
-            SELECT CaseKey, CaseDate, DATE(CaseDate) as case_date FROM cases
-                LEFT JOIN person ON cases.Doctor = person.Name
-            WHERE
-                CaseDate BETWEEN "{start_date}" AND "{end_date}" AND
-                InsType = "健保" AND
-                ApplyType = "申報" AND
-                Doctor IS NOT NULL AND LENGTH(Doctor) > 0 AND
-                person.ID IS NOT NULL
-            GROUP BY case_date, Period, Doctor
+            SELECT COUNT(*) AS record_count FROM (
+                SELECT DATE(CaseDate) AS case_date FROM cases
+                    LEFT JOIN person ON cases.Doctor = person.Name
+                WHERE
+                    CaseDate BETWEEN "{start_date}" AND "{end_date}" AND
+                    InsType = "健保" AND
+                    ApplyType = "申報" AND
+                    Doctor IS NOT NULL AND LENGTH(Doctor) > 0 AND
+                    person.ID IS NOT NULL
+                GROUP BY case_date, Period, Doctor
+            ) AS period_list
         '''
         rows = self.database.select_record(sql)
+        if len(rows) <= 0:
+            return 0
 
-        return len(rows)
+        return number_utils.get_integer(rows[0]["record_count"])
 
     def _get_days(self):
-        start_date = self.start_date.toString('yyyy-MM-dd 00:00:00')
-        end_date = self.end_date.toString('yyyy-MM-dd 23:59:59')
+        start_date = self.start_date.toString("yyyy-MM-dd 00:00:00")
+        end_date = self.end_date.toString("yyyy-MM-dd 23:59:59")
+
         sql = f'''
-            SELECT CaseKey, DATE(CaseDate) as case_date FROM cases
+            SELECT COUNT(DISTINCT DATE(CaseDate)) AS record_count FROM cases
             WHERE
                 CaseDate BETWEEN "{start_date}" AND "{end_date}" AND
                 InsType = "健保" AND
                 ApplyType = "申報"
-            GROUP BY case_date
-        '''
-        rows = self.database.select_record(sql)
-
-        return len(rows)
-
-    def _get_case_count(self):
-        table_widget_apply = self.ui.tableWidget_case_xml
-        item = table_widget_apply.item(table_widget_apply.rowCount()-1, 1)
-        try:
-            case_count = number_utils.get_integer(item.text())
-        except AttributeError:
-            case_count = 0
-
-        return case_count
-
-    def _get_ins_apply_fee(self):
-        table_widget_apply = self.ui.tableWidget_case_xml
-        item = table_widget_apply.item(table_widget_apply.rowCount()-1, 8)
-        try:
-            ins_apply_fee = number_utils.get_integer(item.text())
-        except AttributeError:
-            ins_apply_fee = 0
-
-        return ins_apply_fee
-
-    def _parse_case_ddata(self, root):
-        dhead = root.xpath('//outpatient/ddata/dhead')
-        dbody = root.xpath('//outpatient/ddata/dbody')
-
-        record_count = len(dbody)
-        progress_dialog = QtWidgets.QProgressDialog(
-            '正在統計案件分類申報業績, 請稍後...', '取消', 0, record_count, self
-        )
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
-
-        for xml_row_no, hdata, ddata in zip(range(record_count), dhead, dbody):
-            progress_dialog.setValue(xml_row_no)
-
-            xdata = xml_utils.convert_node_to_dict(ddata)
-            xhdata = xml_utils.convert_node_to_dict(hdata)
-            case_type = xhdata['d1']
-            # if self.exclude_c5 and case_type == 'C5':
-            #     continue
-
-            if self.doctor != '全部':
-                doctor_id = xdata['d30']
-                if doctor_id != self.doctor_id:
-                    continue
-
-            self._parse_ddata(xdata, self.ui.tableWidget_case_xml, case_type)
-
-        progress_dialog.setValue(record_count)
-        progress_dialog.deleteLater()
-
-    def _parse_ddata(self, ddata, table_widget, case_type):
-        row_no = None
-        for i in range(table_widget.rowCount()):
-            item = table_widget.item(i, 0)
-            if item is None:
-                break
-
-            if item.text() == case_type:
-                row_no = i
-                break
-
-        if row_no is None:
-            row_no = table_widget.rowCount()
-            table_widget.setRowCount(row_no+1)
-
-        last_total_count = self._get_cell_value(table_widget, row_no, 1)
-        last_diag_fee = self._get_cell_value(table_widget, row_no, 2)
-        last_drug_fee = self._get_cell_value(table_widget, row_no, 3)
-        last_pharmacy_fee = self._get_cell_value(table_widget, row_no, 4)
-        last_treat_fee = self._get_cell_value(table_widget, row_no, 5)
-        last_total_fee = self._get_cell_value(table_widget, row_no, 6)
-        last_share_fee = self._get_cell_value(table_widget, row_no, 7)
-        last_apply_fee = self._get_cell_value(table_widget, row_no, 8)
-
-        ddata_fee = {
-            'total_count': last_total_count,
-            'diag_fee': last_diag_fee,
-            'drug_fee': last_drug_fee,
-            'pharmacy_fee': last_pharmacy_fee,
-            'treat_fee': last_treat_fee,
-            'total_fee': last_total_fee,
-            'share_fee': last_share_fee,
-            'apply_fee': last_apply_fee,
-        }
-
-        ddata_fee['total_count'] += 1
-
-        try:
-            ddata_fee['diag_fee'] += number_utils.get_integer(ddata['d36'])
-        except Exception:
-            pass
-
-        try:
-            ddata_fee['drug_fee'] += number_utils.get_integer(ddata['d32'])
-        except Exception:
-            pass
-
-        try:
-            ddata_fee['pharmacy_fee'] += number_utils.get_integer(ddata['d38'])
-        except Exception:
-            pass
-
-        try:
-            ddata_fee['treat_fee'] += number_utils.get_integer(ddata['d33'])
-        except Exception:
-            pass
-
-        try:
-            ddata_fee['total_fee'] += number_utils.get_integer(ddata['d39'])
-        except Exception:
-            pass
-
-        try:
-            ddata_fee['share_fee'] += number_utils.get_integer(ddata['d40'])
-        except Exception:
-            pass
-
-        try:
-            ddata_fee['apply_fee'] += number_utils.get_integer(ddata['d41'])
-        except Exception:
-            pass
-
-        data = [
-            case_type,
-            ddata_fee['total_count'],
-            ddata_fee['diag_fee'],
-            ddata_fee['drug_fee'],
-            ddata_fee['pharmacy_fee'],
-            ddata_fee['treat_fee'],
-            ddata_fee['total_fee'],
-            ddata_fee['share_fee'],
-            ddata_fee['apply_fee'],
-        ]
-
-        for col_no in range(len(data)):
-            item = QtWidgets.QTableWidgetItem()
-            item.setData(QtCore.Qt.EditRole, data[col_no])
-            table_widget.setItem(
-                row_no, col_no, item,
-            )
-
-    def _calculate_ins_apply_fee_case_type(self):
-        for row_no in range(self.ui.tableWidget_case_xml.rowCount()):
-            case_type_item = self.ui.tableWidget_case_xml.item(row_no, 0)
-            if case_type_item is None:
-                continue
-
-            case_type_item = case_type_item.text()
-            total_fee = number_utils.get_integer(self.ui.tableWidget_case_xml.item(row_no, 6).text())
-            share_fee = number_utils.get_integer(self.ui.tableWidget_case_xml.item(row_no, 7).text())
-            ins_apply_fee = total_fee - share_fee
-
-            data = [
-                [0, case_type_item],
-                [8, ins_apply_fee],
-            ]
-
-            for col_no in range(len(data)):
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, data[col_no][1])
-                self.ui.tableWidget_case_xml.setItem(
-                    row_no, data[col_no][0], item,
-                )
-
-    def _get_period(self, case_key):
-        sql = f'''
-            SELECT Period FROM cases
-            WHERE
-                CaseKey = {case_key}
         '''
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
-            return None
-
-        return string_utils.xstr(rows[0]['Period'])
-
-    def _get_nurse_fee(self, diag_code, case_date=None):
-        if diag_code == 'A01':
-            no_diag_code = 'A02'
-        elif diag_code == 'A03':
-            no_diag_code = 'A04'
-        elif diag_code == 'A05':
-            no_diag_code = 'A06'
-        elif diag_code == 'A09':
-            no_diag_code = 'A10'
-        else:
             return 0
 
+        return number_utils.get_integer(rows[0]["record_count"])
+
+    def _get_case_count(self):
+        table_widget = self.ui.tableWidget_case_xml
+
+        return self._get_cell_value(table_widget, table_widget.rowCount() - 1, 1)
+
+    def _get_ins_apply_fee(self):
+        table_widget = self.ui.tableWidget_case_xml
+
+        return self._get_cell_value(table_widget, table_widget.rowCount() - 1, 8)
+
+    # -----------------------------------------------------------------------
+    # 跟診護理人員
+    # -----------------------------------------------------------------------
+    def _get_nurse_fee(self, diag_code, case_date=None):
+        no_diag_code = NURSE_DIAG_CODE_PAIR.get(diag_code)
+        if no_diag_code is None:
+            return 0
+
+        cache_key = (diag_code, self._date_text(case_date))
+        if cache_key in self._nurse_fee_cache:
+            return self._nurse_fee_cache[cache_key]
+
         diag_fee = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(self.database, diag_code, case_date=case_date)
+            charge_utils.get_ins_fee_from_ins_code(
+                self.database, diag_code, case_date=case_date
+            )
         )
         no_diag_fee = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(self.database, no_diag_code, case_date=case_date)
+            charge_utils.get_ins_fee_from_ins_code(
+                self.database, no_diag_code, case_date=case_date
+            )
         )
 
-        return diag_fee - no_diag_fee
+        nurse_fee = diag_fee - no_diag_fee
+        self._nurse_fee_cache[cache_key] = nurse_fee
+
+        return nurse_fee
+
+    def _get_case_period_map(self, case_keys):
+        period_map = {}
+
+        keys = sorted(
+            {
+                number_utils.get_integer(case_key)
+                for case_key in case_keys
+                if number_utils.get_integer(case_key) > 0
+            }
+        )
+        for chunk in self._chunks(keys):
+            in_list = ", ".join(str(key) for key in chunk)
+            sql = f"""
+                SELECT CaseKey, Period FROM cases
+                WHERE
+                    CaseKey IN ({in_list})
+            """
+            for row in self.database.select_record(sql):
+                period_map[number_utils.get_integer(row["CaseKey"])] = (
+                    string_utils.xstr(row["Period"])
+                )
+
+        return period_map
+
+    def _get_nurse_schedule_map(self, case_dates):
+        """回傳 {(yyyy-MM-dd, 醫師姓名): nurse_schedule 列}。"""
+        schedule_map = {}
+
+        dates = sorted({date_text for date_text in case_dates if date_text})
+        for chunk in self._chunks(dates):
+            in_list = ", ".join(f'"{date_text}"' for date_text in chunk)
+            sql = f"""
+                SELECT ScheduleDate, Doctor, Nurse1, Nurse2, Nurse3
+                FROM nurse_schedule
+                WHERE
+                    ScheduleDate IN ({in_list})
+            """
+            for row in self.database.select_record(sql):
+                key = (
+                    self._date_text(row["ScheduleDate"]),
+                    string_utils.xstr(row["Doctor"]).strip(),
+                )
+                # 原程式取 rows[0]；同日同醫師有重複列時一樣只取第一筆
+                if key not in schedule_map:
+                    schedule_map[key] = row
+
+        return schedule_map
 
     def _check_ins_apply_fee_nurse(self):
-        try:
-            clinic_id = self.parent.clinic_id
-        except AttributeError:
-            clinic_id = self.system_settings.field('院所代號')
+        self.ui.tableWidget_nurse_list.setRowCount(0)
 
+        diag_code_list = '", "'.join(NURSE_DIAG_CODE_PAIR.keys())
         sql = f'''
-            SELECT * FROM insapply
+            SELECT CaseKey1, CaseDate, DoctorID, DiagCode FROM insapply
             WHERE
-                ClinicID = "{clinic_id}" AND
+                ClinicID = "{self._get_clinic_id()}" AND
                 ApplyDate = "{self.apply_date}" AND
                 ApplyPeriod = "{self.period}" AND
                 ApplyType = "{self.apply_type_code}" AND
-                DiagCode IN ("A01", "A03", "A05", "A09")
+                DiagCode IN ("{diag_code_list}")
         '''
         rows = self.database.select_record(sql)
         record_count = len(rows)
         if record_count <= 0:
             return
 
-        progress_dialog = QtWidgets.QProgressDialog(
-            '正在統計跟診護理人員申報業績, 請稍後...', '取消', 0, record_count, self
+        progress_dialog, progress_step = self._get_progress_dialog(
+            "正在統計跟診護理人員申報業績, 請稍後...", record_count
         )
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
 
         nurse_dict = {}
-        for row_no, row in enumerate(rows):
-            progress_dialog.setValue(row_no)
-            period = self._get_period(row['CaseKey1'])
-            if period is None:
-                continue
+        nurse_field_dict = {"早班": "Nurse1", "午班": "Nurse2", "晚班": "Nurse3"}
 
-            case_date = row['CaseDate'].strftime('%Y-%m-%d')
-            doctor_id = string_utils.xstr(row['DoctorID'])
-            diag_code = string_utils.xstr(row['DiagCode'])
-            doctor_name = personnel_utils.person_id_to_name(self.database, doctor_id)
-
-            sql = f'''
-                SELECT * FROM nurse_schedule
-                WHERE
-                    ScheduleDate = "{case_date}" AND
-                    Doctor = "{doctor_name}"
-            '''
-            nurse_rows = self.database.select_record(sql)
-            if len(nurse_rows) <= 0:
-                continue
-
-            nurse_row = nurse_rows[0]
-            if period == '早班':
-                nurse_field = 'Nurse1'
-            elif period == '午班':
-                nurse_field = 'Nurse2'
-            elif period == '晚班':
-                nurse_field = 'Nurse3'
-            else:
-                continue
-
-            nurse = string_utils.xstr(nurse_row[nurse_field])
-            if nurse not in nurse_dict:
-                nurse_dict[nurse] = {}
-                nurse_dict[nurse]['count'] = 0
-                nurse_dict[nurse]['points'] = 0
-
-            nurse_dict[nurse]['count'] += 1
-            nurse_dict[nurse]['points'] += self._get_nurse_fee(diag_code, case_date=row['CaseDate'])
-
-        self.ui.tableWidget_nurse_list.setRowCount(0)
-        for row_no, nurse in enumerate(nurse_dict.keys()):
-            self.ui.tableWidget_nurse_list.setRowCount(self.ui.tableWidget_nurse_list.rowCount()+1)
-
-            nurse_data = [nurse, nurse_dict[nurse]['count'], nurse_dict[nurse]['points']]
-            for col_no in range(len(nurse_data)):
-                item = QtWidgets.QTableWidgetItem()
-                item.setData(QtCore.Qt.EditRole, nurse_data[col_no])
-                self.ui.tableWidget_nurse_list.setItem(row_no, col_no, item)
-                if col_no in [1, 2]:
-                    self.ui.tableWidget_nurse_list.item(
-                        row_no, col_no).setTextAlignment(
-                        QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                    )
-
-        progress_dialog.setValue(record_count)
-        progress_dialog.deleteLater()
-
-    def _check_ins_apply_fee_special(self):
-        treat_type_list = [
-            '視訊門診', '法定傳染病通報隔離',
-            '巡迴山地', '巡迴偏遠', '巡迴離島',
-            '前往資源不足地區', '照護機構中醫照護',
-            '矯正機關內門診',
-        ]
-
-        self.ui.tableWidget_special_fee.setRowCount(0)
-        for treat_type in treat_type_list:
-            self._check_special_ins_apply_fee(treat_type)
-
-    def _check_special_ins_apply_fee(self, in_treat_type):
         try:
-            clinic_id = self.parent.clinic_id
-        except AttributeError:
-            clinic_id = self.system_settings.field('院所代號')
+            # 先把 cases.Period 與 nurse_schedule 整批撈回來，避免每列 5 次查詢
+            period_map = self._get_case_period_map(row["CaseKey1"] for row in rows)
+            schedule_map = self._get_nurse_schedule_map(
+                self._date_text(row["CaseDate"]) for row in rows
+            )
 
+            for row_no, row in enumerate(rows):
+                if row_no % progress_step == 0:
+                    progress_dialog.setValue(row_no)
+                    if progress_dialog.wasCanceled():
+                        break
+
+                period = period_map.get(number_utils.get_integer(row["CaseKey1"]))
+                if period is None:
+                    continue
+
+                nurse_field = nurse_field_dict.get(period)
+                if nurse_field is None:
+                    continue
+
+                case_date = self._date_text(row["CaseDate"])
+                doctor_name = self._person_id_to_name(
+                    string_utils.xstr(row["DoctorID"])
+                )
+
+                nurse_row = schedule_map.get((case_date, doctor_name.strip()))
+                if nurse_row is None:
+                    continue
+
+                nurse = string_utils.xstr(nurse_row[nurse_field]).strip()
+                if nurse == "":
+                    # 該時段沒有排跟診護理人員，不要產生一列空白姓名
+                    continue
+
+                nurse_data = nurse_dict.get(nurse)
+                if nurse_data is None:
+                    nurse_data = {"count": 0, "points": 0}
+                    nurse_dict[nurse] = nurse_data
+
+                nurse_data["count"] += 1
+                nurse_data["points"] += self._get_nurse_fee(
+                    string_utils.xstr(row["DiagCode"]), case_date=row["CaseDate"]
+                )
+
+            progress_dialog.setValue(record_count)
+        finally:
+            progress_dialog.deleteLater()
+
+        table_widget = self.ui.tableWidget_nurse_list
+        table_widget.setRowCount(len(nurse_dict))
+        for row_no, (nurse, nurse_data) in enumerate(nurse_dict.items()):
+            self._set_row(
+                table_widget,
+                row_no,
+                [nurse, nurse_data["count"], nurse_data["points"]],
+            )
+
+        self._align_right(table_widget)
+
+    # -----------------------------------------------------------------------
+    # 專案申報業績
+    # -----------------------------------------------------------------------
+    def _check_ins_apply_fee_special(self):
+        self.ui.tableWidget_special_fee.setRowCount(0)
+
+        treat_type_list = '", "'.join(SPECIAL_TREAT_TYPE)
         sql = f'''
-            SELECT insapply.*, cases.RegistType, cases.TreatType FROM insapply
+            SELECT insapply.InsApplyFee, cases.RegistType, cases.TreatType
+            FROM insapply
                 LEFT JOIN cases ON insapply.CaseKey1 = cases.CaseKey
             WHERE
-                ClinicID = "{clinic_id}" AND
-                ApplyDate = "{self.apply_date}" AND
-                ApplyPeriod = "{self.period}" AND
+                insapply.ClinicID = "{self._get_clinic_id()}" AND
+                insapply.ApplyDate = "{self.apply_date}" AND
+                insapply.ApplyPeriod = "{self.period}" AND
                 insapply.ApplyType = "{self.apply_type_code}" AND
-                CaseKey1 IS NOT NULL AND
-                (RegistType = "{in_treat_type}" OR TreatType = "{in_treat_type}")
+                insapply.CaseKey1 IS NOT NULL AND
+                (
+                    cases.RegistType IN ("{treat_type_list}") OR
+                    cases.TreatType IN ("{treat_type_list}")
+                )
         '''
         rows = self.database.select_record(sql)
         record_count = len(rows)
         if record_count <= 0:
             return
 
-        progress_dialog = QtWidgets.QProgressDialog(
-            '正在統計專案申報業績, 請稍後...', '取消', 0, record_count, self
+        progress_dialog, progress_step = self._get_progress_dialog(
+            "正在統計專案申報業績, 請稍後...", record_count
         )
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
 
-        count, points = 0, 0
-        for row_no, row in enumerate(rows):
-            progress_dialog.setValue(row_no)
+        special_data = {}
 
-            count += 1
-            points += number_utils.get_integer(row['InsApplyFee'])
+        try:
+            for row_no, row in enumerate(rows):
+                if row_no % progress_step == 0:
+                    progress_dialog.setValue(row_no)
+                    if progress_dialog.wasCanceled():
+                        break
 
-        current_row_no = self.ui.tableWidget_special_fee.rowCount()
-        self.ui.tableWidget_special_fee.setRowCount(current_row_no + 1)
+                ins_apply_fee = number_utils.get_integer(row["InsApplyFee"])
+                # 一筆同時符合掛號別與治療別時，兩邊都要計入（與原程式相同）
+                for treat_type in {
+                    string_utils.xstr(row["RegistType"]),
+                    string_utils.xstr(row["TreatType"]),
+                }:
+                    if treat_type not in SPECIAL_TREAT_TYPE:
+                        continue
 
-        row = [in_treat_type, count, points]
-        for col_no in range(len(row)):
-            item = QtWidgets.QTableWidgetItem()
-            item.setData(QtCore.Qt.EditRole, row[col_no])
-            self.ui.tableWidget_special_fee.setItem(current_row_no, col_no, item)
-            if col_no in [1, 2]:
-                self.ui.tableWidget_special_fee.item(current_row_no, col_no).setTextAlignment(
-                    QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                )
+                    data = special_data.get(treat_type)
+                    if data is None:
+                        data = {"count": 0, "points": 0}
+                        special_data[treat_type] = data
 
-        progress_dialog.setValue(record_count)
-        progress_dialog.deleteLater()
+                    data["count"] += 1
+                    data["points"] += ins_apply_fee
 
+            progress_dialog.setValue(record_count)
+        finally:
+            progress_dialog.deleteLater()
+
+        table_widget = self.ui.tableWidget_special_fee
+        # 依 SPECIAL_TREAT_TYPE 的順序列出，沒有資料的治療別不列（與原程式相同）
+        listed = [
+            treat_type
+            for treat_type in SPECIAL_TREAT_TYPE
+            if treat_type in special_data
+        ]
+        table_widget.setRowCount(len(listed))
+        for row_no, treat_type in enumerate(listed):
+            data = special_data[treat_type]
+            self._set_row(
+                table_widget, row_no, [treat_type, data["count"], data["points"]]
+            )
+
+        self._align_right(table_widget)
+
+    # -----------------------------------------------------------------------
+    # 匯出
+    # -----------------------------------------------------------------------
     def export_doctor_to_excel(self):
         options = QFileDialog.Options()
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "匯出醫師申報業績表",
-            f'{self.apply_year}年{self.apply_month}月醫師申報業績表.xlsx',
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            f"{self.apply_year}年{self.apply_month}月醫師申報業績表.xlsx",
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
 
-        clinic_name = self.system_settings.field('院所名稱')
-        year = self.apply_year
-        month = self.apply_month
-        title = f'{clinic_name} {year}年{month}月份醫師申報業績表'
+        clinic_name = self.system_settings.field("院所名稱")
+        title = f"{clinic_name} {self.apply_year}年{self.apply_month}月份醫師申報業績表"
 
         export_utils.export_table_widget_to_excel(
-            excel_file_name, self.ui.tableWidget_doctor_xml, None, [1, 2, 3, 4, 5, 6, 7, 8], title
+            excel_file_name,
+            self.ui.tableWidget_doctor_xml,
+            None,
+            [1, 2, 3, 4, 5, 6, 7, 8],
+            title,
         )
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            f'<h3>醫師申報業績表{excel_file_name}匯出完成.</h3>',
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            f"<h3>醫師申報業績表{excel_file_name}匯出完成.</h3>",
+            "Microsoft Excel 格式.",
         )
 
     def export_case_to_excel(self):
@@ -884,96 +952,106 @@ class InsApplyFeePerformance(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "匯出案件分類申報業績表",
-            f'{self.apply_year}年{self.apply_month}月案件分類申報業績表.xlsx',
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            f"{self.apply_year}年{self.apply_month}月案件分類申報業績表.xlsx",
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
 
-        clinic_name = self.system_settings.field('院所名稱')
-        year = self.apply_year
-        month = self.apply_month
-        title = f'{clinic_name} {year}年{month}月份案件分類申報業績表'
+        clinic_name = self.system_settings.field("院所名稱")
+        title = (
+            f"{clinic_name} {self.apply_year}年{self.apply_month}月份案件分類申報業績表"
+        )
 
         export_utils.export_table_widget_to_excel(
-            excel_file_name, self.ui.tableWidget_case_xml, None, [1, 2, 3, 4, 5, 6, 7, 8], title
+            excel_file_name,
+            self.ui.tableWidget_case_xml,
+            None,
+            [1, 2, 3, 4, 5, 6, 7, 8],
+            title,
         )
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            f'<h3>案件分類申報業績表{excel_file_name}匯出完成.</h3>',
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            f"<h3>案件分類申報業績表{excel_file_name}匯出完成.</h3>",
+            "Microsoft Excel 格式.",
         )
 
+    # -----------------------------------------------------------------------
+    # 圖表
+    # -----------------------------------------------------------------------
     def _plot_chart(self):
         self._plot_doctor_chart()
         self._plot_case_type_chart()
 
     def _plot_doctor_chart(self):
+        table_widget = self.ui.tableWidget_doctor_xml
+        row_count = table_widget.rowCount()
+        if self._doctor_total_row:
+            row_count -= 1
+
         series = QtChart.QPieSeries()
-        for row_no in range(self.ui.tableWidget_doctor_xml.rowCount()-1):
-            doctor_item = self.ui.tableWidget_doctor_xml.item(row_no, 0)
+        for row_no in range(row_count):
+            doctor_item = table_widget.item(row_no, 0)
             if doctor_item is None:
-                doctor_name = '空白'
+                doctor_name = "空白"
                 ins_apply_fee = 0
             else:
                 doctor_name = doctor_item.text()
-                ins_apply_fee = number_utils.get_integer(self.ui.tableWidget_doctor_xml.item(row_no, 8).text())
+                ins_apply_fee = self._get_cell_value(table_widget, row_no, 8)
 
             series.append(doctor_name, ins_apply_fee)
-
             try:
-                slice = series.slices()[row_no]
+                pie_slice = series.slices()[row_no]
             except IndexError:
                 return
 
-            slice.setExploded()
-            slice.setLabelVisible()
+            pie_slice.setExploded()
+            pie_slice.setLabelVisible()
 
         chart = QtChart.QChart()
         chart.addSeries(series)
-        chart.setTitle('醫師申報業績')
+        chart.setTitle("醫師申報業績")
         chart.legend().hide()
         chart.setAnimationOptions(QtChart.QChart.AllAnimations)
 
         chartView = QtChart.QChartView(chart)
         chartView.setRenderHint(QtGui.QPainter.Antialiasing)
-
         chartView.setFixedWidth(700)
         chartView.setFixedHeight(450)
         self.ui.verticalLayout_chart.addWidget(chartView)
 
     def _plot_case_type_chart(self):
-        case_type_list = []
+        table_widget = self.ui.tableWidget_case_xml
+
         bar_set = []
         series = QtChart.QBarSeries()
-        for row_no in range(self.ui.tableWidget_case_xml.rowCount()-1):
-            case_type = self.ui.tableWidget_case_xml.item(row_no, 0).text()
-            ins_apply_fee = number_utils.get_integer(self.ui.tableWidget_case_xml.item(row_no, 8).text())
+        for row_no in range(table_widget.rowCount() - 1):
+            item = table_widget.item(row_no, 0)
+            if item is None:
+                continue
 
-            case_type_list.append(case_type)
+            case_type = item.text()
             bar_set.append(QtChart.QBarSet(case_type))
-            bar_set[row_no] << ins_apply_fee
-            series.append(bar_set[row_no])
+            bar_set[-1] << self._get_cell_value(table_widget, row_no, 8)
+            series.append(bar_set[-1])
 
         chart = QtChart.QChart()
         chart.addSeries(series)
-        chart.setTitle('案件分類申報統計表')
+        chart.setTitle("案件分類申報統計表")
         chart.setAnimationOptions(QtChart.QChart.SeriesAnimations)
 
-        categories = ['申報金額']
-
+        categories = ["申報金額"]
         axis = QtChart.QBarCategoryAxis()
         axis.append(categories)
         chart.createDefaultAxes()
         chart.setAxisX(axis, series)
-
         chart.legend().setVisible(True)
         chart.legend().setAlignment(QtCore.Qt.AlignBottom)
 
         chartView = QtChart.QChartView(chart)
         chartView.setRenderHint(QtGui.QPainter.Antialiasing)
-
         chartView.setFixedWidth(700)
         self.ui.verticalLayout_chart.addWidget(chartView)

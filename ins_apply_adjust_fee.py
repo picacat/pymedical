@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-
 from PyQt5 import QtCore, QtWidgets
 
 from libs import (
@@ -11,6 +10,11 @@ from libs import (
     personnel_utils,
     string_utils,
 )
+
+# 進度對話盒延遲顯示的毫秒數
+# Qt 預設 4000: 估計作業不到 4 秒就整個不顯示, 看起來像沒反應
+# 0 = 一定顯示; 不想讓小資料量閃一下的話改成 500
+PROGRESS_MINIMUM_DURATION = 0
 
 
 # 候診名單 2018.01.31
@@ -61,41 +65,124 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
     def _set_signal(self):
         pass
 
+    # ==================================================================
+    # 重複調整的防呆
+    # 本檔的 _adjust_child_diag_fee (加成20%)、_adjust_first_visit_fee (加A90)
+    # 與 charge_utils.update_treat_fee (讀當前值再乘成數) 都是「累加型」,
+    # 同一批 insapply 重跑會複利 (九折跑兩次變成八一折)。
+    # 正確流程是「重新產生申報資料 -> 調整」, 這裡加一道旗標把它固定下來。
+    # ==================================================================
+    def _base_condition(self):
+        return f'''
+            ApplyDate = "{self.apply_date}" AND
+            ApplyType = "{self.apply_type_code}" AND
+            ApplyPeriod = "{self.period}" AND
+            ClinicID = "{self.clinic_id}"
+        '''
+
+    def _ensure_adjusted_field(self):
+        """確認 insapply.Adjusted 欄位存在, 沒有就補上.
+
+        失敗時回傳 False, 呼叫端會略過防呆繼續執行——不能因為欄位加不上去
+        就讓申報作業做不下去。
+        """
+        try:  # 探一下欄位在不在, 比 SHOW COLUMNS 可攜
+            self.database.select_record("SELECT Adjusted FROM insapply LIMIT 1")
+            return True
+        except Exception:
+            pass
+
+        try:
+            self.database.exec_sql(
+                "ALTER TABLE insapply ADD COLUMN Adjusted CHAR(1) DEFAULT NULL"
+            )
+            return True
+        except Exception as error:
+            print(
+                f"[申報調整] 無法建立 insapply.Adjusted 欄位, 略過重複調整防呆: {error}"
+            )
+            return False
+
+    def _is_adjusted(self):
+        sql = f"""
+            SELECT COUNT(*) AS cnt FROM insapply
+            WHERE
+                {self._base_condition()} AND
+                Adjusted = "Y"
+        """
+        try:
+            rows = self.database.select_record(sql)
+        except Exception:
+            return False
+
+        if len(rows) <= 0:
+            return False
+
+        return number_utils.get_integer(rows[0]["cnt"]) > 0
+
+    def _mark_adjusted(self):
+        sql = f"""
+            UPDATE insapply
+            SET
+                Adjusted = "Y"
+            WHERE
+                {self._base_condition()}
+        """
+        try:
+            self.database.exec_sql(sql)
+        except Exception as error:
+            print(f"[申報調整] 無法寫入 Adjusted 旗標: {error}")
+
     def adjust_ins_fee(self):
         # if self.apply_type == '補報':  # 補報不調整各項費用成數 2019.05.30
         #     return
+
+        has_flag = self._ensure_adjusted_field()
+        if has_flag and self._is_adjusted():
+            QtWidgets.QMessageBox.warning(
+                self,
+                "申報資料已調整過",
+                "<h3>本次申報的資料已經調整過了, 這次不再調整。</h3>"
+                "<p>重複調整會讓成數累乘 (九折跑兩次變成八一折)、"
+                "未滿四歲加成與初診照護加計重複累加。</p>"
+                "<p>請先<b>重新產生申報資料</b>, 再執行調整。</p>",
+                QtWidgets.QMessageBox.Ok,
+            )
+            return False
 
         progress_dialog = QtWidgets.QProgressDialog(
             "正在調整申報檔各項費用中, 請稍後...", "取消", 0, 8, self
         )
         progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
+        progress_dialog.setMinimumDuration(PROGRESS_MINIMUM_DURATION)
         progress_dialog.setValue(0)
+        progress_dialog.show()
+        QtWidgets.QApplication.processEvents()
 
-        self._adjust_diag_fee()
-        progress_dialog.setValue(1)
+        try:
+            self._adjust_diag_fee()
+            progress_dialog.setValue(1)
+            self._adjust_pharmacy_fee()
+            progress_dialog.setValue(2)
+            self._adjust_nurse_diag_fee()
+            progress_dialog.setValue(3)
+            self._adjust_child_diag_fee()
+            progress_dialog.setValue(4)
+            self._adjust_treat_fee()
+            progress_dialog.setValue(5)
+            self._adjust_treat_drug_fee()
+            progress_dialog.setValue(6)
+            self._adjust_first_visit_fee()
+            progress_dialog.setValue(7)
+            self._adjust_care_fee()
+            progress_dialog.setValue(8)
+        finally:
+            progress_dialog.deleteLater()
 
-        self._adjust_pharmacy_fee()
-        progress_dialog.setValue(2)
+        if has_flag:
+            self._mark_adjusted()
 
-        self._adjust_nurse_diag_fee()
-        progress_dialog.setValue(3)
-
-        self._adjust_child_diag_fee()
-        progress_dialog.setValue(4)
-
-        self._adjust_treat_fee()
-        progress_dialog.setValue(5)
-
-        self._adjust_treat_drug_fee()
-        progress_dialog.setValue(6)
-
-        self._adjust_first_visit_fee()
-        progress_dialog.setValue(7)
-
-        self._adjust_care_fee()
-        progress_dialog.setValue(8)
-
-        progress_dialog.deleteLater()
+        return True
 
     # 診察費調整, 特定照護不列入計算
     def _adjust_diag_fee(self):
@@ -122,6 +209,7 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
             ins_apply_rows = self._get_ins_apply_rows(
                 row["doctor_id"]
             )  # 不含照護及職業傷害, 三歲兒童放在最前面
+
             for ins_row_no, ins_row in zip(
                 range(1, len(ins_apply_rows) + 1), ins_apply_rows
             ):
@@ -135,12 +223,6 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                     self._adjust_diag_section4(ins_row)
                 elif ins_row_no <= diag_section5:
                     self._adjust_diag_section5(ins_row)
-
-    def _adjust_diag_section1(self, row):
-        diag_code = row["DiagCode"]
-        charge_utils.update_ins_apply_diag_fee(
-            self.database, self.system_settings, row["InsApplyKey"], diag_code
-        )
 
     def _adjust_diag_section2(self, row):
         diag_code = row["DiagCode"]
@@ -166,12 +248,14 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
 
     def _adjust_diag_section4(self, row):
         diag_code = "A07"
+
         charge_utils.update_ins_apply_diag_fee(
             self.database, self.system_settings, row["InsApplyKey"], diag_code
         )
 
     def _adjust_diag_section5(self, row):
         diag_code = "A08"
+
         charge_utils.update_ins_apply_diag_fee(
             self.database, self.system_settings, row["InsApplyKey"], diag_code
         )
@@ -179,8 +263,16 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
     # 不含加強照護類及職業傷害
     def _get_ins_apply_rows(self, doctor_id):
         exclude_case_type = tuple(nhi_utils.EXCLUDE_DIAG_ADJUST)
+        share_code_order = "'902', 'S10', 'S20', '003', '004'"
 
         # CaseType: 22 DiagFee = InsTotalFee 問診也要計算
+        # (這個條件與 ins_apply_calculate._count_diag_count 及
+        #  nhi_utils.get_case_type() 判定案別22 的口徑一致)
+        #
+        # ORDER BY 的 FIELD() 找不到時回傳 0, 升冪排序會排在最前面,
+        # 原本會讓 S14/S24/K20/001/007/901/903/904/906 等未列出的代號
+        # 全部插到 902 前面, 三歲兒童優先的用意反而失效。
+        # 多加一個 `FIELD(...) = 0` 當第一排序鍵, 把未列出的推到最後
         sql = f'''
             SELECT InsApplyKey, Sequence, DoctorName, DiagCode, DiagFee, InsTotalFee, InsApplyFee
             FROM insapply
@@ -193,7 +285,11 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                 DiagFee > 0 AND
                 (CaseType NOT IN {exclude_case_type} OR
                  CaseType = "22" AND DiagFee = InsTotalFee)
-                ORDER BY CaseType, Field(ShareCode, '902', 'S10', 'S20', '003', '004'), Sequence
+                ORDER BY
+                    CaseType,
+                    Field(ShareCode, {share_code_order}) = 0,
+                    Field(ShareCode, {share_code_order}),
+                    Sequence
         '''
         rows = self.database.select_record(sql)
 
@@ -240,9 +336,15 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
             "InsTotalFee",
             "InsApplyFee",
         ]
+
         for row in rows:
-            pharmacy_code = string_utils.xstr(row["PharmacyCode"])
+            # PharmacyCode 若為 NULL 或長度不足, 原本的 pharmacy_code[i] 會
+            # IndexError, 整個調整作業會中斷在這裡, 後面五支都不會執行
+            pharmacy_code = string_utils.xstr(row["PharmacyCode"]).ljust(
+                nhi_utils.MAX_COURSE, "0"
+            )
             pharmacy_fee = number_utils.get_integer(row["PharmacyFee"])
+
             new_pharmacy_code = ""
             new_pharmacy_fee = 0
             new_pharmacist_id = None
@@ -287,6 +389,7 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                 - pharmacy_fee
                 + new_pharmacy_fee
             )
+
             if new_pharmacist_id is None:
                 new_pharmacist_id = string_utils.xstr(row["DoctorID"])
 
@@ -325,20 +428,24 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
             case_key = row["CaseKey1"]
             doctor_name = string_utils.xstr(row["DoctorName"])
             diag_code = row["DiagCode"]
-            if not nhi_utils.nurse_schedule_on_duty(
-                self.database, case_key, doctor_name
-            ):
-                if diag_code in ["A01", "A03", "A05"]:
-                    if diag_code == "A01":
-                        diag_code = "A02"
-                    elif diag_code == "A03":
-                        diag_code = "A04"
-                    elif diag_code == "A05":
-                        diag_code = "A06"
 
-                charge_utils.update_ins_apply_diag_fee(
-                    self.database, self.system_settings, row["InsApplyKey"], diag_code
-                )
+            if nhi_utils.nurse_schedule_on_duty(self.database, case_key, doctor_name):
+                continue
+
+            if diag_code == "A01":
+                diag_code = "A02"
+            elif diag_code == "A03":
+                diag_code = "A04"
+            elif diag_code == "A05":
+                diag_code = "A06"
+            else:
+                # 原本這裡不管醫令有沒有變都會呼叫一次 update_ins_apply_diag_fee
+                # (SELECT + 重算 + UPDATE), 沒有護理人員版本的醫令根本不用動
+                continue
+
+            charge_utils.update_ins_apply_diag_fee(
+                self.database, self.system_settings, row["InsApplyKey"], diag_code
+            )
 
     # 未滿四歲加成20% 2022-03-01 實施 (之前為未滿3歲 ShareCode = '902')
     def _adjust_child_diag_fee(self):
@@ -359,6 +466,7 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
             age_year, _ = date_utils.get_age(row["Birthday"], row["CaseDate"])
             if age_year is None or age_year >= 4:  # 已滿4歲
                 continue
+
             # if string_utils.xstr(row["ShareCode"]) != "902":  # 非三歲兒童不計算加成
             #     continue
 
@@ -370,91 +478,9 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
 
             fields = ["DiagFee", "InsTotalFee", "InsApplyFee"]
             data = [diag_fee, ins_total_fee, ins_apply_fee]
-
             self.database.update_record(
                 "insapply", fields, "InsApplyKey", ins_apply_key, data
             )
-
-    # def _adjust_treat_fee(self):
-    #     for ins_calculated_row in self.ins_calculated_table:
-    #         doctor_name = ins_calculated_row["doctor_name"]
-    #         sql = f'''
-    #             SELECT *
-    #             FROM insapply
-    #             WHERE
-    #                 ApplyDate = "{self.apply_date}" AND
-    #                 ApplyType = "{self.apply_type_code}" AND
-    #                 ApplyPeriod = "{self.period}" AND
-    #                 ClinicID = "{self.clinic_id}" AND
-    #                 CaseType = "29"
-    #                 ORDER BY Sequence
-    #         '''
-    #         rows = self.database.select_record(sql)
-
-    #         treat_section1 = ins_calculated_row["treat_section1"]
-    #         treat_section2 = (
-    #             ins_calculated_row["treat_section1"]
-    #             + ins_calculated_row["treat_section2"]
-    #         )
-    #         treat_section3 = (
-    #             ins_calculated_row["treat_section1"]
-    #             + ins_calculated_row["treat_section2"]
-    #             + ins_calculated_row["treat_section3"]
-    #         )
-
-    #         treat_count = 0
-    #         for row in rows:
-    #             for course in range(1, nhi_utils.MAX_COURSE + 1):
-    #                 case_key = row[f"CaseKey{course}"]
-    #                 if case_key in ["", None]:
-    #                     continue
-
-    #                 sql = f'''
-    #                     SELECT CaseKey FROM cases
-    #                     WHERE
-    #                         CaseKey = {case_key} AND
-    #                         Doctor = "{doctor_name}"
-    #                 '''
-    #                 case_rows = self.database.select_record(sql)
-    #                 if len(case_rows) <= 0:
-    #                     continue
-
-    #                 treat_code = string_utils.xstr(row[f"TreatCode{course}"])
-    #                 if treat_code not in nhi_utils.TREAT_ALL_CODE:  # 針傷處置才調整
-    #                     continue
-
-    #                 if treat_code in nhi_utils.TREAT_DRUG_CODE:  # 針傷給藥不調整
-    #                     continue
-
-    #                 # if (
-    #                 #     treat_code in nhi_utils.MODERATE_COMPLICATED_ACUPUNCTURE_CODE
-    #                 # ):  # 2023-05-09 中度複針不調整, 只調整一般針灸比較划算
-    #                 #     continue
-
-    #                 # if (
-    #                 #     treat_code in nhi_utils.HIGHLY_COMPLICATED_ACUPUNCTURE_CODE
-    #                 # ):  # 高度複針不調整
-    #                 #     continue
-
-    #                 treat_fee = number_utils.get_integer(row[f"TreatFee{course}"])
-    #                 if treat_code == "" or treat_fee <= 0:
-    #                     continue
-
-    #                 treat_count += 1
-
-    #                 ins_apply_key = row["InsApplyKey"]
-    #                 treat_percent = 100
-    #                 if treat_count <= treat_section1:
-    #                     pass
-    #                 elif treat_count <= treat_section2:
-    #                     treat_percent = 90
-    #                 elif treat_count <= treat_section3:
-    #                     treat_percent = 0
-
-    #                 if treat_percent < 100:
-    #                     charge_utils.update_treat_fee(
-    #                         self.database, ins_apply_key, course, treat_percent
-    #                     )
 
     # 2026-09-03 優化排序版本，金額高的處置放在treat_section1，金額低的放在後面
     def _adjust_treat_fee(self):
@@ -473,6 +499,7 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                     ORDER BY Sequence
             '''
             rows = self.database.select_record(sql)
+
             treat_section1 = ins_calculated_row["treat_section1"]
             treat_section2 = (
                 ins_calculated_row["treat_section1"]
@@ -492,6 +519,7 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                     case_key = row[f"CaseKey{course}"]
                     if case_key in ["", None]:
                         continue
+
                     sql = f'''
                         SELECT CaseKey FROM cases
                         WHERE
@@ -501,14 +529,18 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
                     case_rows = self.database.select_record(sql)
                     if len(case_rows) <= 0:
                         continue
+
                     treat_code = string_utils.xstr(row[f"TreatCode{course}"])
                     if treat_code not in nhi_utils.TREAT_ALL_CODE:  # 針傷處置才調整
                         continue
+
                     if treat_code in nhi_utils.TREAT_DRUG_CODE:  # 針傷給藥不調整
                         continue
+
                     treat_fee = number_utils.get_integer(row[f"TreatFee{course}"])
                     if treat_code == "" or treat_fee <= 0:
                         continue
+
                     treat_list.append(
                         {
                             "ins_apply_key": row["InsApplyKey"],
@@ -528,6 +560,7 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
             for item in treat_list:
                 treat_count += 1
                 treat_percent = 100
+
                 if treat_count <= treat_section1:
                     pass
                 elif treat_count <= treat_section2:
@@ -576,13 +609,19 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
         treat_drug_count = 0
         for row in rows:
             for course in range(1, nhi_utils.MAX_COURSE + 1):
+                # 其他各支都有檢查 CaseKey, 只有這裡沒有。
+                # 療程殘留的 TreatCode (CaseKey 已經是 0) 會被算成一件,
+                # 既灌水了件數, 超量之後還會把五折打在不存在的療程上
+                if number_utils.get_integer(row[f"CaseKey{course}"]) <= 0:
+                    continue
+
                 treat_code = string_utils.xstr(row[f"TreatCode{course}"])
                 if treat_code not in nhi_utils.TREAT_DRUG_CODE:  # 無開藥不調整
                     continue
 
                 treat_drug_count += 1
-
                 ins_apply_key = row["InsApplyKey"]
+
                 if treat_drug_count > max_treat_drug:
                     treat_percent = 50
                     charge_utils.update_treat_fee(
@@ -623,6 +662,7 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
 
         for row_no, row in zip(range(1, len(rows) + 1), rows):
             ins_apply_key = row["InsApplyKey"]
+
             if row_no <= first_visit_limit:
                 case_date = row["CaseDate"]
                 first_visit_fee = charge_utils.get_ins_fee_from_ins_code(

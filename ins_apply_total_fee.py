@@ -1,19 +1,14 @@
 # -*- coding: UTF-8 -*-
-
 from PyQt5 import QtWidgets
 
-from libs import ui_utils
-from libs import system_utils
-from libs import nhi_utils
-from libs import number_utils
-from libs import printer_utils
+from libs import nhi_utils, number_utils, printer_utils, system_utils, ui_utils
 
 
-# 申請總表 2018.10.01
+# 申請總表 2026-09-05
 class InsApplyTotalFee(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(InsApplyTotalFee, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -31,18 +26,26 @@ class InsApplyTotalFee(QtWidgets.QMainWindow):
         self.apply_date = nhi_utils.get_apply_date(self.apply_year, self.apply_month)
         self.apply_type_code = nhi_utils.APPLY_TYPE_CODE[self.apply_type]
 
+        # system_settings.field() 每次呼叫都真的查資料庫,
+        # 而 _get_html 在顯示/列印/匯出 PDF 各會跑一次, 這裡只取一次
+        self._clinic_name = self.system_settings.field("院所名稱")
+        self._owner = self.system_settings.field("負責醫師")
+        self._address = self.system_settings.field("院所地址")
+        self._telephone = self.system_settings.field("院所電話")
+
         self.ins_total_fee = {
-            'apply_year': self.apply_year,
-            'apply_month': self.apply_month,
-            'apply_period': self.period,
-            'apply_type': self.apply_type_code,
-            'apply_date': self.apply_date,
-            'start_date': self.start_date,
-            'end_date': self.end_date,
-            'clinic_id': self.clinic_id,
-            'period': self.period,
-            'ins_generate_date': self.ins_generate_date,
+            "apply_year": self.apply_year,
+            "apply_month": self.apply_month,
+            "apply_period": self.period,
+            "apply_type": self.apply_type_code,
+            "apply_date": self.apply_date,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "clinic_id": self.clinic_id,
+            "period": self.period,
+            "ins_generate_date": self.ins_generate_date,
         }
+
         self._set_ui()
         self._set_signal()
         self._display_total_fee()
@@ -75,84 +78,90 @@ class InsApplyTotalFee(QtWidgets.QMainWindow):
         self.ui.toolButton_export_pdf.clicked.connect(self._export_pdf)
 
     def _calculate_total_fee(self):
-        (general_count, general_amount, special_count, special_amount, chronical_count, chronical_amount,
-         share_count, diag_share_amount, drug_share_amount, share_amount) = self._calculate_fees()
+        (
+            general_count,
+            general_amount,
+            special_count,
+            special_amount,
+            chronical_count,
+            chronical_amount,
+            share_count,
+            diag_share_amount,
+            drug_share_amount,
+            share_amount,
+        ) = self._calculate_fees()
 
         tcm_count = general_count + special_count
         tcm_amount = general_amount + special_amount
-
         total_count = general_count + special_count + chronical_count
         total_amount = general_amount + special_amount + chronical_amount
 
-        self.ins_total_fee['general_count'] = general_count
-        self.ins_total_fee['general_amount'] = general_amount
-        self.ins_total_fee['special_count'] = special_count
-        self.ins_total_fee['special_amount'] = special_amount
-        self.ins_total_fee['chronical_count'] = chronical_count
-        self.ins_total_fee['chronical_amount'] = chronical_amount
-
-        self.ins_total_fee['tcm_count'] = tcm_count
-        self.ins_total_fee['tcm_amount'] = tcm_amount
-        self.ins_total_fee['total_count'] = total_count
-        self.ins_total_fee['total_amount'] = total_amount
-
-        self.ins_total_fee['share_count'] = share_count
-        self.ins_total_fee['diag_share_amount'] = diag_share_amount
-        self.ins_total_fee['drug_share_amount'] = drug_share_amount
-        self.ins_total_fee['share_amount'] = share_amount
+        self.ins_total_fee["general_count"] = general_count
+        self.ins_total_fee["general_amount"] = general_amount
+        self.ins_total_fee["special_count"] = special_count
+        self.ins_total_fee["special_amount"] = special_amount
+        self.ins_total_fee["chronical_count"] = chronical_count
+        self.ins_total_fee["chronical_amount"] = chronical_amount
+        self.ins_total_fee["tcm_count"] = tcm_count
+        self.ins_total_fee["tcm_amount"] = tcm_amount
+        self.ins_total_fee["total_count"] = total_count
+        self.ins_total_fee["total_amount"] = total_amount
+        self.ins_total_fee["share_count"] = share_count
+        self.ins_total_fee["diag_share_amount"] = diag_share_amount
+        self.ins_total_fee["drug_share_amount"] = drug_share_amount
+        self.ins_total_fee["share_amount"] = share_amount
 
     def _display_total_fee(self):
         self._calculate_total_fee()
-
-        html = self._get_html(self.ins_total_fee, '18px')
+        html = self._get_html(self.ins_total_fee, "18px")
         self.ui.textEdit_total_fee.setHtml(html)
 
     def _get_html(self, ins_total_fee, font_size):
-        apply_year = ins_total_fee['apply_year'] - 1911
-        apply_month = ins_total_fee['apply_month']
-        apply_period = ins_total_fee['apply_period']
-        apply_date = f'{apply_year:0>3}年{apply_month:0>2}月 {apply_period}'
-        if ins_total_fee['apply_type'] == '1':
-            apply_type_name = '1送核'
+        apply_year = ins_total_fee["apply_year"] - 1911
+        apply_month = ins_total_fee["apply_month"]
+        apply_period = ins_total_fee["apply_period"]
+        apply_date = f"{apply_year:0>3}年{apply_month:0>2}月 {apply_period}"
+
+        if ins_total_fee["apply_type"] == "1":
+            apply_type_name = "1送核"
         else:
-            apply_type_name = '2補報'
+            apply_type_name = "2補報"
 
-        ins_year = ins_total_fee['ins_generate_date'].year() - 1911
-        ins_month = ins_total_fee['ins_generate_date'].month()
-        ins_day = ins_total_fee['ins_generate_date'].day()
-        generate_date = f'{ins_year:0>3}年{ins_month:0>2}月{ins_day:0>2}日'
+        ins_year = ins_total_fee["ins_generate_date"].year() - 1911
+        ins_month = ins_total_fee["ins_generate_date"].month()
+        ins_day = ins_total_fee["ins_generate_date"].day()
+        generate_date = f"{ins_year:0>3}年{ins_month:0>2}月{ins_day:0>2}日"
 
-        start_year = ins_total_fee['start_date'].year() - 1911
-        start_month = ins_total_fee['start_date'].month()
-        start_day = ins_total_fee['start_date'].day()
-        start_date = f'{start_year:0>3}年{start_month:0>2}月{start_day:0>2}日'
+        start_year = ins_total_fee["start_date"].year() - 1911
+        start_month = ins_total_fee["start_date"].month()
+        start_day = ins_total_fee["start_date"].day()
+        start_date = f"{start_year:0>3}年{start_month:0>2}月{start_day:0>2}日"
 
-        end_year = ins_total_fee['end_date'].year() - 1911
-        end_month = ins_total_fee['end_date'].month()
-        end_day = ins_total_fee['end_date'].day()
-        end_date = f'{end_year:0>3}年{end_month:0>2}月{end_day:0>2}日'
+        end_year = ins_total_fee["end_date"].year() - 1911
+        end_month = ins_total_fee["end_date"].month()
+        end_day = ins_total_fee["end_date"].day()
+        end_date = f"{end_year:0>3}年{end_month:0>2}月{end_day:0>2}日"
 
-        clinic_id = self.ins_total_fee['clinic_id']
-        clinic_name = self.system_settings.field('院所名稱')
-        owner = self.system_settings.field('負責醫師')
-        address = self.system_settings.field('院所地址')
-        telephone = self.system_settings.field('院所電話')
-        general_count = ins_total_fee['general_count']
-        general_amount = ins_total_fee['general_amount']
-        special_count = ins_total_fee['special_count']
-        special_amount = ins_total_fee['special_amount']
-        chronical_count = ins_total_fee['chronical_count']
-        chronical_amount = ins_total_fee['chronical_amount']
+        clinic_id = self.ins_total_fee["clinic_id"]
+        clinic_name = self._clinic_name
+        owner = self._owner
+        address = self._address
+        telephone = self._telephone
 
-        tcm_count = ins_total_fee['tcm_count']
-        tcm_amount = ins_total_fee['tcm_amount']
-        total_count = ins_total_fee['total_count']
-        total_amount = ins_total_fee['total_amount']
+        general_count = ins_total_fee["general_count"]
+        general_amount = ins_total_fee["general_amount"]
+        special_count = ins_total_fee["special_count"]
+        special_amount = ins_total_fee["special_amount"]
+        chronical_count = ins_total_fee["chronical_count"]
+        chronical_amount = ins_total_fee["chronical_amount"]
+        tcm_count = ins_total_fee["tcm_count"]
+        tcm_amount = ins_total_fee["tcm_amount"]
+        total_count = ins_total_fee["total_count"]
+        total_amount = ins_total_fee["total_amount"]
+        share_count = ins_total_fee["share_count"]
+        share_amount = ins_total_fee["share_amount"]
 
-        share_count = ins_total_fee['share_count']
-        share_amount = ins_total_fee['share_amount']
-
-        html = f'''
+        html = f"""
             <html>
             <body>
                 <div>
@@ -337,71 +346,83 @@ class InsApplyTotalFee(QtWidgets.QMainWindow):
                 </div>
             </body>
             </html>
-        '''
+        """
+
         return html
 
     def _calculate_fees(self):
+        # 原本是把整批 insapply (一個月數千列) 撈回 Python 再逐列加總,
+        # 這裡改成在資料庫端一次算完, 只回傳一列。
+        # 專案案件用「總件數 - 一般 - 慢箋」推算, 才能與原本 if/elif/else
+        # 的行為完全一致 (CaseType 為 NULL 時會落在 else 被算成專案案件)。
         sql = f'''
-            SELECT CaseType, InsApplyFee, DiagShareFee, DrugShareFee, ShareFee
+            SELECT
+                COUNT(*) AS all_count,
+                SUM(CASE WHEN CaseType = "21" THEN 1 ELSE 0 END) AS general_count,
+                SUM(CASE WHEN CaseType = "28" THEN 1 ELSE 0 END) AS chronical_count,
+                SUM(InsApplyFee) AS all_amount,
+                SUM(CASE WHEN CaseType = "21" THEN InsApplyFee ELSE 0 END)
+                    AS general_amount,
+                SUM(CASE WHEN CaseType = "28" THEN InsApplyFee ELSE 0 END)
+                    AS chronical_amount,
+                SUM(CASE WHEN ShareFee > 0 THEN 1 ELSE 0 END) AS share_count,
+                SUM(DiagShareFee) AS diag_share_amount,
+                SUM(DrugShareFee) AS drug_share_amount,
+                SUM(ShareFee) AS share_amount
             FROM insapply
             WHERE
                 ApplyDate = "{self.apply_date}" AND
                 ApplyType = "{self.apply_type_code}" AND
                 ApplyPeriod = "{self.period}" AND
                 ClinicID = "{self.clinic_id}"
-                ORDER BY CaseType, Sequence
         '''
         rows = self.database.select_record(sql)
+        if len(rows) <= 0:  # 理論上聚合查詢一定會回一列, 保險起見
+            return (0,) * 10
 
-        general_count = 0
-        general_amount = 0
-        special_count = 0
-        special_amount = 0
-        chronical_count = 0
-        chronical_amount = 0
+        row = rows[0]
 
-        share_count = 0
-        diag_share_amount = 0
-        drug_share_amount = 0
-        share_amount = 0
-        for row in rows:
-            if row['CaseType'] == '21':
-                general_count += 1
-                general_amount += number_utils.get_integer(row['InsApplyFee'])
-            elif row['CaseType'] == '28':
-                chronical_count += 1
-                chronical_amount += number_utils.get_integer(row['InsApplyFee'])
-            else:
-                special_count += 1
-                special_amount += number_utils.get_integer(row['InsApplyFee'])
+        all_count = number_utils.get_integer(row["all_count"])
+        general_count = number_utils.get_integer(row["general_count"])
+        chronical_count = number_utils.get_integer(row["chronical_count"])
+        special_count = all_count - general_count - chronical_count
 
-            diag_share_fee = number_utils.get_integer(row['DiagShareFee'])
-            drug_share_fee = number_utils.get_integer(row['DrugShareFee'])
-            share_fee = number_utils.get_integer(row['ShareFee'])
-            if share_fee > 0:
-                share_count += 1
+        all_amount = number_utils.get_integer(row["all_amount"])
+        general_amount = number_utils.get_integer(row["general_amount"])
+        chronical_amount = number_utils.get_integer(row["chronical_amount"])
+        special_amount = all_amount - general_amount - chronical_amount
 
-            diag_share_amount += diag_share_fee
-            drug_share_amount += drug_share_fee
-            share_amount += share_fee
+        share_count = number_utils.get_integer(row["share_count"])
+        diag_share_amount = number_utils.get_integer(row["diag_share_amount"])
+        drug_share_amount = number_utils.get_integer(row["drug_share_amount"])
+        share_amount = number_utils.get_integer(row["share_amount"])
 
-        return (general_count, general_amount, special_count, special_amount, chronical_count, chronical_amount,
-                share_count, diag_share_amount, drug_share_amount, share_amount)
+        return (
+            general_count,
+            general_amount,
+            special_count,
+            special_amount,
+            chronical_count,
+            chronical_amount,
+            share_count,
+            diag_share_amount,
+            drug_share_amount,
+            share_amount,
+        )
 
     # 列印申請總表
     def _print_total_fee(self):
         self._calculate_total_fee()
-
         printer_utils.print_form_ins_apply_total_fee(
-            self, self.database, self.system_settings,
+            self,
+            self.database,
+            self.system_settings,
             self.ins_total_fee,
         )
 
     # 列印申請總表PDF
     def _export_pdf(self):
         self._calculate_total_fee()
-
         printer_utils.print_form_ins_apply_total_fee(
-            self, self.database, self.system_settings,
-            self.ins_total_fee, 'pdf'
+            self, self.database, self.system_settings, self.ins_total_fee, "pdf"
         )

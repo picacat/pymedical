@@ -846,3 +846,51 @@ def add_shadow(
     shadow.setColor(color)
     widget.setGraphicsEffect(shadow)
     return shadow  # 回傳物件，以防萬一之後需要動態調整
+
+
+# 進度對話盒總共更新幾次（與資料筆數多寡無關，成本固定）
+PROGRESS_UPDATES = 100
+
+# 進度對話盒延遲顯示的毫秒數
+# Qt 預設 4000：估計作業不到 4 秒就整個不顯示，程式變快後會看起來像沒反應
+# 0 = 一定顯示；不想讓小資料量閃一下的話改成 500
+PROGRESS_MINIMUM_DURATION = 0
+
+
+def get_progress_dialog(
+    parent,
+    message,
+    record_count,
+    cancel_text="取消",
+    minimum_duration=PROGRESS_MINIMUM_DURATION,
+    updates=PROGRESS_UPDATES,
+):
+    """建立進度對話盒，回傳 (dialog, step)。
+
+    step: 每隔幾列才呼叫一次 setValue。更新次數固定在 updates 次左右，
+          資料量再大也不會被重繪與事件迴圈拖慢，資料量小也還是會動
+          （Qt 要有足夠的取樣點才估得出剩餘時間）。
+
+    用法:
+        dialog, step = ui_utils.get_progress_dialog(self, "處理中...", len(rows))
+        try:
+            for row_no, row in enumerate(rows):
+                if row_no % step == 0:
+                    dialog.setValue(row_no)
+                    if dialog.wasCanceled():
+                        break
+                ...
+            dialog.setValue(record_count)
+        finally:
+            dialog.deleteLater()
+    """
+    dialog = QtWidgets.QProgressDialog(
+        message, cancel_text, 0, max(record_count, 1), parent
+    )
+    dialog.setWindowModality(QtCore.Qt.WindowModal)
+    dialog.setMinimumDuration(minimum_duration)
+    dialog.setValue(0)
+    dialog.show()
+    QtWidgets.QApplication.processEvents()
+
+    return dialog, max(1, record_count // updates)

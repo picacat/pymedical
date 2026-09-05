@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-
 import datetime
 import json
 import os
@@ -7,7 +6,7 @@ import re
 import subprocess
 
 from lxml import etree as ET
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtWidgets
 
 from libs import (
     case_utils,
@@ -15,11 +14,13 @@ from libs import (
     date_utils,
     nhi_utils,
     number_utils,
-    personnel_utils,
     prescript_utils,
     string_utils,
+    ui_utils,
     xml_utils,
 )
+
+CHUNK_SIZE = 500  # 批次預取時每一句 IN (...) 的 CaseKey 數量
 
 
 # 健保申報格式xml 2023.10.31
@@ -39,12 +40,31 @@ class InsApplyXML(QtWidgets.QMainWindow):
         self.clinic_id = args[8]
         self.ins_total_fee = args[9]
         self.pre_ins_apply = args[10]
-
         self.ui = None
+
         self.apply_date = nhi_utils.get_apply_date(self.apply_year, self.apply_month)
         self.apply_type_code = nhi_utils.APPLY_TYPE_CODE[self.apply_type]
         self.start_date = self.start_date.toString("yyyy-MM-dd 00:00:00")
         self.end_date = self.end_date.toString("yyyy-MM-dd 23:59:59")
+
+        # ------------------------------------------------------------------
+        # 快取區: 全部只在本次產檔期間有效, 產檔結束即隨物件釋放
+        # ------------------------------------------------------------------
+        self._settings_cache = {}  # {欄位名稱: 值}
+        self._fee_cache = {}  # {(ins_code, 日期字串): 費用}
+        self._ins_code_cache = {}  # {(charge_type, item_name, fuzzy): ins_code}
+        self._infectious_code_cache = {}  # {medicine_name: ins_code}
+        self._pharmacy_fee_cache = {}  # {(有無藥費, pharmacy_type): 調劑費}
+        self._case_cache = {}  # {case_key: [cases rows]}
+        self._prescript_cache = {}  # {case_key: [prescript rows, MedicineSet=1]}
+        self._care_cache = {}  # {case_key: [prescript rows, MedicineSet=11 照護]}
+        self._dosage_cache = {}  # {case_key: dosage row or None}
+        self._caseextend_cache = {}  # {case_key: {ExtendType: Content}}
+        self._identifier_cache = {}  # {case_key: 就醫識別碼}
+        self._treat_datetime_cache = {}  # {case_key: (起日, 迄日, 起時, 迄時)}
+        self._person_cache = None  # {Name: person row}
+        self._schedule_cache = {}  # {'yyyy-mm-dd': pharmacist_schedule row or None}
+        self._pharmacy_code_updates = []  # 待批次寫回的 insapply.PharmacyCode
 
         try:
             with open("2023_ICD_MAP.json", "r", encoding="utf-8") as f:
@@ -79,6 +99,526 @@ class InsApplyXML(QtWidgets.QMainWindow):
     def _set_signal(self):
         pass
 
+    # ==================================================================
+    # 系統設定值快取 (system_settings.field() 每次呼叫都會真的查資料庫)
+    # ==================================================================
+    def _setting(self, field_name):
+        if field_name not in self._settings_cache:
+            self._settings_cache[field_name] = self.system_settings.field(field_name)
+
+        return self._settings_cache[field_name]
+
+    # ==================================================================
+    # 收費資料快取 (charge_settings)
+    # ==================================================================
+    # charge_utils.get_ins_fee_from_ins_code 的快取版
+    # 注意: charge_settings.InsCode 有重複值(門診負擔 S10/001/003...),
+    #       原本的 SQL 是 LIMIT 1 且無 ORDER BY, 所以不能整表預載,
+    #       只能逐一 memoize, 確保取到跟原本完全相同的那一列.
+    def _ins_fee(self, ins_code, case_date=None):
+        if ins_code in [None, ""]:
+            return 0
+
+        if case_date is None:
+            day = None
+        else:
+            try:
+                day = case_date.strftime("%Y-%m-%d")
+            except AttributeError:
+                day = string_utils.xstr(case_date)
+
+        key = (string_utils.xstr(ins_code), day)
+        if key not in self._fee_cache:
+            self._fee_cache[key] = charge_utils.get_ins_fee_from_ins_code(
+                self.database, ins_code, case_date=case_date
+            )
+
+        return self._fee_cache[key]
+
+    # charge_utils.get_ins_code_from_charge_settings 的快取版
+    def _ins_code(self, charge_type, item_name, fuzzy=False):
+        key = (charge_type, item_name, fuzzy)
+        if key not in self._ins_code_cache:
+            self._ins_code_cache[key] = charge_utils.get_ins_code_from_charge_settings(
+                self.database, charge_type, item_name, fuzzy
+            )
+
+        return self._ins_code_cache[key]
+
+    # charge_utils.get_ins_code_from_infectious_drug 的快取版
+    def _infectious_ins_code(self, medicine_name):
+        if medicine_name not in self._infectious_code_cache:
+            self._infectious_code_cache[medicine_name] = (
+                charge_utils.get_ins_code_from_infectious_drug(
+                    self.database, medicine_name
+                )
+            )
+
+        return self._infectious_code_cache[medicine_name]
+
+    # charge_utils.get_ins_pharmacy_fee 的快取版
+    # 其結果只跟「藥費是否大於0」與 pharmacy_type 有關
+    def _ins_pharmacy_fee(self, ins_drug_fee, pharmacy_type="申報"):
+        key = (number_utils.get_integer(ins_drug_fee) != 0, pharmacy_type)
+        if key not in self._pharmacy_fee_cache:
+            self._pharmacy_fee_cache[key] = charge_utils.get_ins_pharmacy_fee(
+                self.database,
+                self.system_settings,
+                ins_drug_fee,
+                pharmacy_type,
+            )
+
+        return self._pharmacy_fee_cache[key]
+
+    # ==================================================================
+    # 批次預取
+    # ==================================================================
+    @staticmethod
+    def _chunks(key_list, size=CHUNK_SIZE):
+        for i in range(0, len(key_list), size):
+            yield key_list[i : i + size]
+
+    def _prefetch(self, rows):
+        case_keys = set()
+        max_case_key_no = max(nhi_utils.MAX_COURSE, nhi_utils.MAX_HOME_CARE)
+
+        for row in rows:
+            for i in range(1, max_case_key_no + 1):
+                try:
+                    case_key = number_utils.get_integer(row[f"CaseKey{i}"])
+                except (KeyError, IndexError, TypeError):
+                    continue
+
+                if case_key > 0:
+                    case_keys.add(case_key)
+
+        case_keys = sorted(case_keys)
+        if len(case_keys) > 0:
+            self._load_cases(case_keys)
+            self._load_prescript(case_keys)
+            self._load_dosage(case_keys)
+            self._load_caseextend(case_keys)
+
+        self._load_person()
+        self._load_pharmacist_schedule()
+
+    def _load_cases(self, case_keys):
+        for chunk in self._chunks(case_keys):
+            in_list = ",".join([str(key) for key in chunk])
+            sql = f"""
+                SELECT cases.*, person.ID AS DoctorID FROM cases
+                    LEFT JOIN person ON cases.Doctor = person.Name
+                WHERE
+                    cases.CaseKey IN ({in_list}) AND
+                    person.Position IN ("醫師", "支援醫師")
+                ORDER BY cases.CaseKey
+            """
+            for row in self.database.select_record(sql):
+                key = number_utils.get_integer(row["CaseKey"])
+                self._case_cache.setdefault(key, []).append(row)
+
+            for key in chunk:  # 查不到的也要記錄, 避免之後又逐筆重查
+                self._case_cache.setdefault(key, [])
+
+    def _load_prescript(self, case_keys):
+        for chunk in self._chunks(case_keys):
+            in_list = ",".join([str(key) for key in chunk])
+            sql = f"""
+                SELECT * FROM prescript
+                WHERE
+                    CaseKey IN ({in_list}) AND
+                    MedicineSet IN (1, 11)
+                ORDER BY CaseKey, PrescriptKey
+            """
+            for row in self.database.select_record(sql):
+                key = number_utils.get_integer(row["CaseKey"])
+                medicine_set = number_utils.get_integer(row["MedicineSet"])
+                if medicine_set == 1:
+                    self._prescript_cache.setdefault(key, []).append(row)
+                elif string_utils.xstr(row["MedicineType"]) == "照護":
+                    self._care_cache.setdefault(key, []).append(row)
+
+            for key in chunk:
+                self._prescript_cache.setdefault(key, [])
+                self._care_cache.setdefault(key, [])
+
+    def _load_dosage(self, case_keys):
+        for chunk in self._chunks(case_keys):
+            in_list = ",".join([str(key) for key in chunk])
+            sql = f"""
+                SELECT CaseKey, Days, Packages, Instruction FROM dosage
+                WHERE
+                    CaseKey IN ({in_list}) AND
+                    MedicineSet = 1
+                ORDER BY DosageKey
+            """
+            for row in self.database.select_record(sql):
+                key = number_utils.get_integer(row["CaseKey"])
+                if key not in self._dosage_cache:  # 只取第一筆, 等同原本的 LIMIT 1
+                    self._dosage_cache[key] = row
+
+            for key in chunk:
+                self._dosage_cache.setdefault(key, None)
+
+    def _load_caseextend(self, case_keys):
+        for chunk in self._chunks(case_keys):
+            in_list = ",".join([str(key) for key in chunk])
+            sql = f"""
+                SELECT CaseKey, ExtendType, Content FROM caseextend
+                WHERE
+                    CaseKey IN ({in_list})
+                ORDER BY CaseExtendKey
+            """
+            for row in self.database.select_record(sql):
+                key = number_utils.get_integer(row["CaseKey"])
+                extend_type = string_utils.xstr(row["ExtendType"])
+                extend_dict = self._caseextend_cache.setdefault(key, {})
+                if extend_type not in extend_dict:  # 只取第一筆
+                    extend_dict[extend_type] = string_utils.xstr(row["Content"])
+
+            for key in chunk:
+                self._caseextend_cache.setdefault(key, {})
+
+    def _load_person(self):
+        if self._person_cache is not None:
+            return
+
+        self._person_cache = {}
+        sql = "SELECT * FROM person ORDER BY PersonKey"
+        for row in self.database.select_record(sql):
+            name = string_utils.xstr(row["Name"])
+            if name not in self._person_cache:  # 同名只取第一筆
+                self._person_cache[name] = row
+
+    def _load_pharmacist_schedule(self):
+        start_date = self.start_date[:10]
+        end_date = self.end_date[:10]
+
+        sql = f'''
+            SELECT ScheduleDate, Pharmacist1, Pharmacist2, Pharmacist3
+            FROM pharmacist_schedule
+            WHERE
+                ScheduleDate BETWEEN "{start_date}" AND "{end_date}"
+        '''
+        try:
+            rows = self.database.select_record(sql)
+        except Exception:
+            return
+
+        for row in rows:
+            self._schedule_cache[string_utils.xstr(row["ScheduleDate"])[:10]] = row
+
+        try:  # 申報期間內查不到的日期也標記起來, 不必再逐日重查
+            current = date_utils.str_to_date(start_date)
+            last = date_utils.str_to_date(end_date)
+            while current <= last:
+                self._schedule_cache.setdefault(current.strftime("%Y-%m-%d"), None)
+                current += datetime.timedelta(days=1)
+        except Exception:
+            pass
+
+    # ==================================================================
+    # 快取存取 (皆有 lazy fallback, 不依賴預取是否涵蓋到)
+    # ==================================================================
+    def _prescript_rows(self, case_key):
+        """MedicineSet = 1 的全部處方 (PrescriptKey 順序)."""
+        case_key = number_utils.get_integer(case_key)
+        if case_key not in self._prescript_cache:
+            self._load_prescript([case_key])
+
+        return self._prescript_cache.get(case_key, [])
+
+    def _care_rows(self, case_key):
+        """MedicineSet = 11 且 MedicineType = 照護 的處方."""
+        case_key = number_utils.get_integer(case_key)
+        if case_key not in self._care_cache:
+            self._load_prescript([case_key])
+
+        return self._care_cache.get(case_key, [])
+
+    def _dosage_row(self, case_key):
+        case_key = number_utils.get_integer(case_key)
+        if case_key not in self._dosage_cache:
+            self._load_dosage([case_key])
+
+        return self._dosage_cache.get(case_key)
+
+    # case_utils.get_pres_days 的快取版 (medicine_set 固定為 1)
+    def _pres_days(self, case_key):
+        row = self._dosage_row(case_key)
+        if row is None:
+            return 0
+
+        return number_utils.get_integer(row["Days"])
+
+    # case_utils.get_packages 的快取版
+    def _packages(self, case_key):
+        row = self._dosage_row(case_key)
+        if row is None:
+            return 0
+
+        return number_utils.get_integer(row["Packages"])
+
+    # case_utils.get_instruction 的快取版
+    def _instruction(self, case_key):
+        row = self._dosage_row(case_key)
+        if row is None:
+            return None
+
+        return string_utils.xstr(row["Instruction"])
+
+    # case_utils.get_case_extend 的快取版
+    def _case_extend(self, case_key, extend_type):
+        case_key = number_utils.get_integer(case_key)
+        if case_key not in self._caseextend_cache:
+            self._load_caseextend([case_key])
+
+        return self._caseextend_cache.get(case_key, {}).get(extend_type)
+
+    # case_utils.get_identifier 的快取版
+    # Security 欄位已經隨 cases.* 撈回來了, 不必再查一次資料庫
+    def _identifier(self, case_row):
+        if case_row is None:
+            return None
+
+        case_key = number_utils.get_integer(case_row["CaseKey"])
+        if case_key not in self._identifier_cache:
+            identifier = None
+            security = case_row["Security"]
+            if security not in [None, ""]:
+                identifier = case_utils.extract_security_xml(security, "就醫識別碼")
+
+            self._identifier_cache[case_key] = identifier
+
+        return self._identifier_cache[case_key]
+
+    # 只有 case_key 在手上時取就醫識別碼
+    # (原本的 case_utils.get_identifier 不受 person.Position 條件限制,
+    #  所以 _get_case_rows 撈不到時要保留原本的查詢路徑)
+    def _identifier_by_case_key(self, case_key):
+        case_key = number_utils.get_integer(case_key)
+        if case_key <= 0:
+            return None
+
+        if case_key in self._identifier_cache:
+            return self._identifier_cache[case_key]
+
+        case_rows = self._get_case_rows(case_key)
+        if len(case_rows) > 0:
+            return self._identifier(case_rows[0])
+
+        identifier = case_utils.get_identifier(self.database, case_key, "就醫識別碼")
+        self._identifier_cache[case_key] = identifier
+
+        return identifier
+
+    # personnel_utils.get_person_field_value 的快取版
+    def _person_field(self, name, field):
+        if string_utils.xstr(name) == "":
+            return ""
+
+        self._load_person()
+        row = self._person_cache.get(string_utils.xstr(name))
+        if row is None:
+            return ""
+
+        return string_utils.xstr(row[field])
+
+    def _pharmacist_schedule_row(self, schedule_date):
+        key = string_utils.xstr(schedule_date)[:10]
+        if key not in self._schedule_cache:
+            sql = f'''
+                SELECT ScheduleDate, Pharmacist1, Pharmacist2, Pharmacist3
+                FROM pharmacist_schedule
+                WHERE
+                    ScheduleDate = "{key}"
+            '''
+            try:
+                rows = self.database.select_record(sql)
+            except Exception:
+                rows = []
+
+            self._schedule_cache[key] = rows[0] if len(rows) > 0 else None
+
+        return self._schedule_cache[key]
+
+    # nhi_utils.pharmacist_schedule_on_duty 的快取版
+    # CaseDate 與 Period 已在 case_row 內, 班表整月預載
+    def _pharmacist_on_duty(self, case_row):
+        on_duty = False, None
+        if case_row is None:
+            return on_duty
+
+        case_date = case_row["CaseDate"]
+        if case_date is None:
+            return on_duty
+
+        period = string_utils.xstr(case_row["Period"])
+        row = self._pharmacist_schedule_row(case_date.date())
+        if row is None:
+            return on_duty
+
+        if period == "早班":
+            index = 1
+        elif period == "午班":
+            index = 2
+        elif period == "晚班":
+            index = 3
+        else:
+            index = 1
+
+        pharmacist = string_utils.xstr(row[f"Pharmacist{index}"])
+        if pharmacist != "":
+            on_duty = True, pharmacist
+
+        return on_duty
+
+    # nhi_utils.get_correction_area_code 的快取版
+    def _correction_area_code(self, correction_area=None):
+        if correction_area is None:
+            correction_area = self._setting("矯正機關")
+
+        if correction_area in ["", None]:
+            return None
+
+        try:
+            correction_dict = nhi_utils.CORRECTION_AREA_DICT[self._setting("健保業務")]
+        except Exception:
+            return None
+
+        try:
+            correction_area_code = correction_dict[correction_area]
+        except Exception:
+            return None
+
+        return correction_area_code
+
+    # nhi_utils.get_home_care_ins_code 的快取版
+    def _home_care_ins_code(self, regist_type):
+        if regist_type in nhi_utils.TOUR_TYPE:  # 山地離島居家醫療
+            ins_code = self._ins_code("診察費", "山地離島地區中醫師訪視費", fuzzy=True)
+            if ins_code == "":
+                ins_code = self._ins_code(
+                    "診察費", "山地離島地區居家醫療訪視費", fuzzy=True
+                )
+        else:
+            ins_code = self._ins_code("診察費", "中醫師訪視費", fuzzy=True)
+            if ins_code == "":
+                ins_code = self._ins_code("診察費", "居家醫療訪視費")
+
+        return ins_code
+
+    # nhi_utils.get_diag_code 的快取版
+    def _diag_code(self, doctor_name, regist_type, treat_type, diag_fee):
+        if diag_fee <= 0:
+            return None
+
+        if treat_type in nhi_utils.CARE_TREAT and treat_type != "兒童鼻炎":
+            return None
+
+        if treat_type in nhi_utils.HOME_CARE:  # 居家醫療
+            return self._home_care_ins_code(regist_type)
+
+        nurse = number_utils.get_integer(self._setting("護士人數"))
+        if regist_type in nhi_utils.TOUR_MOUNTAIN_ISLAND:  # 山地離島診察費
+            diag_code = "A09" if nurse > 0 else "A10"
+        else:
+            diag_code = "A01" if nurse > 0 else "A02"
+
+        return diag_code
+
+    # prescript_utils.get_treat_time 的快取版
+    def _treat_time(self, case_key, case_row, field_value):
+        for row in self._prescript_rows(case_key):
+            medicine_name = string_utils.xstr(row["MedicineName"])
+            if not medicine_name.startswith(field_value):
+                continue
+
+            treat_time = medicine_name
+            try:
+                treat_time = treat_time.split(field_value)[1].replace(":", "").strip()
+            except Exception:
+                pass
+
+            return treat_time
+
+        treat_time = "0000"  # 處方內找不到治療時間, 改由 DoctorDate 推算
+        if case_row is None:
+            return treat_time
+
+        try:
+            if "治療開始" in field_value:
+                treat_time = case_row["DoctorDate"].strftime("%H%M")
+            else:
+                treat_time = case_row["DoctorDate"] + datetime.timedelta(minutes=20)
+                treat_time = treat_time.strftime("%H%M")
+        except Exception:
+            treat_time = "0000"
+
+        return treat_time
+
+    # prescript_utils.get_treat_position_code 的快取版
+    def _treat_position_code(self, case_key, field_value):
+        treat_position_code = ""
+        for row in self._prescript_rows(case_key):
+            medicine_name = string_utils.xstr(row["MedicineName"])
+            if not medicine_name.startswith(field_value):
+                continue
+
+            try:
+                treat_position = medicine_name.split(field_value)[1].strip()
+            except Exception:
+                continue
+
+            try:
+                treat_position_code += nhi_utils.POSITION_DICT[treat_position]
+            except Exception:
+                pass
+
+        return treat_position_code
+
+    # prescript_utils.get_infectious_drug 的快取版
+    def _infectious_drug(self, case_key):
+        is_infectious_drug = False
+        is_ins_drug = False
+
+        for row in self._prescript_rows(case_key):
+            medicine_name = string_utils.xstr(row["MedicineName"])
+            ins_code = string_utils.xstr(row["InsCode"])
+            if "清冠一號" in medicine_name:
+                is_infectious_drug = True
+            elif ins_code != "":
+                is_ins_drug = True
+
+        if is_infectious_drug and is_ins_drug:
+            infectious_drug = "台灣清冠一號及科學中藥"
+        elif is_infectious_drug:
+            infectious_drug = "台灣清冠一號"
+        elif is_ins_drug:
+            infectious_drug = "科學中藥"
+        else:
+            infectious_drug = "未開藥"
+
+        return infectious_drug
+
+    # prescript_utils.get_infectious_drug_code 的快取版
+    def _infectious_drug_code(self, case_key):
+        for row in self._prescript_rows(case_key):
+            if string_utils.xstr(row["MedicineType"]) not in ["單方", "複方"]:
+                continue
+
+            medicine_name = string_utils.xstr(row["MedicineName"])
+            if "清冠一號" not in medicine_name:
+                continue
+
+            ins_code, _, _ = prescript_utils.get_infectious_drug_factory(medicine_name)
+            return ins_code
+
+        return None
+
+    # ==================================================================
+    # 產生申報檔
+    # ==================================================================
     def create_xml_file(self):
         xml_dir = nhi_utils.get_dir(self.system_settings, "申報路徑")
         if not os.path.exists(xml_dir):
@@ -89,7 +629,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
             self.ins_total_fee["apply_type"],
             self.ins_total_fee["apply_date"],
         )
-
         self._write_xml_file(xml_file_name)
         self._zip_xml_file(xml_file_name)
 
@@ -99,25 +638,53 @@ class InsApplyXML(QtWidgets.QMainWindow):
         if record_count <= 0:
             return
 
-        progress_dialog = QtWidgets.QProgressDialog(
-            "正在產生申報XML檔中, 請稍後...", "取消", 0, record_count, self
+        self._prefetch(rows)
+
+        progress_dialog, progress_step = ui_utils.get_progress_dialog(
+            self, "正在產生申報XML檔中, 請稍後...", record_count
         )
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
 
-        root = ET.Element("outpatient")
-        self._add_tdata(root)
-        for row_no, row in enumerate(rows):
-            progress_dialog.setValue(row_no)
-            if progress_dialog.wasCanceled():
-                return
+        try:
+            root = ET.Element("outpatient")
+            self._add_tdata(root)
 
-            self._add_ddata(root, row)
+            for row_no, row in enumerate(rows):
+                if row_no % progress_step == 0:
+                    progress_dialog.setValue(row_no)
+                    if progress_dialog.wasCanceled():
+                        return
 
-        progress_dialog.setValue(record_count)
-        progress_dialog.deleteLater()
+                self._add_ddata(root, row)
+
+            progress_dialog.setValue(record_count)
+        finally:
+            self._flush_pharmacy_code_updates()
+            progress_dialog.deleteLater()
 
         xml_utils.write_big5_xml(root, xml_file_name)
+
+    # 腦血管疾病補寫 PharmacyCode: 收集完一次寫回, 不在產檔迴圈內逐筆 UPDATE
+    def _flush_pharmacy_code_updates(self):
+        if len(self._pharmacy_code_updates) <= 0:
+            return
+
+        update_dict = {}
+        for ins_apply_key, pharmacy_code in self._pharmacy_code_updates:
+            update_dict.setdefault(pharmacy_code, []).append(ins_apply_key)
+
+        for pharmacy_code, key_list in update_dict.items():
+            for chunk in self._chunks(key_list):
+                in_list = ",".join([str(key) for key in chunk])
+                sql = f'''
+                    UPDATE insapply
+                    SET
+                        PharmacyCode = "{pharmacy_code}"
+                    WHERE
+                        InsApplyKey IN ({in_list})
+                '''
+                self.database.exec_sql(sql)
+
+        self._pharmacy_code_updates = []
 
     def _add_tdata(self, root):
         ins_year = self.ins_total_fee["ins_generate_date"].year() - 1911
@@ -136,6 +703,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
         end_date = f"{end_year:0>3}{end_month:0>2}{end_day:0>2}"
 
         tdata = ET.SubElement(root, "tdata")
+
         t1 = ET.SubElement(tdata, "t1")
         t1.text = "10"
         t2 = ET.SubElement(tdata, "t2")
@@ -172,7 +740,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         t30.text = string_utils.xstr(
             self.ins_total_fee["tcm_amount"]
         )  # 中醫案件點數小計
-
         t33 = ET.SubElement(tdata, "t33")
         t33.text = string_utils.xstr(
             self.ins_total_fee["chronical_count"]
@@ -181,7 +748,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         t34.text = string_utils.xstr(
             self.ins_total_fee["chronical_amount"]
         )  # 慢箋點數小計
-
         t37 = ET.SubElement(tdata, "t37")
         t37.text = string_utils.xstr(self.ins_total_fee["total_count"])  # 案件件數總計
         t38 = ET.SubElement(tdata, "t38")
@@ -201,12 +767,12 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
     def _add_ddata(self, root, row):
         ddata = ET.SubElement(root, "ddata")
-
         self._add_dhead(ddata, row)
         self._add_dbody(ddata, row)
 
     def _add_dhead(self, ddata, row):
         dhead = ET.SubElement(ddata, "dhead")
+
         d1 = ET.SubElement(dhead, "d1")
         d1.text = string_utils.xstr(row["CaseType"])
         d2 = ET.SubElement(dhead, "d2")
@@ -233,7 +799,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         d8.text = string_utils.xstr(row["Class"])
         d9 = ET.SubElement(dbody, "d9")
         d9.text = date_utils.west_date_to_nhi_date(row["CaseDate"])
-
         d10 = ET.SubElement(dbody, "d10")
         d10.text = date_utils.west_date_to_nhi_date(row["StopDate"])
 
@@ -248,8 +813,11 @@ class InsApplyXML(QtWidgets.QMainWindow):
                 if case_key <= 0:
                     continue
 
-                case_row = self._get_case_rows(case_key)[0]
-                apply_type = string_utils.xstr(case_row["ApplyType"])
+                remedy_rows = self._get_case_rows(case_key)
+                if len(remedy_rows) <= 0:
+                    continue
+
+                apply_type = string_utils.xstr(remedy_rows[0]["ApplyType"])
                 if apply_type not in nhi_utils.REMEDY_TYPE:
                     continue
 
@@ -278,13 +846,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
         d18 = ET.SubElement(dbody, "d18")
         d18.text = "N"  # 是否轉診
 
-        # if row['StopDate'] not in ['', None]:
-        #     case_date = row['StopDate']
-        # else:
-        #     case_date = row['CaseDate']
-
         case_date = row["CaseDate"]  # 2024-11-22 2014 ICD10舊碼轉換已就醫日期為主
-
         for i in range(1, nhi_utils.MAX_DISEASE_CODE + 1):
             disease_code = string_utils.xstr(row[f"DiseaseCode{i}"]).upper()
             if disease_code != "":
@@ -313,11 +875,9 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         d28 = ET.SubElement(dbody, "d28")
         d28.text = string_utils.xstr(row["PresType"])
-
         d29 = ET.SubElement(dbody, "d29")
         card = string_utils.xstr(row["Card"])[:4]
         d29.text = card
-
         d30 = ET.SubElement(dbody, "d30")
         d30.text = string_utils.xstr(row["DoctorID"])
 
@@ -350,41 +910,31 @@ class InsApplyXML(QtWidgets.QMainWindow):
         pharmacy_fee = number_utils.get_integer(row["PharmacyFee"])
 
         if string_utils.xstr(row["CaseType"]) == "30":  # 腦血管疾病
-            default_pharmacy_fee = charge_utils.get_ins_pharmacy_fee(
-                self.database,
-                self.system_settings,
-                drug_fee,
-                "申報",
-            )
+            default_pharmacy_fee = self._ins_pharmacy_fee(drug_fee, "申報")
             if number_utils.get_integer(row["PharmacyFee"]) > default_pharmacy_fee:
                 pharmacy_code = ""
             elif (
                 number_utils.get_integer(row["PharmacyFee"]) > 0
                 and pharmacy_code.strip() == ""
             ):
-                pharmacist = self.system_settings.field("藥師人數")
+                pharmacist = self._setting("藥師人數")
                 if int(pharmacist) > 0:
                     default_pharmacy_code = "100000"
                 else:
                     default_pharmacy_code = "200000"
 
                 pharmacy_code = nhi_utils.extract_pharmacy_code(default_pharmacy_code)
-                sql = f'''
-                    UPDATE insapply
-                    SET
-                        PharmacyCode = "{default_pharmacy_code}"
-                    WHERE
-                        InsApplyKey = {row["InsApplyKey"]}
-                '''
-                self.database.exec_sql(sql)
-
+                self._pharmacy_code_updates.append(
+                    (
+                        number_utils.get_integer(row["InsApplyKey"]),
+                        default_pharmacy_code,
+                    )
+                )
         elif string_utils.xstr(row["CaseType"]) == "C5":
             if pharmacy_fee <= 0:
                 pharmacy_code = ""
         elif is_cancer_extend_care and drug_fee > 0:
-            pharmacy_code = charge_utils.get_ins_code_from_charge_settings(
-                self.database, "照護費", "中醫門診延長照護藥品調劑費"
-            )
+            pharmacy_code = self._ins_code("照護費", "中醫門診延長照護藥品調劑費")
 
         if string_utils.xstr(pharmacy_code) != "":
             d37 = ET.SubElement(dbody, "d37")
@@ -401,10 +951,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         d41 = ET.SubElement(dbody, "d41")
         d41.text = string_utils.xstr(number_utils.get_integer(row["InsApplyFee"]))
 
-        # if row['AgentFee'] is not None:
-        #     d43 = ET.SubElement(dbody, 'd43')
-        #     d43.text = string_utils.xstr(row['AgentFee'])
-
         # 2023-08-01
         diag_share_fee = number_utils.get_integer(row["DiagShareFee"])
         drug_share_fee = number_utils.get_integer(row["DrugShareFee"])
@@ -417,46 +963,43 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         special_code = string_utils.xstr(row["SpecialCode1"])
         if case_type in ["24", "28"] and special_code in ["CC", "CD", "CE", "CF", "CG"]:
-            total_pres_days = case_utils.get_pres_days(self.database, row["CaseKey1"])
+            total_pres_days = self._pres_days(row["CaseKey1"])
             d44 = ET.SubElement(dbody, "d44")
             d44.text = string_utils.xstr(total_pres_days)
 
         d49 = ET.SubElement(dbody, "d49")
-
         name = string_utils.xstr(row["Name"])
         d49.text = self._get_name(name)
 
         case_key = row["CaseKey1"]
+        case_row = None
         regist_type = None
         treat_type = None
         tour_area = None
         if case_key is not None:
-            rows = self._get_case_rows(case_key)
-            if len(rows) > 0:
-                case_row = rows[0]
+            case_rows = self._get_case_rows(case_key)
+            if len(case_rows) > 0:
+                case_row = case_rows[0]
                 regist_type = string_utils.xstr(case_row["RegistType"])
                 treat_type = string_utils.xstr(case_row["TreatType"])
                 tour_area = string_utils.xstr(case_row["TourArea"])
-            else:
-                case_row = None
 
         if tour_area is not None:
-            correction_area_code = nhi_utils.get_correction_area_code(
-                self.system_settings, tour_area
-            )  # 矯正機關代號
+            correction_area_code = self._correction_area_code(tour_area)  # 矯正機關代號
             if correction_area_code is not None:
                 d50 = ET.SubElement(dbody, "d50")
                 d50.text = correction_area_code
 
+        resource_type = self._setting("資源類別")
         if (
-            self.system_settings.field("資源類別") in nhi_utils.AT_LACK_AREA
+            resource_type in nhi_utils.AT_LACK_AREA
             or regist_type in nhi_utils.AT_LACK_AREA
         ):
             lack_area = "01"
             d52 = ET.SubElement(dbody, "d52")
             d52.text = self._get_name(lack_area)
         elif (
-            self.system_settings.field("資源類別") in nhi_utils.GOTO_LACK_AREA
+            resource_type in nhi_utils.GOTO_LACK_AREA
             or regist_type in nhi_utils.GOTO_LACK_AREA
         ):
             lack_area = "02"
@@ -491,7 +1034,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         # 2023.07.01 實施
         d57 = ET.SubElement(dbody, "d57")
         d57.text = string_utils.xstr(diag_share_fee)
-
         d58 = ET.SubElement(dbody, "d58")
         d58.text = string_utils.xstr(drug_share_fee)
 
@@ -533,14 +1075,12 @@ class InsApplyXML(QtWidgets.QMainWindow):
             if case_key <= 0:
                 continue
 
-            rows = self._get_case_rows(case_key)
-            if len(rows) <= 0:
+            case_rows = self._get_case_rows(case_key)
+            if len(case_rows) <= 0:
                 continue
 
-            case_row = rows[0]
-            identifier = case_utils.get_identifier(
-                self.database, case_key, "就醫識別碼"
-            )
+            case_row = case_rows[0]
+            identifier = self._identifier(case_row)
 
             if course == 1:  # 設定診察費
                 self._set_diagnosis(dbody, row, identifier)
@@ -550,13 +1090,10 @@ class InsApplyXML(QtWidgets.QMainWindow):
             case_type = string_utils.xstr(row["CaseType"])
             if (
                 case_type not in ["28"]
-                and case_utils.get_case_extend(self.database, case_key, "整合醫療照護")
-                == "Y"
+                and self._case_extend(case_key, "整合醫療照護") == "Y"
             ):  # 慢箋不能報
                 self._set_integrate_care(dbody, row, case_row, identifier)
 
-            # infectious_drug = prescript_utils.get_infectious_drug(self.database, case_key)
-            # if infectious_drug in ['台灣清冠一號及科學中藥', '台灣清冠一號']:  # 台灣清冠一號藥品補助費
             if case_type == "C5":  # 法定傳染病通報隔離
                 self._add_infectious_drug(dbody, row, identifier)
 
@@ -579,7 +1116,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
                 self._set_special_care(dbody, row, case_row, identifier)
 
             treat_code = string_utils.xstr(row[f"TreatCode{course}"])
-
             if (
                 treat_type in nhi_utils.PREGNANT_CARE_TREAT
             ):  # 孕產照護不放針傷處置代碼  2024-12-18 陳立德 岐伯齋
@@ -604,9 +1140,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
             # 山地離島居家醫療訪視費
             if case_type == "25" and string_utils.xstr(row["SpecialCode1"]) == "EC":
-                diag_code = nhi_utils.get_diag_code(
-                    self.database,
-                    self.system_settings,
+                diag_code = self._diag_code(
                     string_utils.xstr(case_row["Doctor"]),
                     string_utils.xstr(case_row["RegistType"]),
                     string_utils.xstr(case_row["TreatType"]),
@@ -624,12 +1158,8 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
     def _set_diagnosis(self, dbody, row, identifier):
         diag_code = string_utils.xstr(row["DiagCode"])
-        # case_type = string_utils.xstr(row['CaseType'])
-
         unit_price = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(
-                self.database, diag_code, case_date=row["CaseDate"]
-            )
+            self._ins_fee(diag_code, case_date=row["CaseDate"])
         )
         if unit_price <= 0:
             return
@@ -638,6 +1168,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         self.sequence += 1
         pdata = ET.SubElement(dbody, "pdata")
+
         p3 = ET.SubElement(pdata, "p3")
         p3.text = "0"  # 0=診察費
         p4 = ET.SubElement(pdata, "p4")
@@ -650,7 +1181,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = "1"  # 總量
 
@@ -661,7 +1191,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         p11 = ET.SubElement(pdata, "p11")
         p11.text = string_utils.xstr(price)  # 單價
-
         p12 = ET.SubElement(pdata, "p12")
         p12.text = string_utils.xstr(amount)  # 點數
         p13 = ET.SubElement(pdata, "p13")
@@ -672,13 +1201,53 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p14.text = f"{case_date}0000"
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{case_date}0000"
-
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(row["DoctorID"])
-
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
+        p20 = ET.SubElement(pdata, "p20")
+        p20.text = string_utils.xstr(row["Class"])
 
+        if identifier not in [None, ""]:
+            p26 = ET.SubElement(pdata, "p26")
+            p26.text = identifier
+
+    # 診察費以外的單一醫令 pdata (初診照護 A90 / 兒童傷科加計 E90)
+    def _set_single_order(self, dbody, row, ins_code, identifier):
+        pdata = ET.SubElement(dbody, "pdata")
+        self.sequence += 1
+
+        amount = number_utils.get_integer(
+            self._ins_fee(ins_code, case_date=row["CaseDate"])
+        )
+        unit_price = amount
+
+        p3 = ET.SubElement(pdata, "p3")
+        p3.text = "2"  # 2=診療明細
+        p4 = ET.SubElement(pdata, "p4")
+        p4.text = ins_code
+
+        percent = amount / unit_price * 100
+        p8 = ET.SubElement(pdata, "p8")
+        p8.text = f"{percent:06.2f}"
+        p10 = ET.SubElement(pdata, "p10")
+        p10.text = "1"  # 總量
+        p11 = ET.SubElement(pdata, "p11")
+        p11.text = string_utils.xstr(unit_price)  # 單價
+        p12 = ET.SubElement(pdata, "p12")
+        p12.text = string_utils.xstr(amount)  # 點數
+        p13 = ET.SubElement(pdata, "p13")
+        p13.text = string_utils.xstr(self.sequence)  # 序號
+
+        case_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
+        p14 = ET.SubElement(pdata, "p14")
+        p14.text = f"{case_date}0000"
+        p15 = ET.SubElement(pdata, "p15")
+        p15.text = f"{case_date}0000"
+        p16 = ET.SubElement(pdata, "p16")
+        p16.text = string_utils.xstr(row["DoctorID"])
+        p17 = ET.SubElement(pdata, "p17")
+        p17.text = "4"  # 非慢性病 非同一療程
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -687,112 +1256,18 @@ class InsApplyXML(QtWidgets.QMainWindow):
             p26.text = identifier
 
     def _set_first_visit(self, dbody, row, identifier):
-        pdata = ET.SubElement(dbody, "pdata")
-
-        self.sequence += 1
-        ins_code = "A90"
-        amount = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(
-                self.database, ins_code, case_date=row["CaseDate"]
-            )
-        )
-        unit_price = amount
-
-        p3 = ET.SubElement(pdata, "p3")
-        p3.text = "2"  # 2=診療明細
-        p4 = ET.SubElement(pdata, "p4")
-        p4.text = ins_code
-
-        percent = amount / unit_price * 100
-        p8 = ET.SubElement(pdata, "p8")
-        p8.text = f"{percent:06.2f}"
-
-        p10 = ET.SubElement(pdata, "p10")
-        p10.text = "1"  # 總量
-        p11 = ET.SubElement(pdata, "p11")
-        p11.text = string_utils.xstr(unit_price)  # 單價
-        p12 = ET.SubElement(pdata, "p12")
-        p12.text = string_utils.xstr(amount)  # 點數
-        p13 = ET.SubElement(pdata, "p13")
-        p13.text = string_utils.xstr(self.sequence)  # 序號
-
-        case_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
-        p14 = ET.SubElement(pdata, "p14")
-        p14.text = f"{case_date}0000"
-        p15 = ET.SubElement(pdata, "p15")
-        p15.text = f"{case_date}0000"
-
-        p16 = ET.SubElement(pdata, "p16")
-        p16.text = string_utils.xstr(row["DoctorID"])
-
-        p17 = ET.SubElement(pdata, "p17")
-        p17.text = "4"  # 非慢性病 非同一療程
-
-        p20 = ET.SubElement(pdata, "p20")
-        p20.text = string_utils.xstr(row["Class"])
-
-        if identifier not in [None, ""]:
-            p26 = ET.SubElement(pdata, "p26")
-            p26.text = identifier
+        self._set_single_order(dbody, row, "A90", identifier)
 
     def _set_child_extra_massage_fee(self, dbody, row, identifier):
-        pdata = ET.SubElement(dbody, "pdata")
-
-        self.sequence += 1
-        ins_code = "E90"
-        amount = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(
-                self.database, ins_code, case_date=row["CaseDate"]
-            )
-        )
-        unit_price = amount
-
-        p3 = ET.SubElement(pdata, "p3")
-        p3.text = "2"  # 2=診療明細
-        p4 = ET.SubElement(pdata, "p4")
-        p4.text = ins_code
-
-        percent = amount / unit_price * 100
-        p8 = ET.SubElement(pdata, "p8")
-        p8.text = f"{percent:06.2f}"
-
-        p10 = ET.SubElement(pdata, "p10")
-        p10.text = "1"  # 總量
-        p11 = ET.SubElement(pdata, "p11")
-        p11.text = string_utils.xstr(unit_price)  # 單價
-        p12 = ET.SubElement(pdata, "p12")
-        p12.text = string_utils.xstr(amount)  # 點數
-        p13 = ET.SubElement(pdata, "p13")
-        p13.text = string_utils.xstr(self.sequence)  # 序號
-
-        case_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
-        p14 = ET.SubElement(pdata, "p14")
-        p14.text = f"{case_date}0000"
-        p15 = ET.SubElement(pdata, "p15")
-        p15.text = f"{case_date}0000"
-
-        p16 = ET.SubElement(pdata, "p16")
-        p16.text = string_utils.xstr(row["DoctorID"])
-
-        p17 = ET.SubElement(pdata, "p17")
-        p17.text = "4"  # 非慢性病 非同一療程
-
-        p20 = ET.SubElement(pdata, "p20")
-        p20.text = string_utils.xstr(row["Class"])
-
-        if identifier not in [None, ""]:
-            p26 = ET.SubElement(pdata, "p26")
-            p26.text = identifier
+        self._set_single_order(dbody, row, "E90", identifier)
 
     def _set_integrate_care(self, dbody, row, case_row, identifier):
         pdata = ET.SubElement(dbody, "pdata")
-
         self.sequence += 1
+
         ins_code = "A91"
         amount = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(
-                self.database, ins_code, case_date=row["CaseDate"]
-            )
+            self._ins_fee(ins_code, case_date=row["CaseDate"])
         )
         unit_price = amount
 
@@ -804,7 +1279,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         percent = amount / unit_price * 100
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = "1"  # 總量
         p11 = ET.SubElement(pdata, "p11")
@@ -814,27 +1288,18 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p13 = ET.SubElement(pdata, "p13")
         p13.text = string_utils.xstr(self.sequence)  # 序號
 
-        case_key = case_row["CaseKey"]
         case_date = date_utils.west_date_to_nhi_date(row["CaseDate"])
-        try:
-            start_time, end_time = case_utils.get_integrate_case_time(
-                self.database, case_key
-            )
-        except Exception:
-            start_time = "0000"
-            end_time = "0000"
+        # 診療及衛教時間在 cases.Symptom 內, case_row 已在手上, 不必再查資料庫
+        start_time, end_time = self._integrate_case_time(case_row)
 
         p14 = ET.SubElement(pdata, "p14")
         p14.text = f"{case_date}{start_time}"
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{case_date}{end_time}"
-
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(row["DoctorID"])
-
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -842,17 +1307,38 @@ class InsApplyXML(QtWidgets.QMainWindow):
             p26 = ET.SubElement(pdata, "p26")
             p26.text = identifier
 
+    # case_utils.get_integrate_case_time 的無查詢版
+    @staticmethod
+    def _integrate_case_time(case_row):
+        start_time = "0000"
+        end_time = "0000"
+
+        try:
+            symptom = string_utils.get_str(case_row["Symptom"], "utf8")
+            matches = re.findall(
+                r"診療及衛教時間: 從(\d{2}:\d{2})至(\d{2}:\d{2})", symptom
+            )
+            if matches:
+                start_time, end_time = matches[0]
+                start_time = start_time.replace(":", "")
+                end_time = end_time.replace(":", "")
+        except Exception:
+            start_time = "0000"
+            end_time = "0000"
+
+        return start_time, end_time
+
     def _get_treat_datetime(self, case_key, case_row):
+        case_key = number_utils.get_integer(case_key)
+        if case_key in self._treat_datetime_cache:
+            return self._treat_datetime_cache[case_key]
+
         start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
         end_date = start_date
 
         try:
-            start_time = prescript_utils.get_treat_time(
-                self.database, case_key, "治療開始:"
-            )
-            end_time = prescript_utils.get_treat_time(
-                self.database, case_key, "治療結束:"
-            )
+            start_time = self._treat_time(case_key, case_row, "治療開始:")
+            end_time = self._treat_time(case_key, case_row, "治療結束:")
         except Exception:
             start_time = "0000"
             end_time = "0000"
@@ -862,7 +1348,10 @@ class InsApplyXML(QtWidgets.QMainWindow):
                 case_row["CaseDate"].date() + datetime.timedelta(days=1)
             )
 
-        return start_date, end_date, start_time, end_time
+        result = (start_date, end_date, start_time, end_time)
+        self._treat_datetime_cache[case_key] = result
+
+        return result
 
     def _set_treatment(
         self, dbody, row, case_row, course, treat_code, order_type, identifier
@@ -871,7 +1360,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p17_code = "2"  # 同一療程
         p19_code = ""  # 事前審查受理編號
         total_dosage = 1  # 總量
-
         self.sequence += 1
 
         case_key = case_row["CaseKey"]
@@ -885,29 +1373,21 @@ class InsApplyXML(QtWidgets.QMainWindow):
                 unit_price = amount
             elif order_type == "台灣清冠一號藥品補助費":  # redefine
                 order_type = "2"
-                unit_price = charge_utils.get_ins_fee_from_ins_code(
-                    self.database, "E5012C", case_date=case_date
+                unit_price = self._ins_fee(
+                    "E5012C", case_date=case_date
                 )  # 台灣清冠一號補助費
-                total_dosage = case_utils.get_pres_days(
-                    self.database, case_row["CaseKey"]
-                )
+                total_dosage = self._pres_days(case_key)
                 amount = unit_price * total_dosage
                 percent = 100
                 p17_code = "4"
-                infectious_drug_code = prescript_utils.get_infectious_drug_code(
-                    self.database, case_key
-                )
+                infectious_drug_code = self._infectious_drug_code(case_key)
                 if infectious_drug_code not in ["", None]:
                     p19_code = infectious_drug_code
                 else:
-                    p19_code = charge_utils.get_ins_code_from_infectious_drug(
-                        self.database, "清冠一號"
-                    )
+                    p19_code = self._infectious_ins_code("清冠一號")
             elif order_type == "遠距診療費":  # redefine
                 order_type = "2"
-                amount = charge_utils.get_ins_fee_from_ins_code(
-                    self.database, "E5204C", case_date=case_date
-                )  # 遠距診療費
+                amount = self._ins_fee("E5204C", case_date=case_date)  # 遠距診療費
                 percent = 100
                 unit_price = amount
                 p17_code = "4"
@@ -916,9 +1396,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
                 percent = number_utils.get_integer(row[f"Percent{course}"])
                 treat_code = string_utils.xstr(row[f"TreatCode{course}"])
                 unit_price = number_utils.get_integer(
-                    charge_utils.get_ins_fee_from_ins_code(
-                        self.database, treat_code, case_date=case_date
-                    )
+                    self._ins_fee(treat_code, case_date=case_date)
                 )
                 if (
                     string_utils.xstr(case_row["TreatType"])
@@ -934,8 +1412,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
             unit_price = 0
             percent = 100
 
-        # unit_price = number_utils.round_up(amount / percent * 100)
-
         p2 = ET.SubElement(pdata, "p2")
         p2.text = "0"  # 0=自行調劑或物理治療
         p3 = ET.SubElement(pdata, "p3")
@@ -944,19 +1420,13 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p4.text = treat_code
 
         if treat_code in nhi_utils.COMPLICATED_TREAT_CODE:
-            # if row["CaseType"] == "22":
-            #     print(row["Sequence"], row["Name"], treat_code)
-
-            treat_position_code = prescript_utils.get_treat_position_code(
-                self.database, case_key, "治療部位:"
-            )
+            treat_position_code = self._treat_position_code(case_key, "治療部位:")
             if treat_position_code != "":
                 p6 = ET.SubElement(pdata, "p6")
                 p6.text = treat_position_code[:18]  # p6 最多18bytes
 
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = f"{total_dosage:05.1f}"  # 總量
         p11 = ET.SubElement(pdata, "p11")
@@ -970,15 +1440,10 @@ class InsApplyXML(QtWidgets.QMainWindow):
             case_key, case_row
         )
 
-        # if treat_code in ['F01', 'F02', 'F18', 'F19']:  # 2024.01.04 一般針灸合併一般傷科不需要放治療時間
-        #     start_time = '0000'
-        #     end_time = '0000'
-
         p14 = ET.SubElement(pdata, "p14")
         p14.text = f"{start_date}{start_time}"
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{end_date}{end_time}"
-
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(case_row["DoctorID"])
 
@@ -1017,22 +1482,14 @@ class InsApplyXML(QtWidgets.QMainWindow):
         start_date, end_date, start_time, end_time = self._get_treat_datetime(
             case_key, case_row
         )
-
         start_date += start_time
         end_date += end_time
 
-        sql = f'''
-            SELECT MedicineName FROM prescript
-            WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = 1 AND
-                MedicineName LIKE "{field_value}%"
-            ORDER BY PrescriptKey
-        '''
-        prescript_rows = self.database.select_record(sql)
-
-        for prescript_row in prescript_rows:
+        for prescript_row in self._prescript_rows(case_key):
             auxiliary_treat = string_utils.xstr(prescript_row["MedicineName"])
+            if not auxiliary_treat.startswith(field_value):
+                continue
+
             try:
                 auxiliary_treat = auxiliary_treat.split(field_value)[1].strip()
             except Exception:
@@ -1051,7 +1508,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         self, dbody, row, case_row, ins_code, start_date, end_date, identifier
     ):
         pdata = ET.SubElement(dbody, "pdata")
-
         self.sequence += 1
 
         order_type = "4"  # 藥品代號為 R001~R007 專案支付參考數值填G
@@ -1067,7 +1523,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         percent = 100
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"  # 成數
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = string_utils.xstr(total_dosage)  # 總量
         p11 = ET.SubElement(pdata, "p11")
@@ -1076,19 +1531,14 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p12.text = string_utils.xstr(amount)  # 點數
         p13 = ET.SubElement(pdata, "p13")
         p13.text = string_utils.xstr(self.sequence)  # 序號
-
         p14 = ET.SubElement(pdata, "p14")
         p14.text = start_date
-
         p15 = ET.SubElement(pdata, "p15")
         p15.text = end_date
-
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(case_row["DoctorID"])
-
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -1107,9 +1557,10 @@ class InsApplyXML(QtWidgets.QMainWindow):
         identifier,
         set_A21=True,
     ):
-        pres_days = case_utils.get_pres_days(self.database, case_key)
-        packages = case_utils.get_packages(self.database, case_key)
-        instruction = case_utils.get_instruction(self.database, case_key)
+        pres_days = self._pres_days(case_key)
+        packages = self._packages(case_key)
+        instruction = self._instruction(case_key)
+
         if pres_days <= 0:
             return
 
@@ -1136,8 +1587,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
         if (
             row["Card"] is not None
             and string_utils.xstr(row["Card"][0]) == "W"  # 控制軟體6.0產生卡序 W***
-            and case_utils.get_case_extend(self.database, case_key, "健保卡種類")
-            == "虛擬健保卡"
+            and self._case_extend(case_key, "健保卡種類") == "虛擬健保卡"
         ):
             self._set_virtual_order(dbody, row, case_row, "W00V", 0, identifier)
 
@@ -1177,7 +1627,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
     def _set_virtual_order(self, dbody, row, case_row, ins_code, pres_days, identifier):
         pdata = ET.SubElement(dbody, "pdata")
-
         self.sequence += 1
 
         order_type = "G"  # 藥品代號為 R001~R007 專案支付參考數值填G
@@ -1193,7 +1642,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         percent = 100
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"  # 成數
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = string_utils.xstr(total_dosage)  # 總量
         p11 = ET.SubElement(pdata, "p11")
@@ -1219,10 +1667,8 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(case_row["DoctorID"])
-
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -1241,6 +1687,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         pdata = ET.SubElement(dbody, "pdata")
         self.sequence += 1
+
         order_type = "G"  # 藥品代號為 R001~R007 專案支付參考數值填G
         total_dosage = 0
         unit_price = 0
@@ -1254,7 +1701,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         percent = 000
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"  # 成數
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = string_utils.xstr(total_dosage)  # 總量
         p11 = ET.SubElement(pdata, "p11")
@@ -1267,17 +1713,13 @@ class InsApplyXML(QtWidgets.QMainWindow):
         start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
         p14 = ET.SubElement(pdata, "p14")
         p14.text = f"{start_date}0000"
-
         end_date = start_date
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{end_date}0000"
-
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(case_row["DoctorID"])
-
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -1286,9 +1728,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
             p26.text = identifier
 
     def _set_infectious_virtual_code(self, dbody, row, case_row, identifier):
-        infectious_date = case_utils.get_case_extend(
-            self.database, case_row["CaseKey"], "確診日期"
-        )
+        infectious_date = self._case_extend(case_row["CaseKey"], "確診日期")
         if infectious_date is not None:
             try:
                 infectious_date = date_utils.str_to_date(infectious_date[:10])
@@ -1300,6 +1740,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         pdata = ET.SubElement(dbody, "pdata")
         self.sequence += 1
+
         total_dosage = 0
         unit_price = 0
         amount = 0
@@ -1312,7 +1753,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         percent = 000
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"  # 成數
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = string_utils.xstr(total_dosage)  # 總量
         p11 = ET.SubElement(pdata, "p11")
@@ -1325,17 +1765,13 @@ class InsApplyXML(QtWidgets.QMainWindow):
         start_date = date_utils.west_date_to_nhi_date(infectious_date)
         p14 = ET.SubElement(pdata, "p14")
         p14.text = f"{start_date}0000"
-
         end_date = start_date
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{end_date}0000"
-
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(case_row["DoctorID"])
-
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -1345,7 +1781,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
     def _set_A21(self, dbody, row, case_row, order_type, pres_days, identifier):
         pdata = ET.SubElement(dbody, "pdata")
-
         self.sequence += 1
 
         ins_code = "A21"
@@ -1353,9 +1788,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
             ins_code = "P59021"
 
         unit_price = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(
-                self.database, ins_code, case_date=case_row["CaseDate"]
-            )
+            self._ins_fee(ins_code, case_date=case_row["CaseDate"])
         )
         amount = unit_price * pres_days
 
@@ -1375,7 +1808,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         percent = 100
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"  # 成數
-
         p9 = ET.SubElement(pdata, "p9")
         p9.text = "PO"  # 口服
         p10 = ET.SubElement(pdata, "p10")
@@ -1390,19 +1822,15 @@ class InsApplyXML(QtWidgets.QMainWindow):
         start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
         p14 = ET.SubElement(pdata, "p14")
         p14.text = f"{start_date}0000"
-
         end_date = date_utils.west_date_to_nhi_date(
             case_row["CaseDate"].date() + datetime.timedelta(days=pres_days - 1)
         )
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{end_date}0000"
-
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(case_row["DoctorID"])
-
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -1419,25 +1847,19 @@ class InsApplyXML(QtWidgets.QMainWindow):
         if string_utils.xstr(case_row["PharmacyType"]) == "不申報":
             return
 
-        on_duty, pharmacist = nhi_utils.pharmacist_schedule_on_duty(
-            self.database, case_row["CaseKey"]
-        )
+        on_duty, pharmacist = self._pharmacist_on_duty(case_row)
         if on_duty:
             item_name = "藥師調劑"
         else:
             item_name = "醫師調劑"
 
-        pharmacy_code = charge_utils.get_ins_code_from_charge_settings(
-            self.database, "調劑費", item_name
-        )
+        pharmacy_code = self._ins_code("調劑費", item_name)
 
         pdata = ET.SubElement(dbody, "pdata")
-
         self.sequence += 1
+
         unit_price = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(
-                self.database, pharmacy_code, case_date=case_row["CaseDate"]
-            )
+            self._ins_fee(pharmacy_code, case_date=case_row["CaseDate"])
         )
         amount = charge_utils.get_extra_pharmacy_fee(
             string_utils.xstr(case_row["RegistType"]), unit_price
@@ -1453,7 +1875,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         percent = amount / unit_price * 100
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"  # 成數
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = "1"  # 總量
         p11 = ET.SubElement(pdata, "p11")
@@ -1468,18 +1889,14 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p14.text = f"{case_date}0000"
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{case_date}0000"
-
         p16 = ET.SubElement(pdata, "p16")
         if pharmacist is not None:
-            p16.text = personnel_utils.get_person_field_value(
-                self.database, pharmacist, "ID"
-            )
+            p16.text = self._person_field(pharmacist, "ID")
         else:
             p16.text = string_utils.xstr(case_row["DoctorID"])
 
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -1500,12 +1917,10 @@ class InsApplyXML(QtWidgets.QMainWindow):
             return
 
         pdata = ET.SubElement(dbody, "pdata")
-
         self.sequence += 1
+
         unit_price = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(
-                self.database, pharmacy_code, case_date=case_row["CaseDate"]
-            )
+            self._ins_fee(pharmacy_code, case_date=case_row["CaseDate"])
         )
         amount = charge_utils.get_extra_pharmacy_fee(
             string_utils.xstr(case_row["RegistType"]), unit_price
@@ -1521,7 +1936,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         percent = amount / unit_price * 100
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"  # 成數
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = "1"  # 總量
         p11 = ET.SubElement(pdata, "p11")
@@ -1536,21 +1950,15 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p14.text = f"{case_date}0000"
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{case_date}0000"
-
         p16 = ET.SubElement(pdata, "p16")
         if pharmacy_code == "A31":
-            _, pharmacist = nhi_utils.pharmacist_schedule_on_duty(
-                self.database, case_row["CaseKey"]
-            )
-            p16.text = personnel_utils.get_person_field_value(
-                self.database, pharmacist, "ID"
-            )
+            _, pharmacist = self._pharmacist_on_duty(case_row)
+            p16.text = self._person_field(pharmacist, "ID")
         else:
             p16.text = string_utils.xstr(case_row["DoctorID"])
 
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -1573,8 +1981,8 @@ class InsApplyXML(QtWidgets.QMainWindow):
             return
 
         pdata = ET.SubElement(dbody, "pdata")
-
         self.sequence += 1
+
         unit_price = 0
         amount = unit_price
 
@@ -1588,7 +1996,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p4.text = string_utils.xstr(prescript_row["InsCode"])
 
         dosage = prescript_row["Dosage"]  # 用量
-
         dosage_mode = prescript_row["DosageMode"]  # 劑量模式
         if dosage_mode == "次劑量":
             dosage *= packages
@@ -1604,23 +2011,16 @@ class InsApplyXML(QtWidgets.QMainWindow):
         percent = 100
         p8 = ET.SubElement(pdata, "p8")
         p8.text = f"{percent:06.2f}"  # 成數
-
         p9 = ET.SubElement(pdata, "p9")
         p9.text = "PO"  # 使用途徑
 
         total_dosage = prescript_row["Dosage"] * pres_days  # 總量
         if dosage_mode == "次劑量":
             total_dosage *= packages
-            # total_dosage = round(float(str(total_dosage)), 1)
 
         total_dosage = number_utils.round_up_ex(total_dosage, ".1")  # 小數點1位
-
         p10 = ET.SubElement(pdata, "p10")
         p10.text = f"{total_dosage:07.1f}"  # 總量
-
-        # if case_row['Name'] == '袁巧倪':
-        #     print(prescript_row['Dosage'], pres_days, packages, total_dosage, p10.text)
-
         p11 = ET.SubElement(pdata, "p11")
         p11.text = string_utils.xstr(unit_price)  # 單價
         p12 = ET.SubElement(pdata, "p12")
@@ -1631,19 +2031,15 @@ class InsApplyXML(QtWidgets.QMainWindow):
         start_date = date_utils.west_date_to_nhi_date(case_row["CaseDate"])
         p14 = ET.SubElement(pdata, "p14")
         p14.text = f"{start_date}0000"
-
         end_date = date_utils.west_date_to_nhi_date(
             case_row["CaseDate"].date() + datetime.timedelta(days=pres_days - 1)
         )
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{end_date}0000"
-
         p16 = ET.SubElement(pdata, "p16")
         p16.text = string_utils.xstr(case_row["DoctorID"])
-
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "4"  # 非慢性病 非同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -1664,13 +2060,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
             "C04",
         ]:  # 小兒氣喘, 小兒腦性麻痺
             set_A21 = False
-            sql = f"""
-                SELECT cases.*, person.ID AS DoctorID FROM cases
-                    LEFT JOIN person ON cases.Doctor = person.Name
-                WHERE
-                    CaseKey = {case_key} AND
-                    person.Position IN ("醫師", "支援醫師")
-            """
+            rows = self._get_case_rows(case_key)
         else:
             patient_key = row["PatientKey"]
             auxiliary_treat = tuple(nhi_utils.AUXILIARY_CARE_TREAT)
@@ -1687,11 +2077,18 @@ class InsApplyXML(QtWidgets.QMainWindow):
                     ({apply_type_sql})
                 ORDER BY CaseDate
             '''
+            rows = self.database.select_record(sql)
+            for case_row in rows:  # 順便補進快取, 後續存取不必再查
+                key = number_utils.get_integer(case_row["CaseKey"])
+                if key not in self._case_cache:
+                    self._case_cache[key] = [case_row]
 
-        rows = self.database.select_record(sql)
+        if len(rows) <= 0:
+            return
 
         self.sequence = 0
-        identifier = case_utils.get_identifier(self.database, case_key, "就醫識別碼")
+        # 原本這裡的識別碼取自 CaseKey1, 不是 rows[0], 兩者在專案分支下可能不同
+        identifier = self._identifier_by_case_key(row["CaseKey1"])
         self._set_auxiliary_case(
             dbody, row, rows[0], "2", identifier
         )  # order_type = 2 診療明細, 4 = 不另計價
@@ -1699,13 +2096,9 @@ class InsApplyXML(QtWidgets.QMainWindow):
         # 2026-05-09 增加虛擬健保卡虛擬醫令 (申報指標獎勵金)
         for case_row in rows:
             case_key = case_row["CaseKey"]
-            identifier = case_utils.get_identifier(
-                self.database, case_key, "就醫識別碼"
-            )
-
+            identifier = self._identifier(case_row)
             self._set_auxiliary_case(dbody, row, case_row, "4", identifier)  # 不另計價
-            # treat_code = nhi_utils.get_treat_code(self.database, case_row['CaseKey'])
-            # self.set_treatment(dbody, row, case_row, None, treat_code, '4')
+
             prescript_rows = self._get_prescript_rows(case_key)
             if len(prescript_rows) > 0:
                 self._set_prescript(
@@ -1721,27 +2114,20 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
     def _set_auxiliary_case(self, dbody, row, case_row, order_type, identifier):
         pdata = ET.SubElement(dbody, "pdata")
-
         self.sequence += 1
+
         treat_code = string_utils.xstr(row["TreatCode1"])
         amount = number_utils.get_integer(row["TreatFee1"])
         percent = number_utils.get_integer(row["Percent1"])
         unit_price = number_utils.get_integer(
-            charge_utils.get_ins_fee_from_ins_code(
-                self.database, treat_code, case_date=case_row["CaseDate"]
-            )
+            self._ins_fee(treat_code, case_date=case_row["CaseDate"])
         )
-        # unit_price = number_utils.round_up(amount / percent * 100)
-        doctor_id = personnel_utils.get_person_field_value(
-            self.database, string_utils.xstr(case_row["Doctor"]), "ID"
-        )
+        doctor_id = self._person_field(string_utils.xstr(case_row["Doctor"]), "ID")
 
         p2 = ET.SubElement(pdata, "p2")
         p2.text = "0"  # 0=自行調劑或物理治療
-
         p3 = ET.SubElement(pdata, "p3")
         p3.text = order_type
-
         p4 = ET.SubElement(pdata, "p4")
         p4.text = treat_code
         p8 = ET.SubElement(pdata, "p8")
@@ -1760,13 +2146,10 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p14.text = f"{case_date}0000"
         p15 = ET.SubElement(pdata, "p15")
         p15.text = f"{case_date}0000"
-
         p16 = ET.SubElement(pdata, "p16")
         p16.text = doctor_id
-
         p17 = ET.SubElement(pdata, "p17")
         p17.text = "2"  # 同一療程
-
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
@@ -1776,20 +2159,11 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
     def _set_special_care(self, dbody, row, case_row, identifier):
         case_key = case_row["CaseKey"]
-        sql = f"""
-            SELECT * FROM prescript
-            WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = 11 AND
-                MedicineType = "照護"
-            ORDER BY PrescriptKey
-        """
-        rows = self.database.select_record(sql)
 
-        for care_row in rows:
+        for care_row in self._care_rows(case_key):
             pdata = ET.SubElement(dbody, "pdata")
-
             self.sequence += 1
+
             amount = number_utils.get_integer(care_row["Price"])
             percent = 100
             unit_price = number_utils.round_up(amount / percent * 100)
@@ -1816,13 +2190,10 @@ class InsApplyXML(QtWidgets.QMainWindow):
             p14.text = f"{case_date}0000"
             p15 = ET.SubElement(pdata, "p15")
             p15.text = f"{case_date}0000"
-
             p16 = ET.SubElement(pdata, "p16")
             p16.text = string_utils.xstr(case_row["DoctorID"])
-
             p17 = ET.SubElement(pdata, "p17")
             p17.text = "2"  # 同一療程
-
             p20 = ET.SubElement(pdata, "p20")
             p20.text = string_utils.xstr(row["Class"])
 
@@ -1832,6 +2203,12 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
     def _get_name(self, in_name):
         in_name = re.sub(r"[\x00-\x1F\x7F]", "", in_name)
+
+        try:  # 絕大多數姓名整串就能編碼, 不必逐字元 try/except
+            in_name.encode("big5")
+            return in_name[:20]
+        except UnicodeEncodeError:
+            pass
 
         name = ""
         for ch in in_name:
@@ -1857,31 +2234,42 @@ class InsApplyXML(QtWidgets.QMainWindow):
         return rows
 
     def _get_case_rows(self, case_key):
-        sql = f'''
-            SELECT cases.*, person.ID AS DoctorID FROM cases
-                LEFT JOIN person ON cases.Doctor = person.Name
-            WHERE
-                CaseKey = "{case_key}" AND
-                person.Position IN ("醫師", "支援醫師")
-        '''
-        rows = self.database.select_record(sql)
+        case_key = number_utils.get_integer(case_key)
+        if case_key not in self._case_cache:
+            self._load_cases([case_key])
 
-        return rows
+        return self._case_cache.get(case_key, [])
 
     def _get_prescript_rows(self, case_key):
-        sql = f'''
-            SELECT *
-            FROM prescript
-            WHERE
-                CaseKey = "{case_key}" AND
-                MedicineSet = 1 AND
-                InsCode IS NOT NULL AND
-                MedicineName NOT LIKE "%清冠一號%" AND
-                MedicineType NOT IN ("處置", "穴道") AND
-                LENGTH(InsCode) > 0
-            ORDER BY PrescriptNo, PrescriptKey
-        '''
-        rows = self.database.select_record(sql)
+        rows = []
+        for row in self._prescript_rows(case_key):
+            ins_code = row["InsCode"]
+            if ins_code is None or len(string_utils.xstr(ins_code)) <= 0:
+                continue
+
+            if row["MedicineName"] is None:  # SQL 的 NOT LIKE 遇到 NULL 會排除
+                continue
+
+            if "清冠一號" in string_utils.xstr(row["MedicineName"]):
+                continue
+
+            if row["MedicineType"] is None:  # SQL 的 NOT IN 遇到 NULL 會排除
+                continue
+
+            if string_utils.xstr(row["MedicineType"]) in ["處置", "穴道"]:
+                continue
+
+            rows.append(row)
+
+        # 等同原本的 ORDER BY PrescriptNo, PrescriptKey
+        # 預取時已依 PrescriptKey 排序, Python 的 sort 是穩定排序;
+        # 第一個排序鍵是為了對齊 SQL 把 NULL 排在最前面的行為
+        rows.sort(
+            key=lambda r: (
+                0 if r["PrescriptNo"] is None else 1,
+                number_utils.get_integer(r["PrescriptNo"]),
+            )
+        )
 
         return rows
 
@@ -1889,7 +2277,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
         xml_dir = nhi_utils.get_dir(self.system_settings, "申報路徑")
         zip_file_name = self.ins_total_fee["apply_date"]
         zip_file = f"{xml_dir}/{zip_file_name}-{self.apply_type_code}.zip"
-
         cmd = ["7z", "a", "-tzip", zip_file, xml_file, f"-o{xml_dir}"]
         sp = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
         sp.communicate()
@@ -1901,26 +2288,18 @@ class InsApplyXML(QtWidgets.QMainWindow):
             if case_key <= 0:
                 continue
 
-            rows = self._get_case_rows(case_key)
-            if len(rows) <= 0:
+            case_rows = self._get_case_rows(case_key)
+            if len(case_rows) <= 0:
                 continue
 
-            case_row = rows[0]
-
-            # self._set_diagnosis(dbody, row)
-
-            diag_code = nhi_utils.get_diag_code(
-                self.database,
-                self.system_settings,
+            case_row = case_rows[0]
+            diag_code = self._diag_code(
                 string_utils.xstr(case_row["Doctor"]),
                 string_utils.xstr(case_row["RegistType"]),
                 string_utils.xstr(case_row["TreatType"]),
                 number_utils.get_integer(case_row["DiagFee"]),
             )
-
-            identifier = case_utils.get_identifier(
-                self.database, case_key, "就醫識別碼"
-            )
+            identifier = self._identifier(case_row)
             self._set_treatment(
                 dbody, row, case_row, course, diag_code, "居家醫療", identifier
             )
@@ -1941,26 +2320,24 @@ class InsApplyXML(QtWidgets.QMainWindow):
     def _add_infectious_case(self, dbody, row):
         self.sequence = 0
         course = 1
-
         case_key = number_utils.get_integer(row[f"CaseKey{course}"])
         if case_key <= 0:
             return
 
-        rows = self._get_case_rows(case_key)
-        if len(rows) <= 0:
+        case_rows = self._get_case_rows(case_key)
+        if len(case_rows) <= 0:
             return
 
-        case_row = rows[0]
+        case_row = case_rows[0]
+        identifier = self._identifier(case_row)
 
-        identifier = case_utils.get_identifier(self.database, case_key, "就醫識別碼")
         ins_total_fee = number_utils.get_integer(row["InsTotalFee"])
         diag_fee = number_utils.get_integer(row["DiagFee"])
         treat_fee = number_utils.get_integer(row["TreatFee"])
-
-        infectious_drug_fee = charge_utils.get_ins_fee_from_ins_code(
-            self.database, "E5012C", case_date=case_row["CaseDate"]
+        infectious_drug_fee = self._ins_fee(
+            "E5012C", case_date=case_row["CaseDate"]
         )  # 台灣清冠一號補助費
-        pres_days = case_utils.get_pres_days(self.database, case_row["CaseKey"])
+        pres_days = self._pres_days(case_row["CaseKey"])
 
         if ins_total_fee == (infectious_drug_fee * pres_days):
             self._set_treatment(
@@ -1972,8 +2349,6 @@ class InsApplyXML(QtWidgets.QMainWindow):
                 "台灣清冠一號藥品補助費",
                 identifier,
             )
-            # self._set_infectious_virtual_code(dbody, row, case_row)  # 以下這兩行會造成申報檢核錯誤 2023-06-05 澄美
-            # self._set_covid19(dbody, row, case_row, pres_days, ins_code='ViT-COVID19')
         else:
             if diag_fee > 0:
                 self._set_diagnosis(dbody, row, identifier)
@@ -1988,9 +2363,7 @@ class InsApplyXML(QtWidgets.QMainWindow):
                 dbody, row, case_row, pres_days, identifier, ins_code="ViT-COVID19"
             )
 
-            infectious_drug = prescript_utils.get_infectious_drug(
-                self.database, case_key
-            )
+            infectious_drug = self._infectious_drug(case_key)
             if infectious_drug in ["台灣清冠一號及科學中藥", "科學中藥"]:
                 prescript_rows = self._get_prescript_rows(case_key)
                 if len(prescript_rows) > 0:
@@ -2007,20 +2380,15 @@ class InsApplyXML(QtWidgets.QMainWindow):
     def _add_infectious_drug(self, dbody, row, identifier):
         self.sequence = 0
         course = 1
-
         case_key = number_utils.get_integer(row[f"CaseKey{course}"])
         if case_key <= 0:
             return
 
-        rows = self._get_case_rows(case_key)
-        if len(rows) <= 0:
+        case_rows = self._get_case_rows(case_key)
+        if len(case_rows) <= 0:
             return
 
-        case_row = rows[0]
-
-        pres_days = case_utils.get_pres_days(self.database, case_row["CaseKey"])
+        case_row = case_rows[0]
         self._set_treatment(
             dbody, row, case_row, course, "E5012C", "台灣清冠一號藥品補助費", identifier
         )
-        # self._set_infectious_virtual_code(dbody, row, case_row)
-        # self._set_covid19(dbody, row, case_row, pres_days, ins_code='ViT-COVID19')

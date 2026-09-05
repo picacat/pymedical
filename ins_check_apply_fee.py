@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-
 import datetime
 import os.path
 
@@ -76,8 +75,14 @@ HIGHLY_ACUPUNCTURE_LIST_SET = frozenset(
     ["D07", "D08"] + [f"F{i}" for i in range(52, 69)]
 )
 
-# 進度對話盒更新頻率：每列都更新會強制事件迴圈與重繪
-PROGRESS_STEP = 50
+# 進度對話盒總共更新幾次（與資料筆數無關，成本固定）
+# 每一列都更新會強制事件迴圈與重繪，資料量大時會明顯拖慢
+PROGRESS_UPDATES = 100
+
+# 進度對話盒延遲顯示的毫秒數
+# Qt 預設是 4000：估計作業不到 4 秒就整個不顯示，速度變快後會看起來像沒反應
+# 0 = 一定顯示；若不想讓小月份閃一下，可改成 500
+PROGRESS_MINIMUM_DURATION = 0
 
 
 # 申報金額核對 2026.07.03
@@ -97,8 +102,8 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
         self.clinic_id = args[8]
         self.ins_generate_date = args[9]
         self.ins_total_fee = args[10]
-
         self.ui = None
+
         self.apply_date = nhi_utils.get_apply_date(self.apply_year, self.apply_month)
         self.apply_type_code = nhi_utils.APPLY_TYPE_CODE[self.apply_type]
         self.dict_treat_count = {}
@@ -205,7 +210,6 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
 
     def _get_treat_categories(self, ins_code):
         """回傳這個代碼命中的所有分類（可能不只一個）"""
-
         cached = self._category_cache.get(ins_code)
         if cached is not None:
             return cached
@@ -255,7 +259,6 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
             table_widget.setRowCount(doctor_count + 1)
 
             grand_totals = {key: 0 for key in column_map}
-
             bold_font = QFont()
             bold_font.setBold(True)
 
@@ -273,14 +276,12 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
                 for category, col_no in column_map.items():
                     value = category_totals[category]
                     grand_totals[category] += value
-
                     item = QTableWidgetItem(str(value))
                     item.setTextAlignment(Qt.AlignCenter)
                     table_widget.setItem(row_no, col_no, item)
 
             # ---- 合計列 ----
             total_row_no = doctor_count
-
             total_label_item = QTableWidgetItem("合計")
             total_label_item.setTextAlignment(Qt.AlignCenter)
             total_label_item.setFont(bold_font)
@@ -296,7 +297,6 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
 
     def _parse_ins_calculated_data(self):
         row_no = 0
-
         self.ui.tableWidget_xml.setItem(
             row_no, 0, QtWidgets.QTableWidgetItem(string_utils.xstr("申報檔案"))
         )
@@ -393,117 +393,123 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
             "apply_fee": 0,
             "agent_fee": 0,
         }
-
         error_rows = []
 
         record_count = len(dbody_list)
-        progress_dialog = QtWidgets.QProgressDialog(
-            "正在執行申報檔金額平衡檢查中, 請稍後...", "取消", 0, record_count, self
+        progress_dialog, progress_step = ui_utils.get_progress_dialog(
+            self, "正在執行申報檔金額平衡檢查中, 請稍後...", record_count
         )
-        progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        progress_dialog.setValue(0)
 
-        for row_no, ddata in enumerate(dbody_list):
-            if row_no % PROGRESS_STEP == 0:
-                progress_dialog.setValue(row_no)
-                if progress_dialog.wasCanceled():
+        try:
+            for row_no, ddata in enumerate(dbody_list):
+                if row_no % progress_step == 0:
+                    progress_dialog.setValue(row_no)
+                    if progress_dialog.wasCanceled():
+                        break
+
+                if row_no >= len(dhead_list):
                     break
 
-            if row_no >= len(dhead_list):
-                break
+                dhead = dhead_list[row_no]
+                case_type = self._text_of(dhead, "d1")
 
-            dhead = dhead_list[row_no]
-            case_type = self._text_of(dhead, "d1")
+                ddata_fee["case_type"] = case_type
+                ddata_fee["sequence"] = self._text_of(dhead, "d2")
+                ddata_fee["total_count"] += 1
+                ddata_fee["name"] = self._text_of(ddata, "d49")
 
-            ddata_fee["case_type"] = case_type
-            ddata_fee["sequence"] = self._text_of(dhead, "d2")
-            ddata_fee["total_count"] += 1
-            ddata_fee["name"] = self._text_of(ddata, "d49")
+                diag_fee = self._int_of(ddata, "d36")
+                drug_fee = self._int_of(ddata, "d32")
+                pharmacy_fee = self._int_of(ddata, "d38")
+                treat_fee = self._int_of(ddata, "d33")
+                total_fee = self._int_of(ddata, "d39")
+                diag_share_fee = self._int_of(ddata, "d57")
+                drug_share_fee = self._int_of(ddata, "d58")
+                share_fee = self._int_of(ddata, "d40")
+                apply_fee = self._int_of(ddata, "d41")
+                agent_fee = self._int_of(ddata, "d43")
 
-            diag_fee = self._int_of(ddata, "d36")
-            drug_fee = self._int_of(ddata, "d32")
-            pharmacy_fee = self._int_of(ddata, "d38")
-            treat_fee = self._int_of(ddata, "d33")
-            total_fee = self._int_of(ddata, "d39")
-            diag_share_fee = self._int_of(ddata, "d57")
-            drug_share_fee = self._int_of(ddata, "d58")
-            share_fee = self._int_of(ddata, "d40")
-            apply_fee = self._int_of(ddata, "d41")
-            agent_fee = self._int_of(ddata, "d43")
+                ddata_fee["diag_fee"] += diag_fee
+                ddata_fee["drug_fee"] += drug_fee
+                ddata_fee["pharmacy_fee"] += pharmacy_fee
+                ddata_fee["treat_fee"] += treat_fee
+                ddata_fee["total_fee"] += total_fee
+                ddata_fee["diag_share_fee"] += diag_share_fee
+                ddata_fee["drug_share_fee"] += drug_share_fee
+                ddata_fee["share_fee"] += share_fee
+                ddata_fee["apply_fee"] += apply_fee
+                ddata_fee["agent_fee"] += agent_fee
 
-            ddata_fee["diag_fee"] += diag_fee
-            ddata_fee["drug_fee"] += drug_fee
-            ddata_fee["pharmacy_fee"] += pharmacy_fee
-            ddata_fee["treat_fee"] += treat_fee
-            ddata_fee["total_fee"] += total_fee
-            ddata_fee["diag_share_fee"] += diag_share_fee
-            ddata_fee["drug_share_fee"] += drug_share_fee
-            ddata_fee["share_fee"] += share_fee
-            ddata_fee["apply_fee"] += apply_fee
-            ddata_fee["agent_fee"] += agent_fee
+                error_message = []
+                if (diag_fee + drug_fee + pharmacy_fee + treat_fee) != total_fee:
+                    error_message.append("申報合計不平衡: 自身加總有誤")
 
-            error_message = []
+                if (total_fee - share_fee) != apply_fee:
+                    error_message.append("申報金額不平衡: 自身加總有誤")
 
-            if (diag_fee + drug_fee + pharmacy_fee + treat_fee) != total_fee:
-                error_message.append("申報合計不平衡: 自身加總有誤")
-            if (total_fee - share_fee) != apply_fee:
-                error_message.append("申報金額不平衡: 自身加總有誤")
-            if (diag_share_fee + drug_share_fee) != share_fee:
-                error_message.append("申報金額不平衡: 負擔金額自身加總有誤")
-            if apply_fee <= 0:
-                error_message.append("無申報金額")
+                if (diag_share_fee + drug_share_fee) != share_fee:
+                    error_message.append("申報金額不平衡: 負擔金額自身加總有誤")
 
-            result = self._parse_pdata(ddata, case_type)
+                if apply_fee <= 0:
+                    error_message.append("無申報金額")
 
-            if result["diag_fee"] != diag_fee:
-                error_message.append(
-                    f"診察費不平衡, 清單段: {diag_fee}, 醫令段: {result['diag_fee']}"
-                )
-            if result["drug_fee"] != drug_fee:
-                error_message.append(
-                    f"藥費不平衡, 清單段: {drug_fee}, 醫令段: {result['drug_fee']}"
-                )
-            if result["treat_fee"] != treat_fee:
-                error_message.append(
-                    f"處置費不平衡, 清單段: {treat_fee}, 醫令段: {result['treat_fee']}"
-                )
-            if result["pharmacy_fee"] != pharmacy_fee:
-                error_message.append(
-                    f"調劑費不平衡, 清單段: {pharmacy_fee}, 醫令段: {result['pharmacy_fee']}"
-                )
-            if (
-                result["treat_fee"] > 0
-                and result["treat_fee"] != result["total_treat_fee"]
-            ):
-                error_message.append(
-                    f"自身處置費金額不平衡, 處置費: {result['treat_fee']}, "
-                    f"合計: {result['total_treat_fee']}"
-                )
+                result = self._parse_pdata(ddata, case_type)
 
-            if len(error_message) > 0:
-                error_rows.append(
-                    [
-                        ddata_fee["case_type"],
-                        ddata_fee["sequence"],
-                        ddata_fee["name"],
-                        ", ".join(error_message),
-                    ]
-                )
+                if result["diag_fee"] != diag_fee:
+                    error_message.append(
+                        f"診察費不平衡, 清單段: {diag_fee}, 醫令段: {result['diag_fee']}"
+                    )
 
-            pdata_fee["total_count"] += result["total_count"]
-            pdata_fee["diag_fee"] += result["diag_fee"]
-            pdata_fee["drug_fee"] += result["drug_fee"]
-            pdata_fee["pharmacy_fee"] += result["pharmacy_fee"]
-            pdata_fee["treat_fee"] += result["treat_fee"]
-            pdata_fee["total_fee"] += result["total_fee"]
-            pdata_fee["diag_share_fee"] += result["diag_share_fee"]
-            pdata_fee["drug_share_fee"] += result["drug_share_fee"]
-            pdata_fee["share_fee"] += result["share_fee"]
-            pdata_fee["apply_fee"] += result["apply_fee"]
-            pdata_fee["agent_fee"] += result["agent_fee"]
+                if result["drug_fee"] != drug_fee:
+                    error_message.append(
+                        f"藥費不平衡, 清單段: {drug_fee}, 醫令段: {result['drug_fee']}"
+                    )
 
-        progress_dialog.setValue(record_count)
-        progress_dialog.deleteLater()
+                if result["treat_fee"] != treat_fee:
+                    error_message.append(
+                        f"處置費不平衡, 清單段: {treat_fee}, 醫令段: {result['treat_fee']}"
+                    )
+
+                if result["pharmacy_fee"] != pharmacy_fee:
+                    error_message.append(
+                        f"調劑費不平衡, 清單段: {pharmacy_fee}, "
+                        f"醫令段: {result['pharmacy_fee']}"
+                    )
+
+                if (
+                    result["treat_fee"] > 0
+                    and result["treat_fee"] != result["total_treat_fee"]
+                ):
+                    error_message.append(
+                        f"自身處置費金額不平衡, 處置費: {result['treat_fee']}, "
+                        f"合計: {result['total_treat_fee']}"
+                    )
+
+                if len(error_message) > 0:
+                    error_rows.append(
+                        [
+                            ddata_fee["case_type"],
+                            ddata_fee["sequence"],
+                            ddata_fee["name"],
+                            ", ".join(error_message),
+                        ]
+                    )
+
+                pdata_fee["total_count"] += result["total_count"]
+                pdata_fee["diag_fee"] += result["diag_fee"]
+                pdata_fee["drug_fee"] += result["drug_fee"]
+                pdata_fee["pharmacy_fee"] += result["pharmacy_fee"]
+                pdata_fee["treat_fee"] += result["treat_fee"]
+                pdata_fee["total_fee"] += result["total_fee"]
+                pdata_fee["diag_share_fee"] += result["diag_share_fee"]
+                pdata_fee["drug_share_fee"] += result["drug_share_fee"]
+                pdata_fee["share_fee"] += result["share_fee"]
+                pdata_fee["apply_fee"] += result["apply_fee"]
+                pdata_fee["agent_fee"] += result["agent_fee"]
+
+            progress_dialog.setValue(record_count)
+        finally:  # 中途出錯時對話盒也要收掉, 否則會留在畫面上關不掉
+            progress_dialog.deleteLater()
 
         self._set_error_message(error_rows)
 
@@ -549,7 +555,6 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
 
     def _set_error_message(self, error_rows):
         """錯誤清單一次填入，避免逐列 setRowCount 重新配置"""
-
         table_widget = self.ui.tableWidget_error_message
 
         table_widget.setUpdatesEnabled(False)
@@ -590,7 +595,6 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
             unit_price = number_utils.round_up(self._int_of(row, "p11") * percent / 100)
             total_dosage = self._int_of(row, "p10", 1)
             total_fee = self._int_of(row, "p12")
-
             pay_type = self._text_of(row, "p3")
 
             if pay_type == "0":
@@ -627,7 +631,6 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
                 continue
 
             next_date = case_date + datetime.timedelta(days=1)
-
             patient_key = patient_utils.get_patient_key_by_id(
                 self.database, p["patient_id"]
             )
@@ -672,7 +675,6 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
         解析XML，列出所有屬於高度複針(D07,D08,F52-F68)的病人清單
         回傳 list of dict: [{id, name, doctor_id, ins_code, case_type, case_date}, ...]
         """
-
         xml_file_name = nhi_utils.get_ins_xml_file_name(
             self.system_settings, self.apply_type_code, self.apply_date
         )
@@ -718,7 +720,6 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
 
         # 病人姓名一次查回來，取代原本每一筆各查一次（N+1）
         patient_names = self._get_patient_names(patient_id_set)
-
         for item in result:
             item["patient_name"] = patient_names.get(item["patient_id"], "(查無此人)")
             item["doctor_name"] = self._person_id_to_name(item["doctor_id"])
@@ -727,7 +728,6 @@ class InsCheckApplyFee(QtWidgets.QMainWindow):
 
     def _get_patient_names(self, patient_id_set):
         patient_names = {}
-
         id_list = [pid for pid in patient_id_set if pid]
         if not id_list:
             return patient_names
