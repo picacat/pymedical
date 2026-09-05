@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import calendar
 import os
 import platform
@@ -790,303 +789,28 @@ def export_nursing_home_list_to_excel(
 def add_nursing_home_sheet(
     database, system_settings, row, workbook, apply_year, apply_month, clinic_id
 ):
+    from openpyxl.styles import Border, Side
+
+    thin = Side(style="thin")
+    box = Border(left=thin, right=thin, top=thin, bottom=thin)
+    align_right = Alignment(horizontal="right", vertical="center")
+
     apply_date = nhi_utils.get_apply_date(apply_year, apply_month)
-    case_date = date_utils.west_date_to_nhi_date(row["CaseDate"], "-")
+    case_date = row["CaseDate"]
+    sheet_name = date_utils.west_date_to_nhi_date(case_date, "-")
     title = "全民健康保險中醫門診總額照護機構中醫醫療照護方案門診日報表"
-    sheet = workbook.create_sheet(case_date)
+    sheet = workbook.create_sheet(sheet_name)
 
     branch_name = system_settings.field("健保業務").split("業務組")[0]
     branch = f"中保會{branch_name}分會"
-    case_key = row["CaseKey"]
-    sql = f"""
-        SELECT TourArea FROM cases
-        WHERE
-            CaseKey = {case_key}
-    """
-    rows = database.select_record(sql)
 
-    if len(rows) > 0:
-        tour_area = string_utils.xstr(rows[0]["TourArea"])
-    else:
-        tour_area = ""
-
-    sheet.append(
-        [
-            title,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            "所　屬　分　會",
-            None,
-            branch,
-        ]
-    )
-    sheet.append(
-        [
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            "承　辦　單　位",
-            None,
-        ]
-    )
-    sheet.append(
-        [
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            "醫事服務機構代碼",
-            None,
-            clinic_id,
-        ]
-    )
-    sheet.append(
-        [
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            "地　　　　　點",
-            None,
-            tour_area,
-        ]
-    )
-    sheet.append(
-        [
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            "核　准　代　碼",
-            None,
-        ]
-    )
-
-    merge_cell = [
-        "A1:S5",
-        "T1:U1",
-        "T2:U2",
-        "T3:U3",
-        "T4:U4",
-        "T5:U5",
-        "V1:X1",
-        "V2:X2",
-        "V3:X3",
-        "V4:X4",
-        "V5:X5",
-    ]
-    for cell in merge_cell:
-        sheet.merge_cells(cell)
-
-    for i in range(1, 6):
-        row_property = sheet.row_dimensions[i]
-        row_property.alignment = align_center
-        row_property.font = bold
-
-    title = sheet.cell(row=1, column=1)
-    title.font = Font(size=24)
-    title.alignment = align_center
-
-    header_row = [
-        "日期",
-        case_date,
-        None,
-        "時間",
-        "08:00 - 12:00",
-        None,
-    ]
-    sheet.append(header_row)
-    sheet.merge_cells("B6:C6")
-    sheet.merge_cells("E6:F6")
-    sheet.merge_cells("G6:X6")
-    row_property = sheet.row_dimensions[6]
-    row_property.font = bold
-    row_property.alignment = align_center
-
-    header_row = [
-        "編號",
-        "姓名",
-        "身份證統一編號",
-        "出生年月日",
-        "性別",
-        "住址",
-        "電話",
-        "診察費",
-        "藥費(天)",
-        "調劑費",
-        None,
-        "治療處置",
-        None,
-        None,
-        None,
-        None,
-        None,
-        "當地居民",
-        None,
-        "醫療費用",
-        "部份負擔",
-        "申請費用",
-        "身份別",
-        "備註",
-    ]
-    sheet.append(header_row)
-    row_property.font = bold
-    sheet.merge_cells("J7:K7")
-    sheet.merge_cells("L7:Q7")
-    sheet.merge_cells("R7:S7")
-    row_property.alignment = align_center
-
-    header_row = [
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        "A31",
-        "A32",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "是",
-        "否",
-    ]
-    sheet.append(header_row)
-    merge_cell = [
-        "A7:A8",
-        "B7:B8",
-        "C7:C8",
-        "D7:D8",
-        "E7:E8",
-        "F7:F8",
-        "G7:G8",
-        "H7:H8",
-        "I7:I8",
-        "T7:T8",
-        "U7:U8",
-        "V7:V8",
-        "W7:W8",
-        "X7:X8",
-    ]
-    for cell in merge_cell:
-        sheet.merge_cells(cell)
-
-    row_property = sheet.row_dimensions[7]
-    row_property.alignment = align_center
-    row_property.font = bold
-    row_property = sheet.row_dimensions[8]
-    row_property.alignment = align_center
-    row_property.font = bold
-
-    sheet.column_dimensions["B"].width = 10
-    sheet.column_dimensions["C"].width = 13
-    sheet.column_dimensions["D"].width = 13
-    sheet.column_dimensions["F"].width = 35
-    sheet.column_dimensions["G"].width = 15
-    adjust_column = [
-        "E",
-        "J",
-        "K",
-        "L",
-        "M",
-        "N",
-        "O",
-        "P",
-        "Q",
-        "R",
-        "S",
-    ]
-    for cell in adjust_column:
-        sheet.column_dimensions[cell].width = 5
-
-    case_date = row["CaseDate"]
+    # ------------------------------------------------------------------
+    # 明細資料 (先讀，表頭的服務地點/照護機構代碼要從第一個病人取得)
+    # ------------------------------------------------------------------
     sql = f'''
         SELECT insapply.*,
-               cases.TourArea,
-               patient.Gender, patient.Address, patient.Telephone
+               patient.Gender, patient.Telephone,
+               patient.NursingHome, patient.NursingHomeID
         FROM insapply
             LEFT JOIN cases ON insapply.CaseKey1 = cases.CaseKey
             LEFT JOIN patient ON insapply.PatientKey = patient.PatientKey
@@ -1099,67 +823,182 @@ def add_nursing_home_sheet(
             insapply.CaseDate = "{case_date.date()}"
         ORDER BY Sequence
     '''
-    rows = database.select_record(sql)
+    detail_rows = database.select_record(sql)
+
+    # 同一梯次的病人屬於同一家照護機構，取第一筆即可
+    if len(detail_rows) > 0:
+        nursing_home = string_utils.xstr(detail_rows[0]["NursingHome"])
+        nursing_home_id = string_utils.xstr(detail_rows[0]["NursingHomeID"])
+        nursing_home_id = nursing_home_id.replace("\n", "")
+    else:
+        nursing_home = ""
+        nursing_home_id = ""
+
+    # ------------------------------------------------------------------
+    # 表頭 (第 1 ~ 6 列)：左側大標題，右側 6 組基本資料
+    # ------------------------------------------------------------------
+    header_fields = [
+        ("所　屬　分　會", branch),
+        ("承　辦　單　位", ""),
+        ("醫事服務機構代碼", clinic_id),
+        ("服　務　地　點", nursing_home),
+        ("核　准　代　碼", ""),
+        ("照護機構代碼", nursing_home_id),
+    ]
+    for i, (label, value) in enumerate(header_fields, start=1):
+        sheet.cell(row=i, column=16).value = label  # P 欄
+        sheet.cell(row=i, column=19).value = value  # S 欄
+        sheet.merge_cells(start_row=i, start_column=16, end_row=i, end_column=18)
+        sheet.merge_cells(start_row=i, start_column=19, end_row=i, end_column=21)
+        for col in (16, 19):
+            cell = sheet.cell(row=i, column=col)
+            cell.alignment = align_center
+            cell.font = bold
+
+    sheet.merge_cells("A1:O6")
+    title_cell = sheet.cell(row=1, column=1)
+    title_cell.value = title
+    title_cell.font = Font(size=20, bold=True)
+    title_cell.alignment = align_center
+
+    # ------------------------------------------------------------------
+    # 第 7 列：日期 / 月 / 日 / 時間
+    # ------------------------------------------------------------------
+    sheet.cell(row=7, column=1).value = "日　期"
+    sheet.cell(row=7, column=3).value = f"{case_date.month}　月"
+    sheet.cell(row=7, column=4).value = f"{case_date.day}　日"
+    sheet.cell(row=7, column=5).value = "時間:　08 時 00 分　～　12 時 00 分"
+    sheet.merge_cells("A7:B7")
+    sheet.merge_cells("E7:U7")
+    for col in range(1, 22):
+        cell = sheet.cell(row=7, column=col)
+        cell.alignment = align_center
+        cell.font = bold
+        cell.border = box
+
+    # ------------------------------------------------------------------
+    # 第 8 ~ 9 列：欄位標題
+    # ------------------------------------------------------------------
+    header_row = [
+        "編號",  # A
+        "姓名",  # B
+        "身分證統一編號",  # C
+        "出生年月日",  # D
+        "性別",  # E
+        "電話",  # F
+        "診察費",  # G
+        "藥費(天)",  # H
+        "調劑費",  # I
+        None,  # J
+        "治療處置",  # K
+        None,
+        None,
+        None,
+        None,
+        None,  # L ~ P
+        "醫療費用",  # Q
+        "部分負擔",  # R
+        "申請費用",  # S
+        "身份別",  # T
+        "備註",  # U
+    ]
+    for col, value in enumerate(header_row, start=1):
+        sheet.cell(row=8, column=col).value = value
+
+    sub_header_row = [
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        "A31",
+        "A32",  # I, J
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",  # K ~ P
+    ]
+    for col, value in enumerate(sub_header_row, start=1):
+        sheet.cell(row=9, column=col).value = value
+
+    sheet.merge_cells("I8:J8")  # 調劑費
+    sheet.merge_cells("K8:P8")  # 治療處置
+    for col_letter in ["A", "B", "C", "D", "E", "F", "G", "H", "Q", "R", "S", "T", "U"]:
+        sheet.merge_cells(f"{col_letter}8:{col_letter}9")
+
+    for row_no in (8, 9):
+        for col in range(1, 22):
+            cell = sheet.cell(row=row_no, column=col)
+            cell.alignment = align_center
+            cell.font = bold
+            cell.border = box
+
+    # ------------------------------------------------------------------
+    # 欄寬
+    # ------------------------------------------------------------------
+    sheet.column_dimensions["A"].width = 6
+    sheet.column_dimensions["B"].width = 10
+    sheet.column_dimensions["C"].width = 13
+    sheet.column_dimensions["D"].width = 13
+    sheet.column_dimensions["F"].width = 15
+    sheet.column_dimensions["G"].width = 8
+    sheet.column_dimensions["H"].width = 9
+    for col_letter in ["Q", "R", "S"]:
+        sheet.column_dimensions[col_letter].width = 10
+    sheet.column_dimensions["T"].width = 7
+    sheet.column_dimensions["U"].width = 10
+    for col_letter in ["E", "I", "J", "K", "L", "M", "N", "O", "P"]:
+        sheet.column_dimensions[col_letter].width = 5
+
+    # ------------------------------------------------------------------
+    # 明細列
+    # ------------------------------------------------------------------
+    def to_num(val):
+        try:
+            return float(val) if val is not None else 0
+        except (ValueError, TypeError):
+            return 0
 
     treatment_stats = {}
-    start_row = 9  # 資料開始的行數
+    start_row = 10  # 資料開始的列
 
-    for row_no, row in enumerate(rows):
-        if string_utils.xstr(row["Gender"]) == "男":
-            gender_code = "1"
-        elif string_utils.xstr(row["Gender"]) == "女":
-            gender_code = "0"
-        else:
-            gender_code = ""
+    for row_no, detail_row in enumerate(detail_rows):
+        gender = string_utils.xstr(detail_row["Gender"])
+        gender_code = "1" if gender == "男" else "0" if gender == "女" else ""
 
-        pres_days = row["PresDays"]
         pharmacy_code = nhi_utils.extract_pharmacy_code(
-            string_utils.xstr(row["PharmacyCode"])
+            string_utils.xstr(detail_row["PharmacyCode"])
         )
         pharmacy_list = [None, None]
-        if pharmacy_code != "":
-            pharmacy_code_dict = {
-                "A31": 0,
-                "A32": 1,
-            }
-            pharmacy_list[pharmacy_code_dict[pharmacy_code]] = "V"
+        if pharmacy_code in ("A31", "A32"):
+            pharmacy_list[{"A31": 0, "A32": 1}[pharmacy_code]] = "V"
 
         treat_list = [None] * 6
-        treat_code = string_utils.xstr(row["TreatCode1"])
+        treat_code = string_utils.xstr(detail_row["TreatCode1"])
         if treat_code != "":
             treat_list[0] = treat_code
             treatment_stats[treat_code] = treatment_stats.get(treat_code, 0) + 1
 
-        address = string_utils.xstr(row["Address"])
-        native_list = [
-            None,
-            None,
-        ]
-        if address == "" or tour_area in address:
-            native_list[0] = "V"
-        else:
-            native_list[1] = "V"
-
-        share_code = string_utils.xstr(row["ShareCode"])
+        share_code = string_utils.xstr(detail_row["ShareCode"])
         if share_code in ["S10", "S20"]:
             share_code = ""
 
-        def to_num(val):
-            try:
-                return float(val) if val is not None else 0
-            except (ValueError, TypeError):
-                return 0
-
         data = [
             row_no + 1,
-            string_utils.xstr(row["Name"]),
-            string_utils.xstr(row["ID"]),
-            string_utils.xstr(date_utils.west_date_to_nhi_date(row["Birthday"], "-")),
+            string_utils.xstr(detail_row["Name"]),
+            string_utils.xstr(detail_row["ID"]),
+            string_utils.xstr(
+                date_utils.west_date_to_nhi_date(detail_row["Birthday"], "-")
+            ),
             gender_code,
-            address,
-            string_utils.xstr(row["Telephone"]),
-            string_utils.xstr(row["DiagCode"]),
-            pres_days,
+            string_utils.xstr(detail_row["Telephone"]),
+            string_utils.xstr(detail_row["DiagCode"]),
+            detail_row["PresDays"],
             pharmacy_list[0],
             pharmacy_list[1],
             treat_list[0],
@@ -1168,65 +1007,50 @@ def add_nursing_home_sheet(
             treat_list[3],
             treat_list[4],
             treat_list[5],
-            native_list[0],
-            native_list[1],
-            to_num(row["InsTotalFee"]),  # 轉為數字 (T欄)
-            to_num(row["ShareFee"]),  # 轉為數字 (U欄)
-            to_num(row["InsApplyFee"]),  # 轉為數字 (V欄)
-            share_code,
+            to_num(detail_row["InsTotalFee"]),  # Q 醫療費用
+            to_num(detail_row["ShareFee"]),  # R 部分負擔
+            to_num(detail_row["InsApplyFee"]),  # S 申請費用
+            share_code,  # T 身份別
+            None,  # U 備註
         ]
-        sheet.append(data)
 
         this_row_idx = row_no + start_row
-
-        # 針對該列的每一個儲存格進行設定
-        for col_idx in range(1, len(data) + 1):
+        for col_idx, value in enumerate(data, start=1):
             cell = sheet.cell(row=this_row_idx, column=col_idx)
-            if col_idx in [20, 21, 22]:  # T, U, V
-                cell.alignment = Alignment(horizontal="right", vertical="center")
+            cell.value = value
+            cell.border = box
+            if col_idx in (17, 18, 19):
+                cell.alignment = align_right
             else:
                 cell.alignment = align_center
 
-    # --- 關鍵修改：排序與輸出合計 ---
-    summary_row_no = len(rows) + start_row  # 合計字樣所在列
+    # ------------------------------------------------------------------
+    # 合計
+    # ------------------------------------------------------------------
+    summary_row_no = len(detail_rows) + start_row
 
-    # 寫入「合計」字樣
-    sheet.cell(row=summary_row_no, column=11).value = "合計"
-    sheet.cell(row=summary_row_no, column=11).font = bold
-    sheet.cell(row=summary_row_no, column=11).alignment = align_center
+    summary_cell = sheet.cell(row=summary_row_no, column=10)  # J 欄
+    summary_cell.value = "合計"
+    summary_cell.font = bold
+    summary_cell.alignment = align_center
 
-    # 2. 將統計字典依照 Key (代碼字母) 進行排序
-    # sorted() 會依據字母 A-Z, 數字 0-9 排序
-    sorted_codes = sorted(treatment_stats.items())
+    # 治療處置代碼統計 (依代碼排序，K 欄起往右)
+    for i, (code, count) in enumerate(sorted(treatment_stats.items())):
+        current_col = 11 + i
+        code_cell = sheet.cell(row=summary_row_no, column=current_col)
+        code_cell.value = code
+        code_cell.font = bold
+        code_cell.alignment = align_center
 
-    # 寫入合計金額 (T, U, V 欄)
-    for col in [20, 21, 22]:
-        cell = sheet.cell(row=summary_row_no, column=col)
-        # 這裡同樣設定為靠右
-        cell.alignment = Alignment(horizontal="right", vertical="center")
-        cell.font = bold
-        # 填入公式
-        col_letter = "T" if col == 20 else "U" if col == 21 else "V"
-        cell.value = f"=SUM({col_letter}9:{col_letter}{summary_row_no - 1})"
+        count_cell = sheet.cell(row=summary_row_no + 1, column=current_col)
+        count_cell.value = count
+        count_cell.alignment = align_center
 
-    for i, (code, count) in enumerate(sorted_codes):
-        current_col = 12 + i  # 從 L 欄 (12) 開始向右填寫
-        # 上列：代碼
-        sheet.cell(row=summary_row_no, column=current_col).value = code
-        sheet.cell(row=summary_row_no, column=current_col).font = bold
-        # 下列：數量
-        sheet.cell(row=summary_row_no + 1, column=current_col).value = count
-
-        # 設定居中
-        sheet.cell(row=summary_row_no, column=current_col).alignment = align_center
-        sheet.cell(row=summary_row_no + 1, column=current_col).alignment = align_center
-
-    # 金額總計公式 (T, U, V 欄)
-    for col in [20, 21, 22]:
-        col_letter = "T" if col == 20 else "U" if col == 21 else "V"
+    # 金額合計 (Q, R, S)
+    for col, col_letter in ((17, "Q"), (18, "R"), (19, "S")):
         cell = sheet.cell(row=summary_row_no, column=col)
         cell.value = f"=SUM({col_letter}{start_row}:{col_letter}{summary_row_no - 1})"
-        cell.alignment = Alignment(horizontal="right", vertical="center")
+        cell.alignment = align_right
         cell.font = bold
 
 
@@ -3855,5 +3679,4 @@ def export_correction_reg_income_txt(
         )
 
     with open(txt_filename, "w", encoding="big5") as f:
-        for line in lines:
-            f.write(line)
+        f.writelines(lines)
