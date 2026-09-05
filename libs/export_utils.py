@@ -951,7 +951,7 @@ def add_nursing_home_sheet(
     for col_letter in ["Q", "R", "S"]:
         sheet.column_dimensions[col_letter].width = 10
     sheet.column_dimensions["T"].width = 7
-    sheet.column_dimensions["U"].width = 10
+    sheet.column_dimensions["U"].width = 30
     for col_letter in ["E", "I", "J", "K", "L", "M", "N", "O", "P"]:
         sheet.column_dimensions[col_letter].width = 5
 
