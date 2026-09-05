@@ -553,7 +553,17 @@ class InsApplyAdjustFee(QtWidgets.QMainWindow):
             # 第二階段: 點數高的排前面, 讓它們落在 treat_section1 全額給付
             # 被調整的件數不變, 但砍到的都是點數低的, 總損失最小
             # sort 為穩定排序, 點數相同者維持原本的 Sequence 順序
-            treat_list.sort(key=lambda item: item["treat_fee"], reverse=True)
+            # treat_list.sort(key=lambda item: item["treat_fee"], reverse=True)
+
+            # 第一段優先放 9 碼(避免它們落到第二段被扣) 且點數高的
+            # 第三段(歸零)放點數最低的
+            treat_list.sort(
+                key=lambda item: (
+                    item["treat_code"]
+                    not in nhi_utils.TREAT_DISCOUNT_CODE,  # 9 碼排前面
+                    -item["treat_fee"],
+                )
+            )
 
             # 第三階段: 依序套用遞減分段
             treat_count = 0
