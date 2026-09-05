@@ -2410,7 +2410,7 @@ class Reservation(QtWidgets.QMainWindow):
 
         data = [
             string_utils.xstr(temp_patient_row["Name"]),
-            patient_id,
+            patient_id[:10],
             gender,
             patient_birthday,
             string_utils.xstr(temp_patient_row["PhoneNo"]),
@@ -2419,6 +2419,7 @@ class Reservation(QtWidgets.QMainWindow):
             remark,
             date_utils.now_to_str(),
         ]
+        print(data)
         new_patient_key = self.database.insert_record("patient", field, data)
 
         remark = string_utils.get_str(temp_patient_row["Remark"], "utf-8")
