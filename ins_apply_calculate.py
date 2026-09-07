@@ -140,8 +140,7 @@ class InsApplyCalculate(QtWidgets.QMainWindow):
                 ApplyDate = "{self.apply_date}" AND
                 ApplyType = "{self.apply_type_code}" AND
                 ApplyPeriod = "{self.period}" AND
-                ClinicID = "{self.clinic_id}" AND
-                CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}"
+                ClinicID = "{self.clinic_id}"
             ORDER BY InsApplyKey
         '''
         self._insapply_rows = self.database.select_record(sql)
