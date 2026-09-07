@@ -20,8 +20,6 @@ LED_SETTING_FIELDS = (
     ("叫號燈2", "叫號燈連接埠2", "叫號燈ip2", "叫號燈port2", "叫號燈響鈴2"),
 )
 
-_checksum_list = None  # 第一次用到才建，之後重複使用
-
 
 class ComLedDevice:
     """RS-232 介面的叫號燈"""
@@ -132,60 +130,17 @@ def _send_com_port(com_port, regist_no):
         com.close()
 
 
+COM_OFF_DATA = [0x20, 0x20, 0x20]  # 關燈，checksum 改由下面算
+
+
 def _get_com_data(regist_no):
     regist_no = number_utils.get_integer(regist_no)
     if regist_no == 0:
-        return COM_HEAD + COM_OFF_DATA + COM_TAIL
+        data = COM_OFF_DATA
+    else:
+        data = []
+        for i in f"{regist_no: >3}"[::-1]:
+            data.append(0x3F if i == " " else 0x30 + int(i))
 
-    regist_no_hex = []
-    for i in f"{regist_no: >3}"[::-1]:
-        if i == " ":
-            regist_no_hex.append(0x3F)
-        else:
-            regist_no_hex.append(0x30 + int(i))
-
-    return COM_HEAD + regist_no_hex + [_get_checksum(regist_no)] + COM_TAIL
-
-
-def _get_checksum(regist_no):
-    global _checksum_list
-
-    if _checksum_list is None:
-        _checksum_list = _build_checksum_list()
-
-    return _checksum_list[regist_no]
-
-
-def _build_checksum_list():
-    checksum_list = [None]
-    for i in range(9):  # 1-9 start: 0x24
-        checksum_list.append(0x24 + i)
-    for i in range(1, 10):  # 10-99 start: 0x15
-        for j in range(10):
-            checksum_list.append(0x15 + (j - 1) + i)
-    for i in range(10):  # 100-109 start: 0x06
-        checksum_list.append(0x06 + i)
-    for i in range(1, 37):  # 110-469 start: 0x07
-        for j in range(10):
-            checksum_list.append(0x07 + ((i - 1) % 9) + j)
-    for i in range(1, 4):  # 470-499 start: 0x10
-        for j in range(10):
-            checksum_list.append(0x10 + ((i - 1) % 9) + j)
-    for i in range(1, 28):  # 500-769 start: 0x0a
-        for j in range(10):
-            checksum_list.append(0x10 + ((i - 1) % 9) + j)
-    for i in range(1, 4):  # 770-799 start: 0x13
-        for j in range(10):
-            checksum_list.append(0x13 + ((i - 1) % 9) + j)
-    for i in range(1, 10):  # 800-889 start: 0x0d
-        for j in range(10):
-            checksum_list.append(0x0D + ((i - 1) % 9) + j)
-    for i in range(10):  # 890-899 start: 0x16
-        checksum_list.append(0x16 + i)
-    for i in range(1, 10):  # 900-989 start: 0x0e
-        for j in range(10):
-            checksum_list.append(0x0E + ((i - 1) % 9) + j)
-    for i in range(10):  # 990-999 start: 0x17
-        checksum_list.append(0x17 + i)
-
-    return checksum_list
+    body = COM_HEAD[1:] + data  # STX 之後、checksum 之前的所有 byte
+    return COM_HEAD + data + [sum(body) & 0xFF] + COM_TAIL
