@@ -91,7 +91,7 @@ class PrintReceiptInsForm24:
             self.printer,
             self.system_settings,
             74,
-            188,
+            200,
             QPrinter.Millimeter,
             "健保醫療收據",
         )

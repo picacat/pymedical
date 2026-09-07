@@ -11,7 +11,6 @@ import shutil
 import socket
 import subprocess
 import sys
-import time
 import urllib.parse
 from os import listdir
 from pathlib import Path
@@ -35,7 +34,7 @@ import json
 import logging
 from io import BytesIO
 
-from libs import dialog_utils, nhi_utils, number_utils, ui_utils
+from libs import dialog_utils, nhi_utils, ui_utils
 
 PY_MEDICAL_JSON_FILE = "pymedical.json"
 COMPLICATED_TREATMENT_DISEASE_FILE = "complicated_treatment_disease.json"
@@ -734,107 +733,6 @@ def get_qrcode_from_file(parent):
         return None
     else:
         return qrcode
-
-
-# 'baud=9600 parity=n data=8 stop=1';
-def send_to_com_port(com_port, regist_no):
-
-    import serial
-
-    com = serial.Serial()
-    com.port = f"COM{com_port}"
-    com.baudrate = 9600
-    com.parity = serial.PARITY_NONE
-    com.bytesize = serial.EIGHTBITS
-    com.stopbits = serial.STOPBITS_ONE
-
-    com.timeout = 0.5  # non-block read 0.5s
-    com.writeTimeout = 0.5  # timeout for write 0.5s
-    com.xonxoff = False  # disable software flow control
-    com.rtscts = False  # disable hardware (RTS/CTS) flow control
-    com.dsrdtr = False  # disable hardware (DSR/DTR) flow control
-
-    try:
-        com.open()
-    except Exception:
-        return
-
-    if not com.isOpen():
-        return
-
-    head = [0x02, 0x31, 0x41, 0x03]
-    tail = [0x03]
-
-    regist_no = number_utils.get_integer(regist_no)
-    if number_utils.get_integer(regist_no) == 0:
-        regist_no_hex = [0x20, 0x20, 0x20, 0xD5]  # 關掉led燈
-        data_list = head + regist_no_hex + tail
-    else:
-        regist_no_str = f"{regist_no: >3}"
-        regist_no_str = regist_no_str[::-1]
-        regist_no_hex = []
-        for i in regist_no_str:
-            if i == " ":
-                regist_no_hex.append(0x3F)
-            else:
-                regist_no_hex.append(0x30 + int(i))
-
-        checksum_list = get_checksum_list()
-        data_list = head + regist_no_hex + [checksum_list[regist_no]] + tail
-
-    try:
-        com.flushInput()
-        com.flushOutput()
-        com.write(serial.to_bytes(data_list))
-        time.sleep(0.5)
-        com.close()
-    except Exception:
-        pass
-
-
-def get_checksum_list():
-    checksum_list = [None]
-    for i in range(9):  # 1-9 start: 0x24
-        checksum_list.append(0x24 + i)
-
-    for i in range(1, 10):  # 10-99 start: 0x15
-        for j in range(10):
-            checksum_list.append(0x15 + (j - 1) + i)
-
-    for i in range(10):  # 100-109 start: 0x06
-        checksum_list.append(0x06 + i)
-
-    for i in range(1, 37):  # 110-469 start: 0x07
-        for j in range(10):
-            checksum_list.append(0x07 + ((i - 1) % 9) + j)
-
-    for i in range(1, 4):  # 470-499 start: 0x10
-        for j in range(10):
-            checksum_list.append(0x10 + ((i - 1) % 9) + j)
-
-    for i in range(1, 28):  # 500-769 start: 0x0a
-        for j in range(10):
-            checksum_list.append(0x10 + ((i - 1) % 9) + j)
-
-    for i in range(1, 4):  # 770-799 start: 0x13
-        for j in range(10):
-            checksum_list.append(0x13 + ((i - 1) % 9) + j)
-
-    for i in range(1, 10):  # 800-889 start: 0x0d
-        for j in range(10):
-            checksum_list.append(0x0D + ((i - 1) % 9) + j)
-
-    for i in range(10):  # 890-899 start: 0x16
-        checksum_list.append(0x16 + i)
-
-    for i in range(1, 10):  # 900-989 start: 0x0e
-        for j in range(10):
-            checksum_list.append(0x0E + ((i - 1) % 9) + j)
-
-    for i in range(10):  # 990-999 start: 0x17
-        checksum_list.append(0x17 + i)
-
-    return checksum_list
 
 
 # 傳送資料到tcpip

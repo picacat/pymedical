@@ -12,6 +12,7 @@ from libs import (
     date_utils,
     dialog_utils,
     hainachuan_utils,
+    led_utils,
     nhi_utils,
     notification_utils,
     number_utils,
@@ -97,12 +98,14 @@ class WaitingList(QtWidgets.QMainWindow):
         self.tab_name = "候診名單"
         self.user_name = system_utils.get_user_name(self.system_settings)
         self.settings = QSettings("__settings.ini", QSettings.IniFormat)
-        self.led_port = self.system_settings.field("叫號燈連接埠")
-        self.led_ip = self.system_settings.field("叫號燈ip")
-        self.led_tcp_port = number_utils.get_integer(
-            self.system_settings.field("叫號燈port")
-        )
-        self.ring_bell = self.system_settings.field("叫號燈響鈴")
+        # self.led_port = self.system_settings.field("叫號燈連接埠")
+        # self.led_ip = self.system_settings.field("叫號燈ip")
+        # self.led_tcp_port = number_utils.get_integer(
+        #     self.system_settings.field("叫號燈port")
+        # )
+        # self.ring_bell = self.system_settings.field("叫號燈響鈴")
+        self.led_devices = led_utils.get_led_devices(self.system_settings)
+
         self.notification_client = notification_utils.NotificationClient(
             self,
             database=self.database,
@@ -243,11 +246,15 @@ class WaitingList(QtWidgets.QMainWindow):
 
         self._set_doctor_corner_widget(tab_corner_widget, h_layout)
 
-        if number_utils.get_integer(self.led_port) > 0 or self.led_ip not in [
-            None,
-            "",
-        ]:  # 春暉有叫號燈也有海納川，以叫號燈為主
+        # if number_utils.get_integer(self.led_port) > 0 or self.led_ip not in [
+        #     None,
+        #     "",
+        # ]:  # 春暉有叫號燈也有海納川，以叫號燈為主
+        #     self._set_calling_bulletin_led(tab_corner_widget, h_layout)
+
+        if self.led_devices:  # 春暉有叫號燈也有海納川，以叫號燈為主
             self._set_calling_bulletin_led(tab_corner_widget, h_layout)
+
         if (
             self.system_settings.field("hainachuan") == "Y"
             or self.system_settings.field("線上看診號同步") == "Y"
@@ -703,8 +710,17 @@ class WaitingList(QtWidgets.QMainWindow):
         self._set_permission()
         self._set_led_button(enabled)
 
+    # def _set_led_button(self, enabled=False):
+    #     if number_utils.get_integer(self.led_port) == 0 and self.led_ip in [None, ""]:
+    #         self.ui.action_broadcast_led.setEnabled(False)
+    #         self.ui.action_custom_broadcast_led.setEnabled(False)
+    #         return
+
+    #     self.ui.action_broadcast_led.setEnabled(enabled)
+    #     self.ui.action_custom_broadcast_led.setEnabled(enabled)
+
     def _set_led_button(self, enabled=False):
-        if number_utils.get_integer(self.led_port) == 0 and self.led_ip in [None, ""]:
+        if not self.led_devices:
             self.ui.action_broadcast_led.setEnabled(False)
             self.ui.action_custom_broadcast_led.setEnabled(False)
             return
@@ -1768,52 +1784,72 @@ class WaitingList(QtWidgets.QMainWindow):
             self._send_led()
 
     def _send_led(self, custom=False):
-        if number_utils.get_integer(self.led_port) > 0:
-            self._send_com_data(custom=custom)
-        elif self.led_ip not in ["", None]:
-            self._send_tcpip_data(custom=custom)
-        else:
-            pass
-
+        regist_no = self._get_led_regist_no(custom)
+        led_utils.call_all(self.led_devices, regist_no)
         self._send_broadcast_data()
 
-    def _send_com_data(self, custom=False):
+    def _get_led_regist_no(self, custom):
         if custom:
-            regist_no = self.spinBox_led_number.value()
-        else:
-            regist_no = self.table_widget_waiting_list.field_value(3)
+            return self.spinBox_led_number.value()
 
-        try:
-            system_utils.send_to_com_port(self.led_port, regist_no)
-        except Exception:
-            pass
-
-    def _send_tcpip_data(self, custom=False):
-        if self.ring_bell == "Y":
-            ring_code = 0x01
-        else:
-            ring_code = 0x00
-
-        head = [0x6D, 0x6D, 0x00]
-        tail = [0x01, ring_code, 0x00]
-
-        if custom:
-            regist_no = self.spinBox_led_number.value()
-        else:
-            regist_no = self.table_widget_waiting_list.field_value(3)
-
+        regist_no = self.table_widget_waiting_list.field_value(
+            WAITING_LIST_COL_NO["RegistNo"]
+        )
+        if hasattr(self, "spinBox_led_number"):
             try:
                 self.spinBox_led_number.setValue(int(regist_no))
             except Exception:
-                pass
+                pass  # 診號不是數字，同步不了但叫號照送
 
-        regist_no = f"{regist_no:0>3}"
-        data = head + [int(regist_no[0]), int(regist_no[1]), int(regist_no[2])] + tail
+        return regist_no
 
-        try:
-            system_utils.send_to_tcpip(self.led_ip, self.led_tcp_port, bytes(data))
-        except Exception:
-            pass
+    # def _send_led(self, custom=False):
+    #     if number_utils.get_integer(self.led_port) > 0:
+    #         self._send_com_data(custom=custom)
+    #     elif self.led_ip not in ["", None]:
+    #         self._send_tcpip_data(custom=custom)
+    #     else:
+    #         pass
+
+    #     self._send_broadcast_data()
+
+    # def _send_com_data(self, custom=False):
+    #     if custom:
+    #         regist_no = self.spinBox_led_number.value()
+    #     else:
+    #         regist_no = self.table_widget_waiting_list.field_value(3)
+
+    #     try:
+    #         system_utils.send_to_com_port(self.led_port, regist_no)
+    #     except Exception:
+    #         pass
+
+    # def _send_tcpip_data(self, custom=False):
+    #     if self.ring_bell == "Y":
+    #         ring_code = 0x01
+    #     else:
+    #         ring_code = 0x00
+
+    #     head = [0x6D, 0x6D, 0x00]
+    #     tail = [0x01, ring_code, 0x00]
+
+    #     if custom:
+    #         regist_no = self.spinBox_led_number.value()
+    #     else:
+    #         regist_no = self.table_widget_waiting_list.field_value(3)
+
+    #         try:
+    #             self.spinBox_led_number.setValue(int(regist_no))
+    #         except Exception:
+    #             pass
+
+    #     regist_no = f"{regist_no:0>3}"
+    #     data = head + [int(regist_no[0]), int(regist_no[1]), int(regist_no[2])] + tail
+
+    #     try:
+    #         system_utils.send_to_tcpip(self.led_ip, self.led_tcp_port, bytes(data))
+    #     except Exception:
+    #         pass
 
     def _write_ic_treatment(self):
         card = string_utils.xstr(

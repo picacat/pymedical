@@ -984,7 +984,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>890</width>
+              <width>1301</width>
               <height>820</height>
              </rect>
             </property>
@@ -1733,8 +1733,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>638</width>
-              <height>685</height>
+              <width>1322</width>
+              <height>792</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -2185,7 +2185,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>977</width>
+              <width>1301</width>
               <height>1236</height>
              </rect>
             </property>
@@ -3082,7 +3082,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>685</width>
+              <width>1301</width>
               <height>982</height>
              </rect>
             </property>
@@ -3888,7 +3888,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>881</width>
+              <width>1301</width>
               <height>1478</height>
              </rect>
             </property>
@@ -5296,7 +5296,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-1558</y>
+              <y>0</y>
               <width>1301</width>
               <height>2350</height>
              </rect>
@@ -7175,7 +7175,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>508</width>
+              <width>1301</width>
               <height>883</height>
              </rect>
             </property>
@@ -7484,9 +7484,9 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
-              <width>980</width>
-              <height>1440</height>
+              <y>-646</y>
+              <width>1301</width>
+              <height>1450</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_70">
@@ -8037,10 +8037,38 @@
                   <bool>true</bool>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_17">
+                  <item row="0" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_47">
+                    <item>
+                     <widget class="QLabel" name="label_113">
+                      <property name="text">
+                       <string>封存資料庫名稱</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_archive_database_name"/>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QCheckBox" name="checkBox_voice_call_name">
+                    <property name="text">
+                     <string>叫號內容包含病患的名字</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="4" column="1">
                    <widget class="QCheckBox" name="checkBox_sync_in_price">
                     <property name="text">
                      <string>輸入進貨資料，同步更新藥品進價</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="checkBox_voice_server">
+                    <property name="text">
+                     <string>這台電腦是廣播叫號主機</string>
                     </property>
                    </widget>
                   </item>
@@ -8065,12 +8093,46 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="2" column="0">
-                   <widget class="QCheckBox" name="checkBox_voice_server">
+                  <item row="5" column="0">
+                   <widget class="QCheckBox" name="checkBox_voice_with_led">
                     <property name="text">
-                     <string>這台電腦是廣播叫號主機</string>
+                     <string>叫號同時啟動叫號燈</string>
                     </property>
                    </widget>
+                  </item>
+                  <item row="5" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_58">
+                    <item>
+                     <widget class="QLabel" name="label_80">
+                      <property name="text">
+                       <string>LED叫號燈連接埠</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_129">
+                      <property name="text">
+                       <string>COM</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_led_port"/>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_41">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
                   </item>
                   <item row="3" column="0">
                    <widget class="QCheckBox" name="checkBox_voice_no_call_room">
@@ -8079,10 +8141,122 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="2" column="1">
+                   <widget class="QCheckBox" name="checkBox_import_all_database">
+                    <property name="text">
+                     <string>這台電腦允許執行「匯入全部資料庫」</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QGroupBox" name="groupBox_41">
+                    <property name="title">
+                     <string/>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_56">
+                     <item>
+                      <widget class="QLabel" name="label_126">
+                       <property name="text">
+                        <string>調整庫存量</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="radioButton_batch_stock">
+                       <property name="text">
+                        <string>批次調整</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="radioButton_real_time_stock">
+                       <property name="text">
+                        <string>即時調整</string>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_38">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
                   <item row="3" column="1">
                    <widget class="QCheckBox" name="checkBox_do_not_display_bulletin">
                     <property name="text">
                      <string>首頁不要顯示最新消息</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QGroupBox" name="groupBox_58">
+                    <property name="title">
+                     <string/>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_55">
+                     <item>
+                      <widget class="QLabel" name="label_71">
+                       <property name="text">
+                        <string>醫療系統執行個體</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="radioButton_multi_instance">
+                       <property name="text">
+                        <string>允許執行多個系統</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="radioButton_single_instance">
+                       <property name="text">
+                        <string>僅允許系統獨立執行</string>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_5">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="QCheckBox" name="checkBox_voice_call_next">
+                    <property name="text">
+                     <string>叫號包含請下一位準備</string>
                     </property>
                    </widget>
                   </item>
@@ -8097,12 +8271,12 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="10" column="1">
+                  <item row="6" column="1">
                    <layout class="QHBoxLayout" name="horizontalLayout_91">
                     <item>
                      <widget class="QLabel" name="label_179">
                       <property name="text">
-                       <string>LED叫號燈連接埠</string>
+                       <string>LED1叫號燈連接埠</string>
                       </property>
                      </widget>
                     </item>
@@ -8155,6 +8329,77 @@
                     </item>
                     <item>
                      <spacer name="horizontalSpacer_70">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="10" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_107">
+                    <item>
+                     <widget class="QLabel" name="label_206">
+                      <property name="text">
+                       <string>LED2叫號燈連接埠</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_207">
+                      <property name="text">
+                       <string>IP位址</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_led_ip2">
+                      <property name="minimumSize">
+                       <size>
+                        <width>200</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="placeholderText">
+                       <string>192.168.0.207</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_208">
+                      <property name="text">
+                       <string>連接埠</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_led_port2">
+                      <property name="maximumSize">
+                       <size>
+                        <width>60</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="placeholderText">
+                       <string>23</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_ring_bell2">
+                      <property name="text">
+                       <string>叮咚聲</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_81">
                       <property name="orientation">
                        <enum>Qt::Horizontal</enum>
                       </property>
@@ -8234,180 +8479,6 @@
                      </spacer>
                     </item>
                    </layout>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QGroupBox" name="groupBox_41">
-                    <property name="title">
-                     <string/>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_56">
-                     <item>
-                      <widget class="QLabel" name="label_126">
-                       <property name="text">
-                        <string>調整庫存量</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_batch_stock">
-                       <property name="text">
-                        <string>批次調整</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_real_time_stock">
-                       <property name="text">
-                        <string>即時調整</string>
-                       </property>
-                       <property name="checked">
-                        <bool>false</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <spacer name="horizontalSpacer_38">
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>40</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item row="5" column="1">
-                   <layout class="QHBoxLayout" name="horizontalLayout_58">
-                    <item>
-                     <widget class="QLabel" name="label_80">
-                      <property name="text">
-                       <string>LED叫號燈連接埠</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLabel" name="label_129">
-                      <property name="text">
-                       <string>COM</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QComboBox" name="comboBox_led_port"/>
-                    </item>
-                    <item>
-                     <spacer name="horizontalSpacer_41">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                   </layout>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QCheckBox" name="checkBox_voice_call_name">
-                    <property name="text">
-                     <string>叫號內容包含病患的名字</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0">
-                   <widget class="QCheckBox" name="checkBox_voice_with_led">
-                    <property name="text">
-                     <string>叫號同時啟動叫號燈</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <layout class="QHBoxLayout" name="horizontalLayout_47">
-                    <item>
-                     <widget class="QLabel" name="label_113">
-                      <property name="text">
-                       <string>封存資料庫名稱</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLineEdit" name="lineEdit_archive_database_name"/>
-                    </item>
-                   </layout>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QCheckBox" name="checkBox_import_all_database">
-                    <property name="text">
-                     <string>這台電腦允許執行「匯入全部資料庫」</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QGroupBox" name="groupBox_58">
-                    <property name="title">
-                     <string/>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_55">
-                     <item>
-                      <widget class="QLabel" name="label_71">
-                       <property name="text">
-                        <string>醫療系統執行個體</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_multi_instance">
-                       <property name="text">
-                        <string>允許執行多個系統</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="radioButton_single_instance">
-                       <property name="text">
-                        <string>僅允許系統獨立執行</string>
-                       </property>
-                       <property name="checked">
-                        <bool>false</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <spacer name="horizontalSpacer_5">
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>40</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item row="6" column="0">
-                   <widget class="QCheckBox" name="checkBox_voice_call_next">
-                    <property name="text">
-                     <string>叫號包含請下一位準備</string>
-                    </property>
-                   </widget>
                   </item>
                  </layout>
                 </widget>

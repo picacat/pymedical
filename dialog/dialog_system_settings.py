@@ -1016,6 +1016,10 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self.ui.lineEdit_led_port.setText(self.system_settings.field("叫號燈port"))
         self._set_check_box(self.ui.checkBox_ring_bell, "叫號燈響鈴")
 
+        self.ui.lineEdit_led_ip2.setText(self.system_settings.field("叫號燈ip2"))
+        self.ui.lineEdit_led_port2.setText(self.system_settings.field("叫號燈port2"))
+        self._set_check_box(self.ui.checkBox_ring_bell2, "叫號燈響鈴2")
+
         self._set_check_box(self.ui.checkBox_copy_past, "自動顯示過去病歷")
         self._set_check_box(self.ui.checkBox_only_symptom, "過去病歷診察資料只顯示主訴")
         self._set_check_box(
@@ -2783,14 +2787,18 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self.system_settings.post("叫號燈ip", self.ui.lineEdit_led_ip.text())
         self.system_settings.post("叫號燈port", self.ui.lineEdit_led_port.text())
+        self._save_check_box(self.ui.checkBox_ring_bell, "叫號燈響鈴")
+
+        self.system_settings.post("叫號燈ip2", self.ui.lineEdit_led_ip2.text())
+        self.system_settings.post("叫號燈port2", self.ui.lineEdit_led_port2.text())
+        self._save_check_box(self.ui.checkBox_ring_bell2, "叫號燈響鈴2")
+
         self.system_settings.post(
             "電子秤連接埠", self.ui.comboBox_scale_port.currentText()
         )
         self.system_settings.post(
             "電子秤測重時間", self.ui.doubleSpinBox_scale_time.value()
         )
-
-        self._save_check_box(self.ui.checkBox_ring_bell, "叫號燈響鈴")
 
         self._save_check_box(self.ui.checkBox_side_bar, "顯示側邊欄")
         self._save_check_box(self.ui.checkBox_font_weight, "粗體字")

@@ -44,11 +44,11 @@ from libs import (
     date_utils,
     db_utils,
     dialog_utils,
+    led_utils,
     log_utils,
     module_utils,
     nhi_utils,
     notification_utils,
-    number_utils,
     personnel_utils,
     string_utils,
     system_utils,
@@ -550,24 +550,7 @@ class PyMedical(QtWidgets.QMainWindow):
         self.deactivate_ic_card_reader()
 
     def _turn_off_led(self):
-        led_port = self.system_settings.field("叫號燈連接埠")
-        if led_port not in [None, "0"]:
-            system_utils.send_to_com_port(led_port, "0")
-
-        led_ip = self.system_settings.field("叫號燈ip")
-        if led_ip not in [None, ""]:
-            led_port = number_utils.get_integer(
-                self.system_settings.field("叫號燈port")
-            )
-            try:
-                system_utils.send_to_tcpip(
-                    led_ip, led_port, b"\xed\xed\x0f\x0f\x0f\x0f\x7f\x00\x00"
-                )
-            except Exception as e:
-                system_utils.loggin_error(
-                    "system_errors.log",
-                    f"關閉叫號燈失敗 (IP={led_ip}, Port={led_port}): {e}",
-                )
+        led_utils.turn_off_all(led_utils.get_led_devices(self.system_settings))
 
     def check_system_db(self):
         """檢查資料庫是否需要補充."""

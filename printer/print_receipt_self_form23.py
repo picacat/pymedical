@@ -140,7 +140,7 @@ class PrintReceiptSelfForm23:
             self.printer,
             self.system_settings,
             72,
-            148,
+            200,
             QPrinter.Millimeter,
             "自費醫療收據",
         )
