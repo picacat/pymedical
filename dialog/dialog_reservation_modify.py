@@ -22,7 +22,7 @@ from libs import (
 class DialogReservationModify(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogReservationModify, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -140,7 +140,7 @@ class DialogReservationModify(QtWidgets.QDialog):
                 ReserveNo = {reserve_no}
         '''
         rows = self.database.select_record(sql)
-        if len(rows) > 0:
+        if patient_key != "網路初診" and len(rows) > 0:
             system_utils.show_message_box(
                 QMessageBox.Critical,
                 "預約號碼重複",
