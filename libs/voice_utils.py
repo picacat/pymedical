@@ -240,24 +240,10 @@ def _make_tts_mp3(sentence):
     return tmp_filename
 
 
-# def _play_mp3(filename):
-#     try:
-#         if not mixer.get_init():
-#             mixer.init()
-#         mixer.music.load(filename)
-#         mixer.music.play()
-#         while mixer.music.get_busy():
-#             time.sleep(0.1)
-#         mixer.music.unload()  # 釋放檔案, 避免 Windows 檔案被鎖住
-#     except pygame.error:
-#         pass
-
-
 def _play_mp3(filename):
     for attempt in range(2):
         try:
             if not mixer.get_init():
-                # edge-tts 輸出是 24kHz, 對齊可省掉重新取樣
                 mixer.init()
 
             mixer.music.load(filename)

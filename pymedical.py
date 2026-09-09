@@ -235,6 +235,7 @@ class PyMedical(QtWidgets.QMainWindow):
 
         self.ui = None
 
+        self._init_beep_sound()
         self._init_statistics_dicts()
 
         self._set_ui()
@@ -264,6 +265,19 @@ class PyMedical(QtWidgets.QMainWindow):
             dealer = config["settings"]["dealer"]
 
         self.ui.label_system_owner.setText(f"<b>{dealer}</b>")
+
+    def _init_beep_sound(self):
+        beep_file = os.path.join(self.base_path, "icq.wav")
+        self._beep_path = beep_file if os.path.exists(beep_file) else None
+        self._beep_sound = None
+        self._beep_channel = None
+        try:
+            mixer.pre_init(44100, -16, 2, 1024)  # buffer 調小，提示音延遲較低
+            mixer.init()
+            self._beep_sound = mixer.Sound(os.path.join(self.base_path, "icq.wav"))
+            self._beep_channel = mixer.Channel(1)  # 專用通道，完全不碰 mixer.music
+        except pygame.error as e:
+            system_utils.loggin_error("system_errors.log", f"音效裝置初始化失敗: {e}")
 
     def _init_statistics_dicts(self):
         self.statistics_dicts = {
@@ -524,7 +538,7 @@ class PyMedical(QtWidgets.QMainWindow):
             self._backup_database()
 
         self._turn_off_led()
-        pygame.quit()
+        mixer.quit()
         system_utils.remove_user_info(self.system_settings)
 
         if hasattr(self, "database") and self.database:
@@ -2366,6 +2380,43 @@ class PyMedical(QtWidgets.QMainWindow):
         else:
             pass
 
+    # def _notify_wait_arrive(self):
+    #     if self.no_beep == "Y":
+    #         return
+
+    #     now = time.monotonic()
+    #     if now - self._last_beep_time < BEEP_COOLDOWN_SECONDS:
+    #         return
+
+    #     self._last_beep_time = now
+
+    #     try:
+    #         mixer.init()
+    #         mixer.music.load("./icq.mp3")
+    #         mixer.music.play()
+    #     except pygame.error:
+    #         pass
+
+    def _ensure_beep(self):
+        """mixer 可能被語音播報那邊 quit 掉重開, 用之前先確認一次"""
+        if getattr(self, "_beep_path", None) is None:
+            return False
+
+        try:
+            if not mixer.get_init():
+                mixer.init()
+                self._beep_sound = None  # 裝置換過, 舊的 Sound 已失效
+
+            if self._beep_sound is None:
+                self._beep_sound = mixer.Sound(self._beep_path)
+                self._beep_channel = mixer.Channel(1)
+        except pygame.error as e:
+            system_utils.loggin_error("system_errors.log", f"提示音初始化失敗: {e}")
+            self._beep_sound = None
+            return False
+
+        return True
+
     def _notify_wait_arrive(self):
         if self.no_beep == "Y":
             return
@@ -2376,12 +2427,8 @@ class PyMedical(QtWidgets.QMainWindow):
 
         self._last_beep_time = now
 
-        try:
-            mixer.init()
-            mixer.music.load("./icq.mp3")
-            mixer.music.play()
-        except pygame.error:
-            pass
+        if self._ensure_beep():
+            self._beep_channel.play(self._beep_sound)
 
     # 廣播叫號
     def _broadcast_speech(self, json_data):
