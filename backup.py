@@ -5,13 +5,21 @@
 
 流程：
     1. 判定資料庫引擎（全 InnoDB / 全 MyISAM / 混合）
-    2. 逐表 dump（InnoDB 靠 MVCC 不取鎖，只保單表一致；
-       MyISAM／混合取全域讀鎖換跨表一致性）
-    3. 逐檔驗證（存在、非空、有 dump 結束標記）
+    2. 逐表 dump
+         - InnoDB：靠 MVCC 不取鎖，只保單表一致
+         - MyISAM／混合：取全域讀鎖換跨表一致性；
+           取不到鎖時退回 mysqldump 的單表鎖，至少保住單表一致
+    3. 逐檔驗證（存在、非空、有 dump 結束標記），通過才覆蓋正式檔
     4. 匯出非資料表物件（資料庫字元集、檢視表、routines、權限）
-    5. 匯出當日病歷 JSON
-    6. 把整個備份資料夾複製到其他備份目標
+    5. 匯出當日病歷 JSON（失敗算警告，一定讓人看得到）
+    6. 把整個備份資料夾複製到其他備份目標（先進 .tmp，成功才換掉舊的）
     7. 全部成功才清理舊備份，結果寫入 backup_log.json
+
+呼叫方式：
+    Backup(parent, database, system_settings).start_backup()
+    Backup(parent, database, system_settings).start_backup(unattended=True)
+        → 排程觸發用：不開進度視窗、不跳任何對話框，只寫 log。
+          隔天啟動時由 check_backup_health() 提醒。
 
 需要 system_utils 提供：get_mariadb_dump(version)、get_mariadb_version(database)、
 center_window(widget)、show_message_box(...)
@@ -26,6 +34,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
 from PyQt5 import QtCore, QtWidgets
@@ -59,6 +68,7 @@ MONTHLY_KEEP_DAYS = 400  # 每月 1 號的備份額外保留天數
 WARN_DAYS = 2  # 超過幾天沒有成功備份就示警
 LOCK_WAIT_TIMEOUT = 60  # 取全域讀鎖的等待秒數
 LOG_KEEP_RECORDS = 500
+DUMP_POLL_SECONDS = 0.2  # 等待 mysqldump 時每隔多久檢查一次取消
 
 # 進度視窗固定尺寸，避免訊息長短造成視窗忽大忽小
 PROGRESS_WIDTH = 520
@@ -129,13 +139,49 @@ def last_successful_backup(data_dir):
     return latest
 
 
-def check_backup_health(system_settings, warn_days=WARN_DAYS):
-    """主程式啟動時呼叫，回傳 (ok, message)."""
-    backup_dir = nhi_utils.get_dir(system_settings, "備份路徑")
-    if backup_dir in ["", None]:
-        return False, "尚未設定備份路徑，系統目前沒有任何自動備份。"
+def get_backup_dirs(system_settings):
+    """回傳所有已設定的備份根目錄（順序同 Backup._get_targets，不檢查存在）."""
+    data_dirs = []
 
-    latest = last_successful_backup(backup_dir)
+    physical_dir = system_settings.field("伺服器物理備份路徑")
+    if physical_dir not in ["", None]:
+        data_dirs.append(physical_dir)
+
+    backup_dir = nhi_utils.get_dir(system_settings, "備份路徑")
+    if backup_dir not in ["", None]:
+        data_dirs.append(backup_dir)
+
+    external_dir = system_settings.field("異地備份路徑")
+    if external_dir not in ["", None]:
+        data_dirs.append(external_dir)
+
+    seen, unique_dirs = set(), []
+    for data_dir in data_dirs:
+        key = os.path.normcase(os.path.abspath(data_dir))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_dirs.append(data_dir)
+
+    return unique_dirs
+
+
+def check_backup_health(system_settings, warn_days=WARN_DAYS):
+    """主程式啟動時呼叫，回傳 (ok, message).
+
+    任何一個備份目標有近期的成功紀錄就算通過——主要目標可能是
+    「伺服器物理備份路徑」而不是「備份路徑」，只看後者會誤報。
+    """
+    data_dirs = get_backup_dirs(system_settings)
+    if not data_dirs:
+        return False, "尚未設定任何備份路徑，系統目前沒有任何自動備份。"
+
+    latest = None
+    for data_dir in data_dirs:
+        found = last_successful_backup(data_dir)
+        if found is not None and (latest is None or found > latest):
+            latest = found
+
     if latest is None:
         return False, "找不到任何成功的備份紀錄，請立即檢查備份設定。"
 
@@ -169,7 +215,7 @@ class TargetResult:
         self.cancelled = False
         self.tables_total = 0
         self.failed = []  # 資料表失敗 → 致命
-        self.warnings = []  # 物件檔失敗 → 警告，不阻擋備份
+        self.warnings = []  # 物件檔／病歷 JSON 失敗 → 警告，不阻擋備份
         self.error = ""
         self.seconds = 0.0
 
@@ -195,6 +241,11 @@ class TargetResult:
 # 系統設定 2018.03.19
 # ===========================================================================
 class Backup(QtWidgets.QDialog):
+    # 同一個行程同時只能有一個備份在跑。備份迴圈裡的 processEvents()
+    # 會讓 QTimer 的整點 tick 在備份途中被派送出去，沒有這道防線
+    # 就可能再進一次 start_backup，兩個 dump 同時寫同一個目錄。
+    _running = False
+
     # 初始化
     def __init__(self, parent=None, *args):
         super().__init__(parent)
@@ -221,12 +272,10 @@ class Backup(QtWidgets.QDialog):
         self._step = 0
         self._stage_prefix = ""
         self._cancelled = False
+        self._global_locked = False
+        self._unattended = False
 
-    # 解構
-    def __del__(self):
-        self.close_all()
-
-    # 關閉
+    # 關閉（保留給外部呼叫的介面，不再從 __del__ 觸發）
     def close_all(self):
         pass
 
@@ -236,8 +285,24 @@ class Backup(QtWidgets.QDialog):
     # -------------------------------------------------------------------
     # 主流程
     # -------------------------------------------------------------------
-    def start_backup(self):
-        """執行完整備份，回傳 True 表示所有目標都成功."""
+    def start_backup(self, unattended=False):
+        """執行完整備份，回傳 True 表示所有目標都成功.
+
+        unattended=True：排程觸發用。不開進度視窗、不跳任何對話框，
+        結果只寫 log 與 backup_log.json，凌晨沒人在場也不會卡住那台電腦。
+        """
+        if Backup._running:
+            logger.warning("已有備份正在執行，本次略過")
+            return False
+
+        Backup._running = True
+        self._unattended = unattended
+        try:
+            return self._run_backup()
+        finally:
+            Backup._running = False
+
+    def _run_backup(self):
         self._backup_date = datetime.datetime.today().strftime("%Y-%m-%d")
 
         table_names, view_names = self._load_object_names()
@@ -312,6 +377,10 @@ class Backup(QtWidgets.QDialog):
             name = row["TABLE_NAME"]
             if row["TABLE_TYPE"] == "VIEW":
                 view_names.append(name)
+                continue
+            if row["TABLE_TYPE"] != "BASE TABLE":
+                # MariaDB 的 SEQUENCE 也會出現在這裡，不是資料表
+                logger.info("略過非資料表物件: %s (%s)", name, row["TABLE_TYPE"])
                 continue
             if not row["ENGINE"]:
                 logger.warning("略過沒有引擎實體的資料表: %s", name)
@@ -399,10 +468,10 @@ class Backup(QtWidgets.QDialog):
         # 犧牲的只有跨表一致性（換取備份期間其他站台不被凍住）。
         # MyISAM／混合沒有 MVCC，仍然只能靠全域讀鎖。
         locked = False
-        # if self._engine_mode != ENGINE_INNODB:
-        #     locked = self._acquire_global_lock(result)
-        # else:
-        #     logger.info("純 InnoDB，本次不取全域讀鎖（無跨表一致性）")
+        if self._engine_mode != ENGINE_INNODB:
+            locked = self._acquire_global_lock(result)
+        else:
+            logger.info("純 InnoDB，本次不取全域讀鎖（無跨表一致性）")
 
         try:
             for table_name in table_names:
@@ -420,7 +489,7 @@ class Backup(QtWidgets.QDialog):
             self._release_global_lock(locked, result)
 
         if not result.cancelled:
-            self._backup_json(result.backup_path)
+            object_results.append(self._backup_json(result.backup_path))
         self._advance()
         self._end_stage()
 
@@ -428,14 +497,19 @@ class Backup(QtWidgets.QDialog):
         result.warnings = [t for t in object_results if not t.ok]
         self._write_manifest(result.backup_path, label, table_results + object_results)
 
-        # 物件檔（檢視表、routines）失敗不算致命：病歷資料本身完整，
+        # 物件檔（檢視表、routines）與病歷 JSON 失敗不算致命：資料表本身完整，
         # 異地備份仍應照常複製，舊備份也可以照常輪替。
         result.ok = not result.failed and not result.cancelled and not result.error
         result.seconds = time.time() - started
         return result
 
     def _copy_to_others(self, primary, others, target_count):
-        """把主要目標的備份資料夾複製到其他目標，逐檔顯示進度."""
+        """把主要目標的備份資料夾複製到其他目標，逐檔顯示進度.
+
+        先複製到 <日期>.tmp，全部成功才換掉該目標當日的舊備份。
+        直接對正式目錄 rmtree 再複製的話，網路磁碟中途斷線或
+        使用者按取消，該目標當天就一份都不剩。
+        """
         results = []
 
         try:
@@ -452,23 +526,27 @@ class Backup(QtWidgets.QDialog):
 
             self._begin_stage(offset + 2, target_count, label, len(filenames))
 
+            staging_path = f"{result.backup_path}.tmp"
             try:
-                if os.path.isdir(result.backup_path):
-                    shutil.rmtree(result.backup_path)
-                os.makedirs(result.backup_path, exist_ok=True)
+                if os.path.isdir(staging_path):
+                    shutil.rmtree(staging_path)
+                os.makedirs(staging_path, exist_ok=True)
 
                 for filename in filenames:
                     self._check_cancelled()
                     self._set_label(f"正在複製 {filename} ...")
 
                     source = os.path.join(primary.backup_path, filename)
-                    destination = os.path.join(result.backup_path, filename)
+                    destination = os.path.join(staging_path, filename)
                     if os.path.isdir(source):
                         shutil.copytree(source, destination)
                     else:
                         shutil.copy2(source, destination)
                     self._advance()
 
+                if os.path.isdir(result.backup_path):
+                    shutil.rmtree(result.backup_path)
+                os.rename(staging_path, result.backup_path)
                 result.ok = True
             except BackupCancelled:
                 result.cancelled = True
@@ -476,6 +554,12 @@ class Backup(QtWidgets.QDialog):
             except Exception as error:  # noqa: BLE001
                 result.error = f"複製備份失敗: {error}"
                 logger.error("複製備份到 %s 失敗: %s", label, error)
+            finally:
+                if not result.ok and os.path.isdir(staging_path):
+                    try:
+                        shutil.rmtree(staging_path)
+                    except OSError:
+                        pass
 
             self._end_stage()
             result.seconds = time.time() - started
@@ -490,14 +574,25 @@ class Backup(QtWidgets.QDialog):
     # mysqldump
     # -------------------------------------------------------------------
     def _run_mysqldump(self, extra_args, out_filename):
-        """執行 mysqldump 並把輸出寫進 out_filename."""
+        """執行 mysqldump 並把輸出寫進 out_filename，途中可取消.
+
+        失敗時丟 subprocess.CalledProcessError（stderr 帶回真正原因），
+        使用者取消時丟 BackupCancelled。呼叫端負責清理 out_filename。
+        """
+        # InnoDB：靠 MVCC，完全不鎖。
+        # MyISAM／混合：外層已取得全域讀鎖時子行程不必再鎖；
+        #               沒取到鎖就退回 mysqldump 預設的單表鎖，
+        #               至少保住單表一致性（--skip-lock-tables 會連這個都沒有）。
+        if self._engine_mode == ENGINE_INNODB or self._global_locked:
+            lock_args = ["--skip-lock-tables"]
+        else:
+            lock_args = ["--lock-tables"]
+
         common_args = [
             f"--host={self._host}",
             f"--user={self._user}",
             *CHARSET_ARGS,
-            # InnoDB：完全不鎖，靠 MVCC。
-            # MyISAM／混合：全域讀鎖已在外層取得，子行程不必再鎖。
-            "--skip-lock-tables",
+            *lock_args,
             *extra_args,
         ]
 
@@ -519,60 +614,109 @@ class Backup(QtWidgets.QDialog):
         env = os.environ.copy()
         env["MYSQL_PWD"] = self._password
 
-        kwargs = {"stderr": subprocess.PIPE, "check": True, "env": env}
+        kwargs = {"env": env}
         if sys.platform == "win32":
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = subprocess.SW_HIDE
             kwargs["startupinfo"] = startupinfo
 
-        with open(out_filename, "wb") as f:
-            subprocess.run(args, stdout=f, **kwargs)
+        # stderr 導到暫存檔而不是 PIPE：不必邊跑邊讀，也不會因為
+        # 管線塞滿而卡死；跑完再一次讀回來。
+        with open(out_filename, "wb") as out_file, tempfile.TemporaryFile() as err_file:
+            process = subprocess.Popen(args, stdout=out_file, stderr=err_file, **kwargs)
+            while True:
+                try:
+                    process.wait(timeout=DUMP_POLL_SECONDS)
+                    break
+                except subprocess.TimeoutExpired:
+                    if self._is_cancel_requested():
+                        # docker 模式下只殺得掉本機的 docker exec，
+                        # 容器裡的 mariadb-dump 會自己跑完才結束
+                        process.kill()
+                        process.wait()
+                        raise BackupCancelled()
+                    if self._progress is not None:
+                        QApplication.processEvents()
+            err_file.seek(0)
+            stderr = err_file.read()
 
-    def _dump_table(self, backup_path, table_name):
-        self._check_cancelled()
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(
+                process.returncode, args, output=None, stderr=stderr
+            )
 
-        filename = f"{table_name}.sql"
-        full_filename = os.path.join(backup_path, filename)
-        try:
-            self._run_mysqldump([self._database_name, table_name], full_filename)
-        except subprocess.CalledProcessError as error:
-            stderr = (error.stderr or b"").decode("utf-8", errors="ignore").strip()
-            return TableResult(filename, False, 0, stderr or str(error))
-        except OSError as error:
-            return TableResult(filename, False, 0, f"無法執行 mysqldump: {error}")
-
-        return self._verify_dump_file(filename, full_filename)
-
-    def _dump_object_file(self, name, backup_path, arg_variants):
-        """依序嘗試多組參數，第一組成功就採用。
-
-        舊版 mysqldump 對 --events / --routines 的支援程度不一，
-        失敗時降級重試比直接放棄好。
-        """
-        full_filename = os.path.join(backup_path, name)
-        last_error = ""
-
-        for args in arg_variants:
-            try:
-                self._run_mysqldump(args, full_filename)
-            except subprocess.CalledProcessError as error:
-                # 關鍵：mysqldump 真正的原因在 stderr，不在例外的字串裡
-                stderr = (error.stderr or b"").decode("utf-8", errors="ignore").strip()
-                last_error = stderr or f"exit status {error.returncode}"
-                logger.warning("%s 匯出失敗（%s），嘗試下一組參數", name, last_error)
-                continue
-            except OSError as error:
-                return TableResult(name, False, 0, f"無法執行 mysqldump: {error}")
-
-            return self._verify_dump_file(name, full_filename)
-
-        # 全部失敗，刪掉可能殘留的半成品，避免還原時匯入空檔
+    @staticmethod
+    def _remove_file(full_filename):
         try:
             if os.path.isfile(full_filename):
                 os.remove(full_filename)
         except OSError:
             pass
+
+    def _dump_and_verify(self, name, full_filename, extra_args):
+        """dump 到暫存檔，驗證通過才覆蓋正式檔.
+
+        直接寫正式檔的話，同一天重跑而這次失敗，會先把上一份好的
+        備份截斷成 0 bytes——舊的沒了、新的也沒生出來。
+        """
+        tmp_filename = f"{full_filename}.tmp"
+
+        try:
+            self._run_mysqldump(extra_args, tmp_filename)
+        except BackupCancelled:
+            self._remove_file(tmp_filename)
+            raise
+        except subprocess.CalledProcessError as error:
+            self._remove_file(tmp_filename)
+            # 關鍵：mysqldump 真正的原因在 stderr，不在例外的字串裡
+            stderr = (error.stderr or b"").decode("utf-8", errors="ignore").strip()
+            return TableResult(
+                name, False, 0, stderr or f"exit status {error.returncode}"
+            )
+        except OSError as error:
+            self._remove_file(tmp_filename)
+            return TableResult(name, False, 0, f"無法執行 mysqldump: {error}")
+
+        verified = self._verify_dump_file(name, tmp_filename)
+        if not verified.ok:
+            self._remove_file(tmp_filename)
+            return verified
+
+        try:
+            os.replace(tmp_filename, full_filename)
+        except OSError as error:
+            self._remove_file(tmp_filename)
+            return TableResult(name, False, verified.size, f"無法覆寫備份檔: {error}")
+
+        return verified
+
+    def _dump_table(self, backup_path, table_name):
+        self._check_cancelled()
+
+        filename = f"{table_name}.sql"
+        return self._dump_and_verify(
+            filename,
+            os.path.join(backup_path, filename),
+            [self._database_name, table_name],
+        )
+
+    def _dump_object_file(self, name, backup_path, arg_variants):
+        """依序嘗試多組參數，第一組成功就採用。
+
+        舊版 mysqldump 對 --events / --routines 的支援程度不一，
+        失敗時降級重試比直接放棄好。全部失敗時正式檔不會被動到
+        （暫存檔已在 _dump_and_verify 裡清掉）。
+        """
+        full_filename = os.path.join(backup_path, name)
+        last_error = ""
+
+        for args in arg_variants:
+            result = self._dump_and_verify(name, full_filename, args)
+            if result.ok:
+                return result
+            last_error = result.error
+            logger.warning("%s 匯出失敗（%s），嘗試下一組參數", name, last_error)
 
         return TableResult(name, False, 0, last_error)
 
@@ -619,6 +763,7 @@ class Backup(QtWidgets.QDialog):
             results.append(TableResult(SCHEMA_FILENAME, False, 0, str(error)))
 
         # 2. 檢視表（逐表 dump 的 BASE TABLE 過濾會漏掉）
+        #    檢視表沒有資料，不需要任何鎖；放在後面會蓋掉 common_args 的鎖參數
         if view_names:
             results.append(
                 self._dump_object_file(
@@ -691,10 +836,7 @@ class Backup(QtWidgets.QDialog):
                 "",
             ]
         )
-        with open(
-            os.path.join(backup_path, SCHEMA_FILENAME), "w", encoding="utf-8"
-        ) as f:
-            f.write(content)
+        self._write_text_atomic(os.path.join(backup_path, SCHEMA_FILENAME), content)
 
     def _dump_grants(self, backup_path):
         rows = self.database.select_record(
@@ -706,9 +848,18 @@ class Backup(QtWidgets.QDialog):
             user_name, host_name = row["User"], row["Host"]
             lines.append(f"-- {user_name}@{host_name}")
             try:
-                grant_rows = self.database.select_record(
-                    f"SHOW GRANTS FOR '{user_name}'@'{host_name}'"
-                )
+                # 帳號／主機名含單引號時先跳脫，避免整句 SQL 壞掉
+                safe_user = str(user_name).replace("'", "''")
+                if user_name == "PUBLIC":
+                    # MariaDB 10.11+ 內建的 PUBLIC 角色：語法不帶引號、不帶 host
+                    sql = "SHOW GRANTS FOR PUBLIC"
+                elif host_name in ("", None):
+                    # 角色（role）的 host 是空字串，不能寫成 'name'@''
+                    sql = f"SHOW GRANTS FOR '{safe_user}'"
+                else:
+                    safe_host = str(host_name).replace("'", "''")
+                    sql = f"SHOW GRANTS FOR '{safe_user}'@'{safe_host}'"
+                grant_rows = self.database.select_record(sql)
                 for grant_row in grant_rows:
                     lines.append(f"-- {list(grant_row.values())[0]};")
             except Exception as error:  # noqa: BLE001
@@ -717,10 +868,21 @@ class Backup(QtWidgets.QDialog):
 
         lines.append("-- Dump completed")
         lines.append("")
-        with open(
-            os.path.join(backup_path, GRANTS_FILENAME), "w", encoding="utf-8"
-        ) as f:
-            f.write("\n".join(lines))
+        self._write_text_atomic(
+            os.path.join(backup_path, GRANTS_FILENAME), "\n".join(lines)
+        )
+
+    @staticmethod
+    def _write_text_atomic(full_filename, content):
+        """寫暫存檔再換名，不讓半截檔案蓋掉上一份."""
+        tmp_filename = f"{full_filename}.tmp"
+        try:
+            with open(tmp_filename, "w", encoding="utf-8") as f:
+                f.write(content)
+            os.replace(tmp_filename, full_filename)
+        except Exception:
+            Backup._remove_file(tmp_filename)
+            raise
 
     # -------------------------------------------------------------------
     # 驗證
@@ -765,6 +927,7 @@ class Backup(QtWidgets.QDialog):
             f"# 完成時間   : {datetime.datetime.now():%Y-%m-%d %H:%M:%S}",
             f"# 資料庫     : {self._database_name}",
             f"# 引擎       : {self._engine_mode}",
+            f"# 全域讀鎖   : {'是' if self._engine_mode != ENGINE_INNODB else '否（InnoDB 靠 MVCC）'}",
             f"# MariaDB    : {self._version}",
             f"# 項目       : {ok_count} / {len(table_results)} 成功",
             f"# 總計大小   : {total_size:,} bytes",
@@ -776,10 +939,9 @@ class Backup(QtWidgets.QDialog):
             lines.append(f"{item.name}\t{item.size}\t{status}\t{item.error}")
 
         try:
-            with open(
-                os.path.join(backup_path, MANIFEST_FILENAME), "w", encoding="utf-8"
-            ) as f:
-                f.write("\n".join(lines) + "\n")
+            self._write_text_atomic(
+                os.path.join(backup_path, MANIFEST_FILENAME), "\n".join(lines) + "\n"
+            )
         except Exception as error:  # noqa: BLE001
             logger.warning("寫入 manifest 失敗: %s", error)
 
@@ -787,6 +949,8 @@ class Backup(QtWidgets.QDialog):
     # 全域讀鎖（保證跨表一致性）
     # -------------------------------------------------------------------
     def _acquire_global_lock(self, result):
+        """取不到鎖時回傳 False 並記入 result.error；
+        逐表 dump 會自動退回單表鎖，備份仍會做完，但整份標記為失敗以引起注意。"""
         try:
             self.database.exec_sql(
                 f"SET SESSION lock_wait_timeout = {LOCK_WAIT_TIMEOUT}"
@@ -796,9 +960,11 @@ class Backup(QtWidgets.QDialog):
 
         try:
             self.database.exec_sql("FLUSH TABLES WITH READ LOCK")
+            self._global_locked = True
             logger.info("已取得全域讀鎖")
             return True
         except Exception as error:  # noqa: BLE001
+            self._global_locked = False
             logger.error("無法取得全域讀鎖，本次備份沒有跨表一致性: %s", error)
             result.error = f"無法取得全域讀鎖: {error}"
             return False
@@ -809,6 +975,7 @@ class Backup(QtWidgets.QDialog):
             return
         try:
             self.database.exec_sql("UNLOCK TABLES")
+            self._global_locked = False
             logger.info("已釋放全域讀鎖")
         except Exception as error:  # noqa: BLE001
             logger.critical("UNLOCK TABLES 失敗，資料庫可能仍為唯讀: %s", error)
@@ -818,17 +985,34 @@ class Backup(QtWidgets.QDialog):
     # 當日病歷 JSON
     # -------------------------------------------------------------------
     def _backup_json(self, backup_path):
+        """匯出當日病歷 JSON；失敗只算警告，但必須讓人看得到.
+
+        資料庫整個救不回來時這是最後一道保險，不能靜靜地失敗。
+        今天沒有病歷是正常情況，不算失敗。
+        """
         self._set_label("正在匯出當日病歷 JSON ...")
         filename = f"backup_{datetime.datetime.now():%Y%m%d}.json"
         full_filename = os.path.join(backup_path, filename)
 
         try:
             case_key_list = self._get_case_key_list()
+        except Exception as error:  # noqa: BLE001
+            logger.error("查詢當日病歷失敗: %s", error)
+            return TableResult(filename, False, 0, f"查詢當日病歷失敗: {error}")
+
+        if not case_key_list:
+            logger.info("今日沒有病歷，略過 %s", filename)
+            return TableResult(filename, True, 0, "今日無病歷，略過")
+
+        try:
             db_utils.export_medical_record_to_json(
                 self, self.database, full_filename, case_key_list
             )
         except Exception as error:  # noqa: BLE001
             logger.error("當日病歷 JSON 匯出失敗: %s", error)
+            return TableResult(filename, False, 0, str(error))
+
+        return self._verify_text_file(filename, full_filename)
 
     def _get_case_key_list(self):
         today = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -841,7 +1025,7 @@ class Backup(QtWidgets.QDialog):
         return [row["CaseKey"] for row in rows]
 
     # -------------------------------------------------------------------
-    # 舊備份清理：一般保留 30 天，每月 1 號的多留一年
+    # 舊備份清理：一般保留 KEEP_DAYS 天，每月 1 號的多留 MONTHLY_KEEP_DAYS 天
     # -------------------------------------------------------------------
     def _purge_old_backups(self, data_dir):
         try:
@@ -865,7 +1049,7 @@ class Backup(QtWidgets.QDialog):
                 continue
 
             age = (today - folder_date).days
-            if age <= KEEP_DAYS or folder_date.day == 1 and age <= MONTHLY_KEEP_DAYS:
+            if age <= KEEP_DAYS or (folder_date.day == 1 and age <= MONTHLY_KEEP_DAYS):
                 keep.append(full_path)
             else:
                 remove.append(full_path)
@@ -886,6 +1070,10 @@ class Backup(QtWidgets.QDialog):
     def _start_progress(self):
         self._step = 0
         self._stage_prefix = ""
+
+        if self._unattended:  # 排程觸發：沒人在場，不能開 modal 視窗
+            self._progress = None
+            return
 
         # parent 用真正的主視窗；self 這個 QDialog 從來不顯示，
         # 座標永遠停在 (0, 0)，用它當 parent 會讓進度視窗跑到螢幕左上角
@@ -924,12 +1112,12 @@ class Backup(QtWidgets.QDialog):
         if self._progress is not None:
             self._progress.setRange(0, max(1, total_steps))
             self._progress.setValue(0)
-        QApplication.processEvents()
+            QApplication.processEvents()
 
     def _end_stage(self):
         if self._progress is not None:
             self._progress.setValue(self._progress.maximum())
-        QApplication.processEvents()
+            QApplication.processEvents()
 
     def _finish_progress(self):
         if self._progress is None:
@@ -943,7 +1131,7 @@ class Backup(QtWidgets.QDialog):
         self._step += steps
         if self._progress is not None:
             self._progress.setValue(min(self._step, self._progress.maximum()))
-        QApplication.processEvents()
+            QApplication.processEvents()
 
     def _set_label(self, text):
         if self._progress is not None:
@@ -951,15 +1139,21 @@ class Backup(QtWidgets.QDialog):
                 self._progress.setLabelText(f"{self._stage_prefix}\n{text}")
             else:
                 self._progress.setLabelText(text)
-        QApplication.processEvents()
+            QApplication.processEvents()
 
-    def _check_cancelled(self):
+    def _is_cancel_requested(self):
+        """只回報狀態、不丟例外，給 dump 等待迴圈輪詢用."""
         # 用自己的旗標記住取消狀態：setRange/setValue 之後
         # QProgressDialog.wasCanceled() 的結果不一定保留
         if self._cancelled:
-            raise BackupCancelled()
+            return True
         if self._progress is not None and self._progress.wasCanceled():
             self._cancelled = True
+            return True
+        return False
+
+    def _check_cancelled(self):
+        if self._is_cancel_requested():
             raise BackupCancelled()
 
     def _center_window(self, widget):
@@ -985,6 +1179,10 @@ class Backup(QtWidgets.QDialog):
         )
 
     def _show_error(self, title, message, hint):
+        if self._unattended:
+            logger.error("%s: %s %s", title, message, hint.replace("\n", " / "))
+            return
+
         system_utils.show_message_box(
             QMessageBox.Critical,
             title,
@@ -993,7 +1191,24 @@ class Backup(QtWidgets.QDialog):
         )
 
     def _report(self, results, target_count):
-        """成功時安靜結束；資料表失敗跳紅字，物件檔失敗只提醒."""
+        """成功時安靜結束；資料表失敗跳紅字，物件檔失敗只提醒.
+
+        unattended 模式一律只寫 log，通知交給隔天啟動時的 check_backup_health()。
+        """
+        if self._unattended:
+            for result in results:
+                logger.info(
+                    "備份結果 %s: ok=%s 失敗表=%d 警告=%d %s",
+                    result.label,
+                    result.ok,
+                    len(result.failed),
+                    len(result.warnings),
+                    result.error,
+                )
+            if len(results) < target_count:
+                logger.error("主要目標失敗，其餘備份路徑本次未複製")
+            return
+
         problems = [r for r in results if not r.ok]
         warned = [r for r in results if r.ok and r.warnings]
 
@@ -1001,7 +1216,7 @@ class Backup(QtWidgets.QDialog):
         if not problems and not warned and len(results) == target_count:
             return
 
-        # 資料表都完整，只是物件檔有問題 → 提醒即可，備份仍然有效
+        # 資料表都完整，只是物件檔／病歷 JSON 有問題 → 提醒即可，備份仍然有效
         if not problems and len(results) == target_count:
             lines = []
             for result in warned:
@@ -1009,10 +1224,10 @@ class Backup(QtWidgets.QDialog):
                     lines.append(f"　- {item.name}：{item.error}")
             system_utils.show_message_box(
                 QMessageBox.Warning,
-                "備份完成（部分物件未備份）",
-                '<font size="5"><b>病歷資料已完整備份，'
-                "但部分資料庫物件備份失敗。</b></font>",
-                "以下項目未納入本次備份，不影響病歷資料的還原：\n"
+                "備份完成（部分項目未備份）",
+                '<font size="5"><b>病歷資料表已完整備份，'
+                "但部分項目備份失敗。</b></font>",
+                "以下項目未納入本次備份，不影響資料表的還原：\n"
                 + "\n".join(lines)
                 + "\n\n請在方便時通知系統維護人員檢查。",
             )
