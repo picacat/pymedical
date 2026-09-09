@@ -54,7 +54,7 @@ OBJECT_FILENAMES = (
 
 # ── 參數 ───────────────────────────────────────────────────────────────
 DUMP_COMPLETE_MARKER = "Dump completed"  # mysqldump 正常結束時的檔尾標記
-KEEP_DAYS = 30  # 一般備份保留天數
+KEEP_DAYS = 14  # 一般備份保留天數
 MONTHLY_KEEP_DAYS = 400  # 每月 1 號的備份額外保留天數
 WARN_DAYS = 2  # 超過幾天沒有成功備份就示警
 LOCK_WAIT_TIMEOUT = 60  # 取全域讀鎖的等待秒數
