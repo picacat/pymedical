@@ -15,17 +15,17 @@
       所以這項改動對 MyISAM 客戶完全無影響。
 
   * 資料引擎一律自動判定（_detect_engine）
-      引擎不從設定檔讀取，而是依目前資料表的多數引擎判定。設定檔會說謊
-      ——conf 寫著 InnoDB 而資料表其實還是 MyISAM（或反過來）時，新資料
-      表會被建成另一種引擎，形成難以察覺的混合引擎資料庫。資料庫現況不
-      會說謊，客戶跑完引擎轉換後也不需要再去改任何設定檔。
-      MyISAM 客戶判定出 MyISAM、已轉換的判定出 InnoDB、全新資料庫給
-      InnoDB，三種情況都正確。判定必須在連上目標資料庫之後執行。
+      引擎不從設定檔讀取，而是依目前資料表判定。設定檔會說謊——conf
+      寫著 InnoDB 而資料表其實還是 MyISAM（或反過來）時，新資料表會被
+      建成另一種引擎，形成難以察覺的混合引擎資料庫。資料庫現況不會
+      說謊，客戶跑完引擎轉換後也不需要再去改任何設定檔。
+      判定必須在連上目標資料庫之後執行。
 
-  * 交易深度計數（_tx_depth）
-      insert/update/delete/exec_sql 原本無條件 commit，使得外層交易一
-      開始就被截斷。改為只有「不在明確交易中」時才自動提交。對 MyISAM
-      而言資料本來就即時寫入，跳過 commit 呼叫沒有任何差別。
+  * 交易深度計數（_tx_depth）與中止旗標（_tx_aborted）
+      insert/update/delete/exec_sql 只有「不在明確交易中」時才自動提交。
+      巢狀交易中內層回滾後，外層會被標記為中止：後續任何語句與最後的
+      commit() 都會拋出 TransactionAborted，而不是讓外層在交易早已結束
+      的連線上繼續寫入、最後留下半套資料。
 
   * 交易中禁止自動重連
       重連會靜默回滾未提交的變更，讓後續語句在新交易裡繼續跑，結果是
@@ -39,13 +39,30 @@
   * kill_sleep_connections 排除持有交易的連線
       MyISAM 的 Sleep 連線什麼都沒抓著，殺掉無害；InnoDB 的 Sleep 連線
       可能正持有未提交的交易與一批 row lock。改為排除 INNODB_TRX 中的
-      執行緒。MyISAM 客戶的排除清單為空，行為與先前完全相同。
+      執行緒，並只處理本使用者、本資料庫的連線。
 
   * 隔離等級 READ COMMITTED（條件式）
       對「讀出來→使用者編輯→寫回去」的桌面應用比 REPEATABLE READ 合理，
       也與 PostgreSQL 的預設一致。MyISAM 完全忽略隔離等級。
       注意：binlog_format=STATEMENT 搭配 READ COMMITTED 會讓 InnoDB 寫入
       直接報錯，因此套用前會先檢查 binlog 狀態，不符合就維持預設。
+
+本次修訂
+--------
+  1. exec_sql(auto_commit=False) 在交易外會直接報錯。連線是 autocommit，
+     語句執行完就已提交，這個參數在交易外沒有任何效果，繼續讓它靜默
+     通過只會誤導呼叫端。
+  2. 巢狀交易中止旗標（_tx_aborted），見上。
+  3. check_field_exists 的 add 分支改用拆解後的欄位名稱。
+  4. ping() 改走本類別自己的 _reconnect()，重連後 session 設定（隔離
+     等級）才會重新套用；connector 內建的 reconnect 不會。
+  5. get_cursor() 不再自己 ping。connector 建立 cursor 前會自行驗證
+     連線，失敗時才重連；_auto_commit() 在 autocommit 連線上不再多送
+     一句 COMMIT。一次 insert 從三趟往返降為一趟。
+  6. db_engine() 改回傳快取值；要重新判定請呼叫 refresh_engine()。
+  7. kill_sleep_connections 只處理同使用者、同資料庫的連線；引擎未知
+     時一律不動手。
+  8. is_transactional() 在引擎未知時回傳 False（未知就當作沒有保護）。
 
 刻意不改的項目
 --------------
@@ -99,6 +116,19 @@ class TransactionInterrupted(mysql_errors.InterfaceError):
     """
 
 
+class TransactionAborted(RuntimeError):
+    """外層交易已被內層回滾，不可再繼續。
+
+    典型情境：外層 transaction() 區塊裡呼叫了另一個包 transaction() 的
+    函式，內層出錯回滾，但外層程式碼把例外吞掉繼續往下跑。此時伺服器端
+    的交易早就結束，連線回到 autocommit，外層接下來的每一句都會立刻落地
+    ——這正是「半套資料且沒有任何錯誤」的來源。
+
+    因此內層回滾後，外層的任何語句與最後的 commit() 都會拋出這個例外。
+    正確的做法是讓例外一路傳出最外層的 transaction() 區塊，重做整個操作。
+    """
+
+
 class MySQLDatabase(DatabaseInterface):
     """MySQL 資料庫操作類別，提供連線、查詢、插入、更新、刪除與資料表管理功能。"""
 
@@ -124,20 +154,26 @@ class MySQLDatabase(DatabaseInterface):
         # self.cnx 還是 None，偵測必定失敗並靜默落回 FALLBACK_ENGINE。
         self.engine = None
 
-        # 明確交易的巢狀深度。0 表示不在交易中（自動提交模式）。
+        # 連線是否為 autocommit 模式。_create_connection() 一律以
+        # autocommit=True 建立連線，這個旗標讓 _auto_commit() 知道不必再
+        # 多送一句 COMMIT。刻意不讀 cnx.autocommit：C 版 connector 的
+        # getter 會真的跑一句 SELECT @@session.autocommit。
+        self._autocommit = True
+
+        # 明確交易的巢狀深度（呼叫端的認知）。0 表示不在交易中。
         self._tx_depth = 0
+        # 內層已回滾、外層尚未收工。詳見 TransactionAborted。
+        self._tx_aborted = False
         # MyISAM 客戶端使用交易時只提醒一次，避免洗畫面
         self._warned_myisam_tx = False
+
+        # 舊欄位。本檔案內沒有任何地方使用，但其他模組可能會讀，暫時保留。
+        self.timeout = 0
 
         if config_file:
             self.CONFIG_FILE = config_file
 
-        self.timeout = 0
         self._connect_to_db(**kwargs)
-
-    # def __del__(self):
-    #     """解構時關閉資料庫連線。"""
-    #     self.close_database()
 
     # ------------------------------------------------------------------
     # 連線管理
@@ -145,6 +181,10 @@ class MySQLDatabase(DatabaseInterface):
 
     def connected(self):
         """檢查是否與資料庫成功連線。
+
+        注意：connector 的 is_connected() 會真的送一個 PING 到伺服器，
+        不是免費的。熱路徑（get_cursor）不再使用它，只留給啟動、重連、
+        維護工具這類低頻場合。
 
         Returns:
             bool: 如果資料庫連線成功，回傳 True，否則回傳 False。
@@ -169,6 +209,7 @@ class MySQLDatabase(DatabaseInterface):
             finally:
                 self.cnx = None
         self._tx_depth = 0
+        self._tx_aborted = False
 
     def _get_database_name(self):
         """取得目前使用的資料庫名稱。
@@ -212,6 +253,9 @@ class MySQLDatabase(DatabaseInterface):
                 self.charset = kwargs["charset"]
                 self.port = kwargs.get("port", 3306)
 
+            self._tx_depth = 0
+            self._tx_aborted = False
+
             self._create_connection(use_db=False)
             self._initialize_database()
 
@@ -233,10 +277,12 @@ class MySQLDatabase(DatabaseInterface):
         except mysql.Error as err:
             print(f"Error: {err}")
             self.cnx = None
-        self.timeout = 0
 
     def _create_connection(self, use_db=True):
         """建立與資料庫的實際連線。
+
+        這裡刻意不動 _tx_depth / _tx_aborted：_reconnect() 需要在重連
+        前後保留呼叫端的交易認知，好讓外層的 rollback() 能正確收尾。
 
         Args:
             use_db (bool): 是否指定資料庫名稱連線。
@@ -257,8 +303,11 @@ class MySQLDatabase(DatabaseInterface):
                 # 對 MyISAM 而言此設定無任何作用。
                 autocommit=True,
             )
-            self._tx_depth = 0
-            self._apply_session_settings()
+            self._autocommit = True
+            # use_db=False 的連線只用來 CREATE DATABASE，馬上就會被關掉
+            # 重連，不必浪費一趟去設隔離等級。
+            if use_db:
+                self._apply_session_settings()
         except mysql.Error as err:
             print(f"Error: {err}")
             self.cnx = None
@@ -285,6 +334,9 @@ class MySQLDatabase(DatabaseInterface):
         重要：binlog_format=STATEMENT 搭配 READ COMMITTED 時，InnoDB 的寫入
         會直接以 ER_BINLOG_STMT_MODE_AND_ROW_ENGINE 失敗。因此先檢查 binlog
         狀態，不符合條件就維持伺服器預設，寧可不最佳化也不能弄壞寫入。
+
+        這是 session 層級的設定，重連後必須重新套用——所以所有重連都必須
+        走 _reconnect()，不可用 connector 內建的 ping(reconnect=True)。
         """
         if self.cnx is None:
             return
@@ -313,105 +365,28 @@ class MySQLDatabase(DatabaseInterface):
                     pass
 
     def db_engine(self):
+        """取得目前資料庫的儲存引擎（快取值）。
+
+        連線建立時已由 _detect_engine() 判定，這裡直接回傳，不重新查詢、
+        不印訊息，UI 狀態列可以放心頻繁呼叫。引擎轉換工具在轉換完成後
+        要顯示最新狀態，請改呼叫 refresh_engine()。
+        """
+        return self.engine or "未知"
+
+    def refresh_engine(self):
+        """重新依資料庫現況判定引擎並更新快取。
+
+        給引擎轉換工具在轉換完成後呼叫。會重新查一次 information_schema
+        並印出判定結果。
+
+        Returns:
+            str: 判定後的引擎名稱。
+        """
         try:
-            engine = self._detect_engine()
-        except Exception:
-            engine = "未知"
-
-        return engine
-
-    # def _detect_engine(self):
-    #     """依現有資料表判定本資料庫使用的儲存引擎。
-
-    #     這是引擎的唯一判定來源，設定檔不再參與。理由是設定檔會說謊——
-    #     conf 寫著 InnoDB 而資料表其實還是 MyISAM（或反過來）時，新資料表
-    #     會被建成另一種引擎，形成難以察覺的混合引擎資料庫。資料庫現況不會
-    #     說謊，而且客戶跑完引擎轉換後不需要再去改任何設定檔。
-
-    #     判定規則：取目前資料表中佔多數的引擎；數量相同時偏好 InnoDB，
-    #     避免已經轉換一半的資料庫被判回 MyISAM 而倒退。
-
-    #     前置條件：必須已連上目標資料庫。未連線時直接回傳 FALLBACK_ENGINE
-    #     並明確警告，而不是讓查詢一路失敗後靜默落回預設值——後者會把
-    #     MyISAM 客戶誤判成 InnoDB。
-
-    #     Returns:
-    #         str: 引擎名稱。
-    #     """
-    #     if not self.connected():
-    #         print(
-    #             f"⚠️ 尚未連線，無法判定資料引擎，暫用 {FALLBACK_ENGINE}。"
-    #             "若此訊息出現在正常啟動流程中，代表 _detect_engine() 被"
-    #             "提前呼叫了，請檢查呼叫順序。"
-    #         )
-    #         return FALLBACK_ENGINE
-
-    #     sql = """
-    #         SELECT ENGINE, COUNT(*) AS n
-    #         FROM information_schema.TABLES
-    #         WHERE TABLE_SCHEMA = DATABASE()
-    #           AND TABLE_TYPE = 'BASE TABLE'
-    #           AND ENGINE IS NOT NULL
-    #         GROUP BY ENGINE
-    #     """
-    #     try:
-    #         rows = self.select_record(sql)
-    #     except Exception as e:
-    #         print(f"⚠️ 查詢資料引擎失敗，暫用 {FALLBACK_ENGINE}：{e}")
-    #         return FALLBACK_ENGINE
-
-    #     counts = {}
-    #     for row in rows or []:
-    #         name = row.get("ENGINE")
-    #         if name:
-    #             counts[str(name)] = int(row.get("n") or 0)
-
-    #     if not counts:
-    #         # 兩種截然不同的情況，訊息不能混為一談：
-    #         #
-    #         # (a) 連線根本沒選到資料庫。_initialize_database() 的
-    #         #     CREATE DATABASE IF NOT EXISTS 在「資料庫已存在但使用者
-    #         #     沒有 CREATE 權限」時仍會失敗（權限檢查先於存在檢查），
-    #         #     它的 except 只印訊息，於是後面的 _create_connection
-    #         #     (use_db=True) 不會執行，連線停留在未選定資料庫的狀態。
-    #         #     此時 DATABASE() 是 NULL，查詢自然沒有任何列——若當成
-    #         #     空資料庫處理，MyISAM 客戶就會被靜默誤判成 InnoDB。
-    #         #
-    #         # (b) 資料庫確實是空的（全新安裝），採用預設值才是對的。
-    #         if not self._get_database_name():
-    #             print(
-    #                 f"⚠️ 連線未選定資料庫（`{self.database}` 可能不存在或"
-    #                 f"權限不足），無法判定引擎，暫用 {FALLBACK_ENGINE}。"
-    #                 "請確認資料庫名稱與使用者權限。"
-    #             )
-    #         else:
-    #             print(
-    #                 f"資料庫 `{self.database}` 尚無資料表，"
-    #                 f"新資料表將採用 {FALLBACK_ENGINE}。"
-    #             )
-    #         return FALLBACK_ENGINE
-
-    #     # 數量相同時偏好交易式引擎，讓轉換到一半的資料庫不會被判回 MyISAM
-    #     def _rank(item):
-    #         name, n = item
-    #         return (n, 1 if name.upper() == FALLBACK_ENGINE.upper() else 0)
-
-    #     engine = max(counts.items(), key=_rank)[0]
-
-    #     if len(counts) > 1:
-    #         detail = "、".join(
-    #             f"{k} {v} 張" for k, v in sorted(counts.items(), key=lambda x: -x[1])
-    #         )
-    #         print(
-    #             f"⚠️ 資料庫 `{self.database}` 混合了多種儲存引擎（{detail}），"
-    #             f"新資料表將採用 {engine}。"
-    #             "這通常代表引擎轉換中斷或尚未完成，建議儘快統一。"
-    #         )
-    #     else:
-    #         print(f"資料引擎：{engine}（依現有 {counts[engine]} 張資料表判定）")
-
-    #     return engine
-    # -*- coding: utf-8 -*-
+            self.engine = self._detect_engine()
+        except Exception as e:
+            print(f"⚠️ 重新判定資料引擎失敗：{e}")
+        return self.engine or "未知"
 
     def _detect_engine(self):
         """依現有資料表判定本資料庫使用的儲存引擎。
@@ -545,6 +520,10 @@ class MySQLDatabase(DatabaseInterface):
     def get_cursor(self, dictionary=False, buffered=True):
         """取得 cursor。若連線已斷開，嘗試重連一次。
 
+        這裡不再自己呼叫 connected()：connector 的 cursor() 在建立前會
+        自行 ping 一次驗證連線，我們再 ping 一次只是每句 SQL 多一趟往返。
+        改為直接建立 cursor，失敗（連線已死）時才走重連。
+
         Args:
             dictionary (bool): 是否回傳 dict 格式。
             buffered (bool): 是否啟用 buffer 模式。
@@ -553,11 +532,24 @@ class MySQLDatabase(DatabaseInterface):
             MySQLCursor: 資料庫 cursor。
 
         Raises:
+            TransactionAborted: 外層交易已被內層回滾，不可再執行任何語句。
             TransactionInterrupted: 交易進行中連線中斷。
             mysql_errors.InterfaceError: 重連後仍無法取得有效連線。
         """
-        if not self.connected():
-            self._reconnect()
+        if self._tx_aborted:
+            raise TransactionAborted(
+                "交易已在內層回滾，伺服器端的交易早已結束，不可再繼續執行"
+                "語句。請讓例外傳出最外層的 transaction() 區塊並重做整個操作。"
+            )
+
+        if self.cnx is not None:
+            try:
+                return self.cnx.cursor(dictionary=dictionary, buffered=buffered)
+            except (mysql_errors.OperationalError, mysql_errors.InterfaceError):
+                # 連線已死（閒置過夜被伺服器砍掉、網路閃斷…），往下重連
+                pass
+
+        self._reconnect()  # 交易中會拋 TransactionInterrupted
 
         if not self.connected():
             raise mysql_errors.InterfaceError("資料庫連線已中斷，重新連線失敗。")
@@ -574,9 +566,13 @@ class MySQLDatabase(DatabaseInterface):
         呼叫端毫不知情，後續語句會在一個全新的交易裡繼續執行，最後留下
         半套資料而且完全沒有錯誤訊息。因此這裡選擇重連完成後主動拋出
         例外，讓呼叫端知道整個操作必須重做。
+
+        _tx_depth 刻意不歸零：那是呼叫端的認知，要由呼叫端的 rollback()
+        逐層收尾。這裡只把交易標記為中止，讓收尾前的任何語句都會被擋下。
         """
         was_in_transaction = self.in_transaction
-        self._tx_depth = 0
+        if was_in_transaction:
+            self._tx_aborted = True
 
         if self.cnx:
             try:
@@ -591,6 +587,10 @@ class MySQLDatabase(DatabaseInterface):
         except Exception as e:
             print(f"❌ 無法重新連線至資料庫：{e}")
             self.cnx = None
+
+        # 啟動時連線失敗、引擎沒判定成功，這次重連成功了就補判定
+        if self.engine is None and not was_in_transaction and self.connected():
+            self.engine = self._detect_engine()
 
         if was_in_transaction:
             raise TransactionInterrupted(
@@ -609,22 +609,48 @@ class MySQLDatabase(DatabaseInterface):
 
         注意：MyISAM 資料表不支援交易，這裡不會報錯，但也不會有任何保護
         效果——出錯時不會回滾，仍會留下半套資料。
+
+        Raises:
+            TransactionAborted: 外層交易已被內層回滾，不可再開新的巢狀層。
         """
         if self.cnx is None:
             raise mysql_errors.InterfaceError("資料庫未連線，無法開始交易。")
 
+        if self._tx_aborted:
+            raise TransactionAborted(
+                "外層交易已在內層回滾，不可再開啟巢狀交易。"
+                "請讓例外傳出最外層的 transaction() 區塊並重做整個操作。"
+            )
+
         if self._tx_depth == 0:
             self._warn_if_non_transactional()
+            # 不在交易中，斷線可以安全重連：先確認連線活著再 START
+            cursor = self.get_cursor()
+            try:
+                cursor.close()
+            except Exception:
+                pass
             self.cnx.start_transaction()
 
         self._tx_depth += 1
 
     def commit(self):
-        """提交目前交易。巢狀時只有最外層真正提交。"""
+        """提交目前交易。巢狀時只有最外層真正提交。
+
+        Raises:
+            TransactionAborted: 交易已在內層回滾，沒有東西可以提交。
+        """
         if self._tx_depth > 0:
             self._tx_depth -= 1
             if self._tx_depth > 0:
                 return
+
+        if self._tx_aborted:
+            self._tx_aborted = False
+            raise TransactionAborted(
+                "交易已在內層回滾，無法提交。伺服器端沒有留下本交易的任何"
+                "變更，請重做整個操作。"
+            )
 
         if self.cnx:
             self.cnx.commit()
@@ -632,10 +658,11 @@ class MySQLDatabase(DatabaseInterface):
     def rollback(self):
         """回復目前交易。
 
-        回滾一律作用於整個交易（含所有巢狀層），因此深度直接歸零。
+        伺服器端一律回滾整個交易（含所有巢狀層）；呼叫端的深度計數則只
+        退一層，讓外層的 with 區塊能自己收尾。若退完還有外層存在，就把
+        交易標記為中止，外層接下來的語句與 commit() 都會拋出
+        TransactionAborted。
         """
-        self._tx_depth = 0
-
         if self.cnx:
             try:
                 self.cnx.rollback()
@@ -644,9 +671,24 @@ class MySQLDatabase(DatabaseInterface):
                 # 預期行為，不應讓它蓋掉呼叫端原本要處理的例外
                 print(f"（rollback 未完全生效：{e}）")
 
+        if self._tx_depth > 1:
+            self._tx_aborted = True
+
+        if self._tx_depth > 0:
+            self._tx_depth -= 1
+
+        if self._tx_depth == 0:
+            # 最外層已收尾，整個交易乾淨地結束了
+            self._tx_aborted = False
+
     def _auto_commit(self):
-        """寫入方法用的自動提交：只有不在明確交易中時才真的提交。"""
-        if self._tx_depth == 0 and self.cnx:
+        """寫入方法用的自動提交：只有不在明確交易中時才真的提交。
+
+        連線是 autocommit 模式，不在交易中的語句在 execute 回來時就已由
+        伺服器提交，再送 COMMIT 只是多一趟往返。只有將來有人把連線改成
+        autocommit=False 時，這裡才需要真的動作。
+        """
+        if self._tx_depth == 0 and self.cnx and not self._autocommit:
             self.cnx.commit()
 
     def _auto_rollback(self):
@@ -654,8 +696,9 @@ class MySQLDatabase(DatabaseInterface):
 
         交易中的失敗應由外層決定要回滾整批還是另做處理，內層擅自回滾會
         把外層的變更一併清掉而外層毫不知情。
+        autocommit 連線上失敗的語句本來就不會留下任何東西，不必多送。
         """
-        if self._tx_depth == 0 and self.cnx:
+        if self._tx_depth == 0 and self.cnx and not self._autocommit:
             try:
                 self.cnx.rollback()
             except Exception:
@@ -696,11 +739,15 @@ class MySQLDatabase(DatabaseInterface):
 
         區塊內也不可執行 DDL（ALTER/CREATE/DROP），MariaDB 會隱含提交，
         交易會在你不知情的狀況下被切斷。
+
+        區塊內若呼叫了另一個也包 transaction() 的函式，而內層失敗了，
+        請讓例外一路傳出來，不要在區塊內 except 掉——否則接下來的語句會
+        拋出 TransactionAborted。
         """
         self.begin_transaction()
         try:
             yield self
-        except Exception:
+        except BaseException:
             self.rollback()
             raise
         else:
@@ -826,8 +873,6 @@ class MySQLDatabase(DatabaseInterface):
                         flags=re.IGNORECASE,
                     )
                     # 若未指定 ENGINE，則補上 ENGINE 與 CHARSET 設定
-                    # if "ENGINE=" not in statement.upper():
-                    #     statement += f" ENGINE={engine} DEFAULT CHARSET={self.charset}"
                     if "ENGINE=" not in statement.upper():
                         statement += (
                             f" ENGINE={engine} DEFAULT CHARSET={self.charset} "
@@ -851,10 +896,8 @@ class MySQLDatabase(DatabaseInterface):
                 "編碼錯誤", f"無法解析檔案：{table_file}，請確認是否為 UTF-8 編碼。"
             )
         except mysql.Error as err:
-            # 原本寫成 mysql.connector.Error。因為模組是以
-            # `import mysql.connector as mysql` 匯入的，mysql 已經是
-            # mysql.connector 本身，mysql.connector 這個屬性並不存在，
-            # 真的進到這個 except 時會拋 AttributeError，把原始錯誤蓋掉。
+            # 模組是以 `import mysql.connector as mysql` 匯入的，mysql 已經
+            # 是 mysql.connector 本身，不可寫成 mysql.connector.Error。
             self._show_error_message(
                 "建表錯誤", f"建立資料表 {table_name} 時出現錯誤：\n{err!s}"
             )
@@ -893,7 +936,7 @@ class MySQLDatabase(DatabaseInterface):
                 cursor.execute(sql, params or ())
                 return cursor.fetchall()
 
-            except TransactionInterrupted:
+            except (TransactionInterrupted, TransactionAborted):
                 # 交易已毀，重試單句沒有意義，直接讓呼叫端知道
                 raise
 
@@ -943,12 +986,11 @@ class MySQLDatabase(DatabaseInterface):
             self._auto_rollback()
             raise
         finally:
-            if cursor is not None:
-                try:
-                    if self.cnx and self.cnx.is_connected():
-                        cursor.close()
-                except Exception:
-                    pass
+            try:
+                if cursor and self.cnx and self.cnx.is_connected():
+                    cursor.close()
+            except Exception:
+                pass
 
     def insert_record(self, table_name, fields, data):
         """新增一筆紀錄至指定資料表。
@@ -1018,35 +1060,44 @@ class MySQLDatabase(DatabaseInterface):
         Args:
             sql (str): 要執行的 SQL 語句，可包含 %s 佔位符。
             params (tuple): 對應佔位符的參數，None 表示不使用參數化查詢。
-            auto_commit (bool): 是否自動提交變更。在明確交易中時此參數
-                無效——交易由外層的 commit()/rollback() 決定。
+            auto_commit (bool): 只在 transaction() 區塊內有意義（且在那裡
+                本來就由外層決定提交與否，此參數無作用）。在交易外傳
+                False 會直接報錯：連線是 autocommit 模式，語句執行完就已
+                提交，「先不提交、之後再一起 commit」在這裡做不到，靜默
+                接受只會讓呼叫端誤以為自己有回滾的機會。
 
         Returns:
             int: INSERT 時為新資料的 auto_increment 值，其他語句為 0。
+
+        Raises:
+            RuntimeError: 交易外傳入 auto_commit=False。
         """
+        if not auto_commit and self._tx_depth == 0:
+            raise RuntimeError(
+                "exec_sql(auto_commit=False) 只能在 transaction() 區塊內使用。"
+                "交易外的連線是 autocommit，語句執行完即已提交，此參數沒有"
+                "任何效果。需要一組語句同生共死請改用 with db.transaction():。"
+            )
+
         cursor = self.get_cursor(dictionary=True)
         try:
             cursor.execute(sql, params)  # params=None 時等同原本的 execute(sql)
             last_row_id = cursor.lastrowid
-            if auto_commit:
-                self._auto_commit()
+            self._auto_commit()
             return last_row_id
         except Exception as e:
-            # 失敗時主動清空交易狀態，避免連線殘留未提交/未回復的異動。
+            # 在明確交易中時 _auto_rollback() 不會動作，由外層決定。
             # 注意：若 sql 是 DDL（如 ALTER TABLE），MySQL 在執行前已隱性
             # commit，這裡的 rollback 多半是 no-op。
-            # 在明確交易中時 _auto_rollback() 不會動作，由外層決定。
-            if auto_commit:
-                self._auto_rollback()
+            self._auto_rollback()
             print(f"❌ exec_sql 執行失敗：{sql}\n參數：{params}\n錯誤資訊：{e}")
             raise
         finally:
-            if cursor is not None:
-                try:
-                    if self.cnx and self.cnx.is_connected():
-                        cursor.close()
-                except Exception:
-                    pass
+            try:
+                if cursor and self.cnx and self.cnx.is_connected():
+                    cursor.close()
+            except Exception:
+                pass
 
     def get_last_insert_id(self):
         """取得最近一次插入的自動編號 ID。
@@ -1092,16 +1143,23 @@ class MySQLDatabase(DatabaseInterface):
         return self.database
 
     def engine_name(self):
-        """取得目前資料庫使用的儲存引擎。"""
+        """取得目前資料庫使用的儲存引擎（快取值，未知時給 FALLBACK_ENGINE）。
+
+        與 db_engine() 的差別只在未知時的回傳值：這裡給的是「建表時會用
+        的引擎」，db_engine() 給的是「顯示給人看的狀態」。
+        """
         return self.engine or FALLBACK_ENGINE
 
     def is_transactional(self):
         """目前資料庫的引擎是否支援交易。
 
-        MyISAM 回傳 False。可用於在 UI 上提示客戶尚未轉換，或在關鍵流程
-        中決定是否要走額外的補償邏輯。
+        MyISAM 回傳 False。引擎尚未判定（連線失敗）時也回傳 False——
+        「不知道」就當作沒有保護，比樂觀地假設有來得安全。可用於在 UI 上
+        提示客戶尚未轉換，或在關鍵流程中決定是否要走額外的補償邏輯。
         """
-        return str(self.engine or "").upper() not in ("MYISAM", "MEMORY", "CSV")
+        if not self.engine:
+            return False
+        return str(self.engine).upper() not in ("MYISAM", "MEMORY", "CSV")
 
     def cursor(self):
         """取得預設 dictionary 格式的 cursor。"""
@@ -1144,25 +1202,36 @@ class MySQLDatabase(DatabaseInterface):
     def ping(self):
         """測試資料庫連線是否仍有效，若中斷則自動重連。
 
+        重連一律走本類別的 _reconnect()，不用 connector 內建的
+        ping(reconnect=True)：後者只還原連線參數，不會重新套用
+        _apply_session_settings() 下的隔離等級，連線會悄悄回到
+        REPEATABLE READ，而且 self.engine 等狀態也不會同步。
+
+        交易中不重連（會靜默回滾），斷線就直接回傳 False，讓下一句
+        get_cursor() 拋出 TransactionInterrupted 由呼叫端處理。
+
         Returns:
-            bool: 測試是否成功。
+            bool: 連線是否可用。
         """
         if self.cnx is None:
             return False
 
-        # 交易中不可自動重連（會靜默回滾），只做不重連的檢查
+        try:
+            self.cnx.ping(reconnect=False)
+            return True
+        except Exception:
+            pass
+
         if self.in_transaction:
-            try:
-                self.cnx.ping(reconnect=False)
-                return True
-            except Exception:
-                return False
+            return False
 
         try:
-            self.cnx.ping(reconnect=True, attempts=3, delay=2)
-            return True
-        except mysql.Error:
+            self._reconnect()
+        except Exception as e:
+            print(f"❌ ping 後重新連線失敗：{e}")
             return False
+
+        return self.connected()
 
     # ------------------------------------------------------------------
     # 結構維護（皆為 DDL，不可在交易中呼叫）
@@ -1239,11 +1308,15 @@ class MySQLDatabase(DatabaseInterface):
             pass
 
         if alter_type == "add":
-            sql = f"ALTER TABLE {table_name} ADD `{column}` {data_type}"
+            # 用拆解後的 new_column，不可用原始的 column——後者若是 list
+            # 會被組成 ADD `['old', 'new']`
+            sql = f"ALTER TABLE {table_name} ADD `{new_column}` {data_type}"
         elif alter_type == "change":
             sql = f"ALTER TABLE {table_name} CHANGE `{search_column}` `{new_column}` {data_type}"
         elif alter_type == "modify":
             sql = f"ALTER TABLE {table_name} MODIFY `{new_column}` {data_type}"
+        else:
+            raise ValueError(f"不支援的 alter_type：{alter_type!r}")
         self.exec_sql(sql)
 
     def _get_transaction_thread_ids(self):
@@ -1253,7 +1326,7 @@ class MySQLDatabase(DatabaseInterface):
         kill_sleep_connections 的行為與先前完全相同。
 
         Returns:
-            set[int]: 執行緒 ID。
+            set[int] | None: 執行緒 ID；無法查詢時回傳 None 代表「無法判斷」。
         """
         try:
             rows = self.select_record(
@@ -1271,11 +1344,14 @@ class MySQLDatabase(DatabaseInterface):
 
     def kill_sleep_connections(self, threshold=60):
         """
-        殺掉所有與本資料庫有關、且閒置時間超過 threshold 秒的 Sleep 連線。
+        殺掉本使用者、本資料庫、且閒置時間超過 threshold 秒的 Sleep 連線。
 
         InnoDB 注意事項：Sleep 狀態的連線可能正持有一個未提交的交易與一批
         row lock（idle in transaction）。殺掉它會讓對方的變更被回滾，而對方
         程式毫不知情。因此這裡會先查出 INNODB_TRX 中的執行緒並排除。
+
+        只處理 User 與 db 都和自己相同的連線。db 為 NULL 的連線可能是別的
+        應用剛連上還沒 USE、監控工具、備份腳本，不在本系統的管轄範圍。
 
         MyISAM 客戶端的排除清單永遠為空，行為與改動前完全相同。
 
@@ -1284,8 +1360,9 @@ class MySQLDatabase(DatabaseInterface):
         """
         protected = self._get_transaction_thread_ids()
         if protected is None:
-            # 無法判斷哪些連線持有交易時，只在確定不會誤傷的情況下才動作
-            if self.is_transactional():
+            # 無法判斷哪些連線持有交易時，只在確定不會誤傷的情況下才動作。
+            # 引擎未知也算無法確定。
+            if self.engine is None or self.is_transactional():
                 print("⚠️ 無法查詢 INNODB_TRX，為避免中斷他人交易，略過清理連線。")
                 return
             protected = set()
@@ -1306,8 +1383,8 @@ class MySQLDatabase(DatabaseInterface):
                     row["Command"] == "Sleep"
                     and row["Time"] > threshold
                     and row["Id"] != my_id
-                    and row.get("db")
-                    in (self.database, None)  # 確保是連到同一個資料庫或未指定的資料庫
+                    and row.get("User") == self.user
+                    and row.get("db") == self.database
                 ):
                     process_id = row["Id"]
 
@@ -1322,20 +1399,17 @@ class MySQLDatabase(DatabaseInterface):
                         f"🔪 Killing sleep connection: ID {process_id}, User: {row['User']}, Host: {row['Host']}"
                     )
                     try:
-                        # 沿用外層 cursor。原本在迴圈內另開 kill_cursor，
-                        # execute 失敗時不會執行到 close()，每次失敗漏一個
-                        # cursor。外層 cursor 是 buffered 且已 fetchall()，
-                        # 沒有未讀結果，重用是安全的。
+                        # 沿用外層 cursor。外層 cursor 是 buffered 且已
+                        # fetchall()，沒有未讀結果，重用是安全的。
                         cursor.execute(f"KILL {process_id}")
                     except Exception as e:
                         print(f"❌ 無法刪除 ID {process_id}: {e}")
         finally:
-            if cursor is not None:
-                try:
-                    if self.cnx and self.cnx.is_connected():
-                        cursor.close()
-                except Exception:
-                    pass
+            try:
+                if cursor and self.cnx and self.cnx.is_connected():
+                    cursor.close()
+            except Exception:
+                pass
 
     def add_index_if_not_exists(self, table_name, index_name, fields):
         """
@@ -1365,6 +1439,3 @@ class MySQLDatabase(DatabaseInterface):
 
             print(f"正在建立索引：{index_name} -> {table_name}({field_str})")
             self.exec_sql(create_sql)
-        else:
-            # print(f"索引 {index_name} 已存在，跳過。")
-            pass
