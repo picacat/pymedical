@@ -260,6 +260,34 @@ IMPORT_PROLOGUE = (
 )
 IMPORT_EPILOGUE = b"\nCOMMIT;\n"
 
+# ---------------------------------------------------------------------------
+# 備份檔內的字元集宣告
+#
+# 【為什麼要濾掉】
+# mysql client 的 --default-character-set 只設定連線的「初始」字元集，
+# 而 dump 檔頭自己那句 SET NAMES 會在連線建立之後把它整個覆蓋掉。
+# 結果是 GUI 上選什麼編碼都沒用，永遠是檔案裡的宣告說了算。
+#
+# 混合字元集的舊資料庫最容易踩到：整份備份大多是 utf8，某一張表卻宣告
+# big5，那個檔就會拿 big5 去解 UTF-8 的位元組，噴
+#   ERROR 1300 (HY000): Invalid big5 character string: 'E78FBE'
+# （E7 8F BE 正是 UTF-8 的「現」），而且是整個檔案匯入失敗。
+#
+# 濾掉之後由 --default-character-set 單獨決定，使用者的選擇才有意義。
+# 萬一使用者真的選錯，伺服器一樣會拋 1300 擋下來，不會靜默寫進亂碼——
+# 這是安全的失敗方向。
+# ---------------------------------------------------------------------------
+CHARSET_STMT_PATTERN = re.compile(
+    rb"^\s*(?:/\*!\d*\s*)?SET\s+"
+    rb"(?:NAMES|CHARACTER\s+SET|character_set_client|character_set_results"
+    rb"|character_set_connection|collation_connection)\b",
+    re.IGNORECASE,
+)
+
+# 字元集宣告都在檔頭（每個檔一張表），只需逐行掃描前面這一段，
+# 其餘部分直接整塊複製，不必為了幾行去拆解幾百 MB 的 INSERT。
+HEADER_SCAN_BYTES = 256 * 1024
+
 
 # ---------------------------------------------------------------------------
 # 工具函式
@@ -593,10 +621,31 @@ def write_lossy_evidence(folder, rows):
     return ""
 
 
+def filter_charset_statements(data):
+    """
+    把檔頭裡的字元集宣告註解掉，回傳 (處理後的位元組, 被註解掉的宣告清單)。
+
+    只註解不刪除，行號才不會跑掉——mysql 回報錯誤時給的是行號，
+    刪行會讓「at line 28」對不上原始檔案，除錯時很痛苦。
+    """
+    out = []
+    found = []
+    for line in data.split(b"\n"):
+        if CHARSET_STMT_PATTERN.match(line):
+            found.append(line.strip().decode("ascii", errors="replace"))
+            out.append(b"-- [restore_sql] " + line)
+        else:
+            out.append(line)
+    return b"\n".join(out), found
+
+
 def run_import(cmd, env, full_path):
     """
     以管線方式送出 prologue + 檔案內容 + COMMIT。
-    回傳 (returncode, stderr 字串)。
+    回傳 (returncode, stderr 字串, 被濾掉的字元集宣告清單)。
+
+    檔頭的字元集宣告會被註解掉，改由 --default-character-set 決定，
+    理由見 CHARSET_STMT_PATTERN 上方的說明。
 
     注意：寫完之後【不可】自行呼叫 proc.stdin.close()。
     Popen.communicate() 內部會先做一次 self.stdin.flush()，
@@ -613,9 +662,18 @@ def run_import(cmd, env, full_path):
         **subprocess_flags(),
     )
     write_error = ""
+    stripped = []
     try:
         proc.stdin.write(IMPORT_PROLOGUE)
         with open(full_path, "rb") as f:
+            header = f.read(HEADER_SCAN_BYTES)
+            # 檔頭可能切在某一行中間，切到最後一個換行為止再處理，
+            # 剩下的半行接回去，不然那一行會被拆成兩半送出去
+            cut = header.rfind(b"\n") + 1
+            head, tail = header[:cut], header[cut:]
+            filtered, stripped = filter_charset_statements(head)
+            proc.stdin.write(filtered)
+            proc.stdin.write(tail)
             shutil.copyfileobj(f, proc.stdin, 4 * 1024 * 1024)
         proc.stdin.write(IMPORT_EPILOGUE)
     except Exception as e:
@@ -638,7 +696,7 @@ def run_import(cmd, env, full_path):
     rc = proc.returncode
     if rc == 0 and write_error:
         rc = 1
-    return rc, msg
+    return rc, msg, stripped
 
 
 # ---------------------------------------------------------------------------
@@ -997,11 +1055,24 @@ class RestoreWorker(QObject):
             ]
 
             failed = []
+            declared_charsets = defaultdict(list)
             for i, sql_file in enumerate(sql_files, start=1):
                 self.sig_progress.emit(i, total)
                 full_path = os.path.join(p["sql_folder"], sql_file)
                 t0 = time.time()
-                rc, err = run_import(cmd, env, full_path)
+                rc, err, stripped = run_import(cmd, env, full_path)
+
+                # 檔案自己宣告的字元集與使用者選的不同時，一定要講出來。
+                # 混合字元集的舊資料庫常常只有一兩張表宣告 big5，
+                # 靜默改掉會讓人完全不知道發生過什麼事。
+                for stmt in stripped:
+                    m = re.search(
+                        r"(?:SET\s+NAMES|=)\s*[`'\"]?(\w+)", stmt, re.IGNORECASE
+                    )
+                    name = (m.group(1) if m else "?").lower()
+                    if name not in ("", "?") and name != file_charset.lower():
+                        declared_charsets[name].append(sql_file)
+
                 if rc != 0:
                     failed.append((sql_file, err))
                     self.log(f"  ✗ [{i}/{total}] {sql_file} 失敗：{err}")
@@ -1010,6 +1081,17 @@ class RestoreWorker(QObject):
                         f"  ✓ [{i}/{total}] {sql_file}（{time.time() - t0:.1f} 秒）"
                     )
             t_import = time.time() - t0_phase
+
+            for name, files in sorted(declared_charsets.items()):
+                preview = "、".join(files[:5])
+                if len(files) > 5:
+                    preview += f" 等 {len(files)} 個檔案"
+                self.log(
+                    f"⚠ {len(files)} 個檔案的檔頭宣告 {name}，"
+                    f"與指定的 {file_charset} 不同，已改以 {file_charset} 匯入"
+                    f"（{preview}）。若這些表的內容真的是 {name}，"
+                    f"請改選該編碼重新執行。"
+                )
 
             if failed:
                 detail = "\n  ".join(f"{n}：{e}" for n, e in failed)
