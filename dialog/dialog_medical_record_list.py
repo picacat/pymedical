@@ -328,9 +328,7 @@ class DialogMedicalRecordList(QtWidgets.QDialog):
             condition.append(f'cases.Visit = "{visit}"')
 
         if doctor != "全部":
-            condition.append(
-                f'(cases.Doctor = "{doctor}" and cases.TreatType != "自購")'
-            )
+            condition.append(f'(cases.Doctor = "{doctor}")')
 
         if registrar != "全部":
             condition.append(f'cases.Register = "{registrar}"')
