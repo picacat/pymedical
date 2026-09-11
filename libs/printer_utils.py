@@ -10377,8 +10377,8 @@ def get_case_html_0(
 
 
 def get_blank_line(system_settings):
-    blank_line = number_utils.get_integer(system_settings.field("列印收據空白行"))
-    if not blank_line or blank_line < 0:
+    blank_line = number_utils.get_integer(system_settings.field("列印收據空白行")) or 0
+    if blank_line <= 0:
         return ""
 
     return "<br>" * blank_line + "."
