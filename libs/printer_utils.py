@@ -10381,4 +10381,4 @@ def get_blank_line(system_settings):
     if not blank_line or blank_line < 0:
         return ""
 
-    return "<br>" * blank_line + '<span style="font-size:1pt">.</span>'
+    return "<br>" * blank_line + "."
