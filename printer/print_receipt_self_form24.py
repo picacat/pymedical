@@ -246,6 +246,8 @@ class PrintReceiptSelfForm24:
             clinic_name, clinic_id, clinic_telephone, clinic_address
         )
 
+        blank_line = printer_utils.get_blank_line(self.system_settings)
+
         html = f"""
             <html>
               <body>
@@ -260,6 +262,7 @@ class PrintReceiptSelfForm24:
                 {fees_record}
               </b>
               <br><br>
+              {blank_line}
               </body>
             </html>
         """

@@ -1468,6 +1468,10 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self.ui.spinBox_medicine_character_count.setValue(
             number_utils.get_integer(self.system_settings.field("列印處方字數"))
         )
+        self.ui.spinBox_blank_line.setValue(
+            number_utils.get_integer(self.system_settings.field("列印收據空白行"))
+        )
+
         self._set_check_box(self.ui.checkBox_agreement, "自費同意書自費1金額")
         self._set_radio_button(
             [
@@ -2664,6 +2668,8 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self.system_settings.post(
             "列印處方字數", self.ui.spinBox_medicine_character_count.value()
         )
+        self.system_settings.post("列印收據空白行", self.ui.spinBox_blank_line.value())
+
         self._save_check_box(self.ui.checkBox_agreement, "自費同意書自費1金額")
         self._save_radio_button(
             [

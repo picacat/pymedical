@@ -397,6 +397,7 @@ class SystemSettings:
             "晚班停止掛號結束時間",
             "顯示候診一覽表",
             "醫療費用收據不印粗體",
+            "列印收據空白行",
         ]:
             station_no = 0
         else:

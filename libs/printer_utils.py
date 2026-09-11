@@ -10374,3 +10374,13 @@ def get_case_html_0(
     """
 
     return html
+
+
+def get_blank_line(system_settings):
+    blank_line = number_utils.get_integer(system_settings.field("列印收據空白行"))
+
+    blank_str = ""
+    for i in range(blank_line):
+        blank_str += "<br>"
+
+    return blank_str
