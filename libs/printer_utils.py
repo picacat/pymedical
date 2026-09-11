@@ -10383,4 +10383,6 @@ def get_blank_line(system_settings):
     for i in range(blank_line):
         blank_str += "<br>"
 
+    blank_str += "."
+
     return blank_str
