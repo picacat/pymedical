@@ -36,6 +36,7 @@ from libs import (
 BELL_FILE = "./dingdong.mp3"
 
 
+# 耀康專用
 class BellThread(QThread):
     """播放音效的子執行緒, 音量吃「語音播放音量」"""
 
