@@ -1,10 +1,10 @@
-# 設定抽成人員 2021-11-12
+# 候診系統設定
 # -*- coding: UTF-8 -*-
 
 import json
 import os
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QInputDialog
 
 from libs import (
@@ -16,7 +16,16 @@ from libs import (
     system_utils,
     ui_utils,
     voice_utils,
+    volume_utils,
 )
+
+# 音量的欄位名稱、預設值、訊息格式都放在 volume_utils, 兩邊不會走鐘
+DEFAULT_VOLUME = volume_utils.DEFAULT_VOLUME
+FIELD_VOICE_VOLUME = volume_utils.FIELD_VOICE_VOLUME
+FIELD_MEDIA_VOLUME = volume_utils.FIELD_MEDIA_VOLUME
+
+# 滑桿停下來這麼久之後才廣播, 拖動過程中不會一直發訊息
+VOLUME_PREVIEW_DELAY_MSEC = 200
 
 
 # 主視窗
@@ -44,9 +53,17 @@ class DialogBulletinSettings(QtWidgets.QDialog):
         )
         self.notification_server.update_signal.connect(self._on_notification)
 
+        # 滑桿即時試聽用
+        self.settings_loaded = False  # 讀取設定的過程中不要廣播
+        self.volume_restored = False  # 避免取消時重複廣播還原
+        self.volume_preview_timer = QtCore.QTimer(self)
+        self.volume_preview_timer.setSingleShot(True)
+        self.volume_preview_timer.timeout.connect(self._broadcast_volume_preview)
+
         self._set_ui()
         self._set_signal()
         self._read_settings()
+        self.settings_loaded = True
 
     # 解構
     def __del__(self):
@@ -68,7 +85,13 @@ class DialogBulletinSettings(QtWidgets.QDialog):
             return
 
         voice_data = voice_dict["sentence"]
-        voice_utils.speak(voice_data, threading=True)
+
+        # 用滑桿「現在」的值試聽, 還沒按確定就能聽出差別
+        voice_utils.speak(
+            voice_data,
+            threading=True,
+            volume=self.ui.horizontalSlider_voice_volume.value(),
+        )
 
     # 設定GUI
     def _set_ui(self):
@@ -77,6 +100,10 @@ class DialogBulletinSettings(QtWidgets.QDialog):
         self.setFixedSize(self.size())  # non resizable dialog
         self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("確定")
         self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText("取消")
+
+        # 兩條滑桿一律 0~100, 避免 designer 裡設錯範圍
+        self.ui.horizontalSlider_media_volume.setRange(0, 100)
+        self.ui.horizontalSlider_voice_volume.setRange(0, 100)
 
         self.table_widget_marquee = class_utils.get_table_widget(
             self.ui.tableWidget_marquee, self.database
@@ -96,7 +123,18 @@ class DialogBulletinSettings(QtWidgets.QDialog):
     # 設定信號
     def _set_signal(self):
         self.ui.buttonBox.accepted.connect(self.accepted_button_clicked)
-        self.ui.horizontalSlider_volume.valueChanged.connect(self._volume_changed)
+
+        # 按取消或 Esc 關掉: 叫看板還原成資料庫裡的音量
+        # (兩個都接, 因為 .ui 檔有沒有把 buttonBox 接到 reject() 不一定)
+        self.ui.buttonBox.rejected.connect(self._restore_volume_settings)
+        self.rejected.connect(self._restore_volume_settings)
+
+        self.ui.horizontalSlider_media_volume.valueChanged.connect(
+            self._media_volume_changed
+        )
+        self.ui.horizontalSlider_voice_volume.valueChanged.connect(
+            self._voice_volume_changed
+        )
         self.ui.pushButton_speak_test.clicked.connect(self._speak_test)
         self.ui.toolButton_open_schedule_file.clicked.connect(self._open_schedule_file)
         self.ui.toolButton_open_fixed_image.clicked.connect(self._open_fixed_image)
@@ -109,11 +147,69 @@ class DialogBulletinSettings(QtWidgets.QDialog):
         self.ui.toolButton_add_video_list.clicked.connect(self._add_video_list)
         self.ui.toolButton_remove_video_list.clicked.connect(self._remove_video_list)
 
-    def _volume_changed(self):
-        self.ui.label_volume.setText(str(self.ui.horizontalSlider_volume.value()))
+    def _media_volume_changed(self):
+        self.ui.label_media_volume.setText(
+            str(self.ui.horizontalSlider_media_volume.value())
+        )
+        self._schedule_volume_preview()
+
+    def _voice_volume_changed(self):
+        self.ui.label_voice_volume.setText(
+            str(self.ui.horizontalSlider_voice_volume.value())
+        )
+        self._schedule_volume_preview()
+
+    # ------------------------------------------------------------------
+    # 滑桿即時試聽
+    #
+    # 滑桿一動就通知候診看板馬上套用, 但不寫進資料庫:
+    #   按確定 -> 存檔, 叫看板重新讀資料庫
+    #   按取消 -> 不存檔, 叫看板重新讀資料庫 (等於還原)
+    # ------------------------------------------------------------------
+    def _schedule_volume_preview(self):
+        if not self.settings_loaded:  # 開窗時讀設定不算調整
+            return
+
+        self.volume_preview_timer.start(VOLUME_PREVIEW_DELAY_MSEC)
+
+    def _broadcast_volume_preview(self):
+        message = volume_utils.build_preview_message(
+            self.ui.horizontalSlider_media_volume.value(),
+            self.ui.horizontalSlider_voice_volume.value(),
+        )
+
+        try:
+            self.notification_client.broadcast(
+                notification_utils.CHANNEL_BULLETIN, message
+            )
+        except Exception as e:
+            print(f"音量試聽通知失敗: {e}")
 
     def accepted_button_clicked(self):
+        self.volume_preview_timer.stop()
+        self.volume_restored = True  # 已經存檔, 不需要再還原
+
         self._save_settings()
+        self._notify_volume_changed()
+
+    def _restore_volume_settings(self):
+        """取消時叫看板把音量讀回資料庫的值, 丟掉試聽中的設定"""
+        if self.volume_restored:
+            return
+
+        self.volume_restored = True
+        self.volume_preview_timer.stop()
+        self._notify_volume_changed()
+
+    def _notify_volume_changed(self):
+        """通知候診看板重新讀取音量, 不用重開看板程式"""
+        try:
+            self.notification_client.broadcast(
+                notification_utils.CHANNEL_BULLETIN,
+                volume_utils.REFRESH_VOLUME_MESSAGE,
+            )
+        except Exception as e:
+            print(f"音量設定通知失敗: {e}")
 
     # 讀取 radio_button
     def _set_radio_button(self, radio_buttons, values, field):
@@ -132,6 +228,25 @@ class DialogBulletinSettings(QtWidgets.QDialog):
 
         self.system_settings.post(field, select_value)
 
+    def _get_volume_setting(self, field_name, default=DEFAULT_VOLUME):
+        """讀取音量設定 (0~100)
+
+        欄位不存在或沒填 -> 回傳 default;
+        真的填 0 -> 就是 0 (靜音)。
+        新診所第一次進來時不會因為欄位空白就被當成靜音。
+        """
+        try:
+            value = self.system_settings.field(field_name)
+        except Exception:
+            value = None
+
+        if value is None or string_utils.xstr(value).strip() == "":
+            return default
+
+        volume = number_utils.get_integer(value)
+
+        return max(0, min(volume, 100))
+
     def _read_settings(self):
         self._set_radio_button(
             [
@@ -147,9 +262,17 @@ class DialogBulletinSettings(QtWidgets.QDialog):
             self.system_settings.field("門診表圖檔名")
         )
         self.ui.lineEdit_fixed_image.setText(self.system_settings.field("固定圖檔名"))
-        self.ui.horizontalSlider_volume.setValue(
-            number_utils.get_integer(self.system_settings.field("媒體播放音量"))
+
+        self.ui.horizontalSlider_media_volume.setValue(
+            self._get_volume_setting(FIELD_MEDIA_VOLUME)
         )
+        self.ui.horizontalSlider_voice_volume.setValue(
+            self._get_volume_setting(FIELD_VOICE_VOLUME)
+        )
+        # setValue() 的值如果剛好等於原值不會觸發 valueChanged, 旁邊的數字會對不上
+        self._media_volume_changed()
+        self._voice_volume_changed()
+
         self.ui.spinBox_monitor.setValue(
             number_utils.get_integer(self.system_settings.field("候診系統顯示器編號"))
         )
@@ -243,7 +366,10 @@ class DialogBulletinSettings(QtWidgets.QDialog):
         )
         self.system_settings.post("固定圖檔名", self.ui.lineEdit_fixed_image.text())
         self.system_settings.post(
-            "媒體播放音量", self.ui.horizontalSlider_volume.value()
+            FIELD_MEDIA_VOLUME, self.ui.horizontalSlider_media_volume.value()
+        )
+        self.system_settings.post(
+            FIELD_VOICE_VOLUME, self.ui.horizontalSlider_voice_volume.value()
         )
         self.system_settings.post("候診系統顯示器編號", self.ui.spinBox_monitor.value())
         self.system_settings.post(
@@ -344,7 +470,7 @@ class DialogBulletinSettings(QtWidgets.QDialog):
         options = QFileDialog.Options()
         filename, _ = QFileDialog.getOpenFileName(
             self,
-            "開啟影片檔",
+            "開啟圖片檔",
             "",
             "JPG檔(*.jpg);;JPEG檔(*.jpeg);;PNG檔(*.png);;所有檔案 (*.*)",
             options=options,
@@ -374,7 +500,7 @@ class DialogBulletinSettings(QtWidgets.QDialog):
         options = QFileDialog.Options()
         filename, _ = QFileDialog.getOpenFileName(
             self,
-            "開啟圖片檔",
+            "開啟影片檔",
             "",
             "MP4檔(*.mp4);;WAV檔(*.wav);;MOV檔(*.mov);;AVI檔(*.avi);;所有檔案 (*.*)",
             options=options,

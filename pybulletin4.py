@@ -1,9 +1,10 @@
+# -*- coding: UTF-8 -*-
+
 import datetime
 import json
 import os
 import sys
 import threading
-import time
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
@@ -25,19 +26,12 @@ from libs import (
     string_utils,
     system_utils,
     ui_utils,
-    voice_utils,
+    volume_utils,
 )
 
 MAX_ROOM = 10
 MAX_WAITING_ROWS = 7  # 候診一頁顯示人數
 ROTATION_SECONDS = 5000
-
-# 叫號時背景影片壓低到原音量的比例, 以及最低值
-DUCK_RATIO = 0.15
-DUCK_MIN_VOLUME = 5
-DUCK_POLL_MSEC = 500  # 每 0.5 秒檢查一次語音播完了沒
-DUCK_MIN_SECONDS = 2  # 至少壓低 2 秒, 避免語音還沒開始就還原
-DUCK_MAX_SECONDS = 60  # 保險上限, 語音卡住也不會一直壓著
 
 
 # 候診資訊系統 多診間輪播版
@@ -58,17 +52,12 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
         self.waiting_number = [0 for x in range(100)]
 
-        # 語音音量: 只控制叫號語音本身 (pygame mixer),
-        # YouTube/影片/串流的音量一律交給電腦的系統音量
-        self.voice_volume = self._get_voice_volume()
-        voice_utils.set_voice_volume(self.voice_volume)
-
-        # 叫號時暫時壓低背景影片用
-        self.audio_timer = QtCore.QTimer(self)
-        self.audio_timer.timeout.connect(self._check_restore_audio)
-        self.saved_media_volume = None
-        self.duck_min_time = 0
-        self.duck_deadline = 0
+        # 兩個音量各自獨立: 語音播放音量 -> 叫號語音, 媒體播放音量 -> VLC
+        self.volume_controller = volume_utils.VolumeController(
+            self,
+            database=self.database,
+            get_player=lambda: getattr(self, "vlc_player", None),
+        )
 
         self.url = self.system_settings.field("媒體播放位址")
 
@@ -102,27 +91,6 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.move(monitor.left(), monitor.top())
         self.showFullScreen()
 
-    def _get_setting_int(self, field_name):
-        """讀取系統設定的整數值, 欄位不存在時回傳 0"""
-        try:
-            return number_utils.get_integer(self.system_settings.field(field_name))
-        except Exception:
-            return 0
-
-    def _get_voice_volume(self):
-        """語音音量 0~100
-
-        先找「語音播放音量」, 沒有這個欄位就沿用舊的「媒體播放音量」,
-        都沒有就用 100 (等於不衰減, 大小聲交給系統音量)。
-        """
-        volume = self._get_setting_int("語音播放音量")
-        if volume <= 0:
-            volume = self._get_setting_int("媒體播放音量")
-        if volume <= 0:
-            volume = 100
-
-        return min(volume, 100)
-
     def _set_notification_server(self):
         channels = [
             notification_utils.CHANNEL_WAITING_LIST,  # 原 8880
@@ -141,6 +109,10 @@ class PyBulletin4(QtWidgets.QMainWindow):
         if channel == notification_utils.CHANNEL_WAITING_LIST:
             self._show_waiting_list()  # 原本 8880 就是忽略內容直接刷新
         elif channel == notification_utils.CHANNEL_BULLETIN:
+            # 音量相關的訊息先攔下來, 其餘照原本流程
+            if self.volume_controller.handle_bulletin_message(message):
+                return
+
             self._broadcast_speech(message)  # 內容是 refresh_wait，它自己會分辨
         elif channel == notification_utils.CHANNEL_CALL_NUMBER:
             self._broadcast_speech(message)
@@ -231,65 +203,13 @@ class PyBulletin4(QtWidgets.QMainWindow):
         system_utils.set_theme(self.ui, self.system_settings)
 
     def _notify_wait_arrive(self):
-        # 跟語音共用 pygame 的音樂通道, 音量比照語音音量
-        voice_utils.play_sound_file("./icq.mp3", self.voice_volume)
-
-    # ------------------------------------------------------------------
-    # 叫號時暫時壓低背景影片 (ducking)
-    #
-    # 這裡動到的是 VLC 自己的相對音量, 不會改到 Windows 的系統音量;
-    # 叫號結束就還原成原本的值, 平常完全不干涉媒體音量。
-    # ------------------------------------------------------------------
-    def _get_media_player(self):
-        return getattr(self, "vlc_player", None)
-
-    def _set_lower_audio(self):
-        player = self._get_media_player()
-        if player is None:  # 輪播圖片模式沒有播放器
-            return
-
-        if self.saved_media_volume is None:  # 還沒壓低過才記錄原音量
-            current_volume = player.audio_get_volume()
-            if current_volume is None or current_volume < 0:
-                current_volume = 100
-
-            self.saved_media_volume = current_volume
-
-        duck_volume = max(int(self.saved_media_volume * DUCK_RATIO), DUCK_MIN_VOLUME)
-        try:
-            player.audio_set_volume(duck_volume)
-        except Exception:
-            pass
-
-        now = time.time()
-        self.duck_min_time = now + DUCK_MIN_SECONDS
-        self.duck_deadline = now + DUCK_MAX_SECONDS
-        self.audio_timer.start(DUCK_POLL_MSEC)
-
-    def _check_restore_audio(self):
-        now = time.time()
-
-        if now < self.duck_deadline:
-            if now < self.duck_min_time:
-                return
-            if voice_utils.is_busy():  # 還在念, 繼續壓著
-                return
-
-        self.audio_timer.stop()
-        self._normal_audio()
-
-    def _normal_audio(self):
-        player = self._get_media_player()
-        if player is not None and self.saved_media_volume is not None:
-            try:
-                player.audio_set_volume(self.saved_media_volume)
-            except Exception:
-                pass
-
-        self.saved_media_volume = None
+        # 音量比照「語音播放音量」
+        self.volume_controller.play_sound_file("./icq.mp3")
 
     # 廣播叫號
     def _broadcast_speech(self, json_data):
+        json_data = string_utils.xstr(json_data).strip()
+
         if json_data == "refresh_wait":
             self.show_seq_number = True
             self._show_waiting_list()
@@ -315,8 +235,9 @@ class PyBulletin4(QtWidgets.QMainWindow):
             self._show_waiting_list_html(row)
 
         QtWidgets.qApp.processEvents()
-        self._set_lower_audio()
-        voice_utils.speak(sentence, threading=True, volume=self.voice_volume)
+
+        # 壓低電視音量 + 用語音播放音量播報, 念完自動還原
+        self.volume_controller.speak(sentence)
 
     def _play_media(self):
         if self.media_type == "輪播圖片":
@@ -395,7 +316,6 @@ class PyBulletin4(QtWidgets.QMainWindow):
     def _play_videos(self):
         self.vlc_instance = vlc.Instance()
         self.vlc_player = self.vlc_instance.media_player_new()
-        # 不設定音量: 維持 VLC 預設, 大小聲由電腦的系統音量控制
 
         self._set_vlc_window()
 
@@ -409,6 +329,8 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.media_list_player.set_media_list(media_list)
         self.media_list_player.set_media_player(self.vlc_player)
         self.media_list_player.play()
+
+        self.volume_controller.start_media_volume_timer()
 
     def video_finished(self, data):
         self.video_index += 1
@@ -464,7 +386,6 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
         self.vlc_instance = vlc.Instance()
         self.vlc_player = self.vlc_instance.media_player_new()
-        # 不設定音量: 維持 VLC 預設, 大小聲由電腦的系統音量控制
 
         self._set_vlc_window()
 
@@ -475,6 +396,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
         events.event_attach(vlc.EventType.MediaPlayerEndReached, self._on_end_reached)
 
         self.vlc_player.play()
+        self.volume_controller.start_media_volume_timer()
 
     def _get_stream_url(self, index):
         url = self.stream_list[index]
@@ -506,6 +428,8 @@ class PyBulletin4(QtWidgets.QMainWindow):
                 self.media = self._new_stream_media(index)
                 self.vlc_player.set_media(self.media)
                 self.vlc_player.play()
+                # set_media() 之後 VLC 會重建 audio output, 音量要重設
+                self.volume_controller.apply_media_volume_blocking()
             except Exception as e:
                 print(f"切換串流失敗: {e}")
 

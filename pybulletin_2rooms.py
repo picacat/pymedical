@@ -1,7 +1,10 @@
+# -*- coding: UTF-8 -*-
+
 import datetime
 import json
 import os
 import sys
+import threading
 
 from pygame import mixer
 from PyQt5 import QtCore, QtWidgets
@@ -27,17 +30,23 @@ from libs import (
     system_utils,
     ui_utils,
     voice_utils,
+    volume_utils,
 )
+
+BELL_FILE = "./dingdong.mp3"
 
 
 class BellThread(QThread):
-    """播放音效的子執行緒"""
+    """播放音效的子執行緒, 音量吃「語音播放音量」"""
+
+    def __init__(self, parent=None, filename=BELL_FILE, volume=None):
+        super().__init__(parent)
+        self.filename = filename
+        self.volume = volume
 
     def run(self):
         try:
-            mixer.init()
-            mixer.music.load("./dingdong.mp3")
-            mixer.music.play()
+            voice_utils.play_sound_file(self.filename, self.volume)
 
             while mixer.music.get_busy():
                 time.sleep(0.01)  # 避免過度佔用 CPU
@@ -62,10 +71,16 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         self.ui = None
 
         self.waiting_number = [0 for x in range(100)]
-        self.audio_timer = QtCore.QTimer(self)
-        self.volume = number_utils.get_integer(
-            self.system_settings.field("媒體播放音量")
+
+        # 兩個音量各自獨立: 語音播放音量 -> 叫號語音, 媒體播放音量 -> VLC
+        # 注意: show_bulletin() 目前沒有呼叫 _play_media(), 所以還沒有播放器,
+        # 媒體播放音量要等影片功能打開才會有作用
+        self.volume_controller = volume_utils.VolumeController(
+            self,
+            database=self.database,
+            get_player=lambda: getattr(self, "vlc_player", None),
         )
+
         self.url = self.system_settings.field("媒體播放位址")
 
         self.media_type = self.system_settings.field("媒體播放來源")
@@ -121,7 +136,11 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         if channel == notification_utils.CHANNEL_WAITING_LIST:
             self._show_waiting_list()  # 原本 8880 就是忽略內容直接刷新
         elif channel == notification_utils.CHANNEL_BULLETIN:
-            self._broadcast_voice(message)  # 內容是 refresh_wait，它自己會分辨
+            # 音量相關的訊息先攔下來, 其餘照原本流程
+            if self.volume_controller.handle_bulletin_message(message):
+                return
+
+            self._broadcast_voice(message)
         elif channel == notification_utils.CHANNEL_CALL_NUMBER:
             self._broadcast_voice(message)
 
@@ -208,9 +227,11 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
 
     # 解構
     def __del__(self):
-        pass
-        # self.mediaplayer.stop()
-        # self.mediaplayer.release()
+        try:
+            self.vlc_player.stop()
+            self.vlc_player.release()
+        except Exception:
+            pass
 
     # 設定GUI
     def _set_ui(self):
@@ -264,31 +285,17 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         system_utils.center_window(self)
         system_utils.set_theme(self.ui, self.system_settings)
 
-    def _set_lower_audio(self):
-        if self.url in ["", None]:
-            return
-
-        try:
-            self.vlc_player.audio_set_volume(5)
-        except Exception:
-            pass
-
-        self.audio_timer.start(6000)
-        self.audio_timer.timeout.connect(self._normal_audio)
-
-    def _normal_audio(self):
-        try:
-            self.vlc_player.audio_set_volume(self.volume)
-        except Exception:
-            pass
-
-        self.audio_timer.stop()
-
     # 廣播叫號
     def _broadcast_voice(self, json_data):
         # 增加防呆：檢查是否為空值
         if not json_data:
             print("收到空的 json_data，跳過處理")
+            return
+
+        json_data = string_utils.xstr(json_data).strip()
+
+        if json_data == "refresh_wait":  # 只是要求刷新候診名單
+            self._show_waiting_records()
             return
 
         try:
@@ -311,7 +318,6 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
 
             self.waiting_number[room] = regist_no
 
-            self._set_lower_audio()
             QtWidgets.qApp.processEvents()
             self._show_doctors()
             self._show_sequence(room)
@@ -319,13 +325,18 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
             # self.ring_bell()
             self.start_blinking()
 
-            voice_utils.speak(sentence, threading=True)
+            # 壓低電視音量 + 用語音播放音量播報, 念完自動還原
+            self.volume_controller.speak(sentence)
         else:
             print("JSON 格式正確，但缺少必要的欄位 (regist_no 或 room)")
 
     def ring_bell(self):
-        """播放音效（使用子執行緒）"""
-        self.bell_thread = BellThread()
+        """播放提示音（使用子執行緒）, 音量吃「語音播放音量」"""
+        self.bell_thread = BellThread(
+            self,
+            filename=BELL_FILE,
+            volume=self.volume_controller.voice_volume,
+        )
         self.bell_thread.start()
 
     def _play_media(self):
@@ -393,13 +404,7 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
 
         return video_list
 
-    def _play_videos(self):
-        self.vlc_instance = vlc.Instance()
-        self.vlc_player = self.vlc_instance.media_player_new()
-        self.vlc_player.audio_set_volume(self.volume)
-        # events = self.mediaplayer.event_manager()
-        # events.event_attach(vlc.EventType.MediaPlayerEndReached, self.video_finished)
-
+    def _set_vlc_window(self):
         win_id = int(self.ui.frame_youtube.winId())
         if sys.platform == "win32":
             self.vlc_player.set_hwnd(win_id)
@@ -407,6 +412,14 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
             self.vlc_player.set_xwindow(win_id)
         elif sys.platform == "darwin":
             self.vlc_player.set_nsobject(win_id)
+
+    def _play_videos(self):
+        self.vlc_instance = vlc.Instance()
+        self.vlc_player = self.vlc_instance.media_player_new()
+        # events = self.vlc_player.event_manager()
+        # events.event_attach(vlc.EventType.MediaPlayerEndReached, self.video_finished)
+
+        self._set_vlc_window()
 
         media_list = self.vlc_instance.media_list_new()
         video_list = self._get_video_list()
@@ -418,6 +431,8 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         self.media_list_player.set_media_list(media_list)
         self.media_list_player.set_media_player(self.vlc_player)
         self.media_list_player.play()
+
+        self.volume_controller.start_media_volume_timer()
 
     def video_finished(self, data):
         self.video_index += 1
@@ -454,13 +469,7 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         self.vlc_instance = vlc.Instance()
         self.vlc_player = self.vlc_instance.media_player_new()
 
-        win_id = int(self.ui.frame_youtube.winId())
-        if sys.platform == "win32":
-            self.vlc_player.set_hwnd(win_id)
-        elif sys.platform == "linux":
-            self.vlc_player.set_xwindow(win_id)
-        elif sys.platform == "darwin":
-            self.vlc_player.set_nsobject(win_id)
+        self._set_vlc_window()
 
         stream_url = self._get_stream_url(self.stream_index)
         self.media = self.vlc_instance.media_new(stream_url)
@@ -472,7 +481,9 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         events.event_attach(vlc.EventType.MediaPlayerEndReached, self._on_end_reached)
 
         self.vlc_player.play()
-        self.vlc_player.audio_set_volume(self.volume)
+
+        # 串流剛開始播時音量設不進去, 交給 controller 反覆重試
+        self.volume_controller.start_media_volume_timer()
 
     def _get_stream_url(self, index):
         url = self.stream_list[index]
@@ -488,20 +499,25 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         return stream_url
 
     def _on_end_reached(self, event):
-        self.stream_index += 1
-        if self.stream_index >= len(self.stream_list):
-            self.stream_index = 0
-
-        stream_url = self._get_stream_url(self.stream_index)
-
+        # VLC 的 callback 不能直接呼叫 player 的方法, 也不該在這裡跑 yt_dlp,
+        # 整段搬到背景執行緒
         def restart_media():
-            self.vlc_player.stop()
-            self.media = self.vlc_instance.media_new(stream_url)
-            self.vlc_player.set_media(self.media)
-            self.vlc_player.play()
+            try:
+                self.stream_index += 1
+                if self.stream_index >= len(self.stream_list):
+                    self.stream_index = 0
 
-        # 在新线程中執行停止和重新播放操作
-        threading.Thread(target=restart_media).start()
+                stream_url = self._get_stream_url(self.stream_index)
+                self.vlc_player.stop()
+                self.media = self.vlc_instance.media_new(stream_url)
+                self.vlc_player.set_media(self.media)
+                self.vlc_player.play()
+                # set_media() 之後 VLC 會重建 audio output, 音量要重設
+                self.volume_controller.apply_media_volume_blocking()
+            except Exception as e:
+                print(f"切換串流失敗: {e}")
+
+        threading.Thread(target=restart_media, daemon=True).start()
 
     def _set_marquee_list(self):
         self.marquee_list = []
@@ -611,21 +627,6 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
 
     def _show_waiting_list(self, room=None):
         self._show_waiting_records()
-
-    # def _show_sequence(self, room):
-    #     if room is None:
-    #         return
-
-    #     label_room_list = [
-    #         None,
-    #         self.ui.label_room1,
-    #         self.ui.label_room2,
-    #     ]
-
-    #     self.label_room = label_room_list[room]
-    #     sequence = self.waiting_number[room]
-    #     html = self._get_sequence_html(sequence)
-    #     self.label_room.setText(html)
 
     def _show_sequence(self, room):
         if room is None:
@@ -771,7 +772,8 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         rows = self._get_current_room_rows()
         weekday = date_utils.WEEK_DAY_LIST[datetime.datetime.now().weekday()]
         for row in rows:
-            room = row["Room"]
+            # Room 有可能是字串或 Decimal, 一律轉成整數, 否則下面的 in [1, 2] 會失效
+            room = number_utils.get_integer(row["Room"])
             if room not in [1, 2]:
                 continue
 
@@ -799,21 +801,6 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
         self.blink_count = 0
         self.label_timer.start(interval)
 
-    # def toggle_background(self):
-    #     """切換 QLabel_room 的背景顏色"""
-    #     self.blink_state = not self.blink_state
-    #     color = "green" if self.blink_state else self.color
-    #     self.label_room.setStyleSheet(f"background-color: {color}; font-size: 30px;")
-
-    #     self.blink_count += 1
-    #     if self.blink_count >= self.max_blinks:
-    #         self.stop_blinking()
-
-    # def stop_blinking(self):
-    #     """停止閃爍，恢復背景顏色"""
-    #     self.label_timer.stop()
-    #     self.label_room.setStyleSheet(self.style_sheet)
-
     def toggle_background(self):
         """切換 QLabel_room 的背景顏色"""
         # 安全檢查：如果 label_room 還沒被指派，或是物件已經被銷毀，就直接停止
@@ -828,9 +815,6 @@ class PyBulletin_2rooms(QtWidgets.QMainWindow):
 
             # 這裡建議保留原本的 style，只改 background-color
             self.label_room.setStyleSheet(f"background-color: {color};")
-            # self.label_room.setStyleSheet(
-            #     f"background-color: {color}; font-size: 30px;"
-            # )
 
             self.blink_count += 1
             if self.blink_count >= self.max_blinks:

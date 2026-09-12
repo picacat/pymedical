@@ -1,11 +1,11 @@
+# -*- coding: UTF-8 -*-
+
 import datetime
 import json
 import os
 import sys
 import threading
 
-import pygame
-from pygame import mixer
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QDesktopWidget
@@ -26,7 +26,7 @@ from libs import (
     string_utils,
     system_utils,
     ui_utils,
-    voice_utils,
+    volume_utils,
 )
 
 MAX_ROOM = 10
@@ -53,10 +53,14 @@ class PyBulletin7(QtWidgets.QMainWindow):
         self.ui = None
 
         self.waiting_number = [0 for x in range(100)]
-        self.audio_timer = QtCore.QTimer(self)
-        self.volume = number_utils.get_integer(
-            self.system_settings.field("媒體播放音量")
+
+        # 兩個音量各自獨立: 語音播放音量 -> 叫號語音, 媒體播放音量 -> VLC
+        self.volume_controller = volume_utils.VolumeController(
+            self,
+            database=self.database,
+            get_player=lambda: getattr(self, "vlc_player", None),
         )
+
         self.url = self.system_settings.field("媒體播放位址")
 
         self.media_type = self.system_settings.field("媒體播放來源")
@@ -213,55 +217,43 @@ class PyBulletin7(QtWidgets.QMainWindow):
         if channel == notification_utils.CHANNEL_WAITING_LIST:
             self._show_waiting_list()  # 原本 8880 就是忽略內容直接刷新
         elif channel == notification_utils.CHANNEL_BULLETIN:
+            # 音量相關的訊息先攔下來, 其餘照原本流程
+            if self.volume_controller.handle_bulletin_message(message):
+                return
+
             self._broadcast_speech(message)  # 內容是 refresh_wait，它自己會分辨
         elif channel == notification_utils.CHANNEL_CALL_NUMBER:
             self._broadcast_speech(message)
 
-    @staticmethod
-    def _notify_wait_arrive():
-        try:
-            mixer.init()
-            mixer.music.load("./icq.mp3")
-            mixer.music.play()
-        except pygame.error:
-            pass
-
-    def _set_lower_audio(self):
-        if self.url in ["", None]:
-            return
-
-        try:
-            self.vlc_player.audio_set_volume(5)
-        except Exception:
-            pass
-
-        self.audio_timer.start(6000)
-        self.audio_timer.timeout.connect(self._normal_audio)
-
-    def _normal_audio(self):
-        try:
-            self.vlc_player.audio_set_volume(self.volume)
-        except Exception:
-            pass
-
-        self.audio_timer.stop()
+    def _notify_wait_arrive(self):
+        # 音量比照「語音播放音量」
+        self.volume_controller.play_sound_file("./icq.mp3")
 
     # 廣播叫號
     def _broadcast_speech(self, json_data):
+        json_data = string_utils.xstr(json_data).strip()
+
         if json_data == "refresh_wait":
             self.show_seq_number = True
             self._show_waiting_list()
             self.show_seq_number = False
             return
 
-        voice_dict = json.loads(json_data)
+        try:
+            voice_dict = json.loads(json_data)
+        except Exception:
+            print("json error: ", json_data)
+            return
+
         sentence = voice_dict["sentence"]
+
         if "領藥" in sentence:
-            drug_no = number_utils.get_integer(voice_dict["drug_no"])
+            drug_no = number_utils.get_integer(voice_dict.get("drug_no", 0))
             self._show_pharmacy_list(drug_no=drug_no)
             QtWidgets.qApp.processEvents()
-            self._set_lower_audio()
-            voice_utils.speak(sentence, threading=True)
+
+            # 壓低電視音量 + 用語音播放音量播報, 念完自動還原
+            self.volume_controller.speak(sentence)
             return
 
         regist_no = number_utils.get_integer(voice_dict["regist_no"])
@@ -271,14 +263,13 @@ class PyBulletin7(QtWidgets.QMainWindow):
 
         rows = self._get_wait_rows(room)
         if len(rows) > 0:
-            self._current_room = room
+            self.current_room = room
             row = rows[0]
             self._show_waiting_list_html(row)
 
         print(sentence)
 
-        self._set_lower_audio()
-        voice_utils.speak(sentence, threading=True)
+        self.volume_controller.speak(sentence)
 
     def _play_media(self):
         if self.media_type == "輪播圖片":
@@ -345,13 +336,7 @@ class PyBulletin7(QtWidgets.QMainWindow):
 
         return video_list
 
-    def _play_videos(self):
-        self.vlc_instance = vlc.Instance()
-        self.vlc_player = self.vlc_instance.media_player_new()
-        self.vlc_player.audio_set_volume(self.volume)
-        # events = self.mediaplayer.event_manager()
-        # events.event_attach(vlc.EventType.MediaPlayerEndReached, self.video_finished)
-
+    def _set_vlc_window(self):
         win_id = int(self.ui.frame_youtube.winId())
         if sys.platform == "win32":
             self.vlc_player.set_hwnd(win_id)
@@ -359,6 +344,14 @@ class PyBulletin7(QtWidgets.QMainWindow):
             self.vlc_player.set_xwindow(win_id)
         elif sys.platform == "darwin":
             self.vlc_player.set_nsobject(win_id)
+
+    def _play_videos(self):
+        self.vlc_instance = vlc.Instance()
+        self.vlc_player = self.vlc_instance.media_player_new()
+        # events = self.vlc_player.event_manager()
+        # events.event_attach(vlc.EventType.MediaPlayerEndReached, self.video_finished)
+
+        self._set_vlc_window()
 
         media_list = self.vlc_instance.media_list_new()
         video_list = self._get_video_list()
@@ -370,6 +363,8 @@ class PyBulletin7(QtWidgets.QMainWindow):
         self.media_list_player.set_media_list(media_list)
         self.media_list_player.set_media_player(self.vlc_player)
         self.media_list_player.play()
+
+        self.volume_controller.start_media_volume_timer()
 
     def video_finished(self, data):
         self.video_index += 1
@@ -406,13 +401,7 @@ class PyBulletin7(QtWidgets.QMainWindow):
         self.vlc_instance = vlc.Instance()
         self.vlc_player = self.vlc_instance.media_player_new()
 
-        win_id = int(self.ui.frame_youtube.winId())
-        if sys.platform == "win32":
-            self.vlc_player.set_hwnd(win_id)
-        elif sys.platform == "linux":
-            self.vlc_player.set_xwindow(win_id)
-        elif sys.platform == "darwin":
-            self.vlc_player.set_nsobject(win_id)
+        self._set_vlc_window()
 
         stream_url = self._get_stream_url(self.stream_index)
         self.media = self.vlc_instance.media_new(stream_url)
@@ -424,7 +413,9 @@ class PyBulletin7(QtWidgets.QMainWindow):
         events.event_attach(vlc.EventType.MediaPlayerEndReached, self._on_end_reached)
 
         self.vlc_player.play()
-        self.vlc_player.audio_set_volume(self.volume)
+
+        # 串流剛開始播時音量設不進去, 交給 controller 反覆重試
+        self.volume_controller.start_media_volume_timer()
 
     def _get_stream_url(self, index):
         url = self.stream_list[index]
@@ -440,52 +431,25 @@ class PyBulletin7(QtWidgets.QMainWindow):
         return stream_url
 
     def _on_end_reached(self, event):
-        self.stream_index += 1
-        if self.stream_index >= len(self.stream_list):
-            self.stream_index = 0
-
-        stream_url = self._get_stream_url(self.stream_index)
-
+        # VLC 的 callback 不能直接呼叫 player 的方法, 也不該在這裡跑 yt_dlp,
+        # 整段搬到背景執行緒
         def restart_media():
-            self.vlc_player.stop()
-            self.media = self.vlc_instance.media_new(stream_url)
-            self.vlc_player.set_media(self.media)
-            self.vlc_player.play()
+            try:
+                self.stream_index += 1
+                if self.stream_index >= len(self.stream_list):
+                    self.stream_index = 0
 
-        # 在新线程中執行停止和重新播放操作
-        threading.Thread(target=restart_media).start()
+                stream_url = self._get_stream_url(self.stream_index)
+                self.vlc_player.stop()
+                self.media = self.vlc_instance.media_new(stream_url)
+                self.vlc_player.set_media(self.media)
+                self.vlc_player.play()
+                # set_media() 之後 VLC 會重建 audio output, 音量要重設
+                self.volume_controller.apply_media_volume_blocking()
+            except Exception as e:
+                print(f"切換串流失敗: {e}")
 
-    # def _play_media(self):
-    #     if self.url in ['', None]:
-    #         return
-
-    #     self.vlc_instance = vlc.Instance()
-    #     self.mediaplayer = self.vlc_instance.media_player_new()
-
-    #     win_id = int(self.ui.frame_youtube.winId())
-    #     if sys.platform == 'win32':
-    #         self.mediaplayer.set_hwnd(win_id)
-    #     elif sys.platform == 'linux':
-    #         self.mediaplayer.set_xwindow(win_id)
-    #     elif sys.platform == 'darwin':
-    #         self.mediaplayer.set_nsobject(win_id)
-
-    #     try:
-    #         video = pafy.new(self.url)
-    #         best = video.getbest()
-    #         self.media = self.vlc_instance.media_new(best.url)
-    #     except Exception:
-    #         try:
-    #             self.media.release()
-    #         except Exception:
-    #             pass
-
-    #         self._play_media()
-
-    #     self.media.get_mrl()
-    #     self.mediaplayer.set_media(self.media)
-    #     self.mediaplayer.play()
-    #     self.mediaplayer.audio_set_volume(self.volume)
+        threading.Thread(target=restart_media, daemon=True).start()
 
     def _set_marquee_list(self):
         self.marquee_list = []
@@ -550,16 +514,6 @@ class PyBulletin7(QtWidgets.QMainWindow):
             start = current_page * MAX_WAITING_ROWS
             limit_script = f"LIMIT {start}, {MAX_WAITING_ROWS}"
 
-        # sql = f'''
-        #     SELECT PatientKey, RegistNo, Name, Remark FROM wait
-        #     WHERE
-        #         Room = {room} AND
-        #         Period = "{current_period}" AND
-        #         Doctor != "全部醫師" AND
-        #         DoctorDone = "False"
-        #     ORDER BY RegistNo
-        #     {limit_script}
-        # '''
         sql = f'''
             SELECT PatientKey, RegistNo, Name, Remark FROM wait
             WHERE
@@ -576,6 +530,9 @@ class PyBulletin7(QtWidgets.QMainWindow):
 
     def _mask_name(self, name):
         name = string_utils.remove_not_chinese_character(name)
+        if len(name) <= 1:
+            return name
+
         if len(name) == 2:
             return name[0] + "〇"
 
@@ -605,11 +562,6 @@ class PyBulletin7(QtWidgets.QMainWindow):
         room = number_utils.get_integer(row["Room"])
         doctor = string_utils.xstr(row["Doctor"])
         seq_number = self._get_seq_number(room)
-
-        # if self.show_seq_number:
-        #     called_regist_no = self._get_seq_number(room)
-        # else:
-        #     called_regist_no = self.waiting_number[room]
 
         if seq_number > 0:
             called_regist_no = seq_number
@@ -719,30 +671,20 @@ class PyBulletin7(QtWidgets.QMainWindow):
                 Room = {room}
             GROUP BY Room
         '''
-        # sql = f'''
-        #     SELECT * FROM wait
-        #     WHERE
-        #         Period = "{current_period}" AND
-        #         Doctor != "全部醫師" AND
-        #         Room = {room}
-        #     GROUP BY Room
-        # '''
         rows = self.database.select_record(sql)
 
         return rows
 
     def _rotation_wait_list(self):
-        while True:
+        for _ in range(MAX_ROOM):  # 繞一圈就停, 避免沒有任何診間時卡在無窮迴圈
             self.current_room += 1
             if self.current_room > MAX_ROOM:
                 self.current_room = 1
 
             rows = self._get_wait_rows()
             if len(rows) > 0:
-                row = rows[0]
-                break
-
-        self._show_waiting_list_html(row)
+                self._show_waiting_list_html(rows[0])
+                return
 
     def _get_room_rows(self):
         current_period = registration_utils.get_current_period(self.system_settings)
@@ -754,13 +696,6 @@ class PyBulletin7(QtWidgets.QMainWindow):
                 Doctor != "全部醫師"
             GROUP BY Room ORDER BY Room
         '''
-        # sql = f'''
-        #     SELECT Room, Doctor FROM wait
-        #     WHERE
-        #         Period = "{current_period}" AND
-        #         Doctor != "全部醫師"
-        #     GROUP BY Room ORDER BY Room
-        # '''
         rows = self.database.select_record(sql)
 
         return rows
@@ -873,7 +808,9 @@ class PyBulletin7(QtWidgets.QMainWindow):
         """切換 QLabel_room 的背景顏色"""
         self.blink_state = not self.blink_state
         color = "Orange" if self.blink_state else self.color
-        self.label_drug_no.setStyleSheet(f"background-color: {color}; font-size: 30px;")
+        self.ui.label_drug_no.setStyleSheet(
+            f"background-color: {color}; font-size: 30px;"
+        )
 
         self.blink_count += 1
         if self.blink_count >= self.max_blinks:
@@ -882,7 +819,7 @@ class PyBulletin7(QtWidgets.QMainWindow):
     def stop_blinking(self):
         """停止閃爍，恢復背景顏色"""
         self.label_timer.stop()
-        self.label_drug_no.setStyleSheet(self.style_sheet)
+        self.ui.label_drug_no.setStyleSheet(self.style_sheet)
 
 
 # 主程式

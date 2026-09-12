@@ -10,6 +10,9 @@
 
 背景圖：images/bulletin_background9.png（由 make_background9.py 產生，座標須與
 下方 Layout 常數完全一致）
+
+音量：這支沒有 VLC，只有叫號語音，所以只有「語音播放音量」有作用；
+「媒體播放音量」在這台調了不會有反應（沒有電視聲音可以調）。
 """
 
 import configparser
@@ -29,7 +32,7 @@ from libs import (
     registration_utils,
     string_utils,
     ui_utils,
-    voice_utils,
+    volume_utils,
 )
 
 # 版面設計基準解析度（所有寫死的座標都以此為準）
@@ -567,6 +570,13 @@ class PyBulletin9(QtWidgets.QMainWindow):
             self.database, self.config_file
         )
 
+        # 這支沒有 VLC, 只有叫號語音, 所以只有「語音播放音量」有作用;
+        # 沒有 get_player, controller 會自動略過媒體音量與壓低的動作
+        self.volume_controller = volume_utils.VolumeController(
+            self,
+            database=self.database,
+        )
+
         self.ui = None
         self._set_ui()
         self._set_notification_server()
@@ -648,10 +658,20 @@ class PyBulletin9(QtWidgets.QMainWindow):
         for row_no, row in enumerate(rows):
             if row_no >= self.ROOM_COUNT:
                 break
-            self.waiting_room_info[row_no][0] = row["Room"]
+
+            # Room 有可能是字串或 Decimal, 一律轉成整數,
+            # 否則叫號時 self.waiting_room[i].room == room 永遠不成立
+            self.waiting_room_info[row_no][0] = number_utils.get_integer(row["Room"])
             self.waiting_room_info[row_no][1] = row["Doctor"]
 
+    def _is_ready(self):
+        """show_bulletin() 還沒跑完時, 進來的通知先忽略."""
+        return hasattr(self, "waiting_room") and hasattr(self, "pharmacy")
+
     def _show_waiting_list(self):
+        if not self._is_ready():
+            return
+
         self.refresh_waiting_room_info()
         for i in range(len(self.waiting_room)):
             self.waiting_room[i].room = self.waiting_room_info[i][0]
@@ -679,6 +699,10 @@ class PyBulletin9(QtWidgets.QMainWindow):
         if channel == notification_utils.CHANNEL_WAITING_LIST:
             self._show_waiting_list()  # 原本 8880 就是忽略內容直接刷新
         elif channel == notification_utils.CHANNEL_BULLETIN:
+            # 音量相關的訊息先攔下來, 其餘照原本流程
+            if self.volume_controller.handle_bulletin_message(message):
+                return
+
             self._broadcast_speech(message)  # 內容是 refresh_wait，它自己會分辨
         elif channel == notification_utils.CHANNEL_CALL_NUMBER:
             self._broadcast_speech(message)
@@ -755,6 +779,12 @@ class PyBulletin9(QtWidgets.QMainWindow):
 
     # 廣播叫號
     def _broadcast_speech(self, json_data):
+        json_data = string_utils.xstr(json_data).strip()
+
+        if json_data == "refresh_wait":  # 只是要求刷新候診名單
+            self._show_waiting_list()
+            return
+
         try:
             voice_dict = json.loads(json_data)
         except Exception:
@@ -763,16 +793,19 @@ class PyBulletin9(QtWidgets.QMainWindow):
         room = number_utils.get_integer(voice_dict["room"])
         regist_no = voice_dict["regist_no"]
 
-        for i in range(len(self.waiting_room)):
-            if self.waiting_room[i].room == room:
-                self.waiting_room[i].room = self.waiting_room_info[i][0]
-                self.waiting_room[i].doctor = self.waiting_room_info[i][1]
-                self.waiting_room[i].show_regist_no(regist_no)
-                break
+        if self._is_ready():
+            for i in range(len(self.waiting_room)):
+                if self.waiting_room[i].room == room:
+                    self.waiting_room[i].room = self.waiting_room_info[i][0]
+                    self.waiting_room[i].doctor = self.waiting_room_info[i][1]
+                    self.waiting_room[i].show_regist_no(regist_no)
+                    break
 
         sentence = voice_dict["sentence"]
         QtWidgets.qApp.processEvents()
-        voice_utils.speak(sentence, threading=True)
+
+        # 用「語音播放音量」播報
+        self.volume_controller.speak(sentence)
 
 
 # 主程式

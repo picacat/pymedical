@@ -16,7 +16,7 @@ from libs import (
     registration_utils,
     string_utils,
     ui_utils,
-    voice_utils,
+    volume_utils,
 )
 
 # 版面設計基準解析度（所有寫死的座標都以此為準）
@@ -48,7 +48,7 @@ class ClockOverlay(QtWidgets.QWidget):
                 color: white;
                 font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;
                 font-size: 72px;
-                font-weight: bold;        
+                font-weight: bold;
             }
         """)
 
@@ -306,7 +306,7 @@ class WaitingRoom(QtCore.QObject):
             QLabel {
                 background: transparent;
                 color: white;
-                font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;            
+                font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;
                 font-size: 64px;
                 font-weight: bold;
             }
@@ -323,7 +323,7 @@ class WaitingRoom(QtCore.QObject):
             QLabel {
                 background: transparent;
                 color: white;
-                font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;            
+                font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;
                 font-size: 48px;
                 font-weight: bold;
             }
@@ -339,7 +339,7 @@ class WaitingRoom(QtCore.QObject):
             QLabel {
                 background: transparent;
                 color: white;
-                font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;            
+                font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;
                 font-size: 120px;
                 font-weight: bold;
             }
@@ -362,7 +362,7 @@ class WaitingRoom(QtCore.QObject):
                 QLabel {
                     background: transparent;
                     color: white;
-                    font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;        
+                    font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;
                     font-size: 64px;
                     font-weight: bold;
                 }
@@ -400,6 +400,10 @@ class WaitingRoom(QtCore.QObject):
     # -----------------------------
     def _load_from_db(self):
         """從資料庫讀取候診名單"""
+        if self.doctor is None:
+            self._items = []
+            return
+
         current_period = registration_utils.get_current_period(self.system_settings)
         sql = f'''
             SELECT RegistNo, Name FROM wait
@@ -489,6 +493,10 @@ class WaitingRoom(QtCore.QObject):
     # 顯示邏輯
     # -----------------------------
     def _mask_name(self, name):
+        name = string_utils.xstr(name)
+        if len(name) <= 1:  # 空白或單字姓名不要遮成 IndexError
+            return name
+
         mask_name = name[0] + "〇" + name[2:6]
 
         return mask_name
@@ -591,7 +599,7 @@ class Pharmacy(QtCore.QObject):
             QLabel {
                 background: transparent;
                 color: white;
-                font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;            
+                font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;
                 font-size: 64px;
                 font-weight: bold;
             }
@@ -615,7 +623,7 @@ class Pharmacy(QtCore.QObject):
                 QLabel {
                     background: transparent;
                     color: white;
-                    font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;        
+                    font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", sans-serif;
                     font-size: 96px;
                     font-weight: bold;
                 }
@@ -779,6 +787,13 @@ class PyBulletin8(QtWidgets.QMainWindow):
         )
         self.ui = None
 
+        # 這支沒有 VLC, 只有叫號語音, 所以只有「語音播放音量」有作用;
+        # 沒有 get_player, controller 會自動略過媒體音量與壓低的動作
+        self.volume_controller = volume_utils.VolumeController(
+            self,
+            database=self.database,
+        )
+
         self._set_ui()
         self._set_notification_server()
         self._set_signal()
@@ -890,10 +905,19 @@ class PyBulletin8(QtWidgets.QMainWindow):
         '''
         rows = self.database.select_record(sql)
         for row_no, row in enumerate(rows):
-            self.waiting_room_info[row_no][0] = row["Room"]
+            # Room 有可能是字串或 Decimal, 一律轉成整數,
+            # 否則叫號時 self.waiting_room[i].room == room 永遠不成立
+            self.waiting_room_info[row_no][0] = number_utils.get_integer(row["Room"])
             self.waiting_room_info[row_no][1] = row["Doctor"]
 
+    def _is_ready(self):
+        """show_bulletin() 還沒跑完時, 進來的通知先忽略"""
+        return hasattr(self, "waiting_room") and hasattr(self, "pharmacy")
+
     def _show_waiting_list(self):
+        if not self._is_ready():
+            return
+
         self.refresh_waiting_room_info()
 
         for i in range(len(self.waiting_room)):
@@ -925,6 +949,10 @@ class PyBulletin8(QtWidgets.QMainWindow):
         if channel == notification_utils.CHANNEL_WAITING_LIST:
             self._show_waiting_list()  # 原本 8880 就是忽略內容直接刷新
         elif channel == notification_utils.CHANNEL_BULLETIN:
+            # 音量相關的訊息先攔下來, 其餘照原本流程
+            if self.volume_controller.handle_bulletin_message(message):
+                return
+
             self._broadcast_speech(message)  # 內容是 refresh_wait，它自己會分辨
         elif channel == notification_utils.CHANNEL_CALL_NUMBER:
             self._broadcast_speech(message)
@@ -1000,6 +1028,12 @@ class PyBulletin8(QtWidgets.QMainWindow):
 
     # 廣播叫號
     def _broadcast_speech(self, json_data):
+        json_data = string_utils.xstr(json_data).strip()
+
+        if json_data == "refresh_wait":  # 只是要求刷新候診名單
+            self._show_waiting_list()
+            return
+
         try:
             voice_dict = json.loads(json_data)
         except Exception:
@@ -1008,16 +1042,19 @@ class PyBulletin8(QtWidgets.QMainWindow):
         room = number_utils.get_integer(voice_dict["room"])
         regist_no = voice_dict["regist_no"]
 
-        for i in range(len(self.waiting_room)):
-            if self.waiting_room[i].room == room:
-                self.waiting_room[i].room = self.waiting_room_info[i][0]
-                self.waiting_room[i].doctor = self.waiting_room_info[i][1]
-                self.waiting_room[i].show_regist_no(regist_no)
-                break
+        if self._is_ready():
+            for i in range(len(self.waiting_room)):
+                if self.waiting_room[i].room == room:
+                    self.waiting_room[i].room = self.waiting_room_info[i][0]
+                    self.waiting_room[i].doctor = self.waiting_room_info[i][1]
+                    self.waiting_room[i].show_regist_no(regist_no)
+                    break
 
         sentence = voice_dict["sentence"]
         QtWidgets.qApp.processEvents()
-        voice_utils.speak(sentence, threading=True)
+
+        # 用「語音播放音量」播報
+        self.volume_controller.speak(sentence)
 
 
 # 主程式
