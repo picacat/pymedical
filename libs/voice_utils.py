@@ -40,6 +40,62 @@ except ModuleNotFoundError:
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
 
 
+# ---------------------------------------------------------------------------
+# 語音音量 (0~100)
+#
+# 這裡控制的只有「叫號語音」自己的大小聲 (pygame mixer 的音樂通道),
+# 不會動到 VLC/YouTube, 也不會動到作業系統的主音量。
+# 其他媒體的音量請直接用電腦的系統音量調整。
+# ---------------------------------------------------------------------------
+DEFAULT_VOICE_VOLUME = 100
+_voice_volume = DEFAULT_VOICE_VOLUME
+_voice_volume_lock = threading.Lock()
+
+
+def _clamp_volume(volume):
+    """把 0~100 的整數音量轉成 pygame 用的 0.0~1.0"""
+    try:
+        volume = int(volume)
+    except (TypeError, ValueError):
+        volume = DEFAULT_VOICE_VOLUME
+
+    if volume < 0:
+        volume = 0
+    elif volume > 100:
+        volume = 100
+
+    return volume / 100.0
+
+
+def set_voice_volume(volume):
+    """設定預設語音音量 (0~100), 之後沒指定音量的播報都用這個值"""
+    global _voice_volume
+
+    try:
+        volume = int(volume)
+    except (TypeError, ValueError):
+        return
+
+    with _voice_volume_lock:
+        _voice_volume = max(0, min(volume, 100))
+
+
+def get_voice_volume():
+    with _voice_volume_lock:
+        return _voice_volume
+
+
+def _apply_volume(volume=None):
+    """套用音量到 mixer.music, 要在 load() 之後、play() 之前呼叫"""
+    if volume is None:
+        volume = get_voice_volume()
+
+    try:
+        mixer.music.set_volume(_clamp_volume(volume))
+    except Exception:
+        pass
+
+
 def install_pycaw():
     try:
         # 嘗試導入 pycaw，如果未安裝則安裝
@@ -169,6 +225,8 @@ def _get_tts_cache_filename(sentence):
 
     引擎也要算進去: 同一句話 gTTS 與 edge-tts 的聲音不同, 客戶端日後補裝
     edge-tts 時才不會一直播到之前 gTTS 產生的舊快取。
+
+    音量不必算進 hash: 音量是播放時才套用的, 同一個 mp3 可以用任何音量播。
     """
     key_source = f"{sentence}|{tts_engine_name()}|{EDGE_TTS_VOICE}|{EDGE_TTS_RATE}"
     key = hashlib.md5(key_source.encode("utf-8")).hexdigest()
@@ -240,13 +298,14 @@ def _make_tts_mp3(sentence):
     return tmp_filename
 
 
-def _play_mp3(filename):
+def _play_mp3(filename, volume=None):
     for attempt in range(2):
         try:
             if not mixer.get_init():
                 mixer.init()
 
             mixer.music.load(filename)
+            _apply_volume(volume)  # load 之後、play 之前套用語音音量
             mixer.music.play()
             while mixer.music.get_busy():
                 time.sleep(0.05)
@@ -267,27 +326,60 @@ def _play_mp3(filename):
 _tts_queue = queue.Queue()
 _tts_worker_lock = threading.Lock()
 _tts_worker_started = False
+_tts_playing = False
+
+
+def is_busy():
+    """還有沒有語音正在播或排隊等著播
+
+    候診看板用它來決定背景影片要壓低到什麼時候, 不必猜固定秒數。
+    """
+    if _tts_playing:
+        return True
+
+    if not _tts_queue.empty():
+        return True
+
+    try:
+        if mixer.get_init() and mixer.music.get_busy():
+            return True
+    except Exception:
+        pass
+
+    return False
 
 
 def _tts_worker():
+    global _tts_playing
+
     while True:
-        sentence = _tts_queue.get()
+        item = _tts_queue.get()
         try:
+            # 舊呼叫端可能直接丟字串進來, 兩種格式都吃
+            if isinstance(item, tuple):
+                sentence, volume = item
+            else:
+                sentence, volume = item, None
+
+            _tts_playing = True
             filename = _make_tts_mp3(sentence)
             if filename:
-                _play_mp3(filename)
+                _play_mp3(filename, volume)
         except Exception as e:
             print(f"語音播報失敗: {e}")
         finally:
+            _tts_playing = False
             _tts_queue.task_done()
 
 
-def speak_queued(sentence):
+def speak_queued(sentence, volume=None):
     """把語句丟進佇列, 由單一背景執行緒依序播放, 不會卡 UI
 
     pygame 的 mixer.music 只有「一個」音樂通道: 正在播的時候再 load/play,
     前一句會立刻被切掉。所以叫號一定要走這條佇列, 不能每次叫號各開一個
     執行緒去播 (那就是一診播到一半被二診搶走的原因)。
+
+    volume: 0~100, 不指定就用 set_voice_volume() 設定的預設值。
     """
     global _tts_worker_started
 
@@ -298,24 +390,25 @@ def speak_queued(sentence):
             _tts_worker_started = True
             print(f"語音播報啟動, 引擎: {tts_engine_name()}")
 
-    _tts_queue.put(sentence)
+    _tts_queue.put((sentence, volume))
 
 
-def speak_edge(sentence, threaded=True):
+def speak_edge(sentence, threaded=True, volume=None):
     """保留舊名稱, 避免其他站台的程式呼叫不到"""
-    speak_queued(sentence)
+    speak_queued(sentence, volume)
 
 
-def speak(sentence, threading=False):
+def speak(sentence, threading=False, volume=None):
     """叫號播報唯一入口
 
     不論有沒有裝 edge-tts, 一律走同一條佇列, 保證前一句播完才播下一句。
     threading 參數保留只是為了相容舊呼叫端, 行為已經一律是非阻塞。
+    volume 為 0~100, 只影響語音本身, 不影響 VLC/YouTube 與系統音量。
     """
-    speak_queued(sentence)
+    speak_queued(sentence, volume)
 
 
-def speak_linux(sentence):
+def speak_linux(sentence, volume=None):
     tts = gTTS(text=sentence, lang="zh-tw")
     fp = BytesIO()
     tts.write_to_fp(fp)
@@ -325,6 +418,7 @@ def speak_linux(sentence):
     # 1. 載入音訊
     pygame.mixer.init()
     pygame.mixer.music.load(fp, "mp3")
+    _apply_volume(volume)
 
     # 2. 播放
     pygame.mixer.music.play()
@@ -335,7 +429,7 @@ def speak_linux(sentence):
     # ------------------------------------------------
 
 
-def speak_linux_thread(sentence):
+def speak_linux_thread(sentence, volume=None):
     def _play_audio():
         tts = gTTS(text=sentence, lang="zh-tw")
         fp = BytesIO()
@@ -344,6 +438,7 @@ def speak_linux_thread(sentence):
 
         # 載入音訊
         pygame.mixer.music.load(fp, "mp3")
+        _apply_volume(volume)
         # 播放
         pygame.mixer.music.play()
         # 等待播放完成
@@ -359,7 +454,7 @@ def speak_linux_thread(sentence):
 # gTTS 的音量通常是固定的，如果需要正規化，則需要額外的步驟。
 
 
-def speak_win32(sentence):
+def speak_win32(sentence, volume=None):
     # original_volume = save_volume()  # 保存原始音量
 
     with tempfile.NamedTemporaryFile(delete=True) as fp:
@@ -367,10 +462,10 @@ def speak_win32(sentence):
         tts = gTTS(text=sentence, lang="zh-tw", slow=False)
         tts.save(filename)
 
-        # set_volume(0.1)
         try:
             mixer.init()
             mixer.music.load(filename)
+            _apply_volume(volume)
             mixer.music.play()
             while mixer.music.get_busy():
                 time.sleep(0.1)
@@ -380,7 +475,7 @@ def speak_win32(sentence):
     # restore_volume(original_volume)  # 恢復到原始音量
 
 
-def speak_win32_thread(sentence):
+def speak_win32_thread(sentence, volume=None):
     def _play_audio():
         with tempfile.NamedTemporaryFile(delete=True) as fp:
             filename = f"{fp.name}.mp3"
@@ -390,6 +485,7 @@ def speak_win32_thread(sentence):
             try:
                 mixer.init()
                 mixer.music.load(filename)
+                _apply_volume(volume)
                 mixer.music.play()
                 while mixer.music.get_busy():
                     time.sleep(0.1)
@@ -398,6 +494,25 @@ def speak_win32_thread(sentence):
 
     thread = threading.Thread(target=_play_audio, daemon=True)
     thread.start()
+
+
+def play_sound_file(filename, volume=None):
+    """播放提示音 (例如 icq.mp3), 音量比照語音音量
+
+    注意: 跟語音共用同一個 mixer.music 通道, 正在播語音時呼叫會把語音切掉。
+    """
+    if not os.path.exists(filename):
+        return
+
+    try:
+        if not mixer.get_init():
+            mixer.init()
+
+        mixer.music.load(filename)
+        _apply_volume(volume)
+        mixer.music.play()
+    except pygame.error:
+        pass
 
 
 TTS_CACHE_MAX_AGE_DAYS = 1

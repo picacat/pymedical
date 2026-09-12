@@ -3,9 +3,8 @@ import json
 import os
 import sys
 import threading
+import time
 
-import pygame
-from pygame import mixer
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDesktopWidget
@@ -33,6 +32,13 @@ MAX_ROOM = 10
 MAX_WAITING_ROWS = 7  # 候診一頁顯示人數
 ROTATION_SECONDS = 5000
 
+# 叫號時背景影片壓低到原音量的比例, 以及最低值
+DUCK_RATIO = 0.15
+DUCK_MIN_VOLUME = 5
+DUCK_POLL_MSEC = 500  # 每 0.5 秒檢查一次語音播完了沒
+DUCK_MIN_SECONDS = 2  # 至少壓低 2 秒, 避免語音還沒開始就還原
+DUCK_MAX_SECONDS = 60  # 保險上限, 語音卡住也不會一直壓著
+
 
 # 候診資訊系統 多診間輪播版
 class PyBulletin4(QtWidgets.QMainWindow):
@@ -51,10 +57,19 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.ui = None
 
         self.waiting_number = [0 for x in range(100)]
+
+        # 語音音量: 只控制叫號語音本身 (pygame mixer),
+        # YouTube/影片/串流的音量一律交給電腦的系統音量
+        self.voice_volume = self._get_voice_volume()
+        voice_utils.set_voice_volume(self.voice_volume)
+
+        # 叫號時暫時壓低背景影片用
         self.audio_timer = QtCore.QTimer(self)
-        self.volume = number_utils.get_integer(
-            self.system_settings.field("媒體播放音量")
-        )
+        self.audio_timer.timeout.connect(self._check_restore_audio)
+        self.saved_media_volume = None
+        self.duck_min_time = 0
+        self.duck_deadline = 0
+
         self.url = self.system_settings.field("媒體播放位址")
 
         self.media_type = self.system_settings.field("媒體播放來源")
@@ -86,6 +101,27 @@ class PyBulletin4(QtWidgets.QMainWindow):
         monitor = QDesktopWidget().screenGeometry(monitor_number)
         self.move(monitor.left(), monitor.top())
         self.showFullScreen()
+
+    def _get_setting_int(self, field_name):
+        """讀取系統設定的整數值, 欄位不存在時回傳 0"""
+        try:
+            return number_utils.get_integer(self.system_settings.field(field_name))
+        except Exception:
+            return 0
+
+    def _get_voice_volume(self):
+        """語音音量 0~100
+
+        先找「語音播放音量」, 沒有這個欄位就沿用舊的「媒體播放音量」,
+        都沒有就用 100 (等於不衰減, 大小聲交給系統音量)。
+        """
+        volume = self._get_setting_int("語音播放音量")
+        if volume <= 0:
+            volume = self._get_setting_int("媒體播放音量")
+        if volume <= 0:
+            volume = 100
+
+        return min(volume, 100)
 
     def _set_notification_server(self):
         channels = [
@@ -194,34 +230,63 @@ class PyBulletin4(QtWidgets.QMainWindow):
         system_utils.center_window(self)
         system_utils.set_theme(self.ui, self.system_settings)
 
-    @staticmethod
-    def _notify_wait_arrive():
-        try:
-            mixer.init()
-            mixer.music.load("./icq.mp3")
-            mixer.music.play()
-        except pygame.error:
-            pass
+    def _notify_wait_arrive(self):
+        # 跟語音共用 pygame 的音樂通道, 音量比照語音音量
+        voice_utils.play_sound_file("./icq.mp3", self.voice_volume)
+
+    # ------------------------------------------------------------------
+    # 叫號時暫時壓低背景影片 (ducking)
+    #
+    # 這裡動到的是 VLC 自己的相對音量, 不會改到 Windows 的系統音量;
+    # 叫號結束就還原成原本的值, 平常完全不干涉媒體音量。
+    # ------------------------------------------------------------------
+    def _get_media_player(self):
+        return getattr(self, "vlc_player", None)
 
     def _set_lower_audio(self):
-        if self.url in ["", None]:
+        player = self._get_media_player()
+        if player is None:  # 輪播圖片模式沒有播放器
             return
 
+        if self.saved_media_volume is None:  # 還沒壓低過才記錄原音量
+            current_volume = player.audio_get_volume()
+            if current_volume is None or current_volume < 0:
+                current_volume = 100
+
+            self.saved_media_volume = current_volume
+
+        duck_volume = max(int(self.saved_media_volume * DUCK_RATIO), DUCK_MIN_VOLUME)
         try:
-            self.vlc_player.audio_set_volume(5)
+            player.audio_set_volume(duck_volume)
         except Exception:
             pass
 
-        self.audio_timer.start(6000)
-        self.audio_timer.timeout.connect(self._normal_audio)
+        now = time.time()
+        self.duck_min_time = now + DUCK_MIN_SECONDS
+        self.duck_deadline = now + DUCK_MAX_SECONDS
+        self.audio_timer.start(DUCK_POLL_MSEC)
 
-    def _normal_audio(self):
-        try:
-            self.vlc_player.audio_set_volume(self.volume)
-        except Exception:
-            pass
+    def _check_restore_audio(self):
+        now = time.time()
+
+        if now < self.duck_deadline:
+            if now < self.duck_min_time:
+                return
+            if voice_utils.is_busy():  # 還在念, 繼續壓著
+                return
 
         self.audio_timer.stop()
+        self._normal_audio()
+
+    def _normal_audio(self):
+        player = self._get_media_player()
+        if player is not None and self.saved_media_volume is not None:
+            try:
+                player.audio_set_volume(self.saved_media_volume)
+            except Exception:
+                pass
+
+        self.saved_media_volume = None
 
     # 廣播叫號
     def _broadcast_speech(self, json_data):
@@ -245,13 +310,13 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
         rows = self._get_wait_rows(room)
         if len(rows) > 0:
-            self._current_room = room
+            self.current_room = room
             row = rows[0]
             self._show_waiting_list_html(row)
 
         QtWidgets.qApp.processEvents()
         self._set_lower_audio()
-        voice_utils.speak(sentence, threading=True)
+        voice_utils.speak(sentence, threading=True, volume=self.voice_volume)
 
     def _play_media(self):
         if self.media_type == "輪播圖片":
@@ -318,13 +383,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
         return video_list
 
-    def _play_videos(self):
-        self.vlc_instance = vlc.Instance()
-        self.vlc_player = self.vlc_instance.media_player_new()
-        self.vlc_player.audio_set_volume(self.volume)
-        # events = self.mediaplayer.event_manager()
-        # events.event_attach(vlc.EventType.MediaPlayerEndReached, self.video_finished)
-
+    def _set_vlc_window(self):
         win_id = int(self.ui.frame_youtube.winId())
         if sys.platform == "win32":
             self.vlc_player.set_hwnd(win_id)
@@ -332,6 +391,13 @@ class PyBulletin4(QtWidgets.QMainWindow):
             self.vlc_player.set_xwindow(win_id)
         elif sys.platform == "darwin":
             self.vlc_player.set_nsobject(win_id)
+
+    def _play_videos(self):
+        self.vlc_instance = vlc.Instance()
+        self.vlc_player = self.vlc_instance.media_player_new()
+        # 不設定音量: 維持 VLC 預設, 大小聲由電腦的系統音量控制
+
+        self._set_vlc_window()
 
         media_list = self.vlc_instance.media_list_new()
         video_list = self._get_video_list()
@@ -377,6 +443,19 @@ class PyBulletin4(QtWidgets.QMainWindow):
             if self._is_url(url):
                 self.stream_list.append(url)
 
+    def _new_stream_media(self, index):
+        """依索引取得串流網址並建立 media, 影音分離時補上 input-slave"""
+        video_url, audio_url = self._get_stream_url(index)
+
+        media = self.vlc_instance.media_new(video_url)
+        if audio_url is not None:
+            media.add_option(f":input-slave={audio_url}")
+
+        media.add_option(":network-caching=3000")
+        media.add_option(":audio-desync=-200")  # 毫秒
+
+        return media
+
     def _play_url_stream(self):
         self._set_stream_list()
 
@@ -385,61 +464,17 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
         self.vlc_instance = vlc.Instance()
         self.vlc_player = self.vlc_instance.media_player_new()
+        # 不設定音量: 維持 VLC 預設, 大小聲由電腦的系統音量控制
 
-        win_id = int(self.ui.frame_youtube.winId())
-        if sys.platform == "win32":
-            self.vlc_player.set_hwnd(win_id)
-        elif sys.platform == "linux":
-            self.vlc_player.set_xwindow(win_id)
-        elif sys.platform == "darwin":
-            self.vlc_player.set_nsobject(win_id)
+        self._set_vlc_window()
 
-        # stream_url = self._get_stream_url(self.stream_index)
-        # self.media = self.vlc_instance.media_new(stream_url)
-        # self.vlc_player.set_media(self.media)
-
-        video_url, audio_url = self._get_stream_url(self.stream_index)
-        self.media = self.vlc_instance.media_new(video_url)
-        if audio_url is not None:
-            self.media.add_option(f":input-slave={audio_url}")
-
-        self.media.add_option(":network-caching=3000")
-        self.media.add_option(":audio-desync=-200")  # 毫秒
+        self.media = self._new_stream_media(self.stream_index)
         self.vlc_player.set_media(self.media)
 
         events = self.vlc_player.event_manager()
         events.event_attach(vlc.EventType.MediaPlayerEndReached, self._on_end_reached)
 
         self.vlc_player.play()
-        self._start_volume_timer()
-
-    def _start_volume_timer(self):
-        self.volume_retry = 0
-        self.volume_timer = QtCore.QTimer(self)
-        self.volume_timer.timeout.connect(self._apply_volume)
-        self.volume_timer.start(300)
-
-    def _apply_volume(self):
-        self.volume_retry += 1
-        self.vlc_player.audio_set_volume(self.volume)
-
-        if self.vlc_player.audio_get_volume() == self.volume:
-            self.volume_timer.stop()  # 設定成功
-        elif self.volume_retry > 30:
-            self.volume_timer.stop()  # 約 9 秒後放棄,避免無限輪詢
-
-    # def _get_stream_url(self, index):
-    #     url = self.stream_list[index]
-
-    #     ydl_opts = {
-    #         "format": "best",
-    #         "buffer-size": "4096",
-    #     }
-    #     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-    #         info = ydl.extract_info(url, download=False)
-    #         stream_url = info["url"]
-
-    #     return stream_url
 
     def _get_stream_url(self, index):
         url = self.stream_list[index]
@@ -462,48 +497,19 @@ class PyBulletin4(QtWidgets.QMainWindow):
         if self.stream_index >= len(self.stream_list):
             self.stream_index = 0
 
-        stream_url = self._get_stream_url(self.stream_index)
+        index = self.stream_index
 
+        # VLC 的 callback 不能直接呼叫 player 的方法, 另開執行緒處理
         def restart_media():
-            self.vlc_player.stop()
-            self.media = self.vlc_instance.media_new(stream_url)
-            self.vlc_player.set_media(self.media)
-            self.vlc_player.play()
+            try:
+                self.vlc_player.stop()
+                self.media = self._new_stream_media(index)
+                self.vlc_player.set_media(self.media)
+                self.vlc_player.play()
+            except Exception as e:
+                print(f"切換串流失敗: {e}")
 
-        # 在新线程中執行停止和重新播放操作
-        threading.Thread(target=restart_media).start()
-
-    # def _play_media(self):
-    #     if self.url in ['', None]:
-    #         return
-
-    #     self.vlc_instance = vlc.Instance()
-    #     self.mediaplayer = self.vlc_instance.media_player_new()
-
-    #     win_id = int(self.ui.frame_youtube.winId())
-    #     if sys.platform == 'win32':
-    #         self.mediaplayer.set_hwnd(win_id)
-    #     elif sys.platform == 'linux':
-    #         self.mediaplayer.set_xwindow(win_id)
-    #     elif sys.platform == 'darwin':
-    #         self.mediaplayer.set_nsobject(win_id)
-
-    #     try:
-    #         video = pafy.new(self.url)
-    #         best = video.getbest()
-    #         self.media = self.vlc_instance.media_new(best.url)
-    #     except Exception:
-    #         try:
-    #             self.media.release()
-    #         except Exception:
-    #             pass
-
-    #         self._play_media()
-
-    #     self.media.get_mrl()
-    #     self.mediaplayer.set_media(self.media)
-    #     self.mediaplayer.play()
-    #     self.mediaplayer.audio_set_volume(self.volume)
+        threading.Thread(target=restart_media, daemon=True).start()
 
     def _set_marquee_list(self):
         self.marquee_list = []
@@ -610,11 +616,6 @@ class PyBulletin4(QtWidgets.QMainWindow):
         room = number_utils.get_integer(row["Room"])
         doctor = string_utils.xstr(row["Doctor"])
         seq_number = self._get_seq_number(room)
-
-        # if self.show_seq_number:
-        #     called_regist_no = self._get_seq_number(room)
-        # else:
-        #     called_regist_no = self.waiting_number[room]
 
         if seq_number > 0:
             called_regist_no = seq_number
@@ -727,17 +728,15 @@ class PyBulletin4(QtWidgets.QMainWindow):
         return rows
 
     def _rotation_wait_list(self):
-        while True:
+        for _ in range(MAX_ROOM):  # 繞一圈就停, 避免沒有任何診間時卡在無窮迴圈
             self.current_room += 1
             if self.current_room > MAX_ROOM:
                 self.current_room = 1
 
             rows = self._get_wait_rows()
             if len(rows) > 0:
-                row = rows[0]
-                break
-
-        self._show_waiting_list_html(row)
+                self._show_waiting_list_html(rows[0])
+                return
 
     def _get_room_rows(self):
         current_period = registration_utils.get_current_period(self.system_settings)
