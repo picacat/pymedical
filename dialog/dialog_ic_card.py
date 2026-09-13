@@ -20,7 +20,7 @@ from libs import (
 class DialogICCard(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogICCard, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -87,7 +87,7 @@ class DialogICCard(QtWidgets.QDialog):
     # 解鎖醫事人員卡密碼
     def unlock_hpc_pin(self):
         if self.system_settings.field("讀卡機控制軟體版本") == "cshis6":
-            card_status = self.ic_card.get_api_status("hpc")["status"]
+            card_status = self.ic_card.get_api_status()["hpc"]["status"]
             if card_status == 0:  # 未插入卡片
                 cshis_utils.show_ic_card_message(1102, "醫事人員卡密碼驗證")
                 return
@@ -193,9 +193,8 @@ class DialogICCard(QtWidgets.QDialog):
     # 讀取健保卡就醫資料
     def ic_card_prescript_data(self):
         if self.system_settings.field("讀卡機控制軟體版本") == "cshis6":
-            try:
-                card_status = self.ic_card.get_api_status("hpc")["status"]
-            except Exception:
+            card_status = self.ic_card.get_api_status()["hpc"]["status"]
+            if card_status != 3:
                 cshis_utils.show_ic_card_message(1402, "醫事人員卡密碼驗證")
                 return
 

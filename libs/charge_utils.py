@@ -1443,10 +1443,12 @@ def get_ins_fee(database, system_settings, table_widget_ins_care=None, **kwargs)
         integrate_care = None
 
     case_key = kwargs["case_key"]
-    # case_date, _ = case_utils.get_case_date(database, case_key)
     case_date = kwargs.get("case_date")
     if case_date is None:
         case_date, _ = case_utils.get_case_date(database, case_key)
+
+    case_date = normalize_case_date(case_date)  # 新增
+    case_date_only = case_date.date()  # 新增
 
     if kwargs["treat_type"] in nhi_utils.CARE_TREAT:
         ins_fee = get_ins_special_care_fee(
@@ -1483,12 +1485,6 @@ def get_ins_fee(database, system_settings, table_widget_ins_care=None, **kwargs)
         )
 
     ins_fee["diag_fee"] = check_markup_diag_fee(ins_fee["diag_fee"], kwargs["reg_type"])
-
-    # if kwargs['reg_type'] in nhi_utils.TOUR_TYPE:
-    #     ins_fee['diag_fee'] = number_utils.get_integer(ins_fee['diag_fee'] * 1.1)  # 巡迴醫療診察費加成10%
-    # elif kwargs['reg_type'] in nhi_utils.CORRECTION_REG_TYPE:
-    #     ins_fee['diag_fee'] = number_utils.get_integer(ins_fee['diag_fee'] * 1.1)  # 矯正機關內門診診察費加成10%
-
     ins_fee["drug_fee"] = get_ins_drug_fee(database, pres_days, case_date=case_date)
     ins_fee["pharmacy_fee"] = get_ins_pharmacy_fee(
         database,
@@ -1508,7 +1504,7 @@ def get_ins_fee(database, system_settings, table_widget_ins_care=None, **kwargs)
         kwargs["treatment"],
         ins_fee["drug_fee"],
         kwargs["course"],
-        case_date=case_date.date(),
+        case_date=case_date_only,
         long_term_care=long_term_care,
     )
 
@@ -3656,3 +3652,23 @@ def get_fee_type(database, case_key, medicine_set):
     charge_field = get_charge_field(field, medicine_type)
 
     return charge_field
+
+
+def normalize_case_date(case_date):
+    """就診日期統一成 datetime.datetime；取不到一律視為今天"""
+    if isinstance(case_date, datetime.datetime):
+        return case_date
+
+    if isinstance(case_date, datetime.date):  # 注意順序，datetime 是 date 的子類
+        return datetime.datetime.combine(case_date, datetime.time.min)
+
+    case_date = string_utils.xstr(case_date).strip()
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            return datetime.datetime.strptime(
+                case_date[: len("2026-09-13 00:00:00")], fmt
+            )
+        except ValueError:
+            continue
+
+    return datetime.datetime.now()

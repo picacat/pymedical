@@ -1442,25 +1442,32 @@ class MedicalRecord(QtWidgets.QMainWindow):
             if tab_name == f"自費{i}":
                 self.tab_list[i] = None
 
-        self.tab_medical_record_fees.calculate_fees()
         current_tab.close_all()
         current_tab.deleteLater()
+        sip.delete(current_tab)
 
-        sip.delete(current_tab)  # 真正的刪除分頁
-
-        self.tab_medical_record_fees.calculate_fees()
+        if not getattr(self, "_suspend_calculate_fees", False):
+            self.tab_medical_record_fees.calculate_fees()
 
     # 關閉所有自費處方頁
     def close_all_self_prescript_tabs(self):
-        for i in range(len(self.tab_list), 0, -1):
-            current_tab = self.ui.tabWidget_prescript.widget(i)
-            if current_tab is not None:
+        self._suspend_calculate_fees = True
+        try:
+            for i in range(len(self.tab_list), 0, -1):
+                current_tab = self.ui.tabWidget_prescript.widget(i)
+                if current_tab is None:
+                    continue
+
                 tab_name = self.ui.tabWidget_prescript.tabText(i)
-                if tab_name == "加強照護":  # 加強照護不要關閉
+                if tab_name == "加強照護":
                     continue
 
                 self.close_tab_warning = False
                 self.close_prescript_tab(i)
+        finally:
+            self._suspend_calculate_fees = False
+
+        self.tab_medical_record_fees.calculate_fees()
 
     def close_medical_record(self, close_without_saving=False):
         if close_without_saving:

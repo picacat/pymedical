@@ -3266,9 +3266,12 @@ def insert_prescript(
 
 
 def get_case_date(database, case_key):
-    sql = f"SELECT CaseDate, Period FROM cases WHERE CaseKey = {case_key}"
-    rows = database.select_record(sql)
+    case_key = number_utils.get_integer(case_key)
+    if case_key <= 0:
+        return None, None
 
+    sql = "SELECT CaseDate, Period FROM cases WHERE CaseKey = %s"
+    rows = database.select_record(sql, (case_key,))
     if len(rows) <= 0:
         return None, None
 
