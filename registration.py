@@ -6208,9 +6208,13 @@ class Registration(QtWidgets.QMainWindow):
         web_utils.open_nhi_medcloud(use_virtual_card=False)
 
     def _open_med_vpn_vhc(self):
+        system_utils.set_keyboard_layout("英文")
         vhc_ic_card = class_utils.get_vhccshis(
             self, self.database, self.system_settings, qrcode=None
         )
+        if not vhc_ic_card.read_register_basic_data():
+            return
+
         vhc_ic_card.verify_vhc_card()  # ← 先驗證
         web_utils.open_nhi_medcloud(use_virtual_card=True)
 
