@@ -47,8 +47,8 @@
       注意：binlog_format=STATEMENT 搭配 READ COMMITTED 會讓 InnoDB 寫入
       直接報錯，因此套用前會先檢查 binlog 狀態，不符合就維持預設。
 
-本次修訂
---------
+前一次修訂
+----------
   1. exec_sql(auto_commit=False) 在交易外會直接報錯。連線是 autocommit，
      語句執行完就已提交，這個參數在交易外沒有任何效果，繼續讓它靜默
      通過只會誤導呼叫端。
@@ -64,11 +64,46 @@
      時一律不動手。
   8. is_transactional() 在引擎未知時回傳 False（未知就當作沒有保護）。
 
+本次修訂（2026-09）
+-------------------
+  1. 連線層級例外的判定範圍放寬（_is_connection_error）。
+     起因是一份 crash report：連線半死時 connector 的 cmd_ping() 讀到
+     不足 5 bytes 的封包，在 _handle_ok() 的 packet[4] 直接丟出
+     IndexError，根本走不到把它包成 InterfaceError 的那段程式碼。
+     於是 get_cursor() 原本只攔 OperationalError / InterfaceError 的
+     except 接不到，重連機制形同虛設，例外一路穿到呼叫端。
+     現在 get_cursor() 改用 except Exception（該 try 區塊裡只有建立
+     cursor 一件事，不會夾帶業務邏輯的例外），select_record() 則改用
+     _is_connection_error() 分類，維持「SQL 寫錯不重試」的判斷。
+
+  2. 各方法 finally 區塊不再呼叫 is_connected()。
+     那會真的送一個 PING，等於每個查詢多一趟往返——上一版宣稱的「一次
+     insert 從三趟降為一趟」其實只降到兩趟。cursor.close() 在連線已死
+     時本來就只會丟例外，而外面已經有 try/except 了。
+
+  3. DDL 不再預防性地擊殺閒置連線（_exec_ddl_with_lock_retry）。
+     舊做法是每次 check_field_exists 都先跑一輪 kill_sleep_connections
+     (threshold=60)。診所電腦整天開著，兩個病人之間閒置一分鐘是常態，
+     而看診站在等健保署回應時（最長 30 秒）連線正是 Sleep 狀態且沒有
+     開任何 InnoDB 交易，不在保護名單內——別台電腦一啟動做結構檢查，
+     就可能把正在看診的那台連線殺掉。
+     改為：先把 session 的 lock_wait_timeout 壓到 10 秒（MariaDB 預設
+     86400 秒，這是當初要預防性擊殺的真正原因），真的等不到 metadata
+     lock 時才清理閒置連線並重試一次。
+
+  4. kill_sleep_connections 每次擊殺都寫明 Id / User / Host / Time，
+     方便日後與 crash report 的時間點對帳。
+
 刻意不改的項目
 --------------
 連線 collation 維持 {charset}_general_ci。改成 unicode_ci 會改變字串比較
 與排序語意，且 MyISAM 與 InnoDB 客戶一律受影響，必須搭配所有資料表一起
 ALTER，屬於獨立的一次性任務，不混在本次改動中。
+
+exec_sql() 不加語句層級的自動重試。修好 get_cursor() 之後「建立 cursor」
+這一步已經會自動重連；若是 execute() 執行到一半斷線，語句可能已經送達
+伺服器只是回應沒收到，重送會變成重複套用——累加型的 UPDATE（診察費
+加成、初診加計 A90）正是不能重複的那種。維持丟出例外由呼叫端處理。
 
 （已知現況：restore_gui.py 以 utf8mb4_unicode_ci 建表，與此處的
 general_ci 不一致。兩邊應擇一統一，但那是另一項獨立作業。）
@@ -77,6 +112,7 @@ general_ci 不一致。兩邊應擇一統一，但那是另一項獨立作業。
 import configparser
 import os
 import re
+import struct
 import time
 from contextlib import contextmanager
 
@@ -95,9 +131,15 @@ COLLATION_SUFFIX = "general_ci"
 
 # 值得整批重試的 InnoDB 鎖相關錯誤：
 #   1213 ER_LOCK_DEADLOCK      死結，交易已被伺服器回滾
-#   1205 ER_LOCK_WAIT_TIMEOUT  等鎖逾時
+#   1205 ER_LOCK_WAIT_TIMEOUT  等鎖逾時（metadata lock 等不到也是這個）
 # MyISAM 是表級鎖，不會產生 1213。
 RETRYABLE_LOCK_ERRORS = (1213, 1205)
+
+# DDL 等待 metadata lock 的上限（秒）。
+# MariaDB 的 lock_wait_timeout 預設是 86400 秒，ALTER TABLE 只要遇到任何
+# 一條還開著這張表的連線就會實質上永遠卡住——這正是舊版要在每次 DDL 前
+# 預防性擊殺閒置連線的原因。把上限壓低之後就不必先開槍了。
+DDL_LOCK_WAIT_TIMEOUT = 10
 
 # 無法從資料庫現況判定引擎時採用的值。三種情況會用到：
 #   1. 全新資料庫，還沒有任何資料表（正常情形）
@@ -105,6 +147,25 @@ RETRYABLE_LOCK_ERRORS = (1213, 1205)
 #   3. 連線未選定資料庫，DATABASE() 為 NULL（異常，會另外警告）
 # 只有第 1 種是預期會發生的；另外兩種都會印出明確警告，不會靜默通過。
 FALLBACK_ENGINE = "InnoDB"
+
+
+def _is_connection_error(exc):
+    """判斷例外是否屬於連線層級（可以重連再試），而非 SQL 本身有問題。
+
+    connector 在連線半死或協定流不同步時，不一定會丟出 InterfaceError：
+
+      * cmd_ping() 讀到不足 5 bytes 的封包
+        -> _handle_ok() 的 `packet[4]` 丟出 IndexError
+      * 封包表頭殘缺 -> struct.error
+      * socket 已被對端關閉 -> OSError / ConnectionResetError
+
+    這些都必須當成「連線壞了，重連再試」，而不是「SQL 寫錯了」——
+    後者會讓呼叫端收到一個完全指錯方向的錯誤訊息。
+    """
+    if isinstance(exc, (mysql_errors.OperationalError, mysql_errors.InterfaceError)):
+        return True
+
+    return isinstance(exc, (IndexError, struct.error, OSError))
 
 
 class TransactionInterrupted(mysql_errors.InterfaceError):
@@ -166,6 +227,8 @@ class MySQLDatabase(DatabaseInterface):
         self._tx_aborted = False
         # MyISAM 客戶端使用交易時只提醒一次，避免洗畫面
         self._warned_myisam_tx = False
+        # session 的 lock_wait_timeout 是否已壓低（只需設定一次）
+        self._ddl_lock_timeout_set = False
 
         # 舊欄位。本檔案內沒有任何地方使用，但其他模組可能會讀，暫時保留。
         self.timeout = 0
@@ -183,8 +246,8 @@ class MySQLDatabase(DatabaseInterface):
         """檢查是否與資料庫成功連線。
 
         注意：connector 的 is_connected() 會真的送一個 PING 到伺服器，
-        不是免費的。熱路徑（get_cursor）不再使用它，只留給啟動、重連、
-        維護工具這類低頻場合。
+        不是免費的。熱路徑（get_cursor 的正常路徑、各方法的 finally）
+        一律不使用它，只留給啟動、重連、維護工具這類低頻場合。
 
         Returns:
             bool: 如果資料庫連線成功，回傳 True，否則回傳 False。
@@ -192,6 +255,8 @@ class MySQLDatabase(DatabaseInterface):
         try:
             return self.cnx is not None and self.cnx.is_connected()
         except Exception:
+            # is_connected() 內部的 cmd_ping() 在連線半死時可能丟出
+            # IndexError 之類的非 connector 例外，一律當成沒連上
             return False
 
     @property
@@ -210,6 +275,7 @@ class MySQLDatabase(DatabaseInterface):
                 self.cnx = None
         self._tx_depth = 0
         self._tx_aborted = False
+        self._ddl_lock_timeout_set = False
 
     def _get_database_name(self):
         """取得目前使用的資料庫名稱。
@@ -304,6 +370,8 @@ class MySQLDatabase(DatabaseInterface):
                 autocommit=True,
             )
             self._autocommit = True
+            # 新連線的 session 變數全部回到伺服器預設，旗標要跟著重置
+            self._ddl_lock_timeout_set = False
             # use_db=False 的連線只用來 CREATE DATABASE，馬上就會被關掉
             # 重連，不必浪費一趟去設隔離等級。
             if use_db:
@@ -524,6 +592,13 @@ class MySQLDatabase(DatabaseInterface):
         自行 ping 一次驗證連線，我們再 ping 一次只是每句 SQL 多一趟往返。
         改為直接建立 cursor，失敗（連線已死）時才走重連。
 
+        注意 except 的範圍是 Exception 而非只有 OperationalError /
+        InterfaceError。connector 在連線半死時會在 _handle_ok() 的
+        `packet[4]` 丟出 IndexError（讀到空封包），那不是 connector 的
+        錯誤類別，窄的 except 接不到，重連機制會形同虛設。
+        這個 try 區塊裡只有「建立 cursor」一件事，不會夾帶業務邏輯的
+        例外，所以放寬到 Exception 是安全的。
+
         Args:
             dictionary (bool): 是否回傳 dict 格式。
             buffered (bool): 是否啟用 buffer 模式。
@@ -545,9 +620,10 @@ class MySQLDatabase(DatabaseInterface):
         if self.cnx is not None:
             try:
                 return self.cnx.cursor(dictionary=dictionary, buffered=buffered)
-            except (mysql_errors.OperationalError, mysql_errors.InterfaceError):
-                # 連線已死（閒置過夜被伺服器砍掉、網路閃斷…），往下重連
-                pass
+            except Exception as e:
+                # 連線已死（閒置過夜被伺服器砍掉、被別台 KILL、網路閃斷、
+                # 協定流不同步…），往下重連
+                print(f"⚠️ 建立 cursor 失敗，將重新連線：{type(e).__name__}: {e}")
 
         self._reconnect()  # 交易中會拋 TransactionInterrupted
 
@@ -597,6 +673,21 @@ class MySQLDatabase(DatabaseInterface):
                 "交易進行中連線中斷，未提交的變更已回滾，請重試整個操作。"
             )
 
+    @staticmethod
+    def _close_cursor(cursor):
+        """關閉 cursor。
+
+        刻意不先檢查 is_connected()——那會真的送一個 PING，等於每個查詢
+        多一趟往返。連線已死時 close() 本來就只會丟例外，接住即可。
+        """
+        if cursor is None:
+            return
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
     # ------------------------------------------------------------------
     # 交易管理
     # ------------------------------------------------------------------
@@ -626,10 +717,7 @@ class MySQLDatabase(DatabaseInterface):
             self._warn_if_non_transactional()
             # 不在交易中，斷線可以安全重連：先確認連線活著再 START
             cursor = self.get_cursor()
-            try:
-                cursor.close()
-            except Exception:
-                pass
+            self._close_cursor(cursor)
             self.cnx.start_transaction()
 
         self._tx_depth += 1
@@ -820,6 +908,65 @@ class MySQLDatabase(DatabaseInterface):
             )
 
     # ------------------------------------------------------------------
+    # DDL 執行
+    # ------------------------------------------------------------------
+
+    def _set_ddl_lock_timeout(self):
+        """把本連線等待 metadata lock 的上限壓低（只需設定一次）。
+
+        MariaDB 的 lock_wait_timeout 預設是 86400 秒。ALTER TABLE 需要
+        metadata lock，只要有任何一條連線還開著這張表的交易或未關閉的
+        語句，DDL 就會實質上永遠卡住——舊版之所以在每次 DDL 前都預防性
+        擊殺閒置連線，真正的原因就在這裡。
+
+        把上限壓到 DDL_LOCK_WAIT_TIMEOUT 秒之後，卡住會變成一個可以接住
+        的錯誤（1205），就不必先開槍了。
+        """
+        if self._ddl_lock_timeout_set or self.cnx is None:
+            return
+
+        try:
+            self.exec_sql(f"SET SESSION lock_wait_timeout = {DDL_LOCK_WAIT_TIMEOUT}")
+            self._ddl_lock_timeout_set = True
+        except Exception as e:
+            # 舊版伺服器或權限不足時就算了，行為退回原本的長時間等待
+            print(f"（無法設定 lock_wait_timeout：{e}）")
+
+    def _exec_ddl_with_lock_retry(self, sql, description):
+        """執行 DDL；等不到 metadata lock 時清理閒置連線再重試一次。
+
+        與舊版的差別在「開槍的時機」：舊版每次 DDL 前都先跑一輪
+        kill_sleep_connections(threshold=60)，不管有沒有人擋路。診所電腦
+        整天開著，兩個病人之間閒置一分鐘是常態，而看診站在等健保署回應
+        時（最長 30 秒）連線正是 Sleep 狀態且沒有開任何 InnoDB 交易，
+        不在保護名單內——別台電腦一啟動做結構檢查，就可能把正在看診的
+        那台連線殺掉，對方回來要寫資料時就會撞上「連線已死」。
+
+        現在只有真的被擋住才清理。
+
+        Args:
+            sql (str): 要執行的 DDL 語句。
+            description (str): 用於訊息的說明文字。
+        """
+        self._set_ddl_lock_timeout()
+
+        try:
+            self.exec_sql(sql)
+            return
+        except mysql_errors.Error as e:
+            if getattr(e, "errno", None) not in RETRYABLE_LOCK_ERRORS:
+                raise
+
+            print(f"⚠️ {description} 等不到 metadata lock，清理閒置連線後重試。")
+
+        try:
+            self.kill_sleep_connections()
+        except Exception as e:
+            print(f"（清理閒置連線失敗：{e}）")
+
+        self.exec_sql(sql)
+
+    # ------------------------------------------------------------------
     # 資料表管理
     # ------------------------------------------------------------------
 
@@ -902,11 +1049,7 @@ class MySQLDatabase(DatabaseInterface):
                 "建表錯誤", f"建立資料表 {table_name} 時出現錯誤：\n{err!s}"
             )
         finally:
-            if cursor is not None:
-                try:
-                    cursor.close()
-                except Exception:
-                    pass
+            self._close_cursor(cursor)
 
     # ------------------------------------------------------------------
     # 查詢與寫入
@@ -940,29 +1083,25 @@ class MySQLDatabase(DatabaseInterface):
                 # 交易已毀，重試單句沒有意義，直接讓呼叫端知道
                 raise
 
-            except (mysql_errors.OperationalError, mysql_errors.InterfaceError) as e:
+            except Exception as e:
+                # 連線層級的判定交給 _is_connection_error()：connector 在
+                # 連線半死時不一定丟得出 InterfaceError（見該函式說明），
+                # 只看例外類別會把「連線壞了」誤判成「SQL 寫錯了」。
+                if not _is_connection_error(e):
+                    print(f"❌ SQL 執行失敗，非連線問題，不重試：{sql}\n{e}")
+                    raise
+
                 if self.in_transaction:
                     # 交易中不可重連——重連會靜默回滾整批未提交的變更
                     print(f"❌ 交易中發生連線層級錯誤，不重試：{e}")
                     raise
 
-                # 真正屬於連線層級的問題，才值得重連重試
-                print(f"⚠️ 連線層級錯誤 (第 {attempt + 1} 次): {e}")
+                print(f"⚠️ 連線層級錯誤 (第 {attempt + 1} 次): {type(e).__name__}: {e}")
                 last_exception = e
                 self._reconnect()
 
-            except Exception as e:
-                # SQL 本身寫錯、欄位不存在等，重連沒有意義，直接往上丟
-                print(f"❌ SQL 執行失敗，非連線問題，不重試：{sql}\n{e}")
-                raise
-
             finally:
-                if cursor is not None:
-                    try:
-                        if self.cnx and self.cnx.is_connected():
-                            cursor.close()
-                    except Exception:
-                        pass
+                self._close_cursor(cursor)
 
         if last_exception:
             print(f"❌ 重試 {retry_count} 次後仍失敗：{last_exception}")
@@ -986,11 +1125,7 @@ class MySQLDatabase(DatabaseInterface):
             self._auto_rollback()
             raise
         finally:
-            try:
-                if cursor and self.cnx and self.cnx.is_connected():
-                    cursor.close()
-            except Exception:
-                pass
+            self._close_cursor(cursor)
 
     def insert_record(self, table_name, fields, data):
         """新增一筆紀錄至指定資料表。
@@ -1020,11 +1155,7 @@ class MySQLDatabase(DatabaseInterface):
             self._auto_rollback()
             raise
         finally:
-            try:
-                if cursor and self.cnx and self.cnx.is_connected():
-                    cursor.close()
-            except Exception:
-                pass
+            self._close_cursor(cursor)
 
     def update_record(self, table_name, fields, primary_key, key_value, data):
         """更新指定主鍵的紀錄。
@@ -1048,14 +1179,15 @@ class MySQLDatabase(DatabaseInterface):
             self._auto_rollback()
             raise
         finally:
-            try:
-                if cursor and self.cnx and self.cnx.is_connected():
-                    cursor.close()
-            except Exception:
-                pass
+            self._close_cursor(cursor)
 
     def exec_sql(self, sql, params=None, auto_commit=True):
         """執行任意 SQL 語句（非查詢類），例如 INSERT、UPDATE、DELETE。
+
+        刻意不做語句層級的自動重試：get_cursor() 已經會在「建立 cursor」
+        這一步自動重連，若是 execute() 執行到一半斷線，語句可能已經送達
+        伺服器只是回應沒收到，重送會變成重複套用——累加型的 UPDATE
+        （診察費加成、初診加計 A90）正是不能重複的那種。
 
         Args:
             sql (str): 要執行的 SQL 語句，可包含 %s 佔位符。
@@ -1093,11 +1225,7 @@ class MySQLDatabase(DatabaseInterface):
             print(f"❌ exec_sql 執行失敗：{sql}\n參數：{params}\n錯誤資訊：{e}")
             raise
         finally:
-            try:
-                if cursor and self.cnx and self.cnx.is_connected():
-                    cursor.close()
-            except Exception:
-                pass
+            self._close_cursor(cursor)
 
     def get_last_insert_id(self):
         """取得最近一次插入的自動編號 ID。
@@ -1220,6 +1348,8 @@ class MySQLDatabase(DatabaseInterface):
             self.cnx.ping(reconnect=False)
             return True
         except Exception:
+            # connector 的 ping 在連線半死時也可能丟出 IndexError 之類的
+            # 非 connector 例外，一律當成斷線
             pass
 
         if self.in_transaction:
@@ -1265,6 +1395,9 @@ class MySQLDatabase(DatabaseInterface):
             (identifier) 位置，MySQL 參數化查詢無法替換識別字，僅能替換值。
             因此這幾個參數務必只能來自程式內部可信任的呼叫（例如寫死的表結構
             定義），不可直接帶入外部輸入。
+
+            本版不再預防性地擊殺閒置連線，改由 _exec_ddl_with_lock_retry()
+            在真的被 metadata lock 擋住時才處理，詳見該方法說明。
         """
         self._assert_not_in_transaction("check_field_exists")
 
@@ -1302,11 +1435,6 @@ class MySQLDatabase(DatabaseInterface):
                 "（可能因找不到欄位而報錯）。"
             )
 
-        try:
-            self.kill_sleep_connections()
-        except Exception:
-            pass
-
         if alter_type == "add":
             # 用拆解後的 new_column，不可用原始的 column——後者若是 list
             # 會被組成 ADD `['old', 'new']`
@@ -1317,7 +1445,10 @@ class MySQLDatabase(DatabaseInterface):
             sql = f"ALTER TABLE {table_name} MODIFY `{new_column}` {data_type}"
         else:
             raise ValueError(f"不支援的 alter_type：{alter_type!r}")
-        self.exec_sql(sql)
+
+        self._exec_ddl_with_lock_retry(
+            sql, f"修改資料表 {table_name} 的欄位 `{new_column}`"
+        )
 
     def _get_transaction_thread_ids(self):
         """取得目前持有 InnoDB 交易的執行緒 ID 集合。
@@ -1346,6 +1477,15 @@ class MySQLDatabase(DatabaseInterface):
         """
         殺掉本使用者、本資料庫、且閒置時間超過 threshold 秒的 Sleep 連線。
 
+        【這是破壞性操作，不要預防性地呼叫。】
+        被殺掉的連線屬於別台正在使用的電腦，對方毫不知情，下一次要用
+        資料庫時才會發現連線已死（症狀是 connector 在 cmd_ping() 讀到空
+        封包，於 _handle_ok() 的 packet[4] 丟出 IndexError）。看診站在等
+        健保署回應時連線正是 Sleep 狀態且沒有開任何 InnoDB 交易，不在
+        保護名單內，最容易被誤傷。
+        只有在 DDL 真的被 metadata lock 擋住時才該呼叫——請走
+        _exec_ddl_with_lock_retry()。
+
         InnoDB 注意事項：Sleep 狀態的連線可能正持有一個未提交的交易與一批
         row lock（idle in transaction）。殺掉它會讓對方的變更被回滾，而對方
         程式毫不知情。因此這裡會先查出 INNODB_TRX 中的執行緒並排除。
@@ -1357,6 +1497,9 @@ class MySQLDatabase(DatabaseInterface):
 
         Args:
             threshold (int): 超過這個秒數的 Sleep 連線會被終止，預設為 60 秒。
+
+        Returns:
+            int: 實際終止的連線數。
         """
         protected = self._get_transaction_thread_ids()
         if protected is None:
@@ -1364,9 +1507,10 @@ class MySQLDatabase(DatabaseInterface):
             # 引擎未知也算無法確定。
             if self.engine is None or self.is_transactional():
                 print("⚠️ 無法查詢 INNODB_TRX，為避免中斷他人交易，略過清理連線。")
-                return
+                return 0
             protected = set()
 
+        killed = 0
         cursor = self.get_cursor(dictionary=True, buffered=True)
 
         try:
@@ -1395,21 +1539,24 @@ class MySQLDatabase(DatabaseInterface):
                         )
                         continue
 
+                    # 這一行是日後與 crash report 對帳的關鍵：對方的
+                    # 「連線已死」一定緊接在這個時間點之後
                     print(
-                        f"🔪 Killing sleep connection: ID {process_id}, User: {row['User']}, Host: {row['Host']}"
+                        f"🔪 終止閒置連線 Id={process_id} "
+                        f"User={row.get('User')} Host={row.get('Host')} "
+                        f"db={row.get('db')} Time={row.get('Time')}s"
                     )
                     try:
                         # 沿用外層 cursor。外層 cursor 是 buffered 且已
                         # fetchall()，沒有未讀結果，重用是安全的。
                         cursor.execute(f"KILL {process_id}")
+                        killed += 1
                     except Exception as e:
                         print(f"❌ 無法刪除 ID {process_id}: {e}")
         finally:
-            try:
-                if cursor and self.cnx and self.cnx.is_connected():
-                    cursor.close()
-            except Exception:
-                pass
+            self._close_cursor(cursor)
+
+        return killed
 
     def add_index_if_not_exists(self, table_name, index_name, fields):
         """
@@ -1438,4 +1585,6 @@ class MySQLDatabase(DatabaseInterface):
             )
 
             print(f"正在建立索引：{index_name} -> {table_name}({field_str})")
-            self.exec_sql(create_sql)
+            self._exec_ddl_with_lock_retry(
+                create_sql, f"建立索引 {index_name} -> {table_name}"
+            )

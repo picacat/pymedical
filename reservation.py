@@ -2375,7 +2375,7 @@ class Reservation(QtWidgets.QMainWindow):
         except Exception:
             ic_card = None
 
-        if ic_card is not None and ic_card.read_basic_data(show_error=False):
+        if ic_card is not None and ic_card.read_basic_data(show_message=False):
             if (
                 string_utils.xstr(temp_patient_row["ID"])
                 != ic_card.basic_data["patient_id"]
