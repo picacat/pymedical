@@ -308,7 +308,7 @@ class Registration(QtWidgets.QMainWindow):
         self.ui.action_close.triggered.connect(self.close_registration)
         self.ui.action_clear_wait.triggered.connect(self._clear_wait)
         self.ui.action_med_vpn.triggered.connect(self._open_med_vpn)
-        self.ui.action_med_vpn_vhc.triggered.connect(self._open_med_vpn)
+        self.ui.action_med_vpn_vhc.triggered.connect(self._open_med_vpn_vhc)
         self.ui.action_quick_write_ic_card.triggered.connect(
             self._action_quick_write_ic_treatment
         )
@@ -6205,11 +6205,13 @@ class Registration(QtWidgets.QMainWindow):
         self.database.exec_sql(sql)
 
     def _open_med_vpn(self):
-        # web_utils.open_med_vpn(self.system_settings)
         web_utils.open_nhi_medcloud(use_virtual_card=False)
 
     def _open_med_vpn_vhc(self):
-        # web_utils.open_med_vpn(self.system_settings, vhc_ic_card=True)
+        vhc_ic_card = class_utils.get_vhccshis(
+            self, self.database, self.system_settings, qrcode=None
+        )
+        vhc_ic_card.verify_vhc_card()  # ← 先驗證
         web_utils.open_nhi_medcloud(use_virtual_card=True)
 
     def _spin_box_reg_no_changed(self):
