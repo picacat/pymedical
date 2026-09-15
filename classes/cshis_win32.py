@@ -1,24 +1,25 @@
 # 讀卡機作業 2018.05.03
 
+import ctypes
+import io
+import json
+import os
+import struct
+from queue import Queue
+from threading import Thread
+
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMessageBox, QPushButton
 
-import ctypes
-import os
-import struct
-import io
-import json
-
-from threading import Thread
-from queue import Queue
-
-from libs import number_utils
-from libs import date_utils
-from libs import cshis_utils
-from libs import case_utils
-from libs import prescript_utils
-from libs import string_utils
-from libs import nhi_utils
+from libs import (
+    case_utils,
+    cshis_utils,
+    date_utils,
+    nhi_utils,
+    number_utils,
+    prescript_utils,
+    string_utils,
+)
 
 CURRENT_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
 
@@ -27,21 +28,22 @@ CURRENT_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
 class CSHIS:
     def __init__(self, parent, database, system_settings):
         self.database = database
-        self.ic_com_port = number_utils.get_integer(
-            system_settings.field('健保卡讀卡機連接埠')) - 1  # com1=0, com2=1, com3=2,...
+        self.ic_com_port = (
+            number_utils.get_integer(system_settings.field("健保卡讀卡機連接埠")) - 1
+        )  # com1=0, com2=1, com3=2,...
 
-        if system_settings.field('讀卡機類型') == '健保讀卡機':
-            cshis_file_name = os.path.join(CURRENT_DIR, 'CsHis30.dll')
+        if system_settings.field("讀卡機類型") == "健保讀卡機":
+            cshis_file_name = os.path.join(CURRENT_DIR, "CsHis30.dll")
         else:
-            cshis_file_name = os.path.join(CURRENT_DIR, 'CsHis.dll')
+            cshis_file_name = os.path.join(CURRENT_DIR, "CsHis.dll")
 
         try:
             self.cshis = ctypes.windll.LoadLibrary(cshis_file_name)
         except Exception:
             self.cshis = None
 
-        self.ic_card_type = '一般卡'
-        self.clinic_id = system_settings.field('院所代號')
+        self.ic_card_type = "一般卡"
+        self.clinic_id = system_settings.field("院所代號")
         self.basic_data = cshis_utils.BASIC_DATA
         self.treat_data = cshis_utils.TREAT_DATA
         self.treatment_data = cshis_utils.TREATMENT_DATA
@@ -50,7 +52,7 @@ class CSHIS:
         self.prescript_data = []
 
         try:
-            with open('2023_ICD_MAP.json', 'r', encoding='utf-8') as f:
+            with open("2023_ICD_MAP.json", "r", encoding="utf-8") as f:
                 self.dict_icd_map = json.load(f)
         except Exception:
             self.dict_icd_map = None
@@ -60,7 +62,7 @@ class CSHIS:
             self.close_com()
 
     def activate_reader_app(self):
-        xcshis = ctypes.windll.LoadLibrary('CsHis.dll')
+        xcshis = ctypes.windll.LoadLibrary("CsHis.dll")
         del xcshis
 
     def deactivate_reader_app(self):
@@ -99,7 +101,7 @@ class CSHIS:
             show_warning = True
 
         if operation:
-            msg_box = self._message_box('健保讀卡機作業', args[1], args[2])
+            msg_box = self._message_box("健保讀卡機作業", args[1], args[2])
             msg_box.show()
 
         msg_queue = Queue()
@@ -124,9 +126,9 @@ class CSHIS:
     def verify_sam(self, show_message=True):
         error_code = self.do_thread(
             self.verify_sam_thread,
-            '健保讀卡機安全模組卡認證',
+            "健保讀卡機安全模組卡認證",
             '<font size="5" color="red"><b>健保讀卡機安全模組卡認證中, 請稍後...</b></font>',
-            '正在與健保IDC資訊中心連線, 會花費一些時間.',
+            "正在與健保IDC資訊中心連線, 會花費一些時間.",
             show_message,
         )
 
@@ -137,7 +139,7 @@ class CSHIS:
         error_code = self.cshis.csUpdateHCContents()
         self.close_com()
         if show_message or error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保IC卡卡片內容更新')
+            cshis_utils.show_ic_card_message(error_code, "健保IC卡卡片內容更新")
 
         return error_code
 
@@ -145,59 +147,61 @@ class CSHIS:
         self.open_com()
         error_code = self.cshis.csVerifyHCPIN()
         self.close_com()
-        cshis_utils.show_ic_card_message(error_code, '健保IC卡密碼驗證')
+        cshis_utils.show_ic_card_message(error_code, "健保IC卡密碼驗證")
 
     def input_hc_pin(self):
         self.open_com()
         error_code = self.cshis.csInputHCPIN()
         self.close_com()
-        cshis_utils.show_ic_card_message(error_code, '健保IC卡密碼設定')
+        cshis_utils.show_ic_card_message(error_code, "健保IC卡密碼設定")
 
     def disable_hc_pin(self):
         self.open_com()
         error_code = self.cshis.csDisableHCPIN()
         self.close_com()
-        cshis_utils.show_ic_card_message(error_code, '健保IC卡密碼解除')
+        cshis_utils.show_ic_card_message(error_code, "健保IC卡密碼解除")
 
     def verify_hpc_pin(self):
         self.open_com()
         error_code = self.cshis.hpcVerifyHPCPIN()
         self.close_com()
-        cshis_utils.show_ic_card_message(error_code, '醫事人員卡密碼驗證')
+        cshis_utils.show_ic_card_message(error_code, "醫事人員卡密碼驗證")
 
     def input_hpc_pin(self):
         self.open_com()
         error_code = self.cshis.hpcInputHPCPIN()
         self.close_com()
-        cshis_utils.show_ic_card_message(error_code, '醫事人員卡密碼設定')
+        cshis_utils.show_ic_card_message(error_code, "醫事人員卡密碼設定")
 
     def unlock_hpc(self):
         self.open_com()
         error_code = self.cshis.hpcUnlockHPC()
         self.close_com()
-        cshis_utils.show_ic_card_message(error_code, '醫事人員卡密碼解鎖')
+        cshis_utils.show_ic_card_message(error_code, "醫事人員卡密碼解鎖")
 
     def reset_reader(self, show_message=True):
         self.open_com()
-        error_code = self.cshis.csSoftwareReset(0)  # 0=讀卡機, 1=安全模組, 2=醫事人員卡, 3=健保卡
+        error_code = self.cshis.csSoftwareReset(
+            0
+        )  # 0=讀卡機, 1=安全模組, 2=醫事人員卡, 3=健保卡
         self.close_com()
         if show_message:
-            cshis_utils.show_ic_card_message(error_code, '讀卡機重新啟動')
+            cshis_utils.show_ic_card_message(error_code, "讀卡機重新啟動")
 
     def _update_patient(self, patient_key):
         if not self.read_basic_data():
-            return '', ''
+            return "", ""
 
-        patient_id = self.basic_data['patient_id']
-        patient_birthday = self.basic_data['birthday']
+        patient_id = self.basic_data["patient_id"]
+        patient_birthday = self.basic_data["birthday"]
 
-        fields = ['ID', 'Birthday']
+        fields = ["ID", "Birthday"]
         data = [patient_id, patient_birthday]
-        self.database.update_record('patient', fields, 'PatientKey', patient_key, data)
+        self.database.update_record("patient", fields, "PatientKey", patient_key, data)
 
         return patient_id, patient_birthday
 
-    def read_basic_data(self, show_error=True):
+    def read_basic_data(self, show_message=True):
         buffer = ctypes.c_buffer(72)  # c: char *
         buffer_len = ctypes.c_short(72)  # c: int *
         self.open_com()
@@ -205,8 +209,8 @@ class CSHIS:
         self.close_com()
 
         if error_code != 0:
-            if show_error:
-                cshis_utils.show_ic_card_message(error_code, '健保卡讀取')
+            if show_message:
+                cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
 
             return False
 
@@ -218,10 +222,10 @@ class CSHIS:
         # 1. 準備緩衝區：建議稍微放寬長度（例如 16 或 32）
         max_len = 32
         buffer = ctypes.create_string_buffer(max_len)
-        
+
         # 2. 準備長度參數：必須使用 c_int 以對應 C 語言的 int *
         # 傳入時告知 API buffer 的最大容量
-        buffer_len = ctypes.c_int(max_len) 
+        buffer_len = ctypes.c_int(max_len)
 
         self.open_com()
         try:
@@ -233,13 +237,13 @@ class CSHIS:
 
         # 4. 錯誤處理
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '醫事卡讀取')
+            cshis_utils.show_ic_card_message(error_code, "醫事卡讀取")
             return None
 
         # 5. 取得結果
         # 根據 API 回傳的實際長度 (buffer_len.value) 截取資料
         actual_len = buffer_len.value
-        hpc_card_sn = buffer.raw[:actual_len].decode('ascii').strip()
+        hpc_card_sn = buffer.raw[:actual_len].decode("ascii").strip()
 
         return hpc_card_sn
 
@@ -252,7 +256,7 @@ class CSHIS:
 
         if error_code != 0:
             if show_warning:
-                cshis_utils.show_ic_card_message(error_code, '健保卡讀取')
+                cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
 
             return False
 
@@ -262,9 +266,9 @@ class CSHIS:
 
     # 取得門診資料
     def read_treatment_no_need_hpc(self):
-        title = '取得健保卡門診資料'
+        title = "取得健保卡門診資料"
         message = '<font size="5" color="red"><b>正在取得健保卡門診資料中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
 
@@ -283,11 +287,13 @@ class CSHIS:
         buffer = ctypes.create_string_buffer(498)  # c: char *
         buffer_len = ctypes.c_short(498)  # c: int *
         self.open_com()
-        error_code = self.cshis.hisGetTreatmentNoNeedHPC(buffer, ctypes.byref(buffer_len))
+        error_code = self.cshis.hisGetTreatmentNoNeedHPC(
+            buffer, ctypes.byref(buffer_len)
+        )
         self.close_com()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡讀取')
+            cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
             return False
 
         treatment_data = cshis_utils.decode_treatment_data(buffer)
@@ -295,9 +301,9 @@ class CSHIS:
 
     # 取得門診資料
     def read_treatment_need_hpc(self):
-        title = '取得健保卡診斷資料'
+        title = "取得健保卡診斷資料"
         message = '<font size="5" color="red"><b>正在取得健保卡診斷資料中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
 
@@ -318,12 +324,12 @@ class CSHIS:
         buffer = ctypes.create_string_buffer(length)  # c: char *
         buffer_len = ctypes.c_short(length)  # c: int *
 
-        buffer[0:9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[23:23 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[46:46 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[69:69 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[92:92 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[115:115 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
+        buffer[0:9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[23 : 23 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[46 : 46 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[69 : 69 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[92 : 92 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[115 : 115 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
 
         # for i in range(6):
         #     start_no = i * 23
@@ -354,7 +360,7 @@ class CSHIS:
         self.close_com()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡讀取')
+            cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
             return False
 
         # s = io.BytesIO(buffer)
@@ -366,38 +372,40 @@ class CSHIS:
     def read_critical_illness(self):
         buffer = ctypes.create_string_buffer(138)  # c: char *
         buffer_len = ctypes.c_short(138)  # c: int *
-        buffer[0:9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[23:23 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[46:46 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[69:69 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[92:92 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        buffer[115:115 + 9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
+        buffer[0:9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[23 : 23 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[46 : 46 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[69 : 69 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[92 : 92 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
+        buffer[115 : 115 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
         self.open_com()
         error_code = self.cshis.hisGetCriticalIllness(buffer, ctypes.byref(buffer_len))
         self.close_com()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡讀取重大傷病')
+            cshis_utils.show_ic_card_message(error_code, "健保卡讀取重大傷病")
 
         self.critical_illness_data = []
         buffer = io.BytesIO(buffer)
         buffer.read(1)
         for index in range(6):
             # buffer.read(1)
-            self.critical_illness_data.append({
-                'CI_CODE': buffer.read(8).decode('ascii'),
-                'CI_VALIDITY_START': buffer.read(7).decode('ascii'),
-                'CI_VALIDITY_END': buffer.read(7).decode('ascii'),
-            })
+            self.critical_illness_data.append(
+                {
+                    "CI_CODE": buffer.read(8).decode("ascii"),
+                    "CI_VALIDITY_START": buffer.read(7).decode("ascii"),
+                    "CI_VALIDITY_END": buffer.read(7).decode("ascii"),
+                }
+            )
             buffer.read(1)
 
         return True
 
     # 取得安全簽章
     def read_prescript_data(self):
-        title = '取得健保卡處方資料'
+        title = "取得健保卡處方資料"
         message = '<font size="5" color="red"><b>正在取得健保卡處方資料中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
 
@@ -415,7 +423,7 @@ class CSHIS:
     def read_prescript_data_thread(self, out_queue):
         prescript_count = 60
         prescript_len = 61
-        prescript_length = prescript_count * prescript_len 
+        prescript_length = prescript_count * prescript_len
         buffer_prescript = ctypes.create_string_buffer(prescript_length)  # c: char *
         buffer_prescript_len = ctypes.c_short(prescript_length)  # c: int *
 
@@ -436,10 +444,14 @@ class CSHIS:
 
         self.open_com()
         error_code = self.cshis.hisReadPrescription(
-            buffer_prescript, ctypes.byref(buffer_prescript_len),
-            buffer_longterm, ctypes.byref(buffer_longterm_len),
-            buffer_important, ctypes.byref(buffer_important_len),
-            buffer_irritation, ctypes.byref(buffer_irritation_len),
+            buffer_prescript,
+            ctypes.byref(buffer_prescript_len),
+            buffer_longterm,
+            ctypes.byref(buffer_longterm_len),
+            buffer_important,
+            ctypes.byref(buffer_important_len),
+            buffer_irritation,
+            ctypes.byref(buffer_irritation_len),
         )
         self.close_com()
 
@@ -447,14 +459,14 @@ class CSHIS:
         buffer = io.BytesIO(buffer_prescript)
         for _ in range(prescript_count):
             prescript_dict = {
-                'case_date': buffer.read(13).decode('ascii').strip(),
-                'prescript_type': buffer.read(1).decode('ascii').strip(),
-                'ins_code': buffer.read(12).decode('ascii').strip(),
-                'treat_position': buffer.read(6).decode('ascii').strip(),
-                'usage': buffer.read(18).decode('ascii').strip(),
-                'pres_days': buffer.read(2).decode('ascii').strip(),
-                'total_dosage': buffer.read(7).decode('ascii').strip(),
-                'remark': buffer.read(2).decode('ascii').strip(),
+                "case_date": buffer.read(13).decode("ascii").strip(),
+                "prescript_type": buffer.read(1).decode("ascii").strip(),
+                "ins_code": buffer.read(12).decode("ascii").strip(),
+                "treat_position": buffer.read(6).decode("ascii").strip(),
+                "usage": buffer.read(18).decode("ascii").strip(),
+                "pres_days": buffer.read(2).decode("ascii").strip(),
+                "total_dosage": buffer.read(7).decode("ascii").strip(),
+                "remark": buffer.read(2).decode("ascii").strip(),
             }
             prescript_data.append(prescript_dict)
 
@@ -470,11 +482,13 @@ class CSHIS:
         self.close_com()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡讀取')
+            cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
             return available_date, available_count
 
-        available_date = date_utils.nhi_date_to_west_date(buffer[:7].decode('ascii').strip())
-        available_count = number_utils.get_integer(buffer[7:9].decode('ascii').strip())
+        available_date = date_utils.nhi_date_to_west_date(
+            buffer[:7].decode("ascii").strip()
+        )
+        available_count = number_utils.get_integer(buffer[7:9].decode("ascii").strip())
 
         return available_date, available_count
 
@@ -491,7 +505,7 @@ class CSHIS:
 
         return error_code
 
-    '''
+    """
     取得健保卡就醫序號
     hisGetSeqNumber256(
         char *cTreatItem            [in] cTreatItem為就醫類別(HC健8-1)，為英數字，長度需可存放三個char(包括尾端之\0)。
@@ -537,7 +551,7 @@ class CSHIS:
                                           296     是否同日就診   1 bytes  Y=是 N=否
            int * iBufferLen)        [in/out] iBufferLen，為HIS準備之buffer，HIS呼叫此API時，傳入準備的buffer長度；
                                              CS亦利用此buffer傳出填入到buffer中的資料長度(buffer的尾端不必補\0)。
-    '''
+    """
 
     def get_cs_version(self):
         path_length = 100
@@ -547,11 +561,13 @@ class CSHIS:
         self.close_com()
 
         s = io.BytesIO(path)
-        cs_path = s.read(path_length).decode('ascii').strip()
+        cs_path = s.read(path_length).decode("ascii").strip()
 
         return version, cs_path
 
-    def get_seq_number_256_thread(self, out_queue, treat_item, baby_treat, treat_after_check):
+    def get_seq_number_256_thread(
+        self, out_queue, treat_item, baby_treat, treat_after_check
+    ):
         # cs_version, _ = self.get_cs_version()
         # if cs_version >= 5153:  # 晶片讀卡機
         #     buffer_length = 316
@@ -566,9 +582,9 @@ class CSHIS:
         buffer = ctypes.c_buffer(buffer_length)  # c: char *
         buffer_len = ctypes.c_int(buffer_length)  # c: short *
 
-        p_treat_item = ctypes.c_char_p(treat_item.encode('ascii'))
-        p_baby_treat = ctypes.c_char_p(baby_treat.encode('ascii'))
-        p_treat_after_check = ctypes.c_char_p(treat_after_check.encode('ascii'))
+        p_treat_item = ctypes.c_char_p(treat_item.encode("ascii"))
+        p_baby_treat = ctypes.c_char_p(baby_treat.encode("ascii"))
+        p_treat_after_check = ctypes.c_char_p(treat_after_check.encode("ascii"))
         self.open_com()
 
         error_code = his_get_seq_number_256(
@@ -576,7 +592,8 @@ class CSHIS:
             p_baby_treat,
             p_treat_after_check,
             buffer,
-            ctypes.byref(buffer_len))
+            ctypes.byref(buffer_len),
+        )
 
         self.close_com()
 
@@ -584,16 +601,24 @@ class CSHIS:
 
     # 取得安全簽章
     def get_seq_number_256(self, treat_item, baby_treat, treat_after_check):
-        title = '取得掛號安全簽章'
+        title = "取得掛號安全簽章"
         message = '<font size="5" color="red"><b>健保讀卡機取得掛號安全簽章中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
 
         msg_queue = Queue()
         QtCore.QCoreApplication.processEvents()
 
-        t = Thread(target=self.get_seq_number_256_thread, args=(msg_queue, treat_item, baby_treat, treat_after_check,))
+        t = Thread(
+            target=self.get_seq_number_256_thread,
+            args=(
+                msg_queue,
+                treat_item,
+                baby_treat,
+                treat_after_check,
+            ),
+        )
         t.start()
         (error_code, buffer) = msg_queue.get()
         msg_box.close()
@@ -610,7 +635,7 @@ class CSHIS:
 
         return error_code
 
-    '''
+    """
     就醫費用資料寫入作業
     hisWriteTreatmentFee(
         char * pDateTime            [in] pDateTime: 傳入之「就診日期時間」(HC健8-3)，長度14 bytes(含null char)。
@@ -624,14 +649,15 @@ class CSHIS:
                                          住院部分負擔費用【當次急性30天， 慢性180天以下】(25-31)
                                          住院部分負擔費用【當次急性31天， 慢性181天以上】(32-38)
                                          各欄位資料往左靠，不足處補空白，長度依卡片存放內容規定。
-    '''
+    """
 
     def write_treatment_fee_thread(
-            self, out_queue, registration_datetime, patient_id, patient_birthday, data_write):
-        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode('ascii'))
-        p_patient_id = ctypes.c_char_p(patient_id.encode('ascii'))
-        p_patient_birthday = ctypes.c_char_p(patient_birthday.encode('ascii'))
-        p_data_write = ctypes.c_char_p(data_write.encode('ascii'))
+        self, out_queue, registration_datetime, patient_id, patient_birthday, data_write
+    ):
+        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode("ascii"))
+        p_patient_id = ctypes.c_char_p(patient_id.encode("ascii"))
+        p_patient_birthday = ctypes.c_char_p(patient_birthday.encode("ascii"))
+        p_data_write = ctypes.c_char_p(data_write.encode("ascii"))
 
         self.open_com()
         error_code = self.cshis.hisWriteTreatmentFee(
@@ -645,36 +671,46 @@ class CSHIS:
         out_queue.put(error_code)
 
     # 就醫費用資料寫入作業
-    def write_treatment_fee(self, registration_datetime, patient_id, patient_birthday, data_write):
-        title = '寫入診察費用資料'
+    def write_treatment_fee(
+        self, registration_datetime, patient_id, patient_birthday, data_write
+    ):
+        title = "寫入診察費用資料"
         message = '<font size="5" color="red"><b>健保讀卡機正在寫入診察費用資料中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
         msg_queue = Queue()
         QtCore.QCoreApplication.processEvents()
-        t = Thread(target=self.write_treatment_fee_thread,
-                   args=(msg_queue, registration_datetime, patient_id, patient_birthday, data_write,))
+        t = Thread(
+            target=self.write_treatment_fee_thread,
+            args=(
+                msg_queue,
+                registration_datetime,
+                patient_id,
+                patient_birthday,
+                data_write,
+            ),
+        )
         t.start()
         error_code = msg_queue.get()
         msg_box.close()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡寫入診察費用資料')
+            cshis_utils.show_ic_card_message(error_code, "健保卡寫入診察費用資料")
             return None
 
         return True
 
-    '''
+    """
         進行疾病診斷碼押碼
         hisGetICD10EnC(
         char * IN                   [in] 為呼叫者傳入的原始診斷碼 押碼範圍：ICD-10 CM 疾病診斷碼長度超過 5 Bytes
                                          及字母｢E｣、｢V｣開頭的診斷碼
         char * OUT                  [out] 為呼叫者所準備之buffer，供CS填入押碼後的診斷碼 5 bytes
-    '''
+    """
 
     def get_icd10_encode(self, disease_code):
-        p_disease_code = ctypes.c_char_p(disease_code.encode('ascii'))
+        p_disease_code = ctypes.c_char_p(disease_code.encode("ascii"))
         icd10_encoding = ctypes.create_string_buffer(10)  # c: char *
 
         self.open_com()
@@ -688,13 +724,13 @@ class CSHIS:
             if error_code == 9127:
                 pass
             else:
-                cshis_utils.show_ic_card_message(error_code, 'ICD10病名碼押碼')
+                cshis_utils.show_ic_card_message(error_code, "ICD10病名碼押碼")
 
             return disease_code[:5]
 
-        return icd10_encoding[:5].decode('ascii').strip()
+        return icd10_encoding[:5].decode("ascii").strip()
 
-    '''
+    """
     就醫診療資料寫入作業
     hisWriteTreatmentCode(
         char * pDateTime            [in] pDateTime: 傳入之「就診日期時間」(HC健8-3)，長度14 bytes(含null char)。
@@ -715,14 +751,15 @@ class CSHIS:
                                          資料皆往左靠，不足處補空白。pDataWrite尾隨一個null char。
         char * pBufferDocID)        [out] pBufferDocID: 傳回HPC之身分證號欄位(醫事人員卡之醫師基本資料段)及尾隨之一個null char
                                           buffer 大小至少11 bytes。若讀卡機內無HPC卡，則pBufferDocID存入null char。
-    '''
+    """
 
     def write_treatment_code_thread(
-            self, out_queue, registration_datetime, patient_id, patient_birthday, data_write):
-        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode('ascii'))
-        p_patient_id = ctypes.c_char_p(patient_id.encode('ascii'))
-        p_patient_birthday = ctypes.c_char_p(patient_birthday.encode('ascii'))
-        p_data_write = ctypes.c_char_p(data_write.encode('ascii'))
+        self, out_queue, registration_datetime, patient_id, patient_birthday, data_write
+    ):
+        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode("ascii"))
+        p_patient_id = ctypes.c_char_p(patient_id.encode("ascii"))
+        p_patient_birthday = ctypes.c_char_p(patient_birthday.encode("ascii"))
+        p_data_write = ctypes.c_char_p(data_write.encode("ascii"))
 
         doctor_id = ctypes.create_string_buffer(10)  # c: char *
         self.open_com()
@@ -738,29 +775,39 @@ class CSHIS:
         out_queue.put((error_code, doctor_id))
 
     # 就醫診療資料寫入作業
-    def write_treatment_code(self, registration_datetime, patient_id, patient_birthday, data_write):
-        title = '寫入診察資料'
+    def write_treatment_code(
+        self, registration_datetime, patient_id, patient_birthday, data_write
+    ):
+        title = "寫入診察資料"
         message = '<font size="5" color="red"><b>健保讀卡機正在寫入診察資料中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
         msg_queue = Queue()
         QtCore.QCoreApplication.processEvents()
-        t = Thread(target=self.write_treatment_code_thread,
-                   args=(msg_queue, registration_datetime, patient_id, patient_birthday, data_write,))
+        t = Thread(
+            target=self.write_treatment_code_thread,
+            args=(
+                msg_queue,
+                registration_datetime,
+                patient_id,
+                patient_birthday,
+                data_write,
+            ),
+        )
         t.start()
         (error_code, out_doctor_id) = msg_queue.get()
         msg_box.close()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡寫入診察資料')
+            cshis_utils.show_ic_card_message(error_code, "健保卡寫入診察資料")
             return None
 
-        doctor_id = out_doctor_id[:40].decode('ascii')
+        doctor_id = out_doctor_id[:40].decode("ascii")
 
         return doctor_id
 
-    '''
+    """
     處方箋寫入作業-回傳簽章
     hisWritePrescriptionSign(
         char * pDateTime            [in] 傳入之「就診日期時間」(HC健8-3)，長度14 bytes(含null char)
@@ -779,14 +826,15 @@ class CSHIS:
         char * pBuffer              [out] pBuffer: 為HIS準備之buffer，需可存入「pBuffer回傳內容」所稱之欄位值。
         int * iBufferLen)           [in/out] iBufferLen: HIS所準備buffer之長度，HIS呼叫此API時，傳入準備的buffer長度；
         欄位存入的順序，如「pBuffer回傳內容」所述
-    '''
+    """
 
     def write_prescript_sign_thread(
-            self, out_queue, registration_datetime, patient_id, patient_birthday, data_write):
-        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode('ascii'))
-        p_patient_id = ctypes.c_char_p(patient_id.encode('ascii'))
-        p_patient_birthday = ctypes.c_char_p(patient_birthday.encode('ascii'))
-        p_data_write = ctypes.c_char_p(data_write.encode('ascii'))
+        self, out_queue, registration_datetime, patient_id, patient_birthday, data_write
+    ):
+        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode("ascii"))
+        p_patient_id = ctypes.c_char_p(patient_id.encode("ascii"))
+        p_patient_birthday = ctypes.c_char_p(patient_birthday.encode("ascii"))
+        p_data_write = ctypes.c_char_p(data_write.encode("ascii"))
 
         buffer = ctypes.create_string_buffer(40)  # c: char *
         buffer_len = ctypes.c_short(40)  # c: int *
@@ -797,35 +845,45 @@ class CSHIS:
             p_patient_birthday,
             p_data_write,
             buffer,
-            ctypes.byref(buffer_len)
+            ctypes.byref(buffer_len),
         )
         self.close_com()
 
         out_queue.put((error_code, buffer))
 
-    def write_prescript_sign(self, registration_datetime, patient_id, patient_birthday, data_write):
-        title = '取得處置簽章'
+    def write_prescript_sign(
+        self, registration_datetime, patient_id, patient_birthday, data_write
+    ):
+        title = "取得處置簽章"
         message = '<font size="5" color="red"><b>健保讀卡機取得處置簽章中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
         msg_queue = Queue()
         QtCore.QCoreApplication.processEvents()
-        t = Thread(target=self.write_prescript_sign_thread,
-                   args=(msg_queue, registration_datetime, patient_id, patient_birthday, data_write,))
+        t = Thread(
+            target=self.write_prescript_sign_thread,
+            args=(
+                msg_queue,
+                registration_datetime,
+                patient_id,
+                patient_birthday,
+                data_write,
+            ),
+        )
         t.start()
         (error_code, buffer) = msg_queue.get()
         msg_box.close()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡取得處置簽章')
+            cshis_utils.show_ic_card_message(error_code, "健保卡取得處置簽章")
             return None
 
-        prescript_sign = buffer[:40].decode('ascii')
+        prescript_sign = buffer[:40].decode("ascii")
 
         return prescript_sign
 
-    '''
+    """
     多筆處方箋寫入作業
     hisWriteMultiPrescriptSign(
         char * pDateTime            [in] 傳入之「就診日期時間」(HC健8-3)，長度14 bytes(含null char)
@@ -846,14 +904,21 @@ class CSHIS:
         char * pBuffer              [out] pBuffer: 為HIS準備之buffer，需可存入「pBuffer回傳內容」所稱之欄位值。
                                           欄位存入的順序，如「pBuffer回傳內容」所述
         int * iBufferLen)           [in/out] iBufferLen: HIS所準備buffer之長度，HIS呼叫此API時，傳入準備的buffer長度；
-    '''
+    """
 
     def write_multi_prescript_sign_thread(
-            self, out_queue, registration_datetime, patient_id, patient_birthday, data_write, write_count):
-        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode('ascii'))
-        p_patient_id = ctypes.c_char_p(patient_id.encode('ascii'))
-        p_patient_birthday = ctypes.c_char_p(patient_birthday.encode('ascii'))
-        p_data_write = ctypes.c_char_p(data_write.encode('ascii'))
+        self,
+        out_queue,
+        registration_datetime,
+        patient_id,
+        patient_birthday,
+        data_write,
+        write_count,
+    ):
+        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode("ascii"))
+        p_patient_id = ctypes.c_char_p(patient_id.encode("ascii"))
+        p_patient_birthday = ctypes.c_char_p(patient_birthday.encode("ascii"))
+        p_data_write = ctypes.c_char_p(data_write.encode("ascii"))
 
         p_write_count = ctypes.c_int()
         p_write_count.value = write_count
@@ -869,38 +934,56 @@ class CSHIS:
             p_data_write,
             ctypes.byref(p_write_count),
             buffer,
-            ctypes.byref(buffer_len)
+            ctypes.byref(buffer_len),
         )
         self.close_com()
 
         out_queue.put((error_code, buffer))
 
-    def write_multi_prescript_sign(self, registration_datetime, patient_id, patient_birthday,
-                                   data_write, write_count):
-        title = '取得處方簽章'
+    def write_multi_prescript_sign(
+        self,
+        registration_datetime,
+        patient_id,
+        patient_birthday,
+        data_write,
+        write_count,
+    ):
+        title = "取得處方簽章"
         message = '<font size="5" color="red"><b>健保讀卡機取得處方簽章中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
         msg_queue = Queue()
         QtCore.QCoreApplication.processEvents()
-        t = Thread(target=self.write_multi_prescript_sign_thread,
-                   args=(msg_queue, registration_datetime, patient_id, patient_birthday, data_write, write_count,))
+        t = Thread(
+            target=self.write_multi_prescript_sign_thread,
+            args=(
+                msg_queue,
+                registration_datetime,
+                patient_id,
+                patient_birthday,
+                data_write,
+                write_count,
+            ),
+        )
         t.start()
         (error_code, buffer) = msg_queue.get()
         msg_box.close()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡取得處方簽章')
+            cshis_utils.show_ic_card_message(error_code, "健保卡取得處方簽章")
             return None
 
         chunks, chunk_size = len(buffer), 40
-        prescript_sign_list = [buffer[i:i + chunk_size].decode('ascii') for i in range(0, chunks, chunk_size)]
+        prescript_sign_list = [
+            buffer[i : i + chunk_size].decode("ascii")
+            for i in range(0, chunks, chunk_size)
+        ]
 
         return prescript_sign_list
 
     def return_seq_number_thread(self, out_queue, treat_date):
-        p_treat_date = ctypes.c_char_p(treat_date.encode('ascii'))
+        p_treat_date = ctypes.c_char_p(treat_date.encode("ascii"))
         self.open_com()
         error_code = self.cshis.csUnGetSeqNumber(p_treat_date)
         self.close_com()
@@ -909,9 +992,9 @@ class CSHIS:
 
     # IC退掛
     def return_seq_number(self, treat_date):
-        title = '健保IC卡退掛'
+        title = "健保IC卡退掛"
         message = '<font size="5" color="red"><b>健保IC卡退掛中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
         msg_queue = Queue()
@@ -922,12 +1005,12 @@ class CSHIS:
         msg_box.close()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡退掛')
+            cshis_utils.show_ic_card_message(error_code, "健保卡退掛")
             return False
         else:
             return True
 
-    '''
+    """
         IC卡資料上傳
         csUploadData(
             char * pUploadFileName          [in] 要上傳的檔案名稱，名稱內具備完整的路徑
@@ -942,55 +1025,66 @@ class CSHIS:
                                                      傳入準備的buffer長度；CS亦利用此buffer傳出填入到
                                                      buffer中的資料長度(buffer的尾端不必補\0)
         );
-    '''
+    """
 
     def upload_data_thread(self, out_queue, xml_file_name, record_count):
         file_size = str(os.path.getsize(xml_file_name))
 
-        p_upload_file_name = ctypes.c_char_p(xml_file_name.encode('ascii'))
-        p_file_size = ctypes.c_char_p(file_size.encode('ascii'))
-        p_number = ctypes.c_char_p(str(record_count).encode('ascii'))
+        p_upload_file_name = ctypes.c_char_p(xml_file_name.encode("ascii"))
+        p_file_size = ctypes.c_char_p(file_size.encode("ascii"))
+        p_number = ctypes.c_char_p(str(record_count).encode("ascii"))
 
         buffer = ctypes.c_buffer(50)  # c: char *
         buffer_len = ctypes.c_int(50)  # c: int *
         self.open_com()
         error_code = self.cshis.csUploadData(
-            p_upload_file_name,
-            p_file_size,
-            p_number,
-            buffer,
-            ctypes.byref(buffer_len))
+            p_upload_file_name, p_file_size, p_number, buffer, ctypes.byref(buffer_len)
+        )
         self.close_com()
 
         out_queue.put((error_code, buffer))
 
     # IC卡資料上傳
     def upload_data(self, xml_file_name, record_count):
-        title = '健保IC卡資料上傳'
-        message = '<font size="5" color="red"><b>健保IC卡資料上傳中, 請稍後...</b></font>'
-        hint = '正在與與健保IDC資訊中心連線, 會花費一些時間.'
+        title = "健保IC卡資料上傳"
+        message = (
+            '<font size="5" color="red"><b>健保IC卡資料上傳中, 請稍後...</b></font>'
+        )
+        hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
         msg_queue = Queue()
 
         QtCore.QCoreApplication.processEvents()
-        t = Thread(target=self.upload_data_thread, args=(
-            msg_queue, xml_file_name, record_count))
+        t = Thread(
+            target=self.upload_data_thread,
+            args=(msg_queue, xml_file_name, record_count),
+        )
         t.start()
         (error_code, buffer) = msg_queue.get()
         msg_box.close()
 
         self.xml_feedback_data = None
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡資料上傳')
+            cshis_utils.show_ic_card_message(error_code, "健保卡資料上傳")
             return False
 
         self.xml_feedback_data = cshis_utils.decode_xml_data(buffer)
         return True
 
     # ic卡寫卡
-    def write_ic_card(self, write_type, patient_key, course, share_type, treat_after_check=None, treat_type=None):
-        treat_item = cshis_utils.get_treat_item(course, share_type, treat_type=treat_type)
+    def write_ic_card(
+        self,
+        write_type,
+        patient_key,
+        course,
+        share_type,
+        treat_after_check=None,
+        treat_type=None,
+    ):
+        treat_item = cshis_utils.get_treat_item(
+            course, share_type, treat_type=treat_type
+        )
         if not self.insert_correct_ic_card(patient_key):
             return False
 
@@ -1001,19 +1095,23 @@ class CSHIS:
         if available_count <= 0:
             self.update_hc(False)
 
-        if write_type in ['全部', '掛號寫卡']:
+        if write_type in ["全部", "掛號寫卡"]:
             # if not self.get_seq_number_256(treat_item, ' ', treat_after_check):
             #     return False
-            error_code = self.get_seq_number_256(treat_item, ' ', treat_after_check)
+            error_code = self.get_seq_number_256(treat_item, " ", treat_after_check)
             if error_code != 0:
                 if error_code == 5003:  # 卡片過期
                     self.update_hc(False)
-                    error_code = self.get_seq_number_256(treat_item, ' ', treat_after_check)
+                    error_code = self.get_seq_number_256(
+                        treat_item, " ", treat_after_check
+                    )
                     if error_code != 0:
-                        cshis_utils.show_ic_card_message(error_code, '健保卡取得就醫序號')
+                        cshis_utils.show_ic_card_message(
+                            error_code, "健保卡取得就醫序號"
+                        )
                         return False
                 else:
-                    cshis_utils.show_ic_card_message(error_code, '健保卡取得就醫序號')
+                    cshis_utils.show_ic_card_message(error_code, "健保卡取得就醫序號")
                     return False
 
         return self
@@ -1028,18 +1126,19 @@ class CSHIS:
         buffer = ctypes.c_buffer(buffer_length)  # c: char *
         buffer_len = ctypes.c_int(buffer_length)  # c: short *
 
-        p_patient_id = ctypes.c_char_p(patient_id.encode('ascii'))
-        p_clinic_id = ctypes.c_char_p(self.clinic_id.encode('ascii'))
+        p_patient_id = ctypes.c_char_p(patient_id.encode("ascii"))
+        p_clinic_id = ctypes.c_char_p(self.clinic_id.encode("ascii"))
 
         self.open_com()
         error_code = self.cshis.hisGetTreatNumNoICCard(
-            p_patient_id, p_clinic_id, buffer,
-            ctypes.byref(buffer_len)
+            p_patient_id, p_clinic_id, buffer, ctypes.byref(buffer_len)
         )
         self.close_com()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡異常時取得就醫識別碼失敗')
+            cshis_utils.show_ic_card_message(
+                error_code, "健保卡異常時取得就醫識別碼失敗"
+            )
             return None
 
         self.treat_data = cshis_utils.decode_no_ic_card_treat_data(buffer)
@@ -1052,19 +1151,23 @@ class CSHIS:
         buffer = ctypes.c_buffer(buffer_length)  # c: char *
         buffer_len = ctypes.c_int(buffer_length)  # c: short *
 
-        registration_datetime = date_utils.west_datetime_to_nhi_datetime(registration_datetime)
-        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode('ascii'))
+        registration_datetime = date_utils.west_datetime_to_nhi_datetime(
+            registration_datetime
+        )
+        p_registration_datetime = ctypes.c_char_p(registration_datetime.encode("ascii"))
 
         self.open_com()
-        error_code = self.cshis.hisGetTreatNumICCard(p_registration_datetime, buffer, ctypes.byref(buffer_len))
+        error_code = self.cshis.hisGetTreatNumICCard(
+            p_registration_datetime, buffer, ctypes.byref(buffer_len)
+        )
         self.close_com()
 
         if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, '健保卡取得就醫識別碼失敗')
+            cshis_utils.show_ic_card_message(error_code, "健保卡取得就醫識別碼失敗")
             return None
 
         s = io.BytesIO(buffer)
-        identifier = s.read(buffer_length).decode('ascii').strip()
+        identifier = s.read(buffer_length).decode("ascii").strip()
 
         return identifier
 
@@ -1075,35 +1178,35 @@ class CSHIS:
         except AttributeError:
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle('無法使用健保卡')
+            msg_box.setWindowTitle("無法使用健保卡")
             msg_box.setText(
-                '''
+                """
                 <font size="5" color="red">
                   <b>無法使用讀卡機, 請改掛異常卡序或欠卡<br>
                 </font>
-                '''
+                """
             )
             msg_box.setInformativeText("請確定讀卡機使用正常")
             msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
             msg_box.exec_()
             return False
 
-        sql = f'''
+        sql = f"""
             SELECT * FROM patient
             WHERE
                 PatientKey = {patient_key}
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle('病患資料有誤')
+            msg_box.setWindowTitle("病患資料有誤")
             msg_box.setText(
-                f'''
+                f"""
                     <font size="5" color="red">
                         <b>找不到病歷號{patient_key}, 請重新插卡.</b>
                     </font>
-                '''
+                """
             )
             msg_box.setInformativeText("請確定插入的健保卡是否為此病患所有.")
             msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
@@ -1112,15 +1215,15 @@ class CSHIS:
             return False
 
         row = rows[0]
-        patient_id = string_utils.xstr(row['ID']).upper()
-        patient_name = string_utils.xstr(row['Name'])
-        if patient_id != '' and patient_id != self.basic_data['patient_id']:
-            ic_card_name = self.basic_data['name']
-            ic_card_id = self.basic_data['patient_id']
+        patient_id = string_utils.xstr(row["ID"]).upper()
+        patient_name = string_utils.xstr(row["Name"])
+        if patient_id != "" and patient_id != self.basic_data["patient_id"]:
+            ic_card_name = self.basic_data["name"]
+            ic_card_id = self.basic_data["patient_id"]
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle('健保卡身分不符')
-            msg_box.setText(f'''
+            msg_box.setWindowTitle("健保卡身分不符")
+            msg_box.setText(f"""
                 <font size="5" color="red">
                     <b>此健保卡基本資料為<br>
                 </font>
@@ -1136,13 +1239,13 @@ class CSHIS:
                 <font size="5" color="red">
                   身分證號不相符, 請檢查是否插入錯誤的健保卡.</b>
                 </font>
-            ''')
+            """)
             msg_box.setInformativeText("請確定插入的健保卡是否為此病患所有.")
             msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
             msg_box.exec_()
             return False
 
-        if patient_id == '':
+        if patient_id == "":
             sql = f'''
                 UPDATE patient
                 SET
@@ -1152,8 +1255,8 @@ class CSHIS:
             '''
             self.database.exec_sql(sql)
 
-        if string_utils.xstr(row['CardNo']) == '':
-            card_no = self.basic_data['card_no']
+        if string_utils.xstr(row["CardNo"]) == "":
+            card_no = self.basic_data["card_no"]
             sql = f'''
                 UPDATE patient
                 SET
@@ -1163,8 +1266,8 @@ class CSHIS:
             '''
             self.database.exec_sql(sql)
 
-        if row['Birthday'] != self.basic_data['birthday']:
-            birthday = self.basic_data['birthday']
+        if row["Birthday"] != self.basic_data["birthday"]:
+            birthday = self.basic_data["birthday"]
             sql = f'''
                 UPDATE patient
                 SET
@@ -1179,7 +1282,9 @@ class CSHIS:
     # ic 醫令寫卡
     def write_ic_medical_record(self, case_key, treat_after_check):
         try:
-            doctor_id = self.write_ic_treatment(case_key, treat_after_check)  # 寫入病名, 費用
+            doctor_id = self.write_ic_treatment(
+                case_key, treat_after_check
+            )  # 寫入病名, 費用
             if doctor_id is None:
                 return
         except Exception:
@@ -1187,180 +1292,220 @@ class CSHIS:
 
         self.write_prescript_signature(case_key)  # 寫入醫令簽章
         case_utils.update_xml(
-            self.database, 'cases', 'Security', 'prescript_sign_time',
-            date_utils.now_to_str(), 'CaseKey', case_key
+            self.database,
+            "cases",
+            "Security",
+            "prescript_sign_time",
+            date_utils.now_to_str(),
+            "CaseKey",
+            case_key,
         )  # 更新健保寫卡資料
 
     def rewrite_ic_prescript(self, case_key):
         self.write_prescript_signature(case_key)  # 寫入醫令簽章
         case_utils.update_xml(
-            self.database, 'cases', 'Security', 'prescript_sign_time',
-            date_utils.now_to_str(), 'CaseKey', case_key
+            self.database,
+            "cases",
+            "Security",
+            "prescript_sign_time",
+            date_utils.now_to_str(),
+            "CaseKey",
+            case_key,
         )  # 更新健保寫卡資料
 
     # 寫入藥品處方簽章
-    def write_medicine_signature(self, case_row, patient_row, prescript_rows, dosage_row):
-        ic_card_time = case_utils.extract_security_xml(case_row['Security'], '寫卡時間')
-        reg_datetime = date_utils.west_datetime_to_nhi_datetime(ic_card_time)  # 就診日期時間 13 bytes: EEEmmddHHMMSS
-        patient_id = string_utils.xstr(patient_row['ID'])
-        patient_birthday = string_utils.xstr(patient_row['Birthday'])
+    def write_medicine_signature(
+        self, case_row, patient_row, prescript_rows, dosage_row
+    ):
+        ic_card_time = case_utils.extract_security_xml(case_row["Security"], "寫卡時間")
+        reg_datetime = date_utils.west_datetime_to_nhi_datetime(
+            ic_card_time
+        )  # 就診日期時間 13 bytes: EEEmmddHHMMSS
+        patient_id = string_utils.xstr(patient_row["ID"])
+        patient_birthday = string_utils.xstr(patient_row["Birthday"])
         birthday_nhi_datetime = date_utils.west_date_to_nhi_date(patient_birthday)
 
         try:
-            usage = (prescript_utils.get_usage_code(dosage_row['Packages']) +
-                     prescript_utils.get_instruction_code(dosage_row['Instruction']))
+            usage = prescript_utils.get_usage_code(
+                dosage_row["Packages"]
+            ) + prescript_utils.get_instruction_code(dosage_row["Instruction"])
         except Exception:
-            usage = ''
+            usage = ""
 
-        days = number_utils.get_integer(dosage_row['Days'])
+        days = number_utils.get_integer(dosage_row["Days"])
 
-        data_write = ''
+        data_write = ""
         for row in prescript_rows:
             try:
-                total_dosage = row['Dosage'] * dosage_row['Days']
+                total_dosage = row["Dosage"] * dosage_row["Days"]
             except TypeError:
                 total_dosage = 0
 
-            order_type = '1'                                    # 醫令類別 1 bytes: 1-非長期藥品 2-長期藥品 3-診療 4-特殊材料
-            ins_code = f'{row["InsCode"]:<12}'                  # 診療項目代號 12 bytes
-            treat_position = ' ' * 6                            # 診療部位 6 bytes
-            usage = f'{usage:<18}'                              # 用法 18 bytes
-            days = f'{days:0>2}'                                # 天數 2 bytes: 00
-            total_dosage = f'{total_dosage:0>7.1f}'             # 總量 7 bytes: 00000.0
-            deliver = '01'                                      # 交付處方註記 2 bytes: 01-自行調劑 02-交付調劑 03-自行執行
+            order_type = (
+                "1"  # 醫令類別 1 bytes: 1-非長期藥品 2-長期藥品 3-診療 4-特殊材料
+            )
+            ins_code = f"{row['InsCode']:<12}"  # 診療項目代號 12 bytes
+            treat_position = " " * 6  # 診療部位 6 bytes
+            usage = f"{usage:<18}"  # 用法 18 bytes
+            days = f"{days:0>2}"  # 天數 2 bytes: 00
+            total_dosage = f"{total_dosage:0>7.1f}"  # 總量 7 bytes: 00000.0
+            deliver = "01"  # 交付處方註記 2 bytes: 01-自行調劑 02-交付調劑 03-自行執行
 
-            data_write += f'{reg_datetime}{order_type}{ins_code}{treat_position}{usage}{days}{total_dosage}{deliver}'
+            data_write += f"{reg_datetime}{order_type}{ins_code}{treat_position}{usage}{days}{total_dosage}{deliver}"
 
         prescript_sign_list = self.write_multi_prescript_sign(
-            reg_datetime, patient_id, birthday_nhi_datetime, data_write, len(prescript_rows)
+            reg_datetime,
+            patient_id,
+            birthday_nhi_datetime,
+            data_write,
+            len(prescript_rows),
         )
 
         if prescript_sign_list is None:
             return
 
         for row, prescript_sign in zip(prescript_rows, prescript_sign_list):
-            prescript_key = row['PrescriptKey']
-            sql = f'''
+            prescript_key = row["PrescriptKey"]
+            sql = f"""
                 DELETE FROM presextend
                 WHERE
                     PrescriptKey = {prescript_key} AND
                     ExtendType = "處方簽章"
-            '''
+            """
             self.database.exec_sql(sql)
             fields = [
-                'PrescriptKey', 'ExtendType', 'Content',
+                "PrescriptKey",
+                "ExtendType",
+                "Content",
             ]
             data = [
-                row['PrescriptKey'], '處方簽章', prescript_sign,
+                row["PrescriptKey"],
+                "處方簽章",
+                prescript_sign,
             ]
-            self.database.insert_record('presextend', fields, data)
+            self.database.insert_record("presextend", fields, data)
 
     # 寫入處置處方簽章
     def write_treat_signature(self, case_row, dosage_row, patient_row):
-        ic_card_time = case_utils.extract_security_xml(case_row['Security'], '寫卡時間')
-        reg_datetime = date_utils.west_datetime_to_nhi_datetime(ic_card_time)  # 就診日期時間 13 bytes: EEEmmddHHMMSS
-        patient_id = string_utils.xstr(patient_row['ID'])
-        patient_birthday = string_utils.xstr(patient_row['Birthday'])
+        ic_card_time = case_utils.extract_security_xml(case_row["Security"], "寫卡時間")
+        reg_datetime = date_utils.west_datetime_to_nhi_datetime(
+            ic_card_time
+        )  # 就診日期時間 13 bytes: EEEmmddHHMMSS
+        patient_id = string_utils.xstr(patient_row["ID"])
+        patient_birthday = string_utils.xstr(patient_row["Birthday"])
         birthday_nhi_datetime = date_utils.west_date_to_nhi_date(patient_birthday)
 
-        treat_code = nhi_utils.get_treat_code(
-            self.database, case_row['CaseKey']
-        )
-        usage = ''  # 處置免填
+        treat_code = nhi_utils.get_treat_code(self.database, case_row["CaseKey"])
+        usage = ""  # 處置免填
         days = 0
         total_dosage = 1
 
-        order_type = '3'                        # 醫令類別 1 bytes: 1-非長期藥品 2-長期藥品 3-診療 4-特殊材料
-        treat_code = f'{treat_code:<12}'        # 診療項目代號 12 bytes
-        treat_position = ' ' * 6                # 診療部位 6 bytes
-        usage = f'{usage:<18}'                  # 用法 18 bytes
-        days = f'{days:0>2}'                    # 天數 2 bytes: 00
-        total_dosage = f'{total_dosage:0>7}'    # 總量 7 bytes: 00000.0
-        deliver = '03'                          # 交付處方註記 2 bytes: 01-自行調劑 02-交付調劑 03-自行執行
+        order_type = "3"  # 醫令類別 1 bytes: 1-非長期藥品 2-長期藥品 3-診療 4-特殊材料
+        treat_code = f"{treat_code:<12}"  # 診療項目代號 12 bytes
+        treat_position = " " * 6  # 診療部位 6 bytes
+        usage = f"{usage:<18}"  # 用法 18 bytes
+        days = f"{days:0>2}"  # 天數 2 bytes: 00
+        total_dosage = f"{total_dosage:0>7}"  # 總量 7 bytes: 00000.0
+        deliver = "03"  # 交付處方註記 2 bytes: 01-自行調劑 02-交付調劑 03-自行執行
 
-        data_write = f'{reg_datetime}{order_type}{treat_code}{treat_position}{usage}{days}{total_dosage}{deliver}'
+        data_write = f"{reg_datetime}{order_type}{treat_code}{treat_position}{usage}{days}{total_dosage}{deliver}"
 
         treat_sign = self.write_prescript_sign(
-            reg_datetime, patient_id, birthday_nhi_datetime, data_write,
+            reg_datetime,
+            patient_id,
+            birthday_nhi_datetime,
+            data_write,
         )
 
         if treat_sign is None:
             return
 
-        case_key = case_row['CaseKey']
-        self.database.exec_sql(f'''
+        case_key = case_row["CaseKey"]
+        self.database.exec_sql(f"""
             DELETE FROM presextend
             WHERE
                 PrescriptKey = {case_key} AND
                 ExtendType = "處置簽章"
-        ''')
+        """)
         fields = [
-            'PrescriptKey', 'ExtendType', 'Content',
+            "PrescriptKey",
+            "ExtendType",
+            "Content",
         ]
         data = [
-            case_row['CaseKey'], '處置簽章', treat_sign,
+            case_row["CaseKey"],
+            "處置簽章",
+            treat_sign,
         ]
-        self.database.insert_record('presextend', fields, data)
+        self.database.insert_record("presextend", fields, data)
 
     # 寫入病名及費用
     def write_ic_treatment(self, case_key, treat_after_check):
-        sql = f'''
+        sql = f"""
             SELECT
                 CaseDate, PatientKey, DiseaseCode1, DiseaseCode2, DiseaseCode3, DiseaseCode4,
                 DiagShareFee, DrugShareFee, InsTotalFee, Security
             FROM cases
             WHERE
                 CaseKey = {case_key}
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             return None
-            
-        case_row = rows[0]
-        patient_key = case_row['PatientKey']
-        case_date = case_row['CaseDate']
 
-        sql = f'''
+        case_row = rows[0]
+        patient_key = case_row["PatientKey"]
+        case_date = case_row["CaseDate"]
+
+        sql = f"""
             SELECT ID, Birthday FROM patient
             WHERE
                 PatientKey = {patient_key}
-        '''
+        """
         patient_row = self.database.select_record(sql)[0]
 
-        ic_card_time = case_utils.extract_security_xml(case_row['Security'], '寫卡時間')
+        ic_card_time = case_utils.extract_security_xml(case_row["Security"], "寫卡時間")
         reg_datetime = date_utils.west_datetime_to_nhi_datetime(ic_card_time)
-        patient_id = string_utils.xstr(patient_row['ID'])
-        patient_birthday = string_utils.xstr(patient_row['Birthday'])
+        patient_id = string_utils.xstr(patient_row["ID"])
+        patient_birthday = string_utils.xstr(patient_row["Birthday"])
 
-        if patient_id == '' or patient_birthday == '':
+        if patient_id == "" or patient_birthday == "":
             patient_id, patient_birthday = self._update_patient(patient_key)
 
         birthday_nhi_datetime = date_utils.west_date_to_nhi_date(patient_birthday)
 
-        disease_code1 = string_utils.xstr(case_row['DiseaseCode1'])
-        disease_code2 = string_utils.xstr(case_row['DiseaseCode2'])
-        disease_code3 = string_utils.xstr(case_row['DiseaseCode3'])
-        disease_code4 = string_utils.xstr(case_row['DiseaseCode4'])
+        disease_code1 = string_utils.xstr(case_row["DiseaseCode1"])
+        disease_code2 = string_utils.xstr(case_row["DiseaseCode2"])
+        disease_code3 = string_utils.xstr(case_row["DiseaseCode3"])
+        disease_code4 = string_utils.xstr(case_row["DiseaseCode4"])
 
         if case_date.year <= 2024 and self.dict_icd_map is not None:  # 2024以舊版申報
-            if disease_code1 != '':
+            if disease_code1 != "":
                 try:
-                    disease_code1 = self.dict_icd_map[disease_code1]  # 申報月份2025年以前只能申報2014年版本ICD-10
+                    disease_code1 = self.dict_icd_map[
+                        disease_code1
+                    ]  # 申報月份2025年以前只能申報2014年版本ICD-10
                 except Exception:
                     pass
-            if disease_code2 != '':
+            if disease_code2 != "":
                 try:
-                    disease_code2 = self.dict_icd_map[disease_code2]  # 申報月份2025年以前只能申報2014年版本ICD-10
+                    disease_code2 = self.dict_icd_map[
+                        disease_code2
+                    ]  # 申報月份2025年以前只能申報2014年版本ICD-10
                 except Exception:
                     pass
-            if disease_code3 != '':
+            if disease_code3 != "":
                 try:
-                    disease_code3 = self.dict_icd_map[disease_code3]  # 申報月份2025年以前只能申報2014年版本ICD-10
+                    disease_code3 = self.dict_icd_map[
+                        disease_code3
+                    ]  # 申報月份2025年以前只能申報2014年版本ICD-10
                 except Exception:
                     pass
-            if disease_code4 != '':
+            if disease_code4 != "":
                 try:
-                    disease_code4 = self.dict_icd_map[disease_code4]  # 申報月份2025年以前只能申報2014年版本ICD-10
+                    disease_code4 = self.dict_icd_map[
+                        disease_code4
+                    ]  # 申報月份2025年以前只能申報2014年版本ICD-10
                 except Exception:
                     pass
 
@@ -1373,13 +1518,13 @@ class CSHIS:
         if len(disease_code4) > 5:
             disease_code4 = self.get_icd10_encode(disease_code4)
 
-        disease_code1 = f'[{disease_code1:<7}]'
-        disease_code2 = f'[{disease_code2:<7}]'
-        disease_code3 = f'[{disease_code3:<7}]'
-        disease_code4 = f'[{disease_code4:<7}]'
+        disease_code1 = f"[{disease_code1:<7}]"
+        disease_code2 = f"[{disease_code2:<7}]"
+        disease_code3 = f"[{disease_code3:<7}]"
+        disease_code4 = f"[{disease_code4:<7}]"
 
-        filler = '[       ]'
-        data_write = f'{treat_after_check}{disease_code1}{disease_code2}{disease_code3}{disease_code4}{filler}{filler}'
+        filler = "[       ]"
+        data_write = f"{treat_after_check}{disease_code1}{disease_code2}{disease_code3}{disease_code4}{filler}{filler}"
 
         doctor_id = self.write_treatment_code(
             reg_datetime, patient_id, birthday_nhi_datetime, data_write
@@ -1387,61 +1532,65 @@ class CSHIS:
         if doctor_id is None:
             return doctor_id
 
-        ins_total_fee = string_utils.xstr(case_row['InsTotalFee'])
+        ins_total_fee = string_utils.xstr(case_row["InsTotalFee"])
         share_fee = string_utils.xstr(
-            (number_utils.get_integer(case_row['DiagShareFee']) +
-             number_utils.get_integer(case_row['DrugShareFee']))
+            number_utils.get_integer(case_row["DiagShareFee"])
+            + number_utils.get_integer(case_row["DrugShareFee"])
         )
 
-        ins_total_fee = f'{ins_total_fee:0>8}'
-        share_fee = f'{share_fee:0>8}'
-        hospital_fee = '0' * 8
-        hospital_share_fee1 = '0' * 7
-        hospital_share_fee2 = '0' * 7
-        data_write = f'{ins_total_fee}{share_fee}{hospital_fee}{hospital_share_fee1}{hospital_share_fee2}'
+        ins_total_fee = f"{ins_total_fee:0>8}"
+        share_fee = f"{share_fee:0>8}"
+        hospital_fee = "0" * 8
+        hospital_share_fee1 = "0" * 7
+        hospital_share_fee2 = "0" * 7
+        data_write = f"{ins_total_fee}{share_fee}{hospital_fee}{hospital_share_fee1}{hospital_share_fee2}"
 
-        self.write_treatment_fee(reg_datetime, patient_id, birthday_nhi_datetime, data_write)
+        self.write_treatment_fee(
+            reg_datetime, patient_id, birthday_nhi_datetime, data_write
+        )
 
         return doctor_id
 
     # 寫入處方簽章
     def write_prescript_signature(self, case_key):
-        sql = f'''
+        sql = f"""
             SELECT CaseKey, PatientKey, Treatment, Security FROM cases
             WHERE
                 CaseKey = {case_key}
-        '''
+        """
         case_row = self.database.select_record(sql)[0]
 
-        sql = f'''
+        sql = f"""
             SELECT * FROM dosage
             WHERE
                 CaseKey = {case_key} AND
                 MedicineSet = 1
-        '''
+        """
         rows = self.database.select_record(sql)
         dosage_row = rows[0] if len(rows) > 0 else None
 
-        patient_key = case_row['PatientKey']
-        sql = f'''
+        patient_key = case_row["PatientKey"]
+        sql = f"""
             SELECT ID, Birthday FROM patient
             WHERE
                 PatientKey = {patient_key}
-        '''
+        """
         patient_row = self.database.select_record(sql)[0]
 
-        sql = f'''
+        sql = f"""
             SELECT * FROM prescript
             WHERE
                 CaseKey = {case_key} AND
                 MedicineSet = 1 AND
                 InsCode IS NOT NULL AND
                 MedicineType NOT IN ("穴道", "處置")
-        '''
+        """
         prescript_rows = self.database.select_record(sql)
 
-        if string_utils.xstr(case_row['Treatment']) in nhi_utils.INS_TREAT:
+        if string_utils.xstr(case_row["Treatment"]) in nhi_utils.INS_TREAT:
             self.write_treat_signature(case_row, dosage_row, patient_row)
 
         if len(prescript_rows) > 0 and dosage_row is not None:
-            self.write_medicine_signature(case_row, patient_row, prescript_rows, dosage_row)
+            self.write_medicine_signature(
+                case_row, patient_row, prescript_rows, dosage_row
+            )
