@@ -1948,17 +1948,6 @@ class Registration(QtWidgets.QMainWindow):
                 )
                 return
 
-        # name = row[0]['Name']  # 不要將病患資料中的姓名與ic卡的姓名同步 2023.09.22
-        # if ic_card is not None:
-        #     ic_name = ic_card.basic_data['name']
-        #     if self._need_ic_rename(patient_key, ic_name, name):
-        #         sql = f'''
-        #             SELECT * FROM patient
-        #             WHERE
-        #                 PatientKey = {patient_key}
-        #         '''
-        #         row = self.database.select_record(sql)
-
         self._set_reg_mode(False, ic_card)
         self._set_patient_data(row[0])
         self._set_registration_data(patient_key)
@@ -1975,65 +1964,7 @@ class Registration(QtWidgets.QMainWindow):
             return False
 
         if self.ui.comboBox_ins_type.currentText() == "健保":  # 健保才自動連續療程
-            card, course = self._auto_completion_course(patient_key)
-
-            # if self.ui.checkBox_no_nhi_vpn.isChecked() and system_utils.ping_ip(nhi_utils.VPN_IP):
-            #     system_utils.show_message_box(
-            #         QMessageBox.Warning,
-            #         '健保VPN網路已連線',
-            #         f'<font size="5" color="red"><b>中華電信健保醫療網VPN似乎已經恢復連線，幫您將健保VPN網路斷線取消打勾，並請您插入健保卡</b></font>',
-            #         '網路測試連線正常，可插入健保卡繼續掛號作業.'
-            #     )
-            #     self.ui.checkBox_no_nhi_vpn.setChecked(False)
-            #     self._set_no_nhi_vpn()
-            #     try:
-            #         if self.system_settings.field('使用讀卡機') == 'Y':
-            #             ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
-            #             if ic_card is not None:
-            #                 ic_card.verify_sam(show_message=False)
-            #     except Exception:
-            #         pass
-
-            if self.ui.checkBox_no_nhi_vpn.isChecked():
-                if card != "A020" and number_utils.get_integer(course) >= 2:
-                    self.ui.comboBox_card_abnormal.setCurrentIndex(3)
-                else:
-                    card = "A020"
-
-            self.ui.comboBox_card.setCurrentText(card)
-            self.ui.comboBox_course.setCurrentText(course)
-
-            if self.ui.comboBox_treat_type.currentText() == "慢性腎病照護":
-                if course is not None and number_utils.get_integer(course) >= 2:
-                    message = registration_utils.check_ckd_week(
-                        self.database,
-                        patient_key,
-                        card,
-                    )
-
-                if message is not None:
-                    system_utils.show_message_box(
-                        QMessageBox.Warning,
-                        "慢性腎病CKD警告",
-                        f'<font size="5" color="red"><b>{message}</b></font>',
-                        "將改為一般門診.",
-                    )
-                    self.ui.comboBox_treat_type.setCurrentText("內科")
-
-            message = registration_utils.check_course_complete_in_days(
-                self.database, patient_key, card, course, 30
-            )
-            if message is not None:
-                system_utils.show_message_box(
-                    QMessageBox.Warning,
-                    "療程已超過30日",
-                    f'<font size="5" color="red"><b>{message}</b></font>',
-                    "即將開啟新的療程.",
-                )
-                card_sequence = self._get_card_sequence()
-                self.ui.comboBox_card.setCurrentText(card_sequence)
-                self.ui.comboBox_course.setCurrentIndex(0)
-                self.ui.comboBox_injury_type.setCurrentIndex(0)
+            self._set_auto_completion_course(patient_key)
 
         try:
             self._remind_upcoming_reservation(patient_key)
@@ -2049,6 +1980,50 @@ class Registration(QtWidgets.QMainWindow):
         self._set_last_doctor(patient_key)
 
         self.ui.comboBox_card.setFocus()
+
+    def _set_auto_completion_course(self, patient_key):
+        card, course = self._auto_completion_course(patient_key)
+
+        if self.ui.checkBox_no_nhi_vpn.isChecked():
+            if card != "A020" and number_utils.get_integer(course) >= 2:
+                self.ui.comboBox_card_abnormal.setCurrentIndex(3)
+            else:
+                card = "A020"
+
+        self.ui.comboBox_card.setCurrentText(card)
+        self.ui.comboBox_course.setCurrentText(course)
+
+        if self.ui.comboBox_treat_type.currentText() == "慢性腎病照護":
+            if course is not None and number_utils.get_integer(course) >= 2:
+                message = registration_utils.check_ckd_week(
+                    self.database,
+                    patient_key,
+                    card,
+                )
+
+            if message is not None:
+                system_utils.show_message_box(
+                    QMessageBox.Warning,
+                    "慢性腎病CKD警告",
+                    f'<font size="5" color="red"><b>{message}</b></font>',
+                    "將改為一般門診.",
+                )
+                self.ui.comboBox_treat_type.setCurrentText("內科")
+
+        message = registration_utils.check_course_complete_in_days(
+            self.database, patient_key, card, course, 30
+        )
+        if message is not None:
+            system_utils.show_message_box(
+                QMessageBox.Warning,
+                "療程已超過30日",
+                f'<font size="5" color="red"><b>{message}</b></font>',
+                "即將開啟新的療程.",
+            )
+            card_sequence = self._get_card_sequence()
+            self.ui.comboBox_card.setCurrentText(card_sequence)
+            self.ui.comboBox_course.setCurrentIndex(0)
+            self.ui.comboBox_injury_type.setCurrentIndex(0)
 
     def _remind_upcoming_reservation(self, patient_key):
         sql = """
@@ -5140,7 +5115,8 @@ class Registration(QtWidgets.QMainWindow):
         doctor = string_utils.xstr(row["Doctor"])
         period = string_utils.xstr(row["Period"])
         remark = string_utils.xstr(row["Remark"])
-        self._get_patient(string_utils.xstr(row["PatientKey"]))
+        patient_key = string_utils.xstr(row["PatientKey"])
+        self._get_patient(patient_key)
         self.ui.comboBox_reg_type.setCurrentText("預約門診")
         self.ui.comboBox_doctor.setCurrentText(doctor)
         self.ui.comboBox_remark.setCurrentText(remark)
@@ -5159,6 +5135,9 @@ class Registration(QtWidgets.QMainWindow):
         reg_type = self.ui.comboBox_reg_type.currentText()
         share_type = self._get_share_type(reg_type)
         self.ui.comboBox_share_type.setCurrentText(share_type)
+
+        if self.ui.comboBox_ins_type.currentText() == "健保":  # 健保才自動連續療程
+            self._set_auto_completion_course(patient_key)
 
     def _waiting_list_tab_changed(self, i):
         tab_name = self.ui.tabWidget_list.tabText(i)
