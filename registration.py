@@ -1982,6 +1982,7 @@ class Registration(QtWidgets.QMainWindow):
         self.ui.comboBox_card.setFocus()
 
     def _set_auto_completion_course(self, patient_key):
+        message = None
         card, course = self._auto_completion_course(patient_key)
 
         if self.ui.checkBox_no_nhi_vpn.isChecked():
