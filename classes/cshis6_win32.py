@@ -1,4 +1,5 @@
 import base64
+import contextlib
 import copy
 import datetime
 import os
@@ -58,8 +59,57 @@ VERIFY_NHI_SSL = False
 # 讀卡機狀態快取秒數: 夠短不會漏掉插拔卡, 夠長可以省掉同一流程內的重複往返
 STATUS_CACHE_SECONDS = 0.5
 
+# 資料庫鎖定重試: 1205 鎖等待逾時 / 1213 死結
+# 加了索引之後這兩個幾乎不會再出現, 留著是最後一道防線
+DB_RETRY_ERRNO = (1205, 1213)
+DB_RETRY_TIMES = 3
+DB_RETRY_DELAY = 0.5
+
+PRESEXTEND_INDEX_NAME = "idx_prescript_key"
+
 # 模組載入時關閉一次即可, 不需要每次呼叫都關
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+# ----------------------------------------------------------------------
+# 寫卡忙碌旗標
+# ----------------------------------------------------------------------
+# 等健保署回應期間, _wait_queue 會呼叫 processEvents() 讓畫面保持回應,
+# 這會讓 QTimer (notification 輪詢, 候診名單重讀...) 在寫卡流程中間被叫醒,
+# 用同一條 self.database 連線插隊下查詢.
+#
+# 本檔已經做到:
+#   1. processEvents 加上 ExcludeUserInputEvents, 使用者在「請稍後」上
+#      再按一次按鈕不會引發第二次寫卡
+#   2. write_ic_medical_record / rewrite_ic_prescript 自己擋掉重入
+#
+# 其他模組 (notification_utils 的輪詢 / 候診名單重讀) 若要一起避開,
+# 在自己的 timer callback 開頭加一行即可, 本檔不動其他檔案:
+#
+#     from libs import cshis
+#     if cshis.is_ic_card_busy():
+#         return
+# ----------------------------------------------------------------------
+
+_IC_CARD_BUSY = 0
+_PRESEXTEND_INDEX_CHECKED = False
+
+
+def is_ic_card_busy():
+    """是否正在與健保署往返 / 寫卡中"""
+    return _IC_CARD_BUSY > 0
+
+
+@contextlib.contextmanager
+def _ic_card_busy():
+    global _IC_CARD_BUSY
+
+    _IC_CARD_BUSY += 1
+    try:
+        yield
+    finally:
+        _IC_CARD_BUSY -= 1
+        _IC_CARD_BUSY = max(_IC_CARD_BUSY, 0)
 
 
 def save_log(message):
@@ -175,6 +225,10 @@ class CSHIS:
 
         原本用 msg_queue.get(timeout=30) 會讓主執行緒完全停止處理事件,
         「請稍後...」對話框畫不出來, Windows 判定程式沒有回應而蒙上白色.
+
+        ExcludeUserInputEvents: 等待期間只畫面更新, 不處理滑鼠鍵盤.
+        少了這個, 使用者在「請稍後」上連點兩下就會疊出第二次寫卡流程,
+        兩條流程共用同一條資料庫連線, 是偶發當機與鎖衝突的來源.
         """
         deadline = time.monotonic() + timeout
         app = QtCore.QCoreApplication.instance()
@@ -184,11 +238,45 @@ class CSHIS:
                 return msg_queue.get_nowait()
             except Empty:
                 if app is not None:
-                    app.processEvents()
+                    app.processEvents(QtCore.QEventLoop.ExcludeUserInputEvents)
 
                 time.sleep(0.02)
 
         raise Empty
+
+    def _run_worker(
+        self,
+        target,
+        args=(),
+        title="",
+        message="",
+        hint="",
+        timeout=30,
+        default=None,
+        log_name="",
+    ):
+        """統一的「背景執行緒打 API, 前景等結果」流程
+
+        原本這段在 8 個地方各抄一次 (讀門診 / 讀診斷 / 讀處方 / 取序號 /
+        退掛 / 寫診察 / 取簽章 / 上傳), 每次改都要改八個地方.
+        逾時回傳 default.
+        """
+        msg_box = self._show_wait_box(title, message, hint)
+
+        msg_queue = Queue()
+        worker = Thread(target=target, args=(msg_queue,) + tuple(args), daemon=True)
+
+        with _ic_card_busy():
+            worker.start()
+            try:
+                result = self._wait_queue(msg_queue, timeout)
+            except Empty:
+                result = default
+                save_log(f"{log_name or title}逾時")
+
+        self._close_wait_box(msg_box)
+
+        return result
 
     def do_thread(self, nhi_thread, *args):
         msg_box = None
@@ -208,12 +296,14 @@ class CSHIS:
 
         msg_queue = Queue()
         t = Thread(target=nhi_thread, args=(msg_queue,), daemon=True)
-        t.start()
-        try:
-            error_code = self._wait_queue(msg_queue, 30)
-        except Empty:
-            error_code = -1  # 設定一個錯誤碼，表示逾時
-            save_log(f"健保讀卡機作業逾時: {operation}")
+
+        with _ic_card_busy():
+            t.start()
+            try:
+                error_code = self._wait_queue(msg_queue, 30)
+            except Empty:
+                error_code = -1  # 設定一個錯誤碼，表示逾時
+                save_log(f"健保讀卡機作業逾時: {operation}")
 
         if msg_box:
             msg_box.close()
@@ -240,6 +330,9 @@ class CSHIS:
         if self.silent_mode or not self._is_main_thread():
             return None
 
+        if not title:
+            return None
+
         msg_box = self._message_box(title, message, hint)
         msg_box.show()
 
@@ -252,6 +345,225 @@ class CSHIS:
 
         msg_box.close()
         msg_box.deleteLater()
+
+    # ------------------------------------------------------------------
+    # 資料庫
+    # ------------------------------------------------------------------
+    # 這一段是 1205 Lock wait timeout 的根治處.
+    #
+    # 原本的寫法是 write_treat_signature / write_medicine_signature 各自
+    # 「打 API -> 立刻 DELETE -> 立刻 INSERT」, 而 presextend 若沒有
+    # PrescriptKey 索引, 那句 DELETE 就是全表掃描; InnoDB 底下全表掃描的
+    # DELETE 會鎖住掃過的每一列 (binlog_format=STATEMENT 時還會退回
+    # REPEATABLE READ, 變成整張表的 next-key lock).
+    # 一張 30 味藥的處方等於連續 30 次全表掃描 DELETE, 隔壁診間同時寫卡
+    # 就互相踩 -> 1205.
+    #
+    # 現在改成:
+    #   1. 確保 presextend 有 (PrescriptKey, ExtendType) 索引 (只做一次)
+    #   2. 所有健保署往返先跑完, 簽章全部收齊之後才碰資料庫
+    #   3. 刪 + 插包在同一次短交易, 一句 DELETE ... IN (...) 取代 N 句
+    #   4. 真的還是撞到 1205/1213 就自動重試 (先刪後插, 重跑安全)
+    # ------------------------------------------------------------------
+
+    def _in_transaction(self):
+        """呼叫端是否已經開著交易"""
+        try:
+            return number_utils.get_integer(getattr(self.database, "_tx_depth", 0)) > 0
+        except Exception:
+            return False
+
+    def ensure_database_index(self):
+        """確保 presextend 有 PrescriptKey 索引 (每個行程只做一次)
+
+        可以在程式啟動時主動呼叫一次; 不呼叫的話第一次寫簽章時會自動跑.
+        任何失敗都只記 log, 絕不擋住寫卡.
+        """
+        global _PRESEXTEND_INDEX_CHECKED
+
+        if _PRESEXTEND_INDEX_CHECKED:
+            return
+
+        _PRESEXTEND_INDEX_CHECKED = True  # 不論成敗都只試一次
+
+        database = self.database
+
+        try:
+            rows = database.select_record("""
+                SELECT ENGINE FROM information_schema.TABLES
+                WHERE
+                    TABLE_SCHEMA = DATABASE() AND
+                    TABLE_NAME = "presextend"
+            """)
+            engine = string_utils.xstr(rows[0]["ENGINE"]).upper() if rows else ""
+        except Exception as e:
+            save_log(f"presextend 引擎查詢失敗, 略過索引檢查: {e}")
+            return
+
+        if engine != "INNODB":
+            # MyISAM 是表鎖, 不會出現 1205; 而且 MyISAM 的 ALTER 會把整張表
+            # 鎖到重建完成, 營業時間動它等於讓診所停擺, 所以只記錄不處理.
+            if engine:
+                save_log(f"presextend 引擎為 {engine}, 不自動建立索引")
+            return
+
+        try:
+            rows = database.select_record("SHOW INDEX FROM presextend")
+        except Exception as e:
+            save_log(f"presextend 索引查詢失敗: {e}")
+            return
+
+        for row in rows:
+            try:
+                column_name = string_utils.xstr(row["Column_name"])
+                seq_in_index = number_utils.get_integer(row["Seq_in_index"])
+            except Exception:
+                continue
+
+            if column_name == "PrescriptKey" and seq_in_index == 1:
+                return  # 已經有可用的索引了
+
+        save_log(
+            "presextend 缺少 PrescriptKey 索引 (寫簽章的 DELETE 會全表掃描), 開始建立"
+        )
+
+        # 由寬鬆到保守: 線上建立 -> 一般建立 -> 單欄建立
+        # (ExtendType 若是 TEXT 型別無法直接入索引, 退回只建 PrescriptKey)
+        statements = [
+            f"ALTER TABLE presextend "
+            f"ADD INDEX {PRESEXTEND_INDEX_NAME} (PrescriptKey, ExtendType), "
+            f"ALGORITHM=INPLACE, LOCK=NONE",
+            f"ALTER TABLE presextend "
+            f"ADD INDEX {PRESEXTEND_INDEX_NAME} (PrescriptKey, ExtendType)",
+            f"ALTER TABLE presextend ADD INDEX {PRESEXTEND_INDEX_NAME} (PrescriptKey)",
+        ]
+
+        for sql in statements:
+            try:
+                database.exec_sql(sql)
+                save_log(f"presextend 索引 {PRESEXTEND_INDEX_NAME} 建立完成")
+                return
+            except Exception as e:
+                save_log(f"presextend 索引建立失敗, 嘗試下一種寫法: {e}")
+
+        save_log(
+            "presextend 索引建立全部失敗, 請手動執行: "
+            f"ALTER TABLE presextend ADD INDEX {PRESEXTEND_INDEX_NAME} "
+            f"(PrescriptKey, ExtendType);"
+        )
+
+    def _run_db_write(self, work, description=""):
+        """把 work(database) 包在一次短交易裡執行, 撞到鎖就重試
+
+        相容舊版 mysql_database.py: 沒有 transaction() 就退回逐句 autocommit.
+        """
+        database = self.database
+
+        if self._in_transaction():
+            # 呼叫端自己開了交易: 不要在裡面再開一層, 也不能自己 commit.
+            # 但要留下記錄 -- 這代表鎖會一路持有到呼叫端 commit 為止,
+            # 若那段期間還夾著健保署往返, 就是下一個 1205 的來源.
+            save_log(
+                f"警告: {description} 進入時呼叫端已開啟交易 "
+                f"(深度 {getattr(database, '_tx_depth', '?')}), "
+                f"鎖會持有到呼叫端 commit 為止"
+            )
+            try:
+                work(database)
+                return True
+            except Exception as e:
+                save_log(f"{description} 寫入失敗: {e}")
+                return False
+
+        use_transaction = callable(getattr(database, "transaction", None))
+        last_error = None
+
+        for attempt in range(1, DB_RETRY_TIMES + 1):
+            try:
+                if use_transaction:
+                    with database.transaction():
+                        work(database)
+                else:
+                    work(database)
+
+                return True
+            except TypeError as e:
+                if use_transaction:
+                    save_log(
+                        f"database.transaction() 不是 context manager, "
+                        f"改用逐句寫入: {e}"
+                    )
+                    use_transaction = False
+                    continue
+
+                last_error = e
+                break
+            except Exception as e:
+                last_error = e
+                errno = getattr(e, "errno", None)
+
+                if errno in DB_RETRY_ERRNO and attempt < DB_RETRY_TIMES:
+                    delay = DB_RETRY_DELAY * attempt
+                    save_log(
+                        f"{description} 遇到資料庫鎖定 ({errno}), "
+                        f"{delay} 秒後重試 (第 {attempt} 次)"
+                    )
+                    time.sleep(delay)
+                    continue
+
+                break
+
+        save_log(f"{description} 寫入失敗: {last_error}")
+
+        return False
+
+    @staticmethod
+    def _insert_presextend(database, records):
+        fields = ["PrescriptKey", "ExtendType", "Content"]
+
+        for record in records:
+            data = [
+                number_utils.get_integer(record["prescript_key"]),
+                record["extend_type"],
+                record["content"],
+            ]
+            database.insert_record("presextend", fields, data)
+
+    def _save_presextend(self, records, description=""):
+        """把收齊的簽章寫回 presextend
+
+        records: [{"prescript_key": int, "extend_type": str, "content": str}, ...]
+        同一個 ExtendType 的 key 併成一句 DELETE ... IN (...), 只開一次短交易.
+        這裡不會有任何健保署往返, 所以鎖只存在幾毫秒.
+        """
+        if not records:
+            return True
+
+        self.ensure_database_index()
+
+        groups = {}
+        for record in records:
+            groups.setdefault(record["extend_type"], []).append(record)
+
+        def work(database):
+            for extend_type, rows in groups.items():
+                keys = sorted(
+                    {number_utils.get_integer(row["prescript_key"]) for row in rows}
+                )
+                key_list = ", ".join(str(key) for key in keys)
+
+                # extend_type 是本檔寫死的常數 ("處置簽章" / "處方簽章"),
+                # key_list 全部經過 get_integer, 沒有注入面
+                database.exec_sql(f"""
+                    DELETE FROM presextend
+                    WHERE
+                        PrescriptKey IN ({key_list}) AND
+                        ExtendType = "{extend_type}"
+                """)
+
+                self._insert_presextend(database, rows)
+
+        return self._run_db_write(work, description or "簽章")
 
     # ------------------------------------------------------------------
     # 網路
@@ -1123,27 +1435,15 @@ class CSHIS:
 
     # 取得門診資料 (不需醫事人員卡)
     def read_treatment_no_need_hpc(self):
-        msg_box = self._show_wait_box(
-            "取得健保卡門診資料",
-            '<font size="5" color="red"><b>正在取得健保卡門診資料中, 請稍後...</b></font>',
-            "正在與健保IDC資訊中心連線, 會花費一些時間.",
+        error_code, treatment_data = self._run_worker(
+            self.read_treatment_no_need_hpc_thread,
+            title="取得健保卡門診資料",
+            message='<font size="5" color="red"><b>正在取得健保卡門診資料中, 請稍後...</b></font>',
+            hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
+            timeout=30,
+            default=(-1, {}),
+            log_name="取得健保卡門診資料",
         )
-
-        msg_queue = Queue()
-        t = Thread(
-            target=self.read_treatment_no_need_hpc_thread,
-            args=(msg_queue,),
-            daemon=True,
-        )
-        t.start()
-        try:
-            (error_code, treatment_data) = self._wait_queue(msg_queue, 30)
-        except Empty:
-            error_code = -1
-            treatment_data = {}
-            save_log("取得健保卡門診資料逾時")
-
-        self._close_wait_box(msg_box)
 
         if error_code != 0:
             self._show_message(error_code, "健保卡讀取")
@@ -1175,25 +1475,15 @@ class CSHIS:
 
     # 取得診斷資料 (需醫事人員卡)
     def read_treatment_need_hpc(self):
-        msg_box = self._show_wait_box(
-            "取得健保卡診斷資料",
-            '<font size="5" color="red"><b>正在取得健保卡診斷資料中, 請稍後...</b></font>',
-            "正在與健保IDC資訊中心連線, 會花費一些時間.",
+        error_code, disease_data = self._run_worker(
+            self.read_treatment_need_hpc_thread,
+            title="取得健保卡診斷資料",
+            message='<font size="5" color="red"><b>正在取得健保卡診斷資料中, 請稍後...</b></font>',
+            hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
+            timeout=30,
+            default=(-1, {}),
+            log_name="取得健保卡診斷資料",
         )
-
-        msg_queue = Queue()
-        t = Thread(
-            target=self.read_treatment_need_hpc_thread, args=(msg_queue,), daemon=True
-        )
-        t.start()
-        try:
-            (error_code, disease_data) = self._wait_queue(msg_queue, 30)
-        except Empty:
-            error_code = -1
-            disease_data = {}
-            save_log("取得健保卡診斷資料逾時")
-
-        self._close_wait_box(msg_box)
 
         if error_code != 0:
             self._show_message(error_code, "健保卡讀取")
@@ -1225,25 +1515,15 @@ class CSHIS:
 
     # 取得處方資料
     def read_prescript_data(self):
-        msg_box = self._show_wait_box(
-            "取得健保卡處方資料",
-            '<font size="5" color="red"><b>正在取得健保卡處方資料中, 請稍後...</b></font>',
-            "正在與健保IDC資訊中心連線, 會花費一些時間.",
+        error_code, prescript_data = self._run_worker(
+            self.read_prescript_data_thread,
+            title="取得健保卡處方資料",
+            message='<font size="5" color="red"><b>正在取得健保卡處方資料中, 請稍後...</b></font>',
+            hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
+            timeout=30,
+            default=(-1, []),
+            log_name="取得健保卡處方資料",
         )
-
-        msg_queue = Queue()
-        t = Thread(
-            target=self.read_prescript_data_thread, args=(msg_queue,), daemon=True
-        )
-        t.start()
-        try:
-            (error_code, prescript_data) = self._wait_queue(msg_queue, 30)
-        except Empty:
-            error_code = -1
-            prescript_data = []
-            save_log("取得健保卡處方資料逾時")
-
-        self._close_wait_box(msg_box)
 
         if error_code != 0:
             self._show_message(error_code, "健保卡讀取")
@@ -1316,27 +1596,16 @@ class CSHIS:
 
     # 取得就醫序號
     def get_seq_number_256(self, treat_item, baby_treat, treat_after_check):
-        msg_box = self._show_wait_box(
-            "取得掛號安全簽章",
-            '<font size="5" color="red"><b>健保讀卡機取得掛號安全簽章中, 請稍後...</b></font>',
-            "正在與健保IDC資訊中心連線, 會花費一些時間.",
+        error_code, json_data = self._run_worker(
+            self.get_seq_number_256_thread,
+            (treat_item, baby_treat, treat_after_check),
+            title="取得掛號安全簽章",
+            message='<font size="5" color="red"><b>健保讀卡機取得掛號安全簽章中, 請稍後...</b></font>',
+            hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
+            timeout=30,
+            default=(-1, {}),
+            log_name="取得掛號安全簽章",
         )
-
-        msg_queue = Queue()
-        t = Thread(
-            target=self.get_seq_number_256_thread,
-            args=(msg_queue, treat_item, baby_treat, treat_after_check),
-            daemon=True,
-        )
-        t.start()
-        try:
-            (error_code, json_data) = self._wait_queue(msg_queue, 30)
-        except Empty:
-            error_code = -1
-            json_data = {}
-            save_log("取得掛號安全簽章逾時")
-
-        self._close_wait_box(msg_box)
 
         if error_code == 0:  # 取得安全簽章成功
             self.treat_data = cshis_utils.decode_cshis6_treat_data(json_data)
@@ -1360,26 +1629,16 @@ class CSHIS:
             if not self.reset_vhc_card():
                 return False
 
-        msg_box = self._show_wait_box(
-            "健保IC卡退掛",
-            '<font size="5" color="red"><b>健保IC卡退掛中, 請稍後...</b></font>',
-            "正在與健保IDC資訊中心連線, 會花費一些時間.",
+        error_code = self._run_worker(
+            self.return_seq_number_thread,
+            (treat_date,),
+            title="健保IC卡退掛",
+            message='<font size="5" color="red"><b>健保IC卡退掛中, 請稍後...</b></font>',
+            hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
+            timeout=30,
+            default=-1,
+            log_name="健保IC卡退掛",
         )
-
-        msg_queue = Queue()
-        t = Thread(
-            target=self.return_seq_number_thread,
-            args=(msg_queue, treat_date),
-            daemon=True,
-        )
-        t.start()
-        try:
-            error_code = self._wait_queue(msg_queue, 30)
-        except Empty:
-            error_code = -1
-            save_log("健保IC卡退掛逾時")
-
-        self._close_wait_box(msg_box)
 
         if error_code != 0:
             self._show_message(error_code, "健保卡退掛")
@@ -1445,27 +1704,16 @@ class CSHIS:
 
     # IC卡資料上傳
     def upload_data(self, upload_type, xml, case_count):
-        msg_box = self._show_wait_box(
-            "健保IC卡資料上傳",
-            '<font size="5" color="red"><b>健保IC卡資料上傳中, 請稍後...</b></font>',
-            "正在與健保IDC資訊中心連線, 會花費一些時間.",
+        error_code, op_code = self._run_worker(
+            self.upload_data_thread,
+            (upload_type, xml, case_count),
+            title="健保IC卡資料上傳",
+            message='<font size="5" color="red"><b>健保IC卡資料上傳中, 請稍後...</b></font>',
+            hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
+            timeout=120,
+            default=(-1, {}),
+            log_name="健保IC卡資料上傳",
         )
-
-        msg_queue = Queue()
-        t = Thread(
-            target=self.upload_data_thread,
-            args=(msg_queue, upload_type, xml, case_count),
-            daemon=True,
-        )
-        t.start()
-        try:
-            (error_code, op_code) = self._wait_queue(msg_queue, 120)
-        except Empty:
-            error_code = -1
-            op_code = {}
-            save_log("健保IC卡資料上傳逾時")
-
-        self._close_wait_box(msg_box)
 
         # 成功碼可能是字串 "0000" 或整數 0, 兩種都要接住
         if error_code not in [0, "0000"]:
@@ -1605,6 +1853,25 @@ class CSHIS:
         treat_after_check=None,
         treat_type=None,
     ):
+        with _ic_card_busy():
+            return self._write_ic_card(
+                write_type,
+                patient_key,
+                course,
+                share_type,
+                treat_after_check,
+                treat_type,
+            )
+
+    def _write_ic_card(
+        self,
+        write_type,
+        patient_key,
+        course,
+        share_type,
+        treat_after_check=None,
+        treat_type=None,
+    ):
         treat_item = cshis_utils.get_treat_item(
             course, share_type, treat_type=treat_type
         )
@@ -1665,6 +1932,23 @@ class CSHIS:
 
     # ic 醫令寫卡
     def write_ic_medical_record(self, case_key, treat_after_check, reset_vhc_card=True):
+        if is_ic_card_busy():
+            # 上一次寫卡還沒結束 (多半是使用者在「請稍後」上又點了一次,
+            # 或 processEvents 期間被 timer 重入). 疊上去只會讓兩條流程
+            # 共用同一條 DB 連線互相踩.
+            save_log(
+                f"write_ic_medical_record: 已有寫卡作業進行中, 略過 CaseKey={case_key}"
+            )
+            return False
+
+        with _ic_card_busy():
+            return self._write_ic_medical_record(
+                case_key, treat_after_check, reset_vhc_card
+            )
+
+    def _write_ic_medical_record(
+        self, case_key, treat_after_check, reset_vhc_card=True
+    ):
         if self.ic_card_type == "虛擬健保卡" and reset_vhc_card:
             if not self.reset_vhc_card():
                 return False
@@ -1691,6 +1975,16 @@ class CSHIS:
         return True
 
     def rewrite_ic_prescript(self, case_key):
+        if is_ic_card_busy():
+            save_log(
+                f"rewrite_ic_prescript: 已有寫卡作業進行中, 略過 CaseKey={case_key}"
+            )
+            return False
+
+        with _ic_card_busy():
+            return self._rewrite_ic_prescript(case_key)
+
+    def _rewrite_ic_prescript(self, case_key):
         if self.ic_card_type == "虛擬健保卡":
             if not self.reset_vhc_card():
                 return False
@@ -1760,17 +2054,9 @@ class CSHIS:
         disease_code4,
         share_fee,
     ):
-        msg_box = self._show_wait_box(
-            "寫入診察資料",
-            '<font size="5" color="red"><b>健保讀卡機正在寫入診察資料中, 請稍後...</b></font>',
-            "正在與健保IDC資訊中心連線, 會花費一些時間.",
-        )
-
-        msg_queue = Queue()
-        t = Thread(
-            target=self.write_treatment_code_fee_thread,
-            args=(
-                msg_queue,
+        error_code = self._run_worker(
+            self.write_treatment_code_fee_thread,
+            (
                 registration_datetime,
                 treat_after_check,
                 disease_code1,
@@ -1779,16 +2065,13 @@ class CSHIS:
                 disease_code4,
                 share_fee,
             ),
-            daemon=True,
+            title="寫入診察資料",
+            message='<font size="5" color="red"><b>健保讀卡機正在寫入診察資料中, 請稍後...</b></font>',
+            hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
+            timeout=30,
+            default=-1,
+            log_name="寫入診察資料",
         )
-        t.start()
-        try:
-            error_code = self._wait_queue(msg_queue, 30)
-        except Empty:
-            error_code = -1
-            save_log("寫入診察資料逾時")
-
-        self._close_wait_box(msg_box)
 
         if error_code == 3209:
             error_code = 0
@@ -1827,32 +2110,20 @@ class CSHIS:
         )
 
     def write_multi_prescript_sign(self, registration_datetime, prescriptions):
-        msg_box = self._show_wait_box(
-            "取得處方簽章",
-            '<font size="5" color="red"><b>健保讀卡機取得處方簽章中, 請稍後...</b></font>',
-            "正在與健保IDC資訊中心連線, 會花費一些時間.",
+        (
+            error_code,
+            prescript_sign_list,
+            hex_prescript_sign_list,
+        ) = self._run_worker(
+            self.write_multi_prescript_sign_thread,
+            (registration_datetime, prescriptions),
+            title="取得處方簽章",
+            message='<font size="5" color="red"><b>健保讀卡機取得處方簽章中, 請稍後...</b></font>',
+            hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
+            timeout=30,
+            default=(-1, [], []),
+            log_name="取得處方簽章",
         )
-
-        msg_queue = Queue()
-        t = Thread(
-            target=self.write_multi_prescript_sign_thread,
-            args=(msg_queue, registration_datetime, prescriptions),
-            daemon=True,
-        )
-        t.start()
-        try:
-            (
-                error_code,
-                prescript_sign_list,
-                hex_prescript_sign_list,
-            ) = self._wait_queue(msg_queue, 30)
-        except Empty:
-            error_code = -1
-            prescript_sign_list = []
-            hex_prescript_sign_list = []
-            save_log("取得處方簽章逾時")
-
-        self._close_wait_box(msg_box)
 
         if error_code != 0:
             self._show_message(error_code, "健保卡取得處方簽章")
@@ -1885,16 +2156,22 @@ class CSHIS:
 
         return hex_list
 
-    # 寫入藥品處方簽章
-    def write_medicine_signature(
-        self, case_row, patient_row, prescript_rows, dosage_row
-    ):
+    # ------------------------------------------------------------------
+    # 簽章收集 (只打 API, 不碰資料庫)
+    # ------------------------------------------------------------------
+    # 這兩支是把原本 write_*_signature 的前半段拆出來的.
+    # 拆開的唯一目的: 讓所有健保署往返 (每趟最多 25~30 秒) 全部在
+    # 資料庫交易之外完成, 交易裡只剩下純本機的 DELETE + INSERT.
+    # ------------------------------------------------------------------
+
+    def _collect_medicine_signature(self, case_row, prescript_rows, dosage_row):
+        """取得藥品處方簽章; 回傳待寫入的 presextend 資料, 失敗回 None"""
         case_key = number_utils.get_integer(case_row["CaseKey"])
 
         if dosage_row is None:
             save_log(f"write_medicine_signature: 找不到 dosage 列, CaseKey={case_key}")
             self._show_message(-1, "健保卡寫入醫令簽章")
-            return False
+            return None
 
         ic_card_time = case_utils.extract_security_xml(case_row["Security"], "寫卡時間")
         reg_datetime = date_utils.west_datetime_to_nhi_datetime(
@@ -1935,7 +2212,7 @@ class CSHIS:
 
         result = self.write_multi_prescript_sign(reg_datetime, prescriptions)
         if result is None:
-            return False
+            return None
 
         prescript_sign_list, hex_prescript_sign_list = result
         hex_prescript_sign_list = self._to_hex_signature_list(
@@ -1945,7 +2222,7 @@ class CSHIS:
         if not hex_prescript_sign_list:
             save_log(f"未取得任何醫令簽章, CaseKey={case_key}")
             self._show_message(-1, "健保卡取得處方簽章")
-            return False
+            return None
 
         if len(hex_prescript_sign_list) != len(prescript_rows):
             save_log(
@@ -1953,27 +2230,22 @@ class CSHIS:
                 f"{len(hex_prescript_sign_list)} 不符, CaseKey={case_key}"
             )
             self._show_message(-1, "健保卡取得處方簽章")
-            return False
+            return None
 
+        records = []
         for row, prescript_sign in zip(prescript_rows, hex_prescript_sign_list):
-            prescript_key = number_utils.get_integer(row["PrescriptKey"])
-            sql = f"""
-                DELETE FROM presextend
-                WHERE
-                    PrescriptKey = {prescript_key} AND
-                    ExtendType = "處方簽章"
-            """
-            self.database.exec_sql(sql)
+            records.append(
+                {
+                    "prescript_key": number_utils.get_integer(row["PrescriptKey"]),
+                    "extend_type": "處方簽章",
+                    "content": prescript_sign,
+                }
+            )
 
-            fields = ["PrescriptKey", "ExtendType", "Content"]
-            data = [prescript_key, "處方簽章", prescript_sign]
-            self.database.insert_record("presextend", fields, data)
+        return records
 
-        return True
-
-    # 寫入處置處方簽章
-    def write_treat_signature(self, case_row, dosage_row=None, patient_row=None):
-        # dosage_row / patient_row 目前用不到, 保留參數以相容既有呼叫端
+    def _collect_treat_signature(self, case_row):
+        """取得處置處方簽章; 回傳待寫入的 presextend 資料, 失敗回 None"""
         case_key = number_utils.get_integer(case_row["CaseKey"])
 
         ic_card_time = case_utils.extract_security_xml(case_row["Security"], "寫卡時間")
@@ -1987,7 +2259,7 @@ class CSHIS:
         if treat_code == "":
             save_log(f"write_treat_signature: 取不到處置代碼, CaseKey={case_key}")
             self._show_message(-1, "健保卡寫入處置簽章")
-            return False
+            return None
 
         order_type = "3"  # 醫令類別 1 bytes: 1-非長期藥品 2-長期藥品 3-診療 4-特殊材料
         treat_code = f"{treat_code:<12}"  # 診療項目代號 12 bytes
@@ -2012,7 +2284,7 @@ class CSHIS:
 
         result = self.write_multi_prescript_sign(reg_datetime, prescription)
         if result is None:
-            return False
+            return None
 
         treat_sign_list, hex_treat_sign_list = result
         hex_treat_sign_list = self._to_hex_signature_list(
@@ -2022,22 +2294,43 @@ class CSHIS:
         if not hex_treat_sign_list:
             save_log(f"未取得處置簽章, CaseKey={case_key}")
             self._show_message(-1, "健保卡取得處置簽章")
+            return None
+
+        # 處置簽章借用 PrescriptKey 欄位存 CaseKey, 靠 ExtendType 區分
+        return [
+            {
+                "prescript_key": case_key,
+                "extend_type": "處置簽章",
+                "content": hex_treat_sign_list[0],
+            }
+        ]
+
+    # 寫入藥品處方簽章
+    def write_medicine_signature(
+        self, case_row, patient_row, prescript_rows, dosage_row
+    ):
+        """單獨寫入藥品處方簽章 (保留給既有呼叫端)
+
+        write_prescript_signature 走的是 _collect_* + 一次寫入的路徑,
+        不會經過這裡.
+        """
+        records = self._collect_medicine_signature(case_row, prescript_rows, dosage_row)
+        if records is None:
             return False
 
-        treat_sign = hex_treat_sign_list[0]
+        return self._save_presextend(records, "處方簽章")
 
-        self.database.exec_sql(f"""
-            DELETE FROM presextend
-            WHERE
-                PrescriptKey = {case_key} AND
-                ExtendType = "處置簽章"
-        """)
+    # 寫入處置處方簽章
+    def write_treat_signature(self, case_row, dosage_row=None, patient_row=None):
+        """單獨寫入處置處方簽章 (保留給既有呼叫端)
 
-        fields = ["PrescriptKey", "ExtendType", "Content"]
-        data = [case_key, "處置簽章", treat_sign]
-        self.database.insert_record("presextend", fields, data)
+        dosage_row / patient_row 目前用不到, 保留參數以相容既有呼叫端.
+        """
+        records = self._collect_treat_signature(case_row)
+        if records is None:
+            return False
 
-        return True
+        return self._save_presextend(records, "處置簽章")
 
     # 寫入病名及費用
     def write_ic_treatment(self, case_key, treat_after_check):
@@ -2100,6 +2393,14 @@ class CSHIS:
 
     # 寫入處方簽章
     def write_prescript_signature(self, case_key):
+        """取得處置 + 藥品簽章, 最後一次寫回資料庫
+
+        流程順序是刻意的:
+            1. 讀出需要的資料 (autocommit, 不留鎖)
+            2. 打健保署 API 取簽章 (完全不碰資料庫)
+            3. 一次短交易寫回 presextend
+        步驟 2 有可能花上一分鐘, 絕不能有任何鎖留在手上.
+        """
         case_key = number_utils.get_integer(case_key)
 
         sql = f"""
@@ -2123,15 +2424,6 @@ class CSHIS:
         rows = self.database.select_record(sql)
         dosage_row = rows[0] if len(rows) > 0 else None
 
-        patient_key = number_utils.get_integer(case_row["PatientKey"])
-        sql = f"""
-            SELECT ID, Birthday FROM patient
-            WHERE
-                PatientKey = {patient_key}
-        """
-        patient_rows = self.database.select_record(sql)
-        patient_row = patient_rows[0] if len(patient_rows) > 0 else None
-
         sql = f"""
             SELECT * FROM prescript
             WHERE
@@ -2143,16 +2435,32 @@ class CSHIS:
         """
         prescript_rows = self.database.select_record(sql)
 
+        # ---- 以下全部是健保署往返, 不碰資料庫 ----
         signed = True
-        if string_utils.xstr(
-            case_row["Treatment"]
-        ) in nhi_utils.INS_TREAT and not self.write_treat_signature(
-            case_row, dosage_row, patient_row
-        ):
-            signed = False
+        records = []
 
-        if len(prescript_rows) > 0 and not self.write_medicine_signature(
-            case_row, patient_row, prescript_rows, dosage_row
+        need_treat_signature = (
+            string_utils.xstr(case_row["Treatment"]) in nhi_utils.INS_TREAT
+        )
+        if need_treat_signature:
+            treat_records = self._collect_treat_signature(case_row)
+            if treat_records is None:
+                signed = False
+            else:
+                records += treat_records
+
+        if len(prescript_rows) > 0:
+            medicine_records = self._collect_medicine_signature(
+                case_row, prescript_rows, dosage_row
+            )
+            if medicine_records is None:
+                signed = False
+            else:
+                records += medicine_records
+
+        # ---- 簽章收齊, 這裡才開交易; 鎖只存在幾毫秒 ----
+        if records and not self._save_presextend(
+            records, f"醫令簽章 (CaseKey={case_key})"
         ):
             signed = False
 
