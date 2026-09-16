@@ -2485,11 +2485,11 @@ def export_certificate_payment_to_excel(**kwargs):
 
     workbook = Workbook()
     sheet = workbook.active
-    sheet.title = "醫療費用證明書"
+    sheet.title = "醫療費用收據"
 
     sheet.merge_cells("A1:M1")
     cell_telephone = sheet.cell(row=1, column=1)
-    cell_telephone.value = f"{kwargs['clinic_name']} 醫療費用明細"
+    cell_telephone.value = f"{kwargs['clinic_name']} 醫療費用收據"
     cell_telephone.font = Font(size=20)
     cell_telephone.alignment = align_center
     sheet.row_dimensions[1].height = 50

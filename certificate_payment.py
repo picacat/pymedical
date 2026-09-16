@@ -1036,13 +1036,13 @@ class CertificatePayment(QtWidgets.QMainWindow):
 
         last_dir = system_utils.get_last_directory("醫療費用證明書")
         excel_filename = os.path.join(
-            last_dir, f"{name}_{start_date}至{end_date}醫療費用明細.xlsx"
+            last_dir, f"{name}_{start_date}至{end_date}醫療費用收據.xlsx"
         )
 
         options = QFileDialog.Options()
         excel_filename, _ = QFileDialog.getSaveFileName(
             self.parent,
-            "匯出開立收費證明明細",
+            "匯出開立收費證明收據",
             excel_filename,
             "excel檔案 (*.xlsx);Text Files (*.txt)",
             options=options,
@@ -1050,7 +1050,7 @@ class CertificatePayment(QtWidgets.QMainWindow):
         if not excel_filename:
             return
 
-        system_utils.set_last_directory("醫療費用證明書", excel_filename)
+        system_utils.set_last_directory("醫療費用收據", excel_filename)
 
         patient_key = self.ui.tableWidget_certificate_list.item(
             self.ui.tableWidget_certificate_list.currentRow(), 3
