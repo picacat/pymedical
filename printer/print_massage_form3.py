@@ -99,7 +99,7 @@ class PrintMassageForm3:
             '''
             rows = self.database.select_record(sql)
             if len(rows) <= 0:
-                return
+                return None
 
             row = rows[0]
 
@@ -107,21 +107,16 @@ class PrintMassageForm3:
 
     def _html(self):
         row = self._get_case_row(self.case_key)
+        if row is None:
+            return ""
 
         card = string_utils.xstr(row["Card"])
         if number_utils.get_integer(row["Continuance"]) >= 1:
             card += "-" + string_utils.xstr(row["Continuance"])
 
-        clinic_name = self.system_settings.field("院所名稱")
         case_date = row["CaseDate"]
         patient_key = number_utils.get_integer(row["PatientKey"])
         name = string_utils.xstr(row["Name"])
-        ins_type = string_utils.xstr(row["InsType"])
-        treat_type = string_utils.xstr(row["TreatType"])
-        regist_fee = number_utils.get_integer(row["RegistFee"])
-        diag_share_fee = number_utils.get_integer(row["SDiagShareFee"])
-        deposit_fee = number_utils.get_integer(row["DepositFee"])
-        room = number_utils.get_integer(row["Room"])
         regist_no = number_utils.get_integer(row["RegistNo"])
 
         massager = string_utils.xstr(row["Massager"])

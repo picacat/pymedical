@@ -1,14 +1,11 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
-from PyQt5.QtPrintSupport import QPrinter
 import datetime
 
-from libs import printer_utils
-from libs import string_utils
-from libs import number_utils
-from libs import system_utils
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+from PyQt5.QtPrintSupport import QPrinter
+
+from libs import number_utils, printer_utils, string_utils, system_utils
 
 
 # 掛號機批價收據格式16 80mm * 80mm 熱感紙 板橋新生堂
@@ -22,7 +19,9 @@ class PrintReceiptInsForm16:
         self.case_key = args[2]
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '健保醫療收據印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "健保醫療收據印表機"
+        )
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
 
@@ -59,20 +58,29 @@ class PrintReceiptInsForm16:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
     def print_painter(self):
         self.current_print = self.print_painter
         # self.printer.setPaperSize(QtCore.QSizeF(57, 80), QPrinter.Millimeter)
-        printer_utils.set_paper_size(self.printer, self.system_settings, 57, 80, QPrinter.Millimeter, '健保醫療收據')
+        printer_utils.set_paper_size(
+            self.printer,
+            self.system_settings,
+            57,
+            80,
+            QPrinter.Millimeter,
+            "健保醫療收據",
+        )
 
         painter = QtGui.QPainter()
         painter.setFont(self.font)
         painter.begin(self.printer)
-        painter.drawText(0, 10, 'print test line1 中文測試')
-        painter.drawText(0, 30, 'print test line2 中文測試')
+        painter.drawText(0, 10, "print test line1 中文測試")
+        painter.drawText(0, 30, "print test line2 中文測試")
         painter.end()
 
     def print_html(self, printing):
@@ -86,36 +94,36 @@ class PrintReceiptInsForm16:
             document.print(self.printer)
 
     def _html(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM cases
             WHERE
                 CaseKey = {self.case_key}
-        '''
+        """
         row = self.database.select_record(sql)[0]
 
-        clinic_name = self.system_settings.field('院所名稱')
-        clinic_telephone = self.system_settings.field('院所電話')
-        name = string_utils.xstr(row['Name'])
-        doctor = string_utils.xstr(row['Doctor'])
-        drug_share_fee = number_utils.get_integer(row['SDrugShareFee'])
-        self_total_fee = number_utils.get_integer(row['TotalFee'])
+        clinic_name = self.system_settings.field("院所名稱")
+        clinic_telephone = self.system_settings.field("院所電話")
+        name = string_utils.xstr(row["Name"])
+        doctor = string_utils.xstr(row["Doctor"])
+        drug_share_fee = number_utils.get_integer(row["SDrugShareFee"])
+        self_total_fee = number_utils.get_integer(row["TotalFee"])
         self_treat_fee = (
-            number_utils.get_integer(row['SAcupunctureFee']) +
-            number_utils.get_integer(row['SMassageFee']) +
-            number_utils.get_integer(row['SDislocateFee'])
+            number_utils.get_integer(row["SAcupunctureFee"])
+            + number_utils.get_integer(row["SMassageFee"])
+            + number_utils.get_integer(row["SDislocateFee"])
         )
         self_drug_fee = self_total_fee - self_treat_fee
         total_fee = drug_share_fee + self_total_fee
 
         date = datetime.datetime.now().strftime("%Y-%m-%d")
         time = datetime.datetime.now().strftime("%H:%M:%S")
-        drug_no = number_utils.get_integer(row['DrugNo'])
+        drug_no = number_utils.get_integer(row["DrugNo"])
         if drug_no > 0:
             drug_no_str = f'領藥號碼: <font size="12">{drug_no:0>3}</font><br>'
         else:
-            drug_no_str = ''
+            drug_no_str = ""
 
-        html = f'''
+        html = f"""
             <html>
             <body>
                 <center style="font-size:14px"><b>繳費證明單</b></center>
@@ -136,6 +144,6 @@ class PrintReceiptInsForm16:
                 如需針灸請持單至針灸區
             </body>
             </html>
-        '''
+        """
 
         return html
