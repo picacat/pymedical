@@ -39,23 +39,35 @@ def set_medicine_in_price(database, medicine_key, unit_quantity, unit_price):
 
 
 def add_medicine_quantity(database, medicine_key, stock_quantity):
-    sql = f"""
-        SELECT * FROM medicine
-        WHERE
-            MedicineKey = {medicine_key}
-    """
-    rows = database.select_record(sql)
-    if len(rows) <= 0:
+    if medicine_key in [None, ""]:
         return
 
-    row = rows[0]
-    original_stock_quantity = number_utils.get_float(row["Quantity"])
-    total_quantity = original_stock_quantity + number_utils.get_float(stock_quantity)
+    quantity = number_utils.get_float(stock_quantity)
+    if quantity == 0:
+        return
 
     sql = f"""
         UPDATE medicine
         SET
-            Quantity = {total_quantity}
+            Quantity = ROUND(IFNULL(Quantity, 0) + {quantity}, 1)
+        WHERE
+            MedicineKey = {medicine_key}
+    """
+    database.exec_sql(sql)
+
+
+def subtract_medicine_quantity(database, medicine_key, stock_quantity):
+    if medicine_key in [None, ""]:
+        return
+
+    quantity = number_utils.get_float(stock_quantity)
+    if quantity == 0:
+        return
+
+    sql = f"""
+        UPDATE medicine
+        SET
+            Quantity = ROUND(IFNULL(Quantity, 0) - {quantity}, 1)
         WHERE
             MedicineKey = {medicine_key}
     """
@@ -105,33 +117,6 @@ def restore_self_prescript(database, case_key, medicine_set):
             continue
         total_dosage = number_utils.get_float(row["Dosage"]) * pres_days
         add_medicine_quantity(database, medicine_key, total_dosage)  # 加回庫存
-
-
-def subtract_medicine_quantity(database, medicine_key, stock_quantity):
-    sql = f"""
-        SELECT Quantity FROM medicine
-        WHERE
-            MedicineKey = {medicine_key}
-    """
-    rows = database.select_record(sql)
-    if len(rows) <= 0:
-        return
-
-    row = rows[0]
-    original_stock_quantity = number_utils.get_float(row["Quantity"])
-    # if original_stock_quantity <= 0:  # 庫存量=0 不扣庫存
-    #     return
-
-    total_quantity = round(original_stock_quantity - stock_quantity, 1)
-
-    sql = f"""
-        UPDATE medicine
-        SET
-            Quantity = {total_quantity}
-        WHERE
-            MedicineKey = {medicine_key}
-    """
-    database.exec_sql(sql)
 
 
 def set_restore_date(database, stock_in_key):
@@ -254,7 +239,7 @@ def adjust_ins_prescript(database, case_key):
         if medicine_key is None:
             continue
 
-        total_dosage = number_utils.get_integer(row["Dosage"]) * pres_days
+        total_dosage = number_utils.get_float(row["Dosage"]) * pres_days
 
         subtract_medicine_quantity(database, medicine_key, total_dosage)
 
@@ -302,6 +287,6 @@ def restore_prescript_quantity(database, case_key):
         if pres_days == 0:
             pres_days = 1
 
-        total_dosage = number_utils.get_integer(row["Dosage"]) * pres_days
+        total_dosage = number_utils.get_float(row["Dosage"]) * pres_days
 
         add_medicine_quantity(database, medicine_key, total_dosage)
