@@ -2184,9 +2184,9 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-475</y>
               <width>1301</width>
-              <height>1236</height>
+              <height>1267</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_65">
@@ -2788,6 +2788,13 @@
                    <widget class="QCheckBox" name="checkBox_no_waiting_progress">
                     <property name="text">
                      <string>不要顯示看診進度</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_no_waiting_count">
+                    <property name="text">
+                     <string>看診進度不要顯示候診人數</string>
                     </property>
                    </widget>
                   </item>
@@ -5296,7 +5303,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-1558</y>
+              <y>0</y>
               <width>1301</width>
               <height>2391</height>
              </rect>

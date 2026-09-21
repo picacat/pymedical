@@ -222,6 +222,7 @@ class PyMedical(QtWidgets.QMainWindow):
 
         system_utils.remove_user_info(self.system_settings)
         self.clinic_name = self.system_settings.field("院所名稱")
+        self.clinic_id = self.system_settings.field("院所代號")
         instance_setting = self.system_settings.field("醫療系統執行個體")
         self.set_waiting_list = self.system_settings.field("自動切換醫師候診名單")
         self.no_beep = self.system_settings.field("醫師候診名單不要提示音")
@@ -2039,6 +2040,11 @@ class PyMedical(QtWidgets.QMainWindow):
         for action in action_list:
             action.setEnabled(True)
 
+    # 設定限制的權限
+    def set_unauthorized_permission(self):
+        if self.clinic_id in system_utils.UNAUTHORIZED_CLINIC_ID:
+            self.ui.action_update.setEnabled(False)
+
     # 設定權限
     def set_permission(self):
         self._authorize_all_permission()
@@ -2505,6 +2511,7 @@ class PyMedical(QtWidgets.QMainWindow):
         self._set_user_name()
         self.refresh_status_bar()
         self.set_permission()
+        self.set_unauthorized_permission()
         self.set_root_permission()
         self._reload_users_permission()
 
@@ -2856,6 +2863,7 @@ def setup_user_environment(py_medical, user_name, position):
     )
     py_medical.refresh_status_bar()
     py_medical.set_permission()
+    py_medical.set_unauthorized_permission()
     py_medical.set_root_permission()
     QtWidgets.qApp.processEvents()
     py_medical.set_treatment_list()

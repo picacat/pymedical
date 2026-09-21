@@ -300,6 +300,26 @@
                 <string>傷科總數</string>
                </property>
               </column>
+              <column>
+               <property name="text">
+                <string>針灸併傷</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>電針併傷</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中針併傷</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>高針併傷</string>
+               </property>
+              </column>
              </widget>
             </item>
             <item>
@@ -511,6 +531,26 @@
                 <column>
                  <property name="text">
                   <string>傷科總數</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>針灸併傷</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>電針併傷</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>中針併傷</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>高針併傷</string>
                  </property>
                 </column>
                </widget>

@@ -398,6 +398,7 @@ class SystemSettings:
             "顯示候診一覽表",
             "醫療費用收據不印粗體",
             "列印收據空白行",
+            "網路預約不顯示候診人數",
         ]:
             station_no = 0
         else:

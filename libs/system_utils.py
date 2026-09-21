@@ -39,6 +39,10 @@ from libs import dialog_utils, nhi_utils, ui_utils
 PY_MEDICAL_JSON_FILE = "pymedical.json"
 COMPLICATED_TREATMENT_DISEASE_FILE = "complicated_treatment_disease.json"
 
+UNAUTHORIZED_CLINIC_ID = [
+    "3801102744",  # 馥林
+]
+
 
 class CalendarPopupFixer(QObject):
     """QDateEdit 值為哨兵日期(1900/1/1)時，月曆彈窗改顯示今天的月份"""

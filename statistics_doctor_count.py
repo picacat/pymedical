@@ -21,7 +21,7 @@ from libs import (
 class StatisticsDoctorCount(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsDoctorCount, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -102,6 +102,10 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
             85,
             85,
             100,
+            85,
+            85,
+            85,
+            85,
         ]
         self.table_widget_doctor_count.set_table_heading_width(width)
         self.table_widget_doctor.set_table_heading_width(width)
@@ -253,15 +257,15 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
     def _read_data(self, group_by_doctor=False):
         period_condition = ""
         if self.period != "全部":
-            period_condition = ' AND Period = "{0}"'.format(self.period)
+            period_condition = f' AND Period = "{self.period}"'
 
         ins_type_condition = ""
         if self.ins_type != "全部":
-            ins_type_condition = ' AND InsType = "{0}"'.format(self.ins_type)
+            ins_type_condition = f' AND InsType = "{self.ins_type}"'
 
         doctor_condition = ""
         if self.doctor != "全部":
-            doctor_condition = ' AND Doctor = "{0}"'.format(self.doctor)
+            doctor_condition = f' AND Doctor = "{self.doctor}"'
 
         weekday_condition = ""
         if len(self.weekday_list) > 0:
@@ -673,6 +677,20 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
 
         return col_no
 
+    def _get_merge_col_no(self, treatment):
+        col_no = 39  # 一般針合併傷科
+
+        if "一般針灸合併" in treatment:
+            col_no = 39
+        elif "電針合併" in treatment:
+            col_no = 40
+        elif "中度針灸合併" in treatment:
+            col_no = 41
+        elif "高度針灸合併" in treatment:
+            col_no = 42
+
+        return col_no
+
     def _calculate_treat_count(self, rows):
         for row in rows:
             ins_type = string_utils.xstr(row["InsType"])
@@ -686,7 +704,6 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
 
             row_no = self._get_row_no(case_date)
             col_no = self._get_col_no(treatment, pres_days, course)
-
             treat_count = self.ui.tableWidget_doctor_count.item(row_no, col_no)
             if treat_count is None:
                 treat_count = 0
@@ -699,6 +716,22 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
                 col_no,
                 string_utils.xstr(treat_count + 1),
             )
+
+            if treatment in nhi_utils.MERGE_TREAT:
+                col_no = self._get_merge_col_no(treatment)
+
+                treat_count = self.ui.tableWidget_doctor_count.item(row_no, col_no)
+                if treat_count is None:
+                    treat_count = 0
+                else:
+                    treat_count = number_utils.get_integer(treat_count.text())
+
+                self._set_item_data(
+                    self.ui.tableWidget_doctor_count,
+                    row_no,
+                    col_no,
+                    string_utils.xstr(treat_count + 1),
+                )
 
     def _calculate_doctor_treat_count(self, rows):
         for row in rows:
@@ -733,6 +766,22 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
                 col_no,
                 string_utils.xstr(treat_count + 1),
             )
+
+            if treatment in nhi_utils.MERGE_TREAT:
+                col_no = self._get_merge_col_no(treatment)
+
+                treat_count = self.ui.tableWidget_doctor.item(row_no, col_no)
+                if treat_count is None:
+                    treat_count = 0
+                else:
+                    treat_count = number_utils.get_integer(treat_count.text())
+
+                self._set_item_data(
+                    self.ui.tableWidget_doctor,
+                    row_no,
+                    col_no,
+                    string_utils.xstr(treat_count + 1),
+                )
 
     def _calculate_pres_days(self, rows):
         for row in rows:
@@ -983,9 +1032,7 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            "{0}至{1}{2}醫師門診人次統計表.xlsx".format(
-                self.start_date[:10], self.end_date[:10], self.doctor
-            ),
+            f"{self.start_date[:10]}至{self.end_date[:10]}{self.doctor}醫師門診人次統計表.xlsx",
             "excel檔案 (*.xlsx);;Text Files (*.txt)",
             options=options,
         )
@@ -1029,7 +1076,7 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
         system_utils.show_message_box(
             QMessageBox.Information,
             "資料匯出完成",
-            "<h3>醫師人次統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            f"<h3>醫師人次統計檔{excel_file_name}匯出完成.</h3>",
             "Microsoft Excel 格式.",
         )
 
@@ -1038,9 +1085,7 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            "{0}至{1}{2}個別醫師門診人次統計表.xlsx".format(
-                self.start_date[:10], self.end_date[:10], self.doctor
-            ),
+            f"{self.start_date[:10]}至{self.end_date[:10]}{self.doctor}個別醫師門診人次統計表.xlsx",
             "excel檔案 (*.xlsx);;Text Files (*.txt)",
             options=options,
         )
@@ -1084,7 +1129,7 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
         system_utils.show_message_box(
             QMessageBox.Information,
             "資料匯出完成",
-            "<h3>個別醫師人次統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            f"<h3>個別醫師人次統計檔{excel_file_name}匯出完成.</h3>",
             "Microsoft Excel 格式.",
         )
 
@@ -1093,9 +1138,7 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            "{0}至{1}{2}個別醫師門診人次居家醫療統計表.xlsx".format(
-                self.start_date[:10], self.end_date[:10], self.doctor
-            ),
+            f"{self.start_date[:10]}至{self.end_date[:10]}{self.doctor}個別醫師門診人次居家醫療統計表.xlsx",
             "excel檔案 (*.xlsx);;Text Files (*.txt)",
             options=options,
         )
@@ -1112,7 +1155,7 @@ class StatisticsDoctorCount(QtWidgets.QMainWindow):
         system_utils.show_message_box(
             QMessageBox.Information,
             "資料匯出完成",
-            "<h3>個別醫師人次統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            f"<h3>個別醫師人次統計檔{excel_file_name}匯出完成.</h3>",
             "Microsoft Excel 格式.",
         )
 
