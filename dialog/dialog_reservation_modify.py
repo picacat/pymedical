@@ -140,7 +140,7 @@ class DialogReservationModify(QtWidgets.QDialog):
                 ReserveNo = {reserve_no}
         '''
         rows = self.database.select_record(sql)
-        if patient_key != "網路初診" and len(rows) > 0:
+        if patient_key not in ["初診預約", "網路初診"] and len(rows) > 0:
             system_utils.show_message_box(
                 QMessageBox.Critical,
                 "預約號碼重複",
@@ -208,7 +208,7 @@ class DialogReservationModify(QtWidgets.QDialog):
     def _set_reservation_data(self, row):
         patient_key = string_utils.xstr(row["PatientKey"])
         source = string_utils.xstr(row["Source"])
-        if source[:4] in ["網路初診", "視訊初診"]:
+        if source[:4] in ["初診預約", "網路初診", "視訊初診"]:
             patient_key = source[:4]
 
         self.ui.lineEdit_patient_key.setText(patient_key)
@@ -229,7 +229,7 @@ class DialogReservationModify(QtWidgets.QDialog):
 
         self.ui.comboBox_arrival.setCurrentText(arrival)
 
-        if source[:4] in ["網路預約", "網路初診"]:
+        if source[:4] in ["初診預約", "網路預約", "網路初診"]:
             self.ui.comboBox_source.setEnabled(False)
         else:
             self.ui.comboBox_source.setEnabled(True)
