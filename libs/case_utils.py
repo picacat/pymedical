@@ -2999,7 +2999,7 @@ def delete_traditional_health_care(database, in_case_key):
 
 
 def update_traditional_health_care(
-    database, system_settings, in_case_key, traditional_health_care_fee
+    database, system_settings, in_case_key, traditional_health_care_fee, self_items=None
 ):
     sql = f"""
         SELECT
@@ -3052,17 +3052,31 @@ def update_traditional_health_care(
     database.update_record("cases", fields, "CaseKey", in_case_key, data)
 
     database.exec_sql(f"DELETE FROM prescript WHERE CaseKey = {in_case_key}")
-    _insert_traditional_health_care_prescript(
-        database, system_settings, in_case_key, traditional_health_care_fee
+    insert_traditional_health_care_prescript(
+        database,
+        system_settings,
+        in_case_key,
+        _get_base_health_care_fee(traditional_health_care_fee, self_items),
+        self_items=self_items,
     )
+
+
+def _get_base_health_care_fee(traditional_health_care_fee, self_items):
+    """總額扣掉自費加購項目，得到民俗調理本身的金額"""
+    base_fee = number_utils.get_integer(traditional_health_care_fee)
+    if self_items:
+        base_fee -= sum(number_utils.get_integer(item["amount"]) for item in self_items)
+
+    return base_fee
 
 
 def write_traditional_health_care(
     database,
     system_settings,
     in_case_key,
-    traditional_health_care_fee=None,
+    traditional_health_care_fee=None,  # 總額（含加購項目）
     massager=None,
+    self_items=None,
 ):
     case_key = insert_traditional_health_care_cases(
         database, in_case_key, traditional_health_care_fee, massager
@@ -3070,7 +3084,11 @@ def write_traditional_health_care(
 
     if case_key is not None:
         insert_traditional_health_care_prescript(
-            database, system_settings, case_key, traditional_health_care_fee
+            database,
+            system_settings,
+            case_key,
+            _get_base_health_care_fee(traditional_health_care_fee, self_items),
+            self_items=self_items,
         )
 
 
@@ -3177,12 +3195,25 @@ def insert_traditional_health_care_prescript(
     database,
     system_settings,
     case_key,
-    traditional_health_care_fee,
+    traditional_health_care_fee,  # 基本費用，不含自費加購項目
     folk_massage_name=None,
+    self_items=None,
 ):
     medicine_set = 2
     if folk_massage_name is None:
         folk_massage_name = prescript_utils.get_folk_massage_name(system_settings)
+
+    if self_items is None:
+        self_items = []
+
+    base_fee = number_utils.get_integer(traditional_health_care_fee)
+
+    item_list = []
+    if base_fee > 0 or not self_items:  # 沒有加購項目時維持原本行為
+        item_list.append((folk_massage_name, base_fee))
+
+    for item in self_items:
+        item_list.append((item["name"], number_utils.get_integer(item["amount"])))
 
     fields = [
         "PrescriptNo",
@@ -3197,21 +3228,23 @@ def insert_traditional_health_care_prescript(
         "Price",
         "Amount",
     ]
+    case_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    data = [
-        1,
-        case_key,
-        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        medicine_set,
-        "處置",
-        0,
-        folk_massage_name,
-        1,
-        "次",
-        traditional_health_care_fee,
-        traditional_health_care_fee,
-    ]
-    database.insert_record("prescript", fields, data)
+    for prescript_no, (item_name, fee) in enumerate(item_list, start=1):
+        data = [
+            prescript_no,
+            case_key,
+            case_date,
+            medicine_set,
+            "處置",
+            0,
+            item_name,
+            1,
+            "次",
+            fee,
+            fee,
+        ]
+        database.insert_record("prescript", fields, data)
 
 
 def remove_traditional_health_care_prescript(

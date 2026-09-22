@@ -32,6 +32,8 @@ from libs import (
     web_utils,
 )
 
+SELF_ITEM_INS_TYPE = "自費調理"
+
 
 # 門診掛號 2026-07-06
 class Registration(QtWidgets.QMainWindow):
@@ -61,6 +63,8 @@ class Registration(QtWidgets.QMainWindow):
         self.vhc_ic_card = None
 
         self.smart_card_reader = None
+        self.base_health_care_fee = 0
+        self.check_box_self_items_list = []
 
         self.pregnant_treat_type_list = ["助孕照護", "保胎照護"]
         self.temp_card_list = ["XX1", "XX2", "XX3", "XX4", "XX5"]
@@ -159,12 +163,6 @@ class Registration(QtWidgets.QMainWindow):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_REGISTRATION, self)
 
         system_utils.set_css(self, self.system_settings)
-        # ui_utils.set_completer(
-        #     self.database,
-        #     'SELECT Name FROM patient GROUP BY Name ORDER BY Name',
-        #     'Name',
-        #     self.ui.lineEdit_query
-        # )
         self.table_widget_wait = class_utils.get_table_widget(
             self.ui.tableWidget_wait, self.database
         )
@@ -226,6 +224,69 @@ class Registration(QtWidgets.QMainWindow):
         led_list = self._get_led_list()
         if len(led_list) > 0:
             self._set_tab_widget_corner_widget()
+
+        self._set_self_items()
+
+    def _set_self_items(self):
+        self._clear_charge_layout()
+        self.check_box_self_items_list = []
+
+        sql = """
+            SELECT ItemName, Amount 
+            FROM charge_settings
+            WHERE InsType = %s
+            ORDER BY ChargeSettingsKey
+        """
+        rows = self.database.select_record(sql, (SELF_ITEM_INS_TYPE,))
+
+        for row in rows:
+            item_name = string_utils.xstr(row["ItemName"])
+            chk_box = QtWidgets.QCheckBox(item_name)
+            chk_box.toggled.connect(self._calc_health_care_fee)
+            self.ui.horizontalLayout_charge.addWidget(chk_box)
+            self.check_box_self_items_list.append(
+                {
+                    "checkbox": chk_box,
+                    "name": item_name,
+                    "amount": number_utils.get_integer(row["Amount"]),
+                }
+            )
+
+        self.ui.horizontalLayout_charge.addStretch()
+
+    def _clear_charge_layout(self):
+        layout = self.ui.horizontalLayout_charge
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()
+
+    def set_base_health_care_fee(self, fee):
+        """唯一能設定底價的入口"""
+        self.base_health_care_fee = number_utils.get_integer(fee)
+        self._calc_health_care_fee()
+
+    def _checked_self_items_amount(self):
+        return sum(
+            item["amount"]
+            for item in self.check_box_self_items_list
+            if item["checkbox"].isChecked()
+        )
+
+    def _calc_health_care_fee(self):
+        """唯一能寫入 lineEdit_traditional_health_care_fee 的地方"""
+        total = self.base_health_care_fee + self._checked_self_items_amount()
+
+        line_edit = self.ui.lineEdit_traditional_health_care_fee
+        line_edit.blockSignals(True)
+        try:
+            line_edit.setText(string_utils.xstr(total))
+        finally:
+            line_edit.blockSignals(False)
+
+        self._set_total_amount()
 
     def _set_tab_widget_corner_widget(self):
         self.tab_corner_widget = QtWidgets.QWidget()
@@ -1142,6 +1203,12 @@ class Registration(QtWidgets.QMainWindow):
         self.ui.checkBox_designated_massager.setChecked(False)
         self.ui.dateEdit_case_date.setDate(datetime.datetime.today())
 
+        self.base_health_care_fee = 0
+        for item in self.check_box_self_items_list:
+            item["checkbox"].blockSignals(True)
+            item["checkbox"].setChecked(False)
+            item["checkbox"].blockSignals(False)
+
     # 設定 comboBox
     def _set_combo_box(self):
         ui_utils.set_combo_box(self.ui.comboBox_patient_share, nhi_utils.INSURED_TYPE)
@@ -1562,7 +1629,7 @@ class Registration(QtWidgets.QMainWindow):
             self._set_regist_fee(visit=visit)
             self._set_diag_share_fee()
         elif sender_name == "comboBox_massager":
-            self._set_traditional_health_care_fee()
+            self._set_traditional_health_care_fee(force=True)
         elif sender_name == "comboBox_doctor":
             reg_no = self.ui.spinBox_reg_no.value()
             doctor = self.ui.comboBox_doctor.currentText()
@@ -1700,7 +1767,7 @@ class Registration(QtWidgets.QMainWindow):
         if self_fee is None:
             return
 
-        self.ui.lineEdit_traditional_health_care_fee.setText(str(self_fee))
+        self.set_base_health_care_fee(self_fee)
 
     # 開始查詢病患資料
     def query_patient(self):
@@ -3052,7 +3119,7 @@ class Registration(QtWidgets.QMainWindow):
         self.ui.lineEdit_deposit_fee.setText(str(deposit_fee))
         self._set_total_amount()
 
-    def _set_traditional_health_care_fee(self):
+    def _set_traditional_health_care_fee(self, force=False):
         massager = self.ui.comboBox_massager.currentText()
 
         traditional_health_care_fee = charge_utils.get_traditional_health_care_fee(
@@ -3062,13 +3129,10 @@ class Registration(QtWidgets.QMainWindow):
             number_utils.get_integer(self.ui.comboBox_course.currentText()),
             massager,
         )
-        if traditional_health_care_fee == 0:
+        if traditional_health_care_fee == 0 and not force:
             return
 
-        self.ui.lineEdit_traditional_health_care_fee.setText(
-            str(traditional_health_care_fee)
-        )
-        self._set_total_amount()
+        self.set_base_health_care_fee(traditional_health_care_fee)
 
     # 設定收費資料
     def _set_charge(self, medical_record):
@@ -3077,14 +3141,6 @@ class Registration(QtWidgets.QMainWindow):
         diag_share_fee = medical_record["SDiagShareFee"]
         deposit_fee = medical_record["DepositFee"]
         ins_type = medical_record["InsType"]
-        # traditional_health_care_fee = None
-        # if self.system_settings.field("掛號名單顯示民俗調理費") == "Y":  # 顯示速度太慢
-        #     traditional_health_care_fee = (
-        #         charge_utils.get_traditional_health_care_fee_from_case(
-        #             self.database, case_key, ins_type=ins_type
-        #         )
-        #     )
-
         traditional_health_care_fee = (
             charge_utils.get_traditional_health_care_fee_from_case(
                 self.database, case_key, ins_type=ins_type
@@ -3093,9 +3149,7 @@ class Registration(QtWidgets.QMainWindow):
         self.ui.lineEdit_regist_fee.setText(str(regist_fee))
         self.ui.lineEdit_diag_share_fee.setText(str(diag_share_fee))
         self.ui.lineEdit_deposit_fee.setText(str(deposit_fee))
-        self.ui.lineEdit_traditional_health_care_fee.setText(
-            str(traditional_health_care_fee)
-        )
+        self.set_base_health_care_fee(traditional_health_care_fee)
         self._set_total_amount(case_key)
 
     # 設定收費總金額
@@ -3144,7 +3198,7 @@ class Registration(QtWidgets.QMainWindow):
         self.ui.lineEdit_regist_fee.setText(str(regist_fee))
         self.ui.lineEdit_diag_share_fee.setText(str(diag_share_fee))
         self.ui.lineEdit_deposit_fee.setText(str(deposit_fee))
-        self.ui.lineEdit_traditional_health_care_fee.setText(
+        self.ui.lineEdit_traditional_health_care_fee.setText(  # ← 改回 setText
             str(traditional_health_care_fee)
         )
         self.ui.lineEdit_total_amount.setText(str(total_amount))
@@ -3998,9 +4052,20 @@ class Registration(QtWidgets.QMainWindow):
         ]
         self.database.update_record("cases", fields, "CaseKey", case_key, data)
 
+    def _get_checked_self_items(self):
+        return [
+            {"name": item["name"], "amount": item["amount"]}
+            for item in self.check_box_self_items_list
+            if item["checkbox"].isChecked()
+        ]
+
     def _check_traditional_health_care_fee(self, ins_type, case_key):
         traditional_health_care_fee = number_utils.get_integer(
             self.ui.lineEdit_traditional_health_care_fee.text()
+        )
+        self_items = self._get_checked_self_items()
+        base_fee = traditional_health_care_fee - sum(
+            item["amount"] for item in self_items
         )
 
         treat_type = self.ui.comboBox_treat_type.currentText()
@@ -4034,8 +4099,9 @@ class Registration(QtWidgets.QMainWindow):
                         self.database,
                         self.system_settings,
                         case_key,
-                        traditional_health_care_fee,
+                        base_fee,  # ← 不是 traditional_health_care_fee
                         folk_massage_name=treat_type,
+                        self_items=self_items,
                     )
 
                     return
@@ -4066,7 +4132,8 @@ class Registration(QtWidgets.QMainWindow):
                     self.database,
                     self.system_settings,
                     case_key,
-                    traditional_health_care_fee,
+                    base_fee,
+                    self_items=self_items,
                 )
             elif self.ui.comboBox_treat_type.currentText() == "民俗調理":
                 fields = ["SMassageFee", "SelfTotalFee", "TotalFee", "ReceiptFee"]
@@ -4109,7 +4176,7 @@ class Registration(QtWidgets.QMainWindow):
         if write_health_care:
             try:
                 self._write_traditional_health_care(
-                    ins_type, case_key, traditional_health_care_fee
+                    ins_type, case_key, traditional_health_care_fee, self_items
                 )
             except ValueError:
                 pass
@@ -4440,7 +4507,7 @@ class Registration(QtWidgets.QMainWindow):
         self.database.insert_record("dosage", fields, data)
 
     def _write_traditional_health_care(
-        self, ins_type, in_case_key, traditional_health_care_fee
+        self, ins_type, in_case_key, traditional_health_care_fee, self_items=None
     ):
         treat_type = self.ui.comboBox_treat_type.currentText()
 
@@ -4451,6 +4518,7 @@ class Registration(QtWidgets.QMainWindow):
                 in_case_key,
                 traditional_health_care_fee=traditional_health_care_fee,
                 massager=self.ui.comboBox_massager.currentText(),
+                self_items=self_items,
             )
         else:
             case_utils.update_traditional_health_care(
@@ -4458,6 +4526,7 @@ class Registration(QtWidgets.QMainWindow):
                 self.system_settings,
                 in_case_key,
                 traditional_health_care_fee=traditional_health_care_fee,
+                self_items=self_items,
             )
 
     def _save_wait(self, case_key, req_code):
@@ -6289,9 +6358,7 @@ class Registration(QtWidgets.QMainWindow):
         remark = self.ui.comboBox_remark.currentText()
         massage_fee = charge_utils.get_remark_fee(self.database, remark)
         if massage_fee > 0:
-            self.ui.lineEdit_traditional_health_care_fee.setText(
-                string_utils.xstr(massage_fee)
-            )
+            self.set_base_health_care_fee(massage_fee)
 
     def _open_past_history(self):
         patient_key = self.table_widget_wait.field_value(self.wait_column["PatientKey"])
