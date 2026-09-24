@@ -48,43 +48,46 @@ HEADERS = {
     "Content-Type": "application/json",  # 根據 API 要求的 Content-Type 設定
 }
 
-# 本機主控台元件回應快, 健保署 IDC 常常慢; 分開設定避免內層先逾時
+# ----------------------------------------------------------------------
+# 逾時設定
+# ----------------------------------------------------------------------
+# 主執行緒上的同步呼叫 (讀基本資料 / 卡片狀態 / 緊急聯絡電話 / 卡片更新)
+# 會直接凍住畫面, 逾時一拉長視窗就反白, 所以維持穩定版的 10 秒.
+# 背景執行緒 (取序號 / 寫診察 / 取簽章 / 上傳) 可以等久一點.
 LOCAL_TIMEOUT = 10
-NHI_TIMEOUT = 25
+NHI_TIMEOUT_MAIN = 10
+NHI_TIMEOUT_WORKER = 20
+
+# 等 worker 的秒數必須 >= LOCAL_TIMEOUT + NHI_TIMEOUT_WORKER,
+# 否則 worker 還在跑, 主執行緒就先放棄, 結果沒人收.
+WAIT_TIMEOUT = 35
+UPLOAD_WAIT_TIMEOUT = 120
 
 # 本機主控台元件用自簽憑證, 只能關閉驗證;
 # 健保 VPN 待確認憑證鏈可通過後改為 True (改之前請先在測試環境驗證)
 VERIFY_NHI_SSL = False
 
-# 讀卡機狀態快取秒數: 夠短不會漏掉插拔卡, 夠長可以省掉同一流程內的重複往返
-STATUS_CACHE_SECONDS = 0.5
-
 # 資料庫鎖定重試: 1205 鎖等待逾時 / 1213 死結
-# 加了索引之後這兩個幾乎不會再出現, 留著是最後一道防線
 DB_RETRY_ERRNO = (1205, 1213)
 DB_RETRY_TIMES = 3
 DB_RETRY_DELAY = 0.5
 
-PRESEXTEND_INDEX_NAME = "idx_prescript_key"
+# presextend 若沒有 PrescriptKey 索引, 寫簽章的 DELETE 會全表掃描.
+# 這條 SQL 請在「非營業時間」用資料庫工具手動執行, 客戶端不再自動建立
+# (ALTER TABLE 在營業時間會等 metadata lock, 等多久沒有上限, 視窗就反白).
+PRESEXTEND_INDEX_SQL = (
+    "ALTER TABLE presextend ADD INDEX idx_prescript_key (PrescriptKey, ExtendType);"
+)
 
-# 模組載入時關閉一次即可, 不需要每次呼叫都關
+# 模組載入時關閉一次即可
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # ----------------------------------------------------------------------
 # 寫卡忙碌旗標
 # ----------------------------------------------------------------------
-# 等健保署回應期間, _wait_queue 會呼叫 processEvents() 讓畫面保持回應,
-# 這會讓 QTimer (notification 輪詢, 候診名單重讀...) 在寫卡流程中間被叫醒,
-# 用同一條 self.database 連線插隊下查詢.
-#
-# 本檔已經做到:
-#   1. processEvents 加上 ExcludeUserInputEvents, 使用者在「請稍後」上
-#      再按一次按鈕不會引發第二次寫卡
-#   2. write_ic_medical_record / rewrite_ic_prescript 自己擋掉重入
-#
-# 其他模組 (notification_utils 的輪詢 / 候診名單重讀) 若要一起避開,
-# 在自己的 timer callback 開頭加一行即可, 本檔不動其他檔案:
+# 其他模組 (notification_utils 的輪詢 / 候診名單重讀) 若想避開寫卡中,
+# 在自己的 timer callback 開頭加:
 #
 #     from libs import cshis
 #     if cshis.is_ic_card_busy():
@@ -141,11 +144,11 @@ def save_log(message):
 
 
 class _MessageRelay(QtCore.QObject):
-    """把工作執行緒的訊息請求轉回主執行緒顯示
+    """把「工作執行緒」的訊息請求轉回主執行緒顯示
 
-    Qt 規定 widget 只能在主執行緒建立與操作. 原本各個 *_thread 直接呼叫
-    _show_message() 建立 QMessageBox, 是偶發當機的來源.
-    QueuedConnection 會把呼叫排進主執行緒的事件迴圈.
+    Qt 規定 widget 只能在主執行緒建立與操作. 穩定版的 *_thread 直接在
+    工作執行緒呼叫 _show_message() 建立 QMessageBox, 是偶發當機的來源.
+    只有非主執行緒才會走這條路; 主執行緒一律直接同步顯示.
     """
 
     message = QtCore.pyqtSignal(object, object)
@@ -178,7 +181,7 @@ class CSHIS:
         self.clinic_id = self.system_settings.field("院所代號")
 
         # 用 deepcopy, 不要直接綁到模組層級的 dict;
-        # 否則任何一次寫入都會污染全域預設值, 影響所有 CSHIS 實例
+        # 否則 basic_data["emg_phone"] = ... 會污染全域預設值, 影響所有實例
         self.basic_data = self._default_basic_data()
         self.treat_data = copy.deepcopy(cshis_utils.TREAT_DATA)
         self.treatment_data = copy.deepcopy(cshis_utils.TREATMENT_DATA)
@@ -186,9 +189,6 @@ class CSHIS:
         self.critical_illness_data = []
         self.prescript_data = []
         self.silent_mode = False  # kiosk 無人值守模式: 不顯示阻塞對話框
-
-        self._status_cache = None
-        self._status_time = 0.0
 
         self._relay = _MessageRelay()
         app = QtCore.QCoreApplication.instance()
@@ -216,33 +216,59 @@ class CSHIS:
         if self.silent_mode:
             return
 
-        # 不論在哪個執行緒呼叫, 一律排進主執行緒顯示
+        if self._is_main_thread():
+            # 與穩定版相同: 同步顯示, 呼叫端要等使用者按確定才繼續.
+            # (上一版連主執行緒也用 QueuedConnection, 訊息會延後、亂序跳出)
+            cshis_utils.show_ic_card_message(error_code, operation)
+            return
+
         self._relay.message.emit(error_code, operation)
 
     @staticmethod
-    def _wait_queue(msg_queue, timeout=30):
-        """等待 worker 結果, 期間保持 UI 有回應
+    def _wait_queue(msg_queue, timeout):
+        """等待 worker 結果 (阻塞)
 
-        原本用 msg_queue.get(timeout=30) 會讓主執行緒完全停止處理事件,
-        「請稍後...」對話框畫不出來, Windows 判定程式沒有回應而蒙上白色.
-
-        ExcludeUserInputEvents: 等待期間只畫面更新, 不處理滑鼠鍵盤.
-        少了這個, 使用者在「請稍後」上連點兩下就會疊出第二次寫卡流程,
-        兩條流程共用同一條資料庫連線, 是偶發當機與鎖衝突的來源.
+        刻意沿用穩定版的阻塞 get, 不在等待期間跑 processEvents:
+        processEvents 會讓 QTimer callback (候診名單重讀 / notification 輪詢 /
+        自動讀卡...) 在寫卡流程中間插隊, 跟寫卡共用同一條資料庫連線與
+        讀卡機, 是上一版反白與偶發當機的主因.
         """
-        deadline = time.monotonic() + timeout
-        app = QtCore.QCoreApplication.instance()
+        return msg_queue.get(timeout=timeout)
 
-        while time.monotonic() < deadline:
-            try:
-                return msg_queue.get_nowait()
-            except Empty:
-                if app is not None:
-                    app.processEvents(QtCore.QEventLoop.ExcludeUserInputEvents)
+    @staticmethod
+    def _message_box(title, message, hint):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setInformativeText(hint)
+        msg_box.setStandardButtons(QMessageBox.NoButton)
 
-                time.sleep(0.02)
+        return msg_box
 
-        raise Empty
+    def _show_wait_box(self, title, message, hint):
+        """顯示「請稍後」訊息盒; 非主執行緒或 kiosk 模式一律不顯示"""
+        if self.silent_mode or not self._is_main_thread():
+            return None
+
+        if not title:
+            return None
+
+        msg_box = self._message_box(title, message, hint)
+        msg_box.show()
+
+        # 與穩定版相同: 只在開始等待前處理一次事件, 讓訊息盒畫出來
+        QtCore.QCoreApplication.processEvents()
+
+        return msg_box
+
+    @staticmethod
+    def _close_wait_box(msg_box):
+        if msg_box is None:
+            return
+
+        msg_box.close()
+        msg_box.deleteLater()
 
     def _run_worker(
         self,
@@ -251,14 +277,14 @@ class CSHIS:
         title="",
         message="",
         hint="",
-        timeout=30,
+        timeout=WAIT_TIMEOUT,
         default=None,
         log_name="",
     ):
-        """統一的「背景執行緒打 API, 前景等結果」流程
+        """統一的「背景執行緒打 API, 前景阻塞等結果」流程
 
-        原本這段在 8 個地方各抄一次 (讀門診 / 讀診斷 / 讀處方 / 取序號 /
-        退掛 / 寫診察 / 取簽章 / 上傳), 每次改都要改八個地方.
+        穩定版這段在 8 個地方各抄一次 (讀門診 / 讀診斷 / 讀處方 / 取序號 /
+        退掛 / 寫診察 / 取簽章 / 上傳), 行為完全一樣, 這裡只是收攏.
         逾時回傳 default.
         """
         msg_box = self._show_wait_box(title, message, hint)
@@ -279,136 +305,48 @@ class CSHIS:
         return result
 
     def do_thread(self, nhi_thread, *args):
-        msg_box = None
-        try:
-            operation = args[0]
-        except IndexError:
-            operation = None
+        operation = args[0] if len(args) > 0 else None
+        message = args[1] if len(args) > 1 else ""
+        hint = args[2] if len(args) > 2 else ""
+        show_warning = args[3] if len(args) > 3 else True
 
-        try:
-            show_warning = args[3]
-        except Exception:
-            show_warning = True
-
-        if operation and not self.silent_mode and self._is_main_thread():
-            msg_box = self._message_box("健保讀卡機作業", args[1], args[2])
-            msg_box.show()
-
-        msg_queue = Queue()
-        t = Thread(target=nhi_thread, args=(msg_queue,), daemon=True)
-
-        with _ic_card_busy():
-            t.start()
-            try:
-                error_code = self._wait_queue(msg_queue, 30)
-            except Empty:
-                error_code = -1  # 設定一個錯誤碼，表示逾時
-                save_log(f"健保讀卡機作業逾時: {operation}")
-
-        if msg_box:
-            msg_box.close()
-            msg_box.deleteLater()
+        error_code = self._run_worker(
+            nhi_thread,
+            title="健保讀卡機作業" if operation else "",
+            message=message,
+            hint=hint,
+            timeout=WAIT_TIMEOUT,
+            default=-1,
+            log_name=f"健保讀卡機作業 ({operation})",
+        )
 
         if error_code != 0 or show_warning:
             self._show_message(error_code, operation)
 
         return error_code
 
-    @staticmethod
-    def _message_box(title, message, hint):
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Information)
-        msg_box.setWindowTitle(title)
-        msg_box.setText(message)
-        msg_box.setInformativeText(hint)
-        msg_box.setStandardButtons(QMessageBox.NoButton)
-
-        return msg_box
-
-    def _show_wait_box(self, title, message, hint):
-        """顯示等待中的訊息盒; 非主執行緒或 kiosk 模式一律不顯示"""
-        if self.silent_mode or not self._is_main_thread():
-            return None
-
-        if not title:
-            return None
-
-        msg_box = self._message_box(title, message, hint)
-        msg_box.show()
-
-        return msg_box
-
-    @staticmethod
-    def _close_wait_box(msg_box):
-        if msg_box is None:
-            return
-
-        msg_box.close()
-        msg_box.deleteLater()
-
     # ------------------------------------------------------------------
     # 資料庫
     # ------------------------------------------------------------------
-    # 這一段是 1205 Lock wait timeout 的根治處.
-    #
-    # 原本的寫法是 write_treat_signature / write_medicine_signature 各自
-    # 「打 API -> 立刻 DELETE -> 立刻 INSERT」, 而 presextend 若沒有
-    # PrescriptKey 索引, 那句 DELETE 就是全表掃描; InnoDB 底下全表掃描的
-    # DELETE 會鎖住掃過的每一列 (binlog_format=STATEMENT 時還會退回
-    # REPEATABLE READ, 變成整張表的 next-key lock).
-    # 一張 30 味藥的處方等於連續 30 次全表掃描 DELETE, 隔壁診間同時寫卡
-    # 就互相踩 -> 1205.
-    #
-    # 現在改成:
-    #   1. 確保 presextend 有 (PrescriptKey, ExtendType) 索引 (只做一次)
-    #   2. 所有健保署往返先跑完, 簽章全部收齊之後才碰資料庫
-    #   3. 刪 + 插包在同一次短交易, 一句 DELETE ... IN (...) 取代 N 句
-    #   4. 真的還是撞到 1205/1213 就自動重試 (先刪後插, 重跑安全)
+    # 1205 Lock wait timeout 的處理方式:
+    #   1. 所有健保署往返先跑完, 簽章全部收齊之後才碰資料庫
+    #   2. 一句 DELETE ... IN (...) 取代 N 句 DELETE, 之後逐筆 INSERT
+    #      (autocommit, 每句執行完鎖就放掉, 不另外開交易)
+    #   3. 真的撞到 1205/1213 就自動重試 (先刪後插, 重跑安全)
+    #   4. 索引只「檢查並記錄」, 不在客戶端自動 ALTER TABLE
     # ------------------------------------------------------------------
 
-    def _in_transaction(self):
-        """呼叫端是否已經開著交易"""
-        try:
-            return number_utils.get_integer(getattr(self.database, "_tx_depth", 0)) > 0
-        except Exception:
-            return False
-
-    def ensure_database_index(self):
-        """確保 presextend 有 PrescriptKey 索引 (每個行程只做一次)
-
-        可以在程式啟動時主動呼叫一次; 不呼叫的話第一次寫簽章時會自動跑.
-        任何失敗都只記 log, 絕不擋住寫卡.
-        """
+    def check_database_index(self):
+        """檢查 presextend 是否有 PrescriptKey 索引 (每個行程只做一次, 只記 log)"""
         global _PRESEXTEND_INDEX_CHECKED
 
         if _PRESEXTEND_INDEX_CHECKED:
             return
 
-        _PRESEXTEND_INDEX_CHECKED = True  # 不論成敗都只試一次
-
-        database = self.database
+        _PRESEXTEND_INDEX_CHECKED = True
 
         try:
-            rows = database.select_record("""
-                SELECT ENGINE FROM information_schema.TABLES
-                WHERE
-                    TABLE_SCHEMA = DATABASE() AND
-                    TABLE_NAME = "presextend"
-            """)
-            engine = string_utils.xstr(rows[0]["ENGINE"]).upper() if rows else ""
-        except Exception as e:
-            save_log(f"presextend 引擎查詢失敗, 略過索引檢查: {e}")
-            return
-
-        if engine != "INNODB":
-            # MyISAM 是表鎖, 不會出現 1205; 而且 MyISAM 的 ALTER 會把整張表
-            # 鎖到重建完成, 營業時間動它等於讓診所停擺, 所以只記錄不處理.
-            if engine:
-                save_log(f"presextend 引擎為 {engine}, 不自動建立索引")
-            return
-
-        try:
-            rows = database.select_record("SHOW INDEX FROM presextend")
+            rows = self.database.select_record("SHOW INDEX FROM presextend")
         except Exception as e:
             save_log(f"presextend 索引查詢失敗: {e}")
             return
@@ -421,83 +359,21 @@ class CSHIS:
                 continue
 
             if column_name == "PrescriptKey" and seq_in_index == 1:
-                return  # 已經有可用的索引了
-
-        save_log(
-            "presextend 缺少 PrescriptKey 索引 (寫簽章的 DELETE 會全表掃描), 開始建立"
-        )
-
-        # 由寬鬆到保守: 線上建立 -> 一般建立 -> 單欄建立
-        # (ExtendType 若是 TEXT 型別無法直接入索引, 退回只建 PrescriptKey)
-        statements = [
-            f"ALTER TABLE presextend "
-            f"ADD INDEX {PRESEXTEND_INDEX_NAME} (PrescriptKey, ExtendType), "
-            f"ALGORITHM=INPLACE, LOCK=NONE",
-            f"ALTER TABLE presextend "
-            f"ADD INDEX {PRESEXTEND_INDEX_NAME} (PrescriptKey, ExtendType)",
-            f"ALTER TABLE presextend ADD INDEX {PRESEXTEND_INDEX_NAME} (PrescriptKey)",
-        ]
-
-        for sql in statements:
-            try:
-                database.exec_sql(sql)
-                save_log(f"presextend 索引 {PRESEXTEND_INDEX_NAME} 建立完成")
                 return
-            except Exception as e:
-                save_log(f"presextend 索引建立失敗, 嘗試下一種寫法: {e}")
 
         save_log(
-            "presextend 索引建立全部失敗, 請手動執行: "
-            f"ALTER TABLE presextend ADD INDEX {PRESEXTEND_INDEX_NAME} "
-            f"(PrescriptKey, ExtendType);"
+            "presextend 缺少 PrescriptKey 索引 (寫簽章的 DELETE 會全表掃描), "
+            f"請於非營業時間手動執行: {PRESEXTEND_INDEX_SQL}"
         )
 
     def _run_db_write(self, work, description=""):
-        """把 work(database) 包在一次短交易裡執行, 撞到鎖就重試
-
-        相容舊版 mysql_database.py: 沒有 transaction() 就退回逐句 autocommit.
-        """
-        database = self.database
-
-        if self._in_transaction():
-            # 呼叫端自己開了交易: 不要在裡面再開一層, 也不能自己 commit.
-            # 但要留下記錄 -- 這代表鎖會一路持有到呼叫端 commit 為止,
-            # 若那段期間還夾著健保署往返, 就是下一個 1205 的來源.
-            save_log(
-                f"警告: {description} 進入時呼叫端已開啟交易 "
-                f"(深度 {getattr(database, '_tx_depth', '?')}), "
-                f"鎖會持有到呼叫端 commit 為止"
-            )
-            try:
-                work(database)
-                return True
-            except Exception as e:
-                save_log(f"{description} 寫入失敗: {e}")
-                return False
-
-        use_transaction = callable(getattr(database, "transaction", None))
+        """執行 work(database), 撞到鎖就重試"""
         last_error = None
 
         for attempt in range(1, DB_RETRY_TIMES + 1):
             try:
-                if use_transaction:
-                    with database.transaction():
-                        work(database)
-                else:
-                    work(database)
-
+                work(self.database)
                 return True
-            except TypeError as e:
-                if use_transaction:
-                    save_log(
-                        f"database.transaction() 不是 context manager, "
-                        f"改用逐句寫入: {e}"
-                    )
-                    use_transaction = False
-                    continue
-
-                last_error = e
-                break
             except Exception as e:
                 last_error = e
                 errno = getattr(e, "errno", None)
@@ -533,13 +409,13 @@ class CSHIS:
         """把收齊的簽章寫回 presextend
 
         records: [{"prescript_key": int, "extend_type": str, "content": str}, ...]
-        同一個 ExtendType 的 key 併成一句 DELETE ... IN (...), 只開一次短交易.
-        這裡不會有任何健保署往返, 所以鎖只存在幾毫秒.
+        同一個 ExtendType 的 key 併成一句 DELETE ... IN (...).
+        這裡不會有任何健保署往返, 鎖只存在幾毫秒.
         """
         if not records:
             return True
 
-        self.ensure_database_index()
+        self.check_database_index()
 
         groups = {}
         for record in records:
@@ -577,8 +453,13 @@ class CSHIS:
 
         # 主控台元件預設聆聽 5066 通訊埠
         url = (LOCAL_URL if local_url else nhi_url) + service_path
-        timeout = LOCAL_TIMEOUT if local_url else NHI_TIMEOUT
-        verify = False if local_url else VERIFY_NHI_SSL
+
+        if local_url:
+            timeout = LOCAL_TIMEOUT
+            verify = False
+        else:
+            timeout = NHI_TIMEOUT_MAIN if self._is_main_thread() else NHI_TIMEOUT_WORKER
+            verify = VERIFY_NHI_SSL
 
         try:
             response = requests.request(
@@ -626,8 +507,7 @@ class CSHIS:
     def _signature_data(signature, **extra):
         """把簽章資料展開成 API 需要的欄位, 缺任一必要欄位時回傳 None
 
-        原本各處直接用 signature["clientRandom"] 取值, 健保署沒回這個 key
-        時連檢查那一行自己都會 KeyError.
+        穩定版直接用 signature["hcId"] 取值, 健保署沒回這個 key 時會 KeyError.
         """
         required = ("clientRandom", "hospitalId", "samId", "signature")
         if signature is None:
@@ -656,38 +536,23 @@ class CSHIS:
 
         return self._get_json(service_path, "GET", {})
 
-    def _invalidate_status(self):
-        self._status_cache = None
-        self._status_time = 0.0
-
-    def get_api_status(self, max_age=STATUS_CACHE_SECONDS):
+    def get_api_status(self):
         """取得讀卡機/卡片狀態
 
         主控台元件離線時回傳安全的預設狀態, 讓呼叫端走
         「未初始化 / 未認證 / 未置卡」的流程, 而不是直接炸掉.
-
-        回傳的 dict 本身就含三張卡, 取用方式是
-        get_api_status()["hpc"]["status"], 不是 get_api_status("hpc").
+        (不做快取, 每次都問元件, 跟穩定版一樣)
         """
-        now = time.monotonic()
-        if self._status_cache is not None and now - self._status_time < max_age:
-            return self._status_cache
-
         res_data = self.get_cshis6_status()
         if res_data is None or "status" not in res_data:
-            status = {
+            return {
                 "initialized": False,
                 "sam": {"status": 0},
                 "hpc": {"status": 0},
                 "hc": {"status": 0},
             }
-        else:
-            status = res_data["status"]
 
-        self._status_cache = status
-        self._status_time = now
-
-        return status
+        return res_data["status"]
 
     # ------------------------------------------------------------------
     # 初始化 / 結束
@@ -716,7 +581,6 @@ class CSHIS:
                 data = {"name": com_port}
 
         res_data = self._get_json(service_path, "POST", data)
-        self._invalidate_status()
         if res_data is None:
             return -1
 
@@ -730,7 +594,6 @@ class CSHIS:
         service_path = "/api/common/v1/Finalize"
 
         res_data = self._get_json(service_path, "POST", {})
-        self._invalidate_status()
         if res_data is None:
             return -1
 
@@ -741,7 +604,7 @@ class CSHIS:
         return return_code
 
     def activate_reader_app(self):
-        # init_cshis6() 內部已經會檢查並 finalize, 這裡不需要再做一次
+        # init_cshis6() 內部已經會檢查並 finalize
         return self.init_cshis6()
 
     def deactivate_reader_app(self):
@@ -766,12 +629,11 @@ class CSHIS:
         """純 API 的 SAM 認證, 不產生任何 widget, 工作執行緒可安全呼叫"""
         self.init_cshis6()
 
-        if self.get_api_status(max_age=0)["sam"]["status"] == 2:  # 已經認證過了
+        if self.get_api_status()["sam"]["status"] == 2:  # 已經認證過了
             return 0
 
         service_path = "/api/sam/v1/Verification"
         res_data = self._get_json(service_path, "POST", {})
-        self._invalidate_status()
 
         return res_data.get("statusCode", -1) if res_data else -1
 
@@ -779,7 +641,7 @@ class CSHIS:
         out_queue.put(self._verify_sam_no_ui())
 
     def verify_sam(self, show_message=True):
-        """有 UI 的 SAM 認證, 只能在主執行緒呼叫"""
+        """有 UI 的 SAM 認證, 只能在主執行緒呼叫; 其他執行緒自動走無 UI 路徑"""
         if not self._is_main_thread():
             return self._verify_sam_no_ui()
 
@@ -869,7 +731,8 @@ class CSHIS:
         service_path = "/api/hc/v1/Logout"  # 先登出健保卡狀態
 
         res_data = self._get_json(service_path, "DELETE", {})
-        self._invalidate_status()
+        if res_data is None:
+            save_log("登出健保卡: 主控台元件無回應")
 
         return res_data
 
@@ -881,13 +744,12 @@ class CSHIS:
         service_path = "/api/hpc/v1/Logout"
 
         res_data = self._get_json(service_path, "DELETE", {})
-        self._invalidate_status()
 
         return res_data.get("statusCode", -1) if res_data else -1
 
     # 驗證醫事人員卡
     def verify_hpc_pin(self, show_message=True):
-        """一律回傳 error_code (0 表示成功), 不再回傳 None"""
+        """一律回傳 error_code (0 表示成功)"""
         api_status = self.get_api_status()
         hpc_mode = api_status["hpc"]["status"]
         if hpc_mode == 3:  # 已經認證過了
@@ -924,8 +786,6 @@ class CSHIS:
         data = {"pin": pin}
         service_path = "/api/hpc/v1/Verification/Hpc"
         res_data = self._get_json(service_path, "POST", data)
-        self._invalidate_status()
-
         error_code = res_data.get("statusCode", -1) if res_data else -1
 
         if show_message or error_code != 0:
@@ -1014,7 +874,6 @@ class CSHIS:
         }
 
         res_data = self._get_json(service_path, "PUT", data)
-        self._invalidate_status()
         error_code = res_data.get("statusCode", -1) if res_data else -1
         self._show_message(error_code, "醫事人員卡解鎖")
 
@@ -1023,6 +882,24 @@ class CSHIS:
     # ------------------------------------------------------------------
     # 簽章
     # ------------------------------------------------------------------
+    # _xxx_signature()  -> (error_code, res_data): 只打 API, 不顯示訊息,
+    #                      工作執行緒用這組, 把 error_code 丟回主執行緒顯示
+    # get_xxx_signature() -> res_data 或 None: 主執行緒用, 失敗會顯示訊息
+    # ------------------------------------------------------------------
+
+    def _request_signature(self, service_path, service_type, operation):
+        data = {"serviceType": service_type}
+
+        res_data = self._get_json(service_path, "POST", data)
+        if res_data is None:
+            save_log(f"{operation}: 主控台元件無回應")
+            return -1, None
+
+        error_code = res_data.get("statusCode", -1)
+        if error_code != 0:
+            return error_code, None
+
+        return 0, res_data
 
     def get_sam_signature(self, service_type):
         service_path = "/api/sam/v1/Signature"
@@ -1030,74 +907,63 @@ class CSHIS:
 
         return self._get_json(service_path, "POST", data)
 
+    def _hc_signature(self, service_type):
+        return self._request_signature(
+            "/api/hc/v1/Signature/Hc", service_type, "讀取健保卡簽章"
+        )
+
     def get_hc_signature(self, service_type, show_warning=True):
         """show_warning 只控制要不要跳訊息, 失敗一律回傳 None"""
-        service_path = "/api/hc/v1/Signature/Hc"
-        data = {"serviceType": service_type}
-
-        res_data = self._get_json(service_path, "POST", data)
-        if res_data is None:
-            if show_warning:
-                self._show_message(-1, "讀取健保卡簽章")
-
-            return None
-
-        error_code = res_data.get("statusCode", -1)
-        if error_code != 0:
-            if show_warning:
-                self._show_message(error_code, "讀取健保卡簽章")
-
-            return None
+        error_code, res_data = self._hc_signature(service_type)
+        if error_code != 0 and show_warning:
+            self._show_message(error_code, "讀取健保卡簽章")
 
         return res_data
 
-    def get_hpc_signature(self, service_type):
-        api_status = self.get_api_status()
-        if api_status["hpc"]["status"] == 0:  # 未置入卡片
-            self._show_message(1102, "讀取醫事人員卡簽章")
-            return None
+    def _hpc_signature(self, service_type):
+        if self.get_api_status()["hpc"]["status"] == 0:  # 未置入卡片
+            return 1102, None
 
         self._ensure_sam_verified()
 
-        service_path = "/api/hpc/v1/Signature"
-        data = {"serviceType": service_type}
+        return self._request_signature(
+            "/api/hpc/v1/Signature", service_type, "讀取醫事人員卡簽章"
+        )
 
-        res_data = self._get_json(service_path, "POST", data)
-        if res_data is None:
-            self._show_message(-1, "讀取醫事人員卡簽章")
-            return None
-
-        error_code = res_data.get("statusCode", -1)
-        if error_code != 0:
+    def get_hpc_signature(self, service_type, show_warning=True):
+        error_code, res_data = self._hpc_signature(service_type)
+        if error_code != 0 and show_warning:
             self._show_message(error_code, "讀取醫事人員卡簽章")
-            return None
 
         return res_data
 
-    def get_hpchc_signature(self, service_type):
+    def _hpchc_signature(self, service_type):
         api_status = self.get_api_status()
         if api_status["hc"]["status"] == 0:  # 健保卡未置入
-            self._show_message(1102, "讀取健保卡")
-            return None
+            return 1102, None
 
         if api_status["hpc"]["status"] != 3:  # 醫事人員卡未認證
-            self._show_message(1402, "讀取醫事人員卡簽章")
-            return None
+            return 1402, None
 
         self._ensure_sam_verified()
 
-        service_path = "/api/hc/v1/Signature/HpcHc"
-        data = {"serviceType": service_type}
+        error_code, res_data = self._request_signature(
+            "/api/hc/v1/Signature/HpcHc", service_type, "讀取三卡簽章"
+        )
+        if error_code == -1:
+            error_code = 4061  # 穩定版對「元件無回應」用的代碼
 
-        res_data = self._get_json(service_path, "POST", data)
-        if res_data is None:
-            self._show_message(4061, "讀取三卡簽章")
-            return None
+        return error_code, res_data
 
-        error_code = res_data.get("statusCode", -1)
-        if error_code != 0:
-            self._show_message(error_code, "讀取三卡簽章")
-            return None
+    def get_hpchc_signature(self, service_type, show_warning=True):
+        error_code, res_data = self._hpchc_signature(service_type)
+        if error_code != 0 and show_warning:
+            if error_code == 1102:
+                self._show_message(error_code, "讀取健保卡")
+            elif error_code == 1402:
+                self._show_message(error_code, "讀取醫事人員卡簽章")
+            else:
+                self._show_message(error_code, "讀取三卡簽章")
 
         return res_data
 
@@ -1113,15 +979,17 @@ class CSHIS:
         """讀卡失敗時務必清空, 否則會殘留上一位病人的資料"""
         self.basic_data = self._default_basic_data()
 
-    def read_basic_data(self, show_message=True):
+    def read_basic_data(self, show_error=True, show_message=None):
+        # show_error 是穩定版的參數名, show_message 是上一版的; 兩個都收
+        if show_message is not None:
+            show_error = show_message
+
         self.logout_hc()
 
         if self.ic_card_type == "虛擬健保卡":
             return self.read_register_basic_data_by_vhc()
 
-        hc_signature = self.get_hc_signature(
-            service_type="01", show_warning=show_message
-        )
+        hc_signature = self.get_hc_signature(service_type="01", show_warning=show_error)
         request_data = self._signature_data(hc_signature)
         if request_data is None:
             self._reset_basic_data()
@@ -1131,7 +999,7 @@ class CSHIS:
         res_data = self._get_json(service_path, "POST", request_data, local_url=False)
         if res_data is None:
             self._reset_basic_data()
-            if show_message:
+            if show_error:
                 self._show_message(-1, "讀取健保卡基本資料")
 
             return False
@@ -1213,9 +1081,9 @@ class CSHIS:
                 "new_born_mark": None,
                 "emg_phone": None,
             }
-        except KeyError as e:
+        except Exception as e:
             self._reset_basic_data()
-            save_log(f"虛擬健保卡回應缺少欄位 {e}: {card_content}")
+            save_log(f"處理虛擬健保卡資料時發生異常 {e}: {card_content}")
             return False
 
         return True
@@ -1297,7 +1165,7 @@ class CSHIS:
                         "CI_VALIDITY_END": illness_data[i]["validityEnd"],
                     }
                 )
-            except (IndexError, KeyError, TypeError):
+            except Exception:
                 self.critical_illness_data.append(
                     {
                         "CI_CODE": "",
@@ -1359,8 +1227,7 @@ class CSHIS:
         if self.qrcode is None:
             self.qrcode = self._get_qrcode()
 
-        if not self.read_register_basic_data():
-            return False
+        self.read_register_basic_data()
 
         return self.verify_vhc_card()
 
@@ -1432,6 +1299,9 @@ class CSHIS:
     # ------------------------------------------------------------------
     # 門診 / 診斷 / 處方資料讀取
     # ------------------------------------------------------------------
+    # *_thread 只打 API, 把 (error_code, data) 丟回主執行緒;
+    # 訊息一律由主執行緒顯示 (穩定版是在工作執行緒裡直接跳 QMessageBox).
+    # ------------------------------------------------------------------
 
     # 取得門診資料 (不需醫事人員卡)
     def read_treatment_no_need_hpc(self):
@@ -1440,7 +1310,6 @@ class CSHIS:
             title="取得健保卡門診資料",
             message='<font size="5" color="red"><b>正在取得健保卡門診資料中, 請稍後...</b></font>',
             hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
-            timeout=30,
             default=(-1, {}),
             log_name="取得健保卡門診資料",
         )
@@ -1454,10 +1323,10 @@ class CSHIS:
         return True
 
     def read_treatment_no_need_hpc_thread(self, out_queue):
-        hc_signature = self.get_hc_signature(service_type="01", show_warning=False)
+        error_code, hc_signature = self._hc_signature("01")
         request_data = self._signature_data(hc_signature)
         if request_data is None:
-            out_queue.put((-1, {}))
+            out_queue.put((error_code or -1, {}))
             return
 
         service_path = "/api/v1/Treatment/NoNeedHPC"
@@ -1480,7 +1349,6 @@ class CSHIS:
             title="取得健保卡診斷資料",
             message='<font size="5" color="red"><b>正在取得健保卡診斷資料中, 請稍後...</b></font>',
             hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
-            timeout=30,
             default=(-1, {}),
             log_name="取得健保卡診斷資料",
         )
@@ -1494,10 +1362,10 @@ class CSHIS:
         return True
 
     def read_treatment_need_hpc_thread(self, out_queue):
-        hpchc_signature = self.get_hpchc_signature(service_type="01")
+        error_code, hpchc_signature = self._hpchc_signature("01")
         request_data = self._signature_data(hpchc_signature, format="0")
         if request_data is None:
-            out_queue.put((-1, {}))
+            out_queue.put((error_code or -1, {}))
             return
 
         service_path = "/api/v1/Treatment/NeedHPC"
@@ -1520,7 +1388,6 @@ class CSHIS:
             title="取得健保卡處方資料",
             message='<font size="5" color="red"><b>正在取得健保卡處方資料中, 請稍後...</b></font>',
             hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
-            timeout=30,
             default=(-1, []),
             log_name="取得健保卡處方資料",
         )
@@ -1534,10 +1401,10 @@ class CSHIS:
         return True
 
     def read_prescript_data_thread(self, out_queue):
-        hpchc_signature = self.get_hpchc_signature(service_type="01")
+        error_code, hpchc_signature = self._hpchc_signature("01")
         request_data = self._signature_data(hpchc_signature)
         if request_data is None:
-            out_queue.put((-1, []))
+            out_queue.put((error_code or -1, []))
             return
 
         service_path = "/api/v1/Prescription/Query"
@@ -1575,7 +1442,7 @@ class CSHIS:
     def get_seq_number_256_thread(
         self, out_queue, treat_item, baby_treat, treat_after_check
     ):
-        hc_signature = self.get_hc_signature(service_type="03", show_warning=False)
+        error_code, hc_signature = self._hc_signature("03")
         request_data = self._signature_data(
             hc_signature,
             treatmentItem=treat_item,
@@ -1583,7 +1450,7 @@ class CSHIS:
             afterCheck=treat_after_check,
         )
         if request_data is None:
-            out_queue.put((-1, {}))
+            out_queue.put((error_code or -1, {}))
             return
 
         service_path = "/api/v1/SequelNumber/Next"
@@ -1602,7 +1469,6 @@ class CSHIS:
             title="取得掛號安全簽章",
             message='<font size="5" color="red"><b>健保讀卡機取得掛號安全簽章中, 請稍後...</b></font>',
             hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
-            timeout=30,
             default=(-1, {}),
             log_name="取得掛號安全簽章",
         )
@@ -1613,10 +1479,10 @@ class CSHIS:
         return error_code
 
     def return_seq_number_thread(self, out_queue, treat_date):
-        hc_signature = self.get_hc_signature(service_type="03", show_warning=False)
+        error_code, hc_signature = self._hc_signature("03")
         request_data = self._signature_data(hc_signature, treatmentDateTime=treat_date)
         if request_data is None:
-            out_queue.put(-1)
+            out_queue.put(error_code or -1)
             return
 
         service_path = "/api/v1/SequelNumber/Rollback"
@@ -1635,7 +1501,6 @@ class CSHIS:
             title="健保IC卡退掛",
             message='<font size="5" color="red"><b>健保IC卡退掛中, 請稍後...</b></font>',
             hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
-            timeout=30,
             default=-1,
             log_name="健保IC卡退掛",
         )
@@ -1710,7 +1575,7 @@ class CSHIS:
             title="健保IC卡資料上傳",
             message='<font size="5" color="red"><b>健保IC卡資料上傳中, 請稍後...</b></font>',
             hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
-            timeout=120,
+            timeout=UPLOAD_WAIT_TIMEOUT,
             default=(-1, {}),
             log_name="健保IC卡資料上傳",
         )
@@ -1762,7 +1627,24 @@ class CSHIS:
     def insert_correct_ic_card(self, patient_key):
         patient_key = number_utils.get_integer(patient_key)
 
-        if not self.read_basic_data():
+        try:
+            read_ok = self.read_basic_data()
+        except Exception as e:
+            save_log(f"insert_correct_ic_card: 讀取基本資料例外: {e}")
+            read_ok = False
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setWindowTitle("無法使用健保卡")
+            msg_box.setText("""
+                <font size="5" color="red">
+                  <b>無法使用讀卡機, 請改掛異常卡序或欠卡<br>
+                </font>
+            """)
+            msg_box.setInformativeText("請確定讀卡機使用正常")
+            msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+            msg_box.exec_()
+
+        if not read_ok:
             return False
 
         sql = f"""
@@ -1773,16 +1655,18 @@ class CSHIS:
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             save_log(f"insert_correct_ic_card: 找不到病歷號 {patient_key}")
-            system_utils.show_message_box(
-                QMessageBox.Critical,
-                "病患資料有誤",
-                f"""
-                    <font size="5" color="red">
-                        <b>找不到病歷號{patient_key}, 請重新插卡.</b>
-                    </font>
-                """,
-                "請確定插入的健保卡是否為此病患所有.",
-            )
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setWindowTitle("病患資料有誤")
+            msg_box.setText(f"""
+                <font size="5" color="red">
+                    <b>找不到病歷號{patient_key}, 請重新插卡.</b>
+                </font>
+            """)
+            msg_box.setInformativeText("請確定插入的健保卡是否為此病患所有.")
+            msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+            msg_box.exec_()
+
             return False
 
         row = rows[0]
@@ -1880,8 +1764,9 @@ class CSHIS:
             return False
 
         if self.ic_card_type == "虛擬健保卡":
+            # 與穩定版相同: 驗證失敗不中斷, 後面取序號失敗時會有訊息
             if not self.verify_vhc_card():
-                return False
+                save_log("虛擬健保卡驗證失敗, 繼續取得就醫序號")
         else:
             _, available_count = self.get_card_status()
             if available_count is None:
@@ -1933,9 +1818,7 @@ class CSHIS:
     # ic 醫令寫卡
     def write_ic_medical_record(self, case_key, treat_after_check, reset_vhc_card=True):
         if is_ic_card_busy():
-            # 上一次寫卡還沒結束 (多半是使用者在「請稍後」上又點了一次,
-            # 或 processEvents 期間被 timer 重入). 疊上去只會讓兩條流程
-            # 共用同一條 DB 連線互相踩.
+            # 只有在錯誤訊息盒 (modal) 期間 timer 插隊才會走到這裡
             save_log(
                 f"write_ic_medical_record: 已有寫卡作業進行中, 略過 CaseKey={case_key}"
             )
@@ -2018,7 +1901,7 @@ class CSHIS:
         disease_code4,
         share_fee,
     ):
-        hc_signature = self.get_hc_signature(service_type="02", show_warning=False)
+        error_code, hc_signature = self._hc_signature("02")
         request_data = self._signature_data(
             hc_signature,
             afterCheck=treat_after_check,
@@ -2036,7 +1919,7 @@ class CSHIS:
             inpatient180Fee=0,
         )
         if request_data is None:
-            out_queue.put(-1)
+            out_queue.put(error_code or -1)
             return
 
         service_path = "/api/v1/Treatment/WriteCodeFee"
@@ -2068,7 +1951,6 @@ class CSHIS:
             title="寫入診察資料",
             message='<font size="5" color="red"><b>健保讀卡機正在寫入診察資料中, 請稍後...</b></font>',
             hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
-            timeout=30,
             default=-1,
             log_name="寫入診察資料",
         )
@@ -2085,14 +1967,14 @@ class CSHIS:
     def write_multi_prescript_sign_thread(
         self, out_queue, registration_datetime, prescriptions
     ):
-        hc_signature = self.get_hc_signature(service_type="02", show_warning=False)
+        error_code, hc_signature = self._hc_signature("02")
         request_data = self._signature_data(
             hc_signature,
             treatmentDateTime=registration_datetime,
             prescriptions=prescriptions,
         )
         if request_data is None:
-            out_queue.put((-1, [], []))
+            out_queue.put((error_code or -1, [], []))
             return
 
         service_path = "/api/v1/Prescription/Write"
@@ -2120,7 +2002,6 @@ class CSHIS:
             title="取得處方簽章",
             message='<font size="5" color="red"><b>健保讀卡機取得處方簽章中, 請稍後...</b></font>',
             hint="正在與健保IDC資訊中心連線, 會花費一些時間.",
-            timeout=30,
             default=(-1, [], []),
             log_name="取得處方簽章",
         )
@@ -2159,9 +2040,8 @@ class CSHIS:
     # ------------------------------------------------------------------
     # 簽章收集 (只打 API, 不碰資料庫)
     # ------------------------------------------------------------------
-    # 這兩支是把原本 write_*_signature 的前半段拆出來的.
-    # 拆開的唯一目的: 讓所有健保署往返 (每趟最多 25~30 秒) 全部在
-    # 資料庫交易之外完成, 交易裡只剩下純本機的 DELETE + INSERT.
+    # 把穩定版 write_*_signature 的前半段拆出來: 所有健保署往返先完成,
+    # 之後才用 _save_presextend 一次寫回, 不會邊等健保署邊握著資料庫的鎖.
     # ------------------------------------------------------------------
 
     def _collect_medicine_signature(self, case_row, prescript_rows, dosage_row):
@@ -2194,7 +2074,11 @@ class CSHIS:
             )
             ins_code = string_utils.xstr(row["InsCode"])  # 診療項目代號 12 bytes
             treat_position = ""  # 診療部位 6 bytes
-            total_dosage = round(number_utils.get_float(row["Dosage"]) * days, 2)
+            try:
+                total_dosage = round(number_utils.get_float(row["Dosage"]) * days, 2)
+            except TypeError:
+                total_dosage = 0
+
             deliver = "01"  # 交付處方註記 2 bytes: 01-自行調劑 02-交付調劑 03-自行執行
 
             prescriptions.append(
@@ -2309,11 +2193,7 @@ class CSHIS:
     def write_medicine_signature(
         self, case_row, patient_row, prescript_rows, dosage_row
     ):
-        """單獨寫入藥品處方簽章 (保留給既有呼叫端)
-
-        write_prescript_signature 走的是 _collect_* + 一次寫入的路徑,
-        不會經過這裡.
-        """
+        """單獨寫入藥品處方簽章 (保留給既有呼叫端)"""
         records = self._collect_medicine_signature(case_row, prescript_rows, dosage_row)
         if records is None:
             return False
@@ -2322,10 +2202,7 @@ class CSHIS:
 
     # 寫入處置處方簽章
     def write_treat_signature(self, case_row, dosage_row=None, patient_row=None):
-        """單獨寫入處置處方簽章 (保留給既有呼叫端)
-
-        dosage_row / patient_row 目前用不到, 保留參數以相容既有呼叫端.
-        """
+        """單獨寫入處置處方簽章 (保留給既有呼叫端)"""
         records = self._collect_treat_signature(case_row)
         if records is None:
             return False
@@ -2396,9 +2273,9 @@ class CSHIS:
         """取得處置 + 藥品簽章, 最後一次寫回資料庫
 
         流程順序是刻意的:
-            1. 讀出需要的資料 (autocommit, 不留鎖)
+            1. 讀出需要的資料
             2. 打健保署 API 取簽章 (完全不碰資料庫)
-            3. 一次短交易寫回 presextend
+            3. 簽章收齊後才寫 presextend
         步驟 2 有可能花上一分鐘, 絕不能有任何鎖留在手上.
         """
         case_key = number_utils.get_integer(case_key)
@@ -2458,7 +2335,7 @@ class CSHIS:
             else:
                 records += medicine_records
 
-        # ---- 簽章收齊, 這裡才開交易; 鎖只存在幾毫秒 ----
+        # ---- 簽章收齊, 這裡才寫資料庫; 鎖只存在幾毫秒 ----
         if records and not self._save_presextend(
             records, f"醫令簽章 (CaseKey={case_key})"
         ):
