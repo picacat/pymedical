@@ -587,8 +587,8 @@ def loggin_error(filename, error_message):
 
 def send_telegram_alert(json_data, mail_content):
     # --- 步驟 1: 配置您的 Token 和 Chat ID ---
-    BOT_TOKEN = "8235563099:AAFBSEhk0BgQFRUjsH87iO38Gn70ZGo1GMI"
-    CHAT_ID = "7646915984"
+    BOT_TOKEN = "8986203522:AAG4lcwuBW5nHhtHTG2z5H52X84GbWcwFqE"
+    CHAT_ID = "8986203522"
 
     # --- 步驟 2: 組織訊息內容 ---
 
