@@ -1,8 +1,10 @@
 # -*- coding: UTF-8 -*-
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from libs import (
+    care_utils,
     class_utils,
     dialog_utils,
     nhi_utils,
@@ -11,6 +13,19 @@ from libs import (
     system_utils,
     ui_utils,
 )
+
+# 照護醫令的申報限制
+# 每個 tuple 是 (區間類型, 該區間內最多申報次數, 提醒文字)
+CARE_LIMITS = {
+    # 特定癌症
+    "P56005": ("month", 12, "每人每月申報上限為 12 次，第 13 次以上不申報"),
+    "P56006": ("days60", 1, "限 60 日申報一次，60 天內不可重複申報"),
+    "P56007": ("days60", 1, "限 60 日申報一次，60 天內不可重複申報"),
+    # 慢性腎臟病 (CKD)
+    "P64010": ("week", 3, "每週限申報 3 次，每週第 4 次以上不申報"),
+    "P64011": ("days56", 1, "限 56 天(含)以上申報一次，56 天內不可重複申報"),
+    "P64012": ("months6", 1, "限每 6 個月申報一次，6 個月內不可重複申報"),
+}
 
 
 # 輸入健保處方 2018.04.14
@@ -542,7 +557,48 @@ class InsCareRecord(QtWidgets.QMainWindow):
             if ins_code in treat_code:  # 刪掉指定的醫令
                 self.ui.tableWidget_prescript.removeRow(row_no)
 
+    def _get_patient_key(self):
+        sql = """
+            SELECT PatientKey FROM cases
+            WHERE CaseKey = %s
+        """
+        rows = self.database.select_record(sql, (self.case_key,))
+        if rows:
+            return rows[0]["PatientKey"]
+
+        return None
+
+    # 檢查治療
+    def _is_valid(self, treat_code):
+        if treat_code not in care_utils.CARE_LIMITS:
+            return True
+
+        case_date = self.case_date.date()
+        is_valid, care_dates = care_utils.check_care_limit(
+            self.database, self._get_patient_key(), self.case_key, case_date, treat_code
+        )
+        if is_valid:
+            return True
+
+        period, _, limit_text = care_utils.CARE_LIMITS[treat_code]
+        start_date = care_utils.get_care_start_date(period, case_date)
+        date_list = "\n".join(
+            f"  {i}. {d.strftime('%Y-%m-%d')}" for i, d in enumerate(care_dates, 1)
+        )
+        system_utils.show_message_box(
+            QtWidgets.QMessageBox.Critical,
+            "申報檢查",
+            f"照護醫令 {treat_code} 超過申報限制，本次不予申報。",
+            f"{limit_text}。\n"
+            f"該病患自 {start_date} 至 {case_date} 已申報 {len(care_dates)} 次：\n"
+            f"{date_list}",
+        )
+        return False
+
     def _add_care_row(self, treat_code, row_no):
+        if not self._is_valid(treat_code):
+            return
+
         sql = f'''
             SELECT * FROM charge_settings
             WHERE
@@ -584,18 +640,6 @@ class InsCareRecord(QtWidgets.QMainWindow):
             string_utils.xstr(row["Amount"]),
         ]
 
-        # for col_no, item in enumerate(prescript_row):
-        #     self.ui.tableWidget_prescript.setItem(
-        #         row_no, col_no, QtWidgets.QTableWidgetItem(item)
-        #     )
-        #     if col_no in [9, 10, 12]:
-        #         self.ui.tableWidget_prescript.item(row_no, col_no).setTextAlignment(
-        #             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-        #         )
-        #     elif col_no in [11]:
-        #         self.ui.tableWidget_prescript.item(row_no, col_no).setTextAlignment(
-        #             QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
-        #         )
         for col_no, item_val in enumerate(prescript_row):
             # 1. 建立物件（轉換為字串並處理 None）
             table_item = QtWidgets.QTableWidgetItem(

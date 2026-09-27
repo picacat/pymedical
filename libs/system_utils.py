@@ -11,7 +11,6 @@ import shutil
 import socket
 import subprocess
 import sys
-import urllib.parse
 from os import listdir
 from pathlib import Path
 
@@ -588,7 +587,7 @@ def loggin_error(filename, error_message):
 def send_telegram_alert(json_data, mail_content):
     # --- 步驟 1: 配置您的 Token 和 Chat ID ---
     BOT_TOKEN = "8986203522:AAG4lcwuBW5nHhtHTG2z5H52X84GbWcwFqE"
-    CHAT_ID = "8986203522"
+    CHAT_ID = "7646915984"  # 個人ID，不可改
 
     # --- 步驟 2: 組織訊息內容 ---
 
@@ -602,9 +601,6 @@ def send_telegram_alert(json_data, mail_content):
         f"**詳細錯誤：**\n"
         f"```\n{mail_content}\n```"  # 使用三引號讓錯誤訊息格式化
     )
-
-    # URL 編碼訊息內容，確保特殊字符不會破壞 URL
-    encoded_text = urllib.parse.quote_plus(text_message)
 
     # Telegram API URL
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"

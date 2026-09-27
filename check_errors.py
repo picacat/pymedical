@@ -6,6 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QPushButton
 
 from libs import (
+    care_utils,
     case_utils,
     charge_utils,
     class_utils,
@@ -174,6 +175,7 @@ class CheckErrors(QtWidgets.QMainWindow):
             error_messages += self._check_invalid_gender_disease(row)
             error_messages += self._check_duplicate_treat(row)
             error_messages += self._check_integrate_care(row)
+            error_messages += self._check_care_limit(row)
 
             if len(error_messages) > 0:
                 self._insert_error_record(row, error_messages)
@@ -1923,3 +1925,32 @@ class CheckErrors(QtWidgets.QMainWindow):
             return new_icd_10[disease_code]
         else:
             return None
+
+    def _check_care_limit(self, row):
+        """特定癌症、慢性腎臟病照護醫令的次數限制"""
+        error_messages = []
+
+        # 從共用快取找出這張病歷有哪些受限的照護醫令（不分 MedicineSet）
+        treat_codes = sorted(
+            {
+                string_utils.xstr(r["InsCode"])
+                for r in self._prescript_rows(row["CaseKey"])
+                if string_utils.xstr(r["InsCode"]) in care_utils.CARE_LIMITS
+            }
+        )
+        if not treat_codes:
+            return error_messages
+
+        case_date = row["CaseDate"].date()
+        for treat_code in treat_codes:
+            is_valid, care_dates = care_utils.check_care_limit(
+                self.database, row["PatientKey"], row["CaseKey"], case_date, treat_code
+            )
+            if is_valid:
+                continue
+
+            _, _, limit_text = care_utils.CARE_LIMITS[treat_code]
+            date_list = ", ".join(d.strftime("%Y-%m-%d") for d in care_dates)
+            error_messages.append(f"{treat_code} {limit_text} (已於 {date_list} 申報)")
+
+        return error_messages
