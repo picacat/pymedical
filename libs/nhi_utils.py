@@ -4212,12 +4212,12 @@ def NHI_GetB(system_settings, local_id, nhi_id, parent=None):
         error_message = "檔案下載成功"
         hint = f"檔案位置: {download_file}"
 
-    system_utils.show_message_box(
-        QMessageBox.Information,
-        "下載結果",
-        f'<font size="5" color="red"><b>{error_message}</b></font>',
-        hint,
-    )
+    # system_utils.show_message_box(
+    #     QMessageBox.Information,
+    #     "下載結果",
+    #     f'<font size="5" color="red"><b>{error_message}</b></font>',
+    #     hint,
+    # )
 
     return error_message, download_file
 
