@@ -31,7 +31,9 @@ E14--不分療程－未開內服藥   327
 import ctypes
 import datetime
 import os
+import shutil
 import sys
+import tempfile
 from queue import Queue
 from threading import Thread
 
@@ -4120,19 +4122,17 @@ def NHI_GetB_thread(out_queue, system_settings, local_id, nhi_id, download_path)
 
     nhi_eii_api = ctypes.windll.LoadLibrary(dll_file)
 
-    com_port = (
-        number_utils.get_integer(system_settings.field("健保卡讀卡機連接埠")) - 1
-    )  # com1=0, com2=1, com3=2,...
+    com_port = number_utils.get_integer(system_settings.field("健保卡讀卡機連接埠")) - 1
     reader_file = os.path.join(BASE_DIR, "reader.dll")
 
-    download_path = os.path.normpath(download_path)
-    if not download_path.endswith("\\"):
-        download_path += "\\"
+    # DLL 對特殊資料夾(桌面)及中文路徑會回 [17], 先下載到暫存目錄再搬過去
+    temp_dir = tempfile.mkdtemp(prefix="nhi_", dir=get_dir(system_settings, "申報路徑"))
+    temp_path = temp_dir + "\\"
 
     p_reader_file = ctypes.c_char_p(reader_file.encode("mbcs"))
     p_local_id = ctypes.c_char_p(local_id.encode("ascii"))
     p_nhi_id = ctypes.c_char_p(nhi_id.encode("ascii"))
-    p_download_path = ctypes.c_char_p(download_path.encode("mbcs"))
+    p_download_path = ctypes.c_char_p(temp_path.encode("mbcs"))
     download_file_name = ctypes.c_buffer(256)
 
     error_code = nhi_eii_api.NHI_GetB(
@@ -4144,8 +4144,18 @@ def NHI_GetB_thread(out_queue, system_settings, local_id, nhi_id, download_path)
         download_file_name,
     )
 
-    file_name = download_file_name.value.decode("mbcs", errors="ignore").strip()
-    out_queue.put((error_code, os.path.join(download_path, file_name)))
+    download_file = None
+    if error_code == 0:
+        file_name = download_file_name.value.decode("mbcs", errors="ignore").strip()
+        src = os.path.join(temp_dir, file_name)
+        download_file = os.path.join(download_path, file_name)
+        try:
+            shutil.move(src, download_file)  # 跨磁碟也能搬
+        except Exception:
+            download_file = src  # 搬不過去就留在暫存, 至少告訴使用者在哪
+
+    shutil.rmtree(temp_dir, ignore_errors=True)
+    out_queue.put((error_code, download_file))
 
 
 def NHI_GetB(system_settings, local_id, nhi_id, parent=None):
