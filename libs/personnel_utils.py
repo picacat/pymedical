@@ -166,7 +166,7 @@ def get_person(database, personnel_type, exclude_person=None, include_person=Non
             )
         """
     elif personnel_type == "職員":
-        position_condition = 'WHERE (Position IN("職員", "護士", "其他"))'
+        position_condition = 'WHERE (Position NOT IN("醫師", "支援醫師"))'
     else:
         position_condition = f'WHERE Position = "{personnel_type}"'
 
