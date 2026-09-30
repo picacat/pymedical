@@ -1,23 +1,23 @@
-
 # 病歷查詢 2014.09.22
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets
 import datetime
 
-from libs import system_utils
-from libs import ui_utils
-from libs import nhi_utils
-from libs import personnel_utils
-from libs import registration_utils
-from libs import string_utils
+from PyQt5 import QtWidgets
+
+from libs import (
+    personnel_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 新增盤點記錄
 class DialogAddInventory(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogAddInventory, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -42,11 +42,11 @@ class DialogAddInventory(QtWidgets.QDialog):
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
         self.setFixedSize(self.size())  # non resizable dialog
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText('確定')
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText('取消')
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setText("確定")
+        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).setText("取消")
         ui_utils.set_combo_box(
             self.ui.comboBox_inspector,
-            personnel_utils.get_person(self.database, '職員'),
+            personnel_utils.get_person(self.database, "全職"),
         )
         self.ui.dateEdit_inventory_date.setDate(datetime.datetime.today())
 
@@ -54,19 +54,19 @@ class DialogAddInventory(QtWidgets.QDialog):
             self._set_stock_inventory_data()
 
     def _set_stock_inventory_data(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM stockinventory
             WHERE
                 StockInventoryKey = {self.stock_inventory_key}
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
             return
 
         row = rows[0]
-        self.ui.dateEdit_inventory_date.setDate(row['StockInventoryDate'])
-        self.ui.comboBox_inspector.setCurrentText(string_utils.xstr(row['Inspector']))
-        self.ui.lineEdit_remark.setText(string_utils.xstr(row['Remark']))
+        self.ui.dateEdit_inventory_date.setDate(row["StockInventoryDate"])
+        self.ui.comboBox_inspector.setCurrentText(string_utils.xstr(row["Inspector"]))
+        self.ui.lineEdit_remark.setText(string_utils.xstr(row["Remark"]))
 
     # 設定信號
     def _set_signal(self):
@@ -80,22 +80,34 @@ class DialogAddInventory(QtWidgets.QDialog):
 
     def _insert_inventory(self):
         fields = [
-            'StockInventoryDate', 'Inspector', 'Remark',
+            "StockInventoryDate",
+            "Inspector",
+            "Remark",
         ]
         data = [
-            self.ui.dateEdit_inventory_date.date().toString('yyyy-MM-dd'),
+            self.ui.dateEdit_inventory_date.date().toString("yyyy-MM-dd"),
             self.ui.comboBox_inspector.currentText(),
             self.ui.lineEdit_remark.text(),
         ]
-        self.stock_inventory_key = self.database.insert_record('stockinventory', fields, data)
+        self.stock_inventory_key = self.database.insert_record(
+            "stockinventory", fields, data
+        )
 
     def _update_inventory(self):
         fields = [
-            'StockInventoryDate', 'Inspector', 'Remark',
+            "StockInventoryDate",
+            "Inspector",
+            "Remark",
         ]
         data = [
-            self.ui.dateEdit_inventory_date.date().toString('yyyy-MM-dd'),
+            self.ui.dateEdit_inventory_date.date().toString("yyyy-MM-dd"),
             self.ui.comboBox_inspector.currentText(),
             self.ui.lineEdit_remark.text(),
         ]
-        self.database.update_record('stockinventory', fields, 'StockInventoryKey', self.stock_inventory_key, data)
+        self.database.update_record(
+            "stockinventory",
+            fields,
+            "StockInventoryKey",
+            self.stock_inventory_key,
+            data,
+        )
