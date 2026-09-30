@@ -174,14 +174,16 @@ class DialogImportHomeCare(QtWidgets.QDialog):
         nhi_id = json_dict["nhi_id"]
 
         error_message, download_file = self._nhi_get_b(local_id, nhi_id)
-        if error_message == "檔案下載成功":
-            system_utils.show_message_box(
-                QMessageBox.Information,
-                "資料下載完成",
-                f"<h3>居家病歷資料已下載至:<br>{download_file}<br>請解壓縮後匯入居家病歷資料.</h3>",
-                "資料下載完成",
-            )
-        self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).animateClick()
+        if error_message != "檔案下載成功":
+            self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).animateClick()
+            return
+
+        json_file = self._unzip_home_care_file(download_file)
+        if json_file is None:
+            self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).animateClick()
+            return
+
+        self._read_home_care_json(json_file)
 
     def _nhi_get_b(self, local_id, nhi_id):
         error_message, download_file = nhi_utils.NHI_GetB(
@@ -189,6 +191,41 @@ class DialogImportHomeCare(QtWidgets.QDialog):
         )
 
         return error_message, download_file
+
+    def _unzip_home_care_file(self, zip_file):
+        password = string_utils.xstr(self.system_settings.field("院所代號"))
+
+        try:
+            files = nhi_utils.unzip_nhi_file(zip_file, password)
+        except RuntimeError as e:
+            # 密碼錯誤時 zipfile 丟 RuntimeError: Bad password
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "解壓縮失敗",
+                "<h3>解壓縮失敗, 請確認系統設定的院所代號是否正確.</h3>",
+                str(e),
+            )
+            return None
+        except Exception as e:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "解壓縮失敗",
+                f"<h3>無法解壓縮檔案</h3>{zip_file}",
+                str(e),
+            )
+            return None
+
+        json_files = [f for f in files if f.lower().endswith(".json")]
+        if len(json_files) <= 0:
+            system_utils.show_message_box(
+                QMessageBox.Warning,
+                "找不到病歷檔",
+                "<h3>壓縮檔內沒有 JSON 病歷檔.</h3>",
+                "\n".join(files),
+            )
+            return None
+
+        return json_files[0]
 
     def _nhi_dowload_b(self, file_date):
         clinic_id = self.system_settings.field("院所代號")

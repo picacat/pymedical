@@ -34,6 +34,7 @@ import os
 import shutil
 import sys
 import tempfile
+import zipfile
 from queue import Queue
 from threading import Thread
 
@@ -4826,3 +4827,22 @@ def get_division_code(division):
         "東區業務組": "6",
     }
     return division_dict.get(division)
+
+
+def unzip_nhi_file(zip_file, password, extract_dir=None):
+    """
+    解壓健保署下載的加密 zip.
+    zip_file:    zip 檔完整路徑
+    password:    解壓密碼 (院所代號)
+    extract_dir: 解壓到哪個目錄, 預設與 zip 同一目錄
+    回傳: 解出來的檔案完整路徑清單
+    """
+    if extract_dir is None:
+        extract_dir = os.path.dirname(zip_file)
+
+    with zipfile.ZipFile(zip_file) as zf:
+        zf.setpassword(password.encode("ascii"))
+        names = [info.filename for info in zf.infolist() if not info.is_dir()]
+        zf.extractall(extract_dir, members=names)
+
+    return [os.path.join(extract_dir, name) for name in names]
