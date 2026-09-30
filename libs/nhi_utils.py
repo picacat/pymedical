@@ -4178,7 +4178,8 @@ def NHI_GetB(system_settings, local_id, nhi_id, parent=None):
     #     return "取消下載", None
 
     # 固定存到 申報路徑\home_care, 不再詢問使用者
-    download_path = os.path.join(system_settings.field("申報路徑"), "home_care")
+    apply_dir = get_dir(system_settings, "申報路徑")
+    download_path = os.path.join(apply_dir, "home_care")
     os.makedirs(download_path, exist_ok=True)
 
     title = "下載健保資料"
