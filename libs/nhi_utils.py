@@ -4147,13 +4147,20 @@ def NHI_GetB_thread(out_queue, system_settings, local_id, nhi_id, download_path)
 
     download_file = None
     if error_code == 0:
-        file_name = download_file_name.value.decode("mbcs", errors="ignore").strip()
-        src = os.path.join(temp_dir, file_name)
-        download_file = os.path.join(download_path, file_name)
-        try:
-            shutil.move(src, download_file)  # 跨磁碟也能搬
-        except Exception:
-            download_file = src  # 搬不過去就留在暫存, 至少告訴使用者在哪
+        download_path = os.path.normpath(download_path)  # 把 C:/_temp 轉成 C:\_temp
+        # 不依賴 DLL 回傳的檔名, 暫存目錄裡的檔案就是剛下載的
+        downloaded = [
+            f for f in os.listdir(temp_dir) if os.path.isfile(os.path.join(temp_dir, f))
+        ]
+        for file_name in downloaded:
+            src = os.path.join(temp_dir, file_name)
+            dest = os.path.join(download_path, file_name)
+            shutil.move(src, dest)
+            if download_file is None:  # 一般只會有一個檔, 回傳第一個
+                download_file = dest
+
+        if download_file is None:  # DLL 說成功卻沒有檔案
+            error_code = -1
 
     shutil.rmtree(temp_dir, ignore_errors=True)
     out_queue.put((error_code, download_file))
@@ -4187,7 +4194,11 @@ def NHI_GetB(system_settings, local_id, nhi_id, parent=None):
     error_code, download_file = msg_queue.get()
     msg_box.close()
 
-    if error_code != 0:
+    if error_code == -1:
+        error_message = "下載完成但找不到檔案"
+        download_file = None
+        hint = "請檢查暫存目錄權限."
+    elif error_code != 0:
         error_message = nhi_eii_api_error_code[error_code]
         download_file = None
         hint = "請檢查讀卡機與網路連線."
