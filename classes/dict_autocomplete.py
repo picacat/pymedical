@@ -105,6 +105,13 @@ class ClinicCache:
         for item in items:
             self._by_name.setdefault(item.clinic_name, item)
 
+        # 預先算好小寫版本的比對鍵，搜尋時不必每按一個鍵就對全部項目重算 lower()
+        # 維持 load_by_type 的排序（中文字順序），search 依序走訪即可
+        self._search_keys = [
+            (item, item.clinic_name.lower(), (item.input_code or "").lower())
+            for item in items
+        ]
+
     def search(self, keyword, limit=20, match_mode="prefix"):
         """
         Args:
@@ -114,24 +121,24 @@ class ClinicCache:
         if not keyword:
             return []
         kw = keyword.strip().lower()
+        if not kw:
+            return []
 
+        results = []
         if match_mode == "contains":
-            matched = [
-                item
-                for item in self._items
-                if kw in item.clinic_name.lower()
-                or (item.input_code and item.input_code.lower().startswith(kw))
-            ]
+            for item, name_key, code_key in self._search_keys:
+                if kw in name_key or (code_key and code_key.startswith(kw)):
+                    results.append(item)
+                    if len(results) >= limit:
+                        break
         else:
-            matched = [
-                item
-                for item in self._items
-                if item.clinic_name.lower().startswith(kw)
-                or (item.input_code and item.input_code.lower().startswith(kw))
-            ]
+            for item, name_key, code_key in self._search_keys:
+                if name_key.startswith(kw) or (code_key and code_key.startswith(kw)):
+                    results.append(item)
+                    if len(results) >= limit:
+                        break
 
-        # 已經依中文字順序預先排序過了（load_by_type 的 ORDER BY），這裡維持原順序即可
-        return matched[:limit]
+        return results
 
     def get_by_name(self, name):
         return self._by_name.get(name)
@@ -180,8 +187,10 @@ class DictAutoComplete(QObject):
         self.cache = ClinicCache(items)
 
         # 自己刻的下拉清單視窗：無邊框、不搶焦點，純粹拿來顯示 + 反白，
-        # 所有鍵盤操作邏輯都在 DictAutoComplete 自己身上，不靠這個 widget 自己處理按鍵
-        self.popup = QListWidget()
+        # 所有鍵盤操作邏輯都在 DictAutoComplete 自己身上，不靠這個 widget 自己處理按鍵。
+        # parent 設為 text_edit：Qt.ToolTip 旗標讓它仍以獨立浮動視窗顯示，
+        # 但擁有權歸 text_edit，病歷視窗關閉時會跟著被回收，不會殘留在記憶體裡。
+        self.popup = QListWidget(self.text_edit)
         self.popup.setWindowFlags(Qt.ToolTip | Qt.FramelessWindowHint)
         self.popup.setFocusPolicy(Qt.NoFocus)
         self.popup.setAttribute(Qt.WA_ShowWithoutActivating, True)
@@ -280,8 +289,7 @@ class DictAutoComplete(QObject):
             return
 
         row = self.popup.currentRow()
-        if row < 0:
-            row = 0
+        row = max(row, 0)
 
         if key == Qt.Key_Down:
             row = min(row + 1, count - 1)

@@ -28,7 +28,7 @@ class DialogImportHomeCare(QtWidgets.QDialog):
     program_name = "匯入居家藍芽資料"
 
     def __init__(self, parent=None, *args):
-        super(DialogImportHomeCare, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -172,20 +172,23 @@ class DialogImportHomeCare(QtWidgets.QDialog):
         json_dict = json.loads(string_utils.xstr(row["Log"]))
         local_id = json_dict["local_id"]
         nhi_id = json_dict["nhi_id"]
-        error_message = self._nhi_get_b(local_id, nhi_id)
+
+        error_message, download_file = self._nhi_get_b(local_id, nhi_id)
         if error_message == "檔案下載成功":
             system_utils.show_message_box(
                 QMessageBox.Information,
                 "資料下載完成",
-                "<h3>居家病歷資料下載完成, 請匯入居家病歷資料.</h3>",
+                f"<h3>居家病歷資料已下載至:<br>{download_file}<br>請解壓縮後匯入居家病歷資料.</h3>",
                 "資料下載完成",
             )
         self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).animateClick()
 
     def _nhi_get_b(self, local_id, nhi_id):
-        error_message = nhi_utils.NHI_GetB(self.system_settings, local_id, nhi_id)
+        error_message, download_file = nhi_utils.NHI_GetB(
+            self.system_settings, local_id, nhi_id, parent=self
+        )
 
-        return error_message
+        return error_message, download_file
 
     def _nhi_dowload_b(self, file_date):
         clinic_id = self.system_settings.field("院所代號")
@@ -241,7 +244,7 @@ class DialogImportHomeCare(QtWidgets.QDialog):
             for row in rows:
                 self._set_medical_record(row)
 
-        for i in range(0, self.ui.tableWidget_medical_record.rowCount()):
+        for i in range(self.ui.tableWidget_medical_record.rowCount()):
             self.ui.tableWidget_medical_record.setRowHeight(i, 800)
 
     def _get_symptom(self, json_dict):

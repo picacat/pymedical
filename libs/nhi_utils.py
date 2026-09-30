@@ -36,7 +36,8 @@ from queue import Queue
 from threading import Thread
 
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QStandardPaths
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from libs import (
     case_utils,
@@ -4101,7 +4102,16 @@ def NHI_DownloadB(system_settings, type_code, dest_file):
     return local_id, nhi_id
 
 
-def NHI_GetB_thread(out_queue, system_settings, local_id, nhi_id):
+def get_desktop_path():
+    # 用 Qt 查桌面路徑, Windows 上桌面被 OneDrive 重導向時也抓得到正確位置
+    path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
+    if not path:
+        path = os.path.join(os.path.expanduser("~"), "Desktop")
+
+    return path
+
+
+def NHI_GetB_thread(out_queue, system_settings, local_id, nhi_id, download_path):
     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
 
     dll_file = os.path.join(BASE_DIR, "cnhi_eiiapi.dll")
@@ -4114,30 +4124,44 @@ def NHI_GetB_thread(out_queue, system_settings, local_id, nhi_id):
         number_utils.get_integer(system_settings.field("健保卡讀卡機連接埠")) - 1
     )  # com1=0, com2=1, com3=2,...
     reader_file = os.path.join(BASE_DIR, "reader.dll")
-    download_path = get_dir(system_settings, "申報路徑")
 
-    p_reader_file = ctypes.c_char_p(reader_file.encode("ascii"))
+    download_path = os.path.normpath(download_path)
+    if not download_path.endswith("\\"):
+        download_path += "\\"
+
+    p_reader_file = ctypes.c_char_p(reader_file.encode("mbcs"))
     p_local_id = ctypes.c_char_p(local_id.encode("ascii"))
     p_nhi_id = ctypes.c_char_p(nhi_id.encode("ascii"))
-    p_download_path = ctypes.c_char_p(download_path.encode("ascii"))
+    p_download_path = ctypes.c_char_p(download_path.encode("mbcs"))
+    download_file_name = ctypes.c_buffer(256)
 
-    local_id = ctypes.c_buffer(12)
-    nhi_id = ctypes.c_buffer(12)
     error_code = nhi_eii_api.NHI_GetB(
         com_port,
         p_reader_file,
         p_local_id,
         p_nhi_id,
         p_download_path,
+        download_file_name,
     )
 
-    out_queue.put(error_code)
+    file_name = download_file_name.value.decode("mbcs", errors="ignore").strip()
+    out_queue.put((error_code, os.path.join(download_path, file_name)))
 
 
-def NHI_GetB(system_settings, local_id, nhi_id):
+def NHI_GetB(system_settings, local_id, nhi_id, parent=None):
+    # 先問使用者要存到哪個資料夾, 預設桌面
+    download_path = QFileDialog.getExistingDirectory(
+        parent,
+        "請選擇健保資料下載位置",
+        get_desktop_path(),
+        QFileDialog.ShowDirsOnly,
+    )
+    if not download_path:  # 使用者按取消
+        return "取消下載", None
+
     title = "下載健保資料"
     message = '<font size="5" color="red"><b>正在下載健保資料中, 請稍後...</b></font>'
-    hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
+    hint = "正在與健保IDC資訊中心連線, 會花費一些時間."
     msg_box = dialog_utils.message_box(title, message, hint)
     msg_box.show()
 
@@ -4146,30 +4170,99 @@ def NHI_GetB(system_settings, local_id, nhi_id):
 
     t = Thread(
         target=NHI_GetB_thread,
-        args=(
-            msg_queue,
-            system_settings,
-            local_id,
-            nhi_id,
-        ),
+        args=(msg_queue, system_settings, local_id, nhi_id, download_path),
     )
     t.start()
-    (error_code) = msg_queue.get()
+    error_code, download_file = msg_queue.get()
     msg_box.close()
 
     if error_code != 0:
         error_message = nhi_eii_api_error_code[error_code]
+        download_file = None
+        hint = "請檢查讀卡機與網路連線."
     else:
         error_message = "檔案下載成功"
+        hint = f"檔案位置: {download_file}"
 
     system_utils.show_message_box(
         QMessageBox.Information,
         "下載結果",
         f'<font size="5" color="red"><b>{error_message}</b></font>',
-        "若下載成功, 請解壓縮後執行後續作業.",
+        hint,
     )
 
-    return error_message
+    return error_message, download_file
+
+
+# def NHI_GetB_thread(out_queue, system_settings, local_id, nhi_id):
+#     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname("__file__")))
+
+#     dll_file = os.path.join(BASE_DIR, "cnhi_eiiapi.dll")
+#     if system_settings.field("讀卡機類型") == "健保讀卡機":
+#         dll_file = os.path.join(BASE_DIR, "nhi_eiiapi.dll")
+
+#     nhi_eii_api = ctypes.windll.LoadLibrary(dll_file)
+
+#     com_port = (
+#         number_utils.get_integer(system_settings.field("健保卡讀卡機連接埠")) - 1
+#     )  # com1=0, com2=1, com3=2,...
+#     reader_file = os.path.join(BASE_DIR, "reader.dll")
+#     download_path = get_dir(system_settings, "申報路徑")
+
+#     p_reader_file = ctypes.c_char_p(reader_file.encode("ascii"))
+#     p_local_id = ctypes.c_char_p(local_id.encode("ascii"))
+#     p_nhi_id = ctypes.c_char_p(nhi_id.encode("ascii"))
+#     p_download_path = ctypes.c_char_p(download_path.encode("ascii"))
+
+#     local_id = ctypes.c_buffer(12)
+#     nhi_id = ctypes.c_buffer(12)
+#     error_code = nhi_eii_api.NHI_GetB(
+#         com_port,
+#         p_reader_file,
+#         p_local_id,
+#         p_nhi_id,
+#         p_download_path,
+#     )
+
+#     out_queue.put(error_code)
+
+
+# def NHI_GetB(system_settings, local_id, nhi_id):
+#     title = "下載健保資料"
+#     message = '<font size="5" color="red"><b>正在下載健保資料中, 請稍後...</b></font>'
+#     hint = "正在與與健保IDC資訊中心連線, 會花費一些時間."
+#     msg_box = dialog_utils.message_box(title, message, hint)
+#     msg_box.show()
+
+#     msg_queue = Queue()
+#     QtCore.QCoreApplication.processEvents()
+
+#     t = Thread(
+#         target=NHI_GetB_thread,
+#         args=(
+#             msg_queue,
+#             system_settings,
+#             local_id,
+#             nhi_id,
+#         ),
+#     )
+#     t.start()
+#     (error_code) = msg_queue.get()
+#     msg_box.close()
+
+#     if error_code != 0:
+#         error_message = nhi_eii_api_error_code[error_code]
+#     else:
+#         error_message = "檔案下載成功"
+
+#     system_utils.show_message_box(
+#         QMessageBox.Information,
+#         "下載結果",
+#         f'<font size="5" color="red"><b>{error_message}</b></font>',
+#         "若下載成功, 請解壓縮後執行後續作業.",
+#     )
+
+#     return error_message
 
 
 """
