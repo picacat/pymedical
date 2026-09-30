@@ -40,7 +40,7 @@ from threading import Thread
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QStandardPaths
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMessageBox
 
 from libs import (
     case_utils,
@@ -4168,15 +4168,20 @@ def NHI_GetB_thread(out_queue, system_settings, local_id, nhi_id, download_path)
 
 def NHI_GetB(system_settings, local_id, nhi_id, parent=None):
     # 先問使用者要存到哪個資料夾, 預設桌面
-    download_path = QFileDialog.getExistingDirectory(
-        parent,
-        "請選擇健保資料下載位置",
-        get_desktop_path(),
-        QFileDialog.ShowDirsOnly,
-    )
-    if not download_path:  # 使用者按取消
-        return "取消下載", None
+    # download_path = QFileDialog.getExistingDirectory(
+    #     parent,
+    #     "請選擇健保資料下載位置",
+    #     get_desktop_path(),
+    #     QFileDialog.ShowDirsOnly,
+    # )
+    # if not download_path:  # 使用者按取消
+    #     return "取消下載", None
 
+    # 固定存到 申報路徑\home_care, 不再詢問使用者
+    download_path = os.path.join(system_settings.field("申報路徑"), "home_care")
+    os.makedirs(download_path, exist_ok=True)
+
+    title = "下載健保資料"
     title = "下載健保資料"
     message = '<font size="5" color="red"><b>正在下載健保資料中, 請稍後...</b></font>'
     hint = "正在與健保IDC資訊中心連線, 會花費一些時間."
