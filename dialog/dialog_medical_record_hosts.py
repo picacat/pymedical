@@ -439,6 +439,7 @@ class DialogMedicalRecordHosts(QtWidgets.QDialog):
         if copy_self_prescript:
             self.ui.checkBox_self_prescript.setChecked(False)  # 預設不要拷貝
 
+    # 讀取分院病歷影像
     def _read_images(self):
         image_database_list = db_utils.get_host_database_dict(
             self.database, "顯示分院病歷"
