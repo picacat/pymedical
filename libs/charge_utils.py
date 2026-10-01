@@ -573,6 +573,32 @@ def get_default_herb_fee(database):
     return herb_fee
 
 
+# 2026-10-01 取消
+# def get_custom_herb_fee1(database, case_key, table_widget_prescript):
+#     """仁聿中醫專用"""
+
+#     default_herb_fee = get_renyu_default_herb_fee(database, case_key)
+#     is_herbal_decocation_service = prescript_utils.is_herbal_decocation_service(
+#         table_widget_prescript
+#     )
+#     net_weight = prescript_utils.get_herbal_net_weight(
+#         is_herbal_decocation_service, table_widget_prescript
+#     )
+
+#     if net_weight < 20:
+#         set_normal_price(database, table_widget_prescript)
+#         default_herb_fee = 50
+#     elif 20 <= net_weight < 50:
+#         pass
+#     else:  # 淨重超過50ㄎ克, 減去50克, 餘數 * 5元 + 基本費
+#         net_weight -= 50
+#         default_herb_fee += net_weight * 5
+
+#     herb_fee = default_herb_fee
+
+#     return herb_fee
+
+
 def get_custom_herb_fee1(database, case_key, table_widget_prescript):
     """仁聿中醫專用"""
 
@@ -584,14 +610,16 @@ def get_custom_herb_fee1(database, case_key, table_widget_prescript):
         is_herbal_decocation_service, table_widget_prescript
     )
 
-    if net_weight < 20:
-        set_normal_price(database, table_widget_prescript)
-        default_herb_fee = 50
-    elif 20 <= net_weight < 50:
-        pass
-    else:  # 淨重超過50ㄎ克, 減去50克, 餘數 * 5元 + 基本費
-        net_weight -= 50
-        default_herb_fee += net_weight * 5
+    if net_weight <= 20:
+        pass  # 維持原算法
+    elif net_weight <= 30:
+        default_herb_fee = 300
+    elif net_weight <= 40:
+        default_herb_fee = 330
+    elif net_weight <= 50:
+        default_herb_fee = 360
+    else:
+        default_herb_fee = 360 + (net_weight - 50) * 5  # 待客戶確認
 
     herb_fee = default_herb_fee
 
