@@ -1,4 +1,4 @@
-"""Pymedical主程式 2026-09-17 v3"""
+"""Pymedical主程式 2026-10-01 v2"""
 
 # -*- coding: utf-8 -*-
 
