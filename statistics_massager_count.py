@@ -259,8 +259,13 @@ class StatisticsMassagerCount(QtWidgets.QMainWindow):
         massage_fee = number_utils.get_integer(row["SMassageFee"])
         patient_key = row["PatientKey"]
 
-        if self.system_settings.field("院所名稱") in ["耀康中醫診所", "永錡中醫診所"]:
+        if self.system_settings.field("院所名稱") in ["耀康中醫診所"]:
             if massage_fee == 50:
+                col_no = 1
+            else:
+                col_no = 2
+        elif self.system_settings.field("院所名稱") in ["永錡中醫診所"]:
+            if 0 < massage_fee <= 100:
                 col_no = 1
             else:
                 col_no = 2

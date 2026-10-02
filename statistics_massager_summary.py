@@ -147,8 +147,10 @@ class StatisticsMassagerSummary(QtWidgets.QMainWindow):
             only_traditional_massage_condition = ' AND TreatType = "民俗調理"'
 
         massage_fee_condition = ""
-        if self.system_settings.field("院所名稱") in ["耀康中醫診所", "永錡中醫診所"]:
+        if self.system_settings.field("院所名稱") in ["耀康中醫診所"]:
             massage_fee_condition = " AND SMassageFee > 50"
+        elif self.system_settings.field("院所名稱") in ["永錡中醫診所"]:
+            massage_fee_condition = " AND SMassageFee > 100"
 
         sql = f'''
             SELECT

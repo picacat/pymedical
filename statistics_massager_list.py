@@ -82,13 +82,14 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
 
     def start_calculate(self):
         self.ui.tableWidget_massager_list.setRowCount(0)
-        self._read_data("自費", ins_massage_fee=50)
-        self._read_data("健保", ins_massage_fee=50)
+        self._read_data("自費")
+        self._read_data("健保")
         self._calculate_total("自費")
         self._calculate_total("健保")
         # self._plot_chart()
 
-    def _read_data(self, ins_type, ins_massage_fee):
+    def _read_data(self, ins_type):
+        ins_massage_fee = 50
         only_traditional_massage_condition = ""
         if self.only_traditional_massage:
             only_traditional_massage_condition = ' AND TreatType = "民俗調理"'
@@ -104,11 +105,16 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
             )
 
         massage_fee_condition = ""
-        if self.system_settings.field("院所名稱") in ["耀康中醫診所", "永錡中醫診所"]:
+        if self.system_settings.field("院所名稱") in ["耀康中醫診所"]:
             if ins_type == "自費":
-                massage_fee_condition = f" AND SMassageFee > {ins_massage_fee}"
+                massage_fee_condition = " AND SMassageFee > 50"
             else:
-                massage_fee_condition = f" AND SMassageFee = {ins_massage_fee}"
+                massage_fee_condition = " AND SMassageFee = 50"
+        elif self.system_settings.field("院所名稱") in ["永錡中醫診所"]:
+            if ins_type == "自費":
+                massage_fee_condition = " AND SMassageFee > 100"
+            else:
+                massage_fee_condition = " AND SMassageFee > 0 AND SMassageFee <= 100"
 
         sql = f'''
             SELECT

@@ -307,10 +307,15 @@ class DialogCertificatePayment(QtWidgets.QDialog):
         check_box.setChecked(True)
 
         if (
-            self.clinic_name in ["耀康中醫診所", "永錡中醫診所"]
+            self.clinic_name in ["耀康中醫診所"]
             and ins_type == "自費"
             and treat_type == "民俗調理"
             and total_fee > 50
+        ) or (
+            self.clinic_name in ["永錡中醫診所"]
+            and ins_type == "自費"
+            and treat_type == "民俗調理"
+            and total_fee > 100
         ):
             check_box.setChecked(False)
 

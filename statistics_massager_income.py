@@ -249,9 +249,8 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
             row_no = self._get_row_no(case_date)
             self.progress_dialog.setValue(row_no)
             massage_fee = number_utils.get_integer(row["SMassageFee"])
-            if (
-                self.clinic_name in ["耀康中醫診所", "永錡中醫診所"]
-                and massage_fee == 50
+            if (self.clinic_name in ["耀康中醫診所"] and massage_fee == 50) or (
+                self.clinic_name in ["永錡中醫診所"] and 0 < massage_fee <= 100
             ):  # 健保民俗調理費不算業績
                 continue
 
@@ -269,9 +268,11 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
             row_no = self._get_massager_row_no(massager)
             self.progress_dialog.setValue(row_no)
             if (
-                self.system_settings.field("院所名稱")
-                in ["耀康中醫診所", "永錡中醫診所"]
+                self.system_settings.field("院所名稱") in ["耀康中醫診所"]
                 and massage_fee == 50
+            ) or (
+                self.system_settings.field("院所名稱") in ["永錡中醫診所"]
+                and 0 < massage_fee <= 100
             ):  # 健保民俗調理費不算業績
                 continue
 
