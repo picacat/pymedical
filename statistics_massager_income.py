@@ -19,7 +19,7 @@ from libs import (
 class StatisticsMassagerIncome(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsMassagerIncome, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -199,7 +199,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
             group_condition = " GROUP BY Massager"
 
         massage_fee_condition = ""
-        if self.system_settings.field("院所名稱") == "耀康中醫診所":
+        if self.system_settings.field("院所名稱") in ["耀康中醫診所", "永錡中醫診所"]:
             massage_fee_condition = " AND SMassageFee > 0"
 
         sql = f'''
@@ -250,7 +250,8 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
             self.progress_dialog.setValue(row_no)
             massage_fee = number_utils.get_integer(row["SMassageFee"])
             if (
-                self.clinic_name == "耀康中醫診所" and massage_fee == 50
+                self.clinic_name in ["耀康中醫診所", "永錡中醫診所"]
+                and massage_fee == 50
             ):  # 健保民俗調理費不算業績
                 continue
 
@@ -268,7 +269,9 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
             row_no = self._get_massager_row_no(massager)
             self.progress_dialog.setValue(row_no)
             if (
-                self.clinic_name == "耀康中醫診所" and massage_fee == 50
+                self.system_settings.field("院所名稱")
+                in ["耀康中醫診所", "永錡中醫診所"]
+                and massage_fee == 50
             ):  # 健保民俗調理費不算業績
                 continue
 
@@ -385,9 +388,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            "{0}至{1}{2}推拿師收入統計表.xlsx".format(
-                self.start_date[:10], self.end_date[:10], self.massager
-            ),
+            f"{self.start_date[:10]}至{self.end_date[:10]}{self.massager}推拿師收入統計表.xlsx",
             "excel檔案 (*.xlsx);;Text Files (*.txt)",
             options=options,
         )
@@ -402,7 +403,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         system_utils.show_message_box(
             QMessageBox.Information,
             "資料匯出完成",
-            "<h3>推拿師收入統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            f"<h3>推拿師收入統計檔{excel_file_name}匯出完成.</h3>",
             "Microsoft Excel 格式.",
         )
 
@@ -411,9 +412,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            "{0}至{1}{2}推拿師個別收入統計表.xlsx".format(
-                self.start_date[:10], self.end_date[:10], self.massager
-            ),
+            f"{self.start_date[:10]}至{self.end_date[:10]}{self.massager}推拿師個別收入統計表.xlsx",
             "excel檔案 (*.xlsx);;Text Files (*.txt)",
             options=options,
         )
@@ -428,7 +427,7 @@ class StatisticsMassagerIncome(QtWidgets.QMainWindow):
         system_utils.show_message_box(
             QMessageBox.Information,
             "資料匯出完成",
-            "<h3>推拿師個別收入統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            f"<h3>推拿師個別收入統計檔{excel_file_name}匯出完成.</h3>",
             "Microsoft Excel 格式.",
         )
 

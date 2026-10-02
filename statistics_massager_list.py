@@ -17,7 +17,7 @@ from libs import (
 class StatisticsMassagerList(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsMassagerList, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -104,7 +104,7 @@ class StatisticsMassagerList(QtWidgets.QMainWindow):
             )
 
         massage_fee_condition = ""
-        if self.system_settings.field("院所名稱") == "耀康中醫診所":
+        if self.system_settings.field("院所名稱") in ["耀康中醫診所", "永錡中醫診所"]:
             if ins_type == "自費":
                 massage_fee_condition = f" AND SMassageFee > {ins_massage_fee}"
             else:

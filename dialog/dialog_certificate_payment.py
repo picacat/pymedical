@@ -25,7 +25,7 @@ from libs import (
 class DialogCertificatePayment(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogCertificatePayment, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -307,7 +307,7 @@ class DialogCertificatePayment(QtWidgets.QDialog):
         check_box.setChecked(True)
 
         if (
-            self.clinic_name == "耀康中醫診所"
+            self.clinic_name in ["耀康中醫診所", "永錡中醫診所"]
             and ins_type == "自費"
             and treat_type == "民俗調理"
             and total_fee > 50
@@ -445,7 +445,10 @@ class DialogCertificatePayment(QtWidgets.QDialog):
             + s_massage_fee
         )
 
-        if self.clinic_name == "耀康中醫診所":  # 民俗調理費放在其他費用
+        if self.clinic_name in [
+            "耀康中醫診所",
+            "永錡中醫診所",
+        ]:  # 民俗調理費放在其他費用
             sql = f"""
                 UPDATE certificate_items
                 SET
