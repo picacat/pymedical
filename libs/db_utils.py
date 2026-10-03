@@ -505,6 +505,19 @@ def get_patient_row(database, patient_key):
     return rows
 
 
+def get_memo_row(database, patient_key):
+    sql = f"""
+        SELECT * FROM patient_extension
+        WHERE
+            PatientKey = {patient_key} AND
+            ExtensionType = "Memo"
+        ORDER BY PatientExtensionKey DESC LIMIT 1
+    """
+    rows = database.select_record(sql)
+
+    return rows
+
+
 def get_dosage_row(database, case_key):
     sql = f"""
         SELECT * FROM dosage
@@ -590,6 +603,7 @@ def export_medical_record_to_json(parent, database, filename, case_key_list):
         row["TreatJSON"] = get_pres_extend_treat_row(database, case_key)
         row["DosageJSON"] = get_dosage_row(database, case_key)
         row["PrescriptJSON"] = get_prescript_row(database, case_key)
+        row["MemoJson"] = get_memo_row(database, patient_key)
         progress_dialog.setValue(i)
 
     progress_dialog.setValue(max_progress)
