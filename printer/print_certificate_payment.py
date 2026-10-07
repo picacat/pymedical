@@ -126,22 +126,27 @@ class PrintCertificatePayment:
         self.current_print = self.print_html
         self.printer.setPaperSize(printer_utils.get_paper_size(self.system_settings))
 
+        html = self._get_html()
+        if html is None:
+            system_utils.show_message_box(
+                QMessageBox.Warning,
+                "無法列印",
+                '<font size="4" color="red"><b>找不到此收費證明資料</b></font>',
+                f"CertificateKey: {self.certificate_key}",
+            )
+            return
+
         document = printer_utils.get_document(self.printer, self.font)
         document.setDocumentMargin(5)
-        document.setHtml(self._get_html())
+        document.setHtml(html)
         if printing:
             document.print(self.printer)
 
     def _get_html(self):
-        sql = f"""
-            SELECT * FROM certificate
-            WHERE
-                CertificateKey = {self.certificate_key}
-        """
-        rows = self.database.select_record(sql)
-
-        if len(rows) <= 0:
-            return
+        sql = "SELECT * FROM certificate WHERE CertificateKey = %s"
+        rows = self.database.select_record(sql, (self.certificate_key,))
+        if not rows:
+            return None
 
         row = rows[0]
 

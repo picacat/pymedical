@@ -194,7 +194,8 @@ def export_tab_widget_to_excel(
 
         if column_width is not None:
             for i in range(len(column_width)):
-                ws.column_dimensions[chr(ord("A") + i)].width = column_width[i]
+                # ws.column_dimensions[chr(ord("A") + i)].width = column_width[i]
+                ws.column_dimensions[get_column_letter(i + 1)].width = column_width[i]
 
         header_row = []
         for col_no in range(table_widget.columnCount()):
