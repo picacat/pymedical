@@ -184,24 +184,24 @@ def update_xml(
 
 
 def get_dosage_row(database, case_key, medicine_set=1):
-    sql = f"""
+    sql = """
         SELECT * FROM dosage
         WHERE
-            CaseKey = {case_key} AND
-            MedicineSet = {medicine_set}
+            CaseKey = %s AND
+            MedicineSet = %s
     """
-    rows = database.select_record(sql)
+    rows = database.select_record(sql, (case_key, medicine_set))
 
     return rows
 
 
 def get_doctor_done(database, case_key):
-    sql = f"""
+    sql = """
         SELECT DoctorDone FROM cases
         WHERE
-            CaseKey = {case_key}
+            CaseKey = %s
     """
-    rows = database.select_record(sql)
+    rows = database.select_record(sql, (case_key,))
     if len(rows) <= 0:
         return False
 
@@ -213,24 +213,25 @@ def get_doctor_done(database, case_key):
 
 
 def set_pres_days(database, case_key, medicine_set=1, pres_days=0):
-    sql = f"""
+    sql = """
         SELECT * FROM dosage
         WHERE
-            CaseKey = {case_key} AND
-            MedicineSet = {medicine_set}
+            CaseKey = %s AND
+            MedicineSet = %s
     """
-    rows = database.select_record(sql)
+    rows = database.select_record(sql, (case_key, medicine_set))
 
     if len(rows) > 0:
-        sql = f"""
+        sql = """
             UPDATE dosage
             SET
-                Days = {pres_days}
+                Days = %s
             WHERE
-                CaseKey = {case_key} AND
-                MedicineSet = {medicine_set}
+                CaseKey = %s AND
+                MedicineSet = %s
         """
-        database.exec_sql(sql)
+        params = (pres_days, case_key, medicine_set)
+        database.exec_sql(sql, params=params)
     else:
         fields = ["CaseKey", "MedicineSet", "Days"]
         data = [case_key, medicine_set, pres_days]
@@ -241,15 +242,15 @@ def get_pres_days(database, case_key, medicine_set=1):
     if medicine_set is None:
         return 0
 
-    sql = f"""
+    sql = """
         SELECT Days FROM dosage
         WHERE
-            CaseKey = {case_key} AND
-            MedicineSet = {medicine_set}
+            CaseKey = %s AND
+            MedicineSet = %s
         LIMIT 1
     """
     try:
-        rows = database.select_record(sql)
+        rows = database.select_record(sql, (case_key, medicine_set))
     except Exception:
         return 0
 
@@ -1759,13 +1760,13 @@ def correct_neat_disease(database, case_key, index):
 def is_disease_code_exist(database, disease_code):
     is_exist = True
 
-    sql = f'''
+    sql = """
         SELECT ICD10Key FROM icd10
         WHERE
-            ICDCode = "{disease_code}"
+            ICDCode = %s
         LIMIT 1
-    '''
-    rows = database.select_record(sql)
+    """
+    rows = database.select_record(sql, (disease_code,))
 
     if len(rows) <= 0:
         is_exist = False
@@ -1774,13 +1775,13 @@ def is_disease_code_exist(database, disease_code):
 
 
 def get_disease_special_code(database, disease_code):
-    sql = f'''
+    sql = """
         SELECT SpecialCode FROM icd10
         WHERE
-            ICDCode = "{disease_code}"
+            ICDCode = %s
         LIMIT 1
-    '''
-    rows = database.select_record(sql)
+    """
+    rows = database.select_record(sql, (disease_code,))
 
     if len(rows) <= 0:
         return ""

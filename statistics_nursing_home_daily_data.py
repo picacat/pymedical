@@ -710,6 +710,7 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
         if not excel_file_name:
             return
 
+        clinic_name = self.system_settings.field("院所名稱")
         clinic_id = self.system_settings.field("院所代號")
         export_utils.export_nursing_home_list_to_excel(
             self.database,
@@ -717,6 +718,7 @@ class StatisticsNursingHomeDailyData(QtWidgets.QMainWindow):
             excel_file_name,
             self.year,
             self.month,
+            clinic_name,
             clinic_id,
         )
 
