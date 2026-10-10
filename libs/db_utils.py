@@ -574,43 +574,80 @@ def get_pres_extend_row(database, prescript_key):
 
 
 def export_medical_record_to_json(parent, database, filename, case_key_list):
+    import json
+    import os
+
     from PyQt5 import QtCore, QtWidgets
 
-    case_key_list = str(case_key_list)[1:-1]
-
+    case_key_list = list(case_key_list)
     if len(case_key_list) <= 0:
         return
 
-    sql = f"""
-        SELECT * FROM cases
-        WHERE
-            CaseKey in ({case_key_list})
-    """
-    rows = database.select_record(sql)
+    BATCH_SIZE = 200
+    total = len(case_key_list)
 
-    max_progress = len(rows)
     progress_dialog = QtWidgets.QProgressDialog(
-        "正在匯出JSON病歷資料中, 請稍後...", "取消", 0, max_progress, parent
+        "正在匯出JSON病歷資料中, 請稍後...", "取消", 0, total, parent
     )
-
     progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
     progress_dialog.setValue(0)
-    for i, row in enumerate(rows):
-        case_key = row["CaseKey"]
-        patient_key = row["PatientKey"]
 
-        row["PatientJSON"] = get_patient_row(database, patient_key)
-        row["TreatJSON"] = get_pres_extend_treat_row(database, case_key)
-        row["DosageJSON"] = get_dosage_row(database, case_key)
-        row["PrescriptJSON"] = get_prescript_row(database, case_key)
-        row["MemoJson"] = get_memo_row(database, patient_key)
-        progress_dialog.setValue(i)
+    patient_cache = {}  # 同一病患只查一次
+    memo_cache = {}
+    done = 0
+    canceled = False
 
-    progress_dialog.setValue(max_progress)
-    json_data = mysql_to_json(rows)
-    text_file = open(filename, "w", encoding="utf8")
-    text_file.write(str(json_data))
-    text_file.close()
+    with open(filename, "w", encoding="utf8") as f:
+        f.write("[\n")
+        first = True
+
+        for start in range(0, total, BATCH_SIZE):
+            chunk = case_key_list[start : start + BATCH_SIZE]
+            keys = ", ".join(str(int(k)) for k in chunk)
+            sql = f"""
+                SELECT * FROM cases
+                WHERE
+                    CaseKey IN ({keys})
+                ORDER BY CaseKey
+            """
+            rows = database.select_record(sql)
+
+            for row in rows:
+                case_key = row["CaseKey"]
+                patient_key = row["PatientKey"]
+
+                if patient_key not in patient_cache:
+                    patient_cache[patient_key] = get_patient_row(database, patient_key)
+                    memo_cache[patient_key] = get_memo_row(database, patient_key)
+
+                row["PatientJSON"] = patient_cache[patient_key]
+                row["TreatJSON"] = get_pres_extend_treat_row(database, case_key)
+                row["DosageJSON"] = get_dosage_row(database, case_key)
+                row["PrescriptJSON"] = get_prescript_row(database, case_key)
+                row["MemoJson"] = memo_cache[patient_key]
+
+                if not first:
+                    f.write(",\n")
+                json.dump(row, f, ensure_ascii=False, default=str_converter)
+                first = False
+
+                done += 1
+                progress_dialog.setValue(done)
+                if progress_dialog.wasCanceled():
+                    canceled = True
+                    break
+
+            del rows
+            if canceled:
+                break
+
+        f.write("\n]\n")
+
+    progress_dialog.setValue(total)
+    progress_dialog.deleteLater()
+
+    if canceled:
+        os.remove(filename)  # 不留半份檔案
 
 
 # 更新TimeStamp
