@@ -20,7 +20,7 @@ class Income(QtWidgets.QMainWindow):
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(Income, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -415,6 +415,12 @@ class Income(QtWidgets.QMainWindow):
             )
 
     def _print_income(self, orientation, print_type=None):
+        if self.tab_income_cash_flow is None:  # 依你實際的變數名稱調整
+            QtWidgets.QMessageBox.information(
+                self, "無法列印", "請先查詢資料後再列印。"
+            )
+            return
+
         printer_utils.print_income(
             self,
             self.database,
@@ -429,6 +435,12 @@ class Income(QtWidgets.QMainWindow):
         )
 
     def _print_income2(self, orientation, print_type=None):
+        if self.tab_income_cash_flow is None:  # 依你實際的變數名稱調整
+            QtWidgets.QMessageBox.information(
+                self, "無法列印", "請先查詢資料後再列印。"
+            )
+            return
+
         printer_utils.print_income2(
             self,
             self.database,

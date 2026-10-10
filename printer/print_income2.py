@@ -29,6 +29,9 @@ class PrintIncome2:
         self.tab_income_list = args[4]
         self.columns = args[5]
 
+        if self.tab_income_cash_flow is None:
+            return
+
         self.ui = None
 
         if self.tab_income_cash_flow is not None:
