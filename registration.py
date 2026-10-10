@@ -1,4 +1,5 @@
 import datetime
+import logging
 import platform
 import re
 import subprocess
@@ -1769,7 +1770,6 @@ class Registration(QtWidgets.QMainWindow):
 
         self.set_base_health_care_fee(self_fee)
 
-    # 開始查詢病患資料
     def query_patient(self):
         keyword = string_utils.xstr(self.ui.lineEdit_query.text())
         if keyword == "":
@@ -1822,7 +1822,7 @@ class Registration(QtWidgets.QMainWindow):
 
             if dialog.exec_():
                 patient_key = dialog.get_primary_key()
-                self._get_patient(patient_key)
+                self._get_patient_by_key(patient_key)
 
             del dialog
         elif row == -1:  # 取消查詢
@@ -1831,6 +1831,31 @@ class Registration(QtWidgets.QMainWindow):
             self._prepare_registration_data(row, ic_card)
 
         self.ui.lineEdit_query.clear()
+
+    # 由選取視窗取得 PatientKey 後直接讀取, 不再遞迴呼叫 _get_patient
+    def _get_patient_by_key(self, patient_key):
+        sql = """
+            SELECT * FROM patient
+            WHERE
+                PatientKey = %s
+        """
+        try:
+            rows = self.database.select_record(sql, params=(patient_key,))
+        except Exception as e:
+            logging.exception(f"讀取病患資料失敗: {e}\nPatientKey: {patient_key}")
+            rows = []
+
+        if not rows:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "查無資料",
+                '<font size="5" color="red"><b>讀取病患資料失敗.</b></font>',
+                f"PatientKey: {patient_key}",
+            )
+            self.ui.lineEdit_query.setFocus()
+            return
+
+        self._prepare_registration_data(rows)
 
     # 掛號修正
     def _modify_wait(self):

@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 
 from PyQt5.QtWidgets import QMessageBox
@@ -13,76 +14,107 @@ from libs import (
 )
 
 
+def _is_digits(s):
+    return s.isascii() and s.isdigit()
+
+
 # 尋找病患資料
 def search_patient(
     ui, database, settings, keyword, verify_keyword=None, use_patient_key=False
 ):
-    if keyword.isnumeric():
-        if len(keyword) >= 7:
-            sql = f"""
+    keyword = str(keyword)
+    like_keyword = f"%{keyword}%"
+
+    if _is_digits(keyword):
+        if use_patient_key:
+            sql = """
                 SELECT * FROM patient
                 WHERE
-                    Telephone LIKE "%{keyword}%" OR
-                    Cellphone LIKE "%{keyword}%"
+                    PatientKey = %s
             """
+            params = (keyword,)
+        elif len(keyword) >= 7:
+            sql = """
+                SELECT * FROM patient
+                WHERE
+                    Telephone LIKE %s OR
+                    Cellphone LIKE %s
+            """
+            params = (like_keyword, like_keyword)
         else:
-            if use_patient_key:
-                sql = f"""
-                    SELECT * FROM patient
-                    WHERE
-                        PatientKey = {keyword}
-                """
-            else:
-                sql = f"""
-                    SELECT * FROM patient
-                    WHERE
-                        (PatientKey = {keyword} OR
-                         ChartNo = {keyword})
-                """
+            sql = """
+                SELECT * FROM patient
+                WHERE
+                    PatientKey = %s OR
+                    ChartNo = %s
+            """
+            params = (keyword, keyword)
     else:
-        patient_key_script = ""
-        if verify_keyword is not None:
-            if "-" in verify_keyword or "." in verify_keyword or "/" in verify_keyword:
-                pass
-            elif verify_keyword.isnumeric():
-                patient_key_script = f"(PatientKey = {verify_keyword}) OR "
+        conditions = []
+        params = []
 
-        sql = f'''
+        if verify_keyword is not None and _is_digits(verify_keyword):
+            conditions.append("PatientKey = %s")
+            params.append(verify_keyword)
+
+        conditions += [
+            "Name LIKE %s",
+            "ID LIKE %s",
+            "Birthday = %s",
+            "Telephone LIKE %s",
+            "Cellphone LIKE %s",
+        ]
+        params += [like_keyword, f"{keyword}%", keyword, like_keyword, like_keyword]
+
+        sql = f"""
             SELECT * FROM patient
             WHERE
-                {patient_key_script}
-                (Name like "%{keyword}%") OR
-                (ID like "{keyword}%") OR
-                (Birthday = "{keyword}") OR
-                (Telephone LIKE "%{keyword}%") OR
-                (Cellphone LIKE "%{keyword}%")
+                {" OR ".join(conditions)}
             ORDER BY PatientKey
-        '''
+        """
+        params = tuple(params)
 
     try:
-        rows = database.select_record(sql)
-    except Exception:
-        return None
+        rows = database.select_record(sql, params=params)
+    except Exception as e:
+        logging.exception(f"search_patient 查詢失敗: {e}\nSQL: {sql}\nparams: {params}")
+        system_utils.show_message_box(
+            QMessageBox.Critical,
+            "查詢失敗",
+            '<font size="5" color="red"><b>資料庫查詢發生錯誤, 請稍後再試.</b></font>',
+            str(e),
+        )
+        return -1
 
     row_count = len(rows)
 
     if row_count <= 0:
-        if keyword.isnumeric() and len(keyword) == 10:
-            keyword = f"{keyword[:4]}-{keyword[4:7]}-{keyword[7:10]}"
-            sql = f"""
-                SELECT * FROM patient
-                WHERE
-                    Telephone LIKE "%{keyword}%" OR
-                    Cellphone LIKE "%{keyword}%"
-            """
-            try:
-                rows = database.select_record(sql)
-            except Exception:
-                return None
+        if not (_is_digits(keyword) and len(keyword) == 10):
+            return None
 
-            if len(rows) <= 0:
-                return None
-        else:
+        phone = f"%{keyword[:4]}-{keyword[4:7]}-{keyword[7:10]}%"
+        sql = """
+            SELECT * FROM patient
+            WHERE
+                Telephone LIKE %s OR
+                Cellphone LIKE %s
+        """
+        params = (phone, phone)
+        try:
+            rows = database.select_record(sql, params=params)
+        except Exception as e:
+            logging.exception(
+                f"search_patient 查詢失敗: {e}\nSQL: {sql}\nparams: {params}"
+            )
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "查詢失敗",
+                '<font size="5" color="red"><b>資料庫查詢發生錯誤, 請稍後再試.</b></font>',
+                str(e),
+            )
+            return -1
+
+        if len(rows) <= 0:
             return None
     elif row_count >= 2:
         dialog = dialog_utils.get_dialog_patient(ui, database, settings, rows)
@@ -91,12 +123,28 @@ def search_patient(
         if patient_key is None:  # 取消查詢
             return -1
 
-        sql = f"""
+        sql = """
             SELECT * FROM patient
             WHERE
-                PatientKey = {patient_key}
+                PatientKey = %s
         """
-        rows = database.select_record(sql)
+        params = (patient_key,)
+        try:
+            rows = database.select_record(sql, params=params)
+        except Exception as e:
+            logging.exception(
+                f"search_patient 查詢失敗: {e}\nSQL: {sql}\nparams: {params}"
+            )
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "查詢失敗",
+                '<font size="5" color="red"><b>資料庫查詢發生錯誤, 請稍後再試.</b></font>',
+                str(e),
+            )
+            return -1
+
+    if not rows:
+        return None
 
     return rows
 
