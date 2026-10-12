@@ -139,6 +139,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         )
         self.no_ins_cost = self.system_settings.field("不要顯示健保用藥成本")
         self.no_massage = self.system_settings.field("不申報傷科治療")
+        self.no_merge_treat = self.system_settings.field("不申報針傷合併治療")
         self.is_vegetarian = False
         vegetarian = patient_utils.get_patient_extension_settings(
             self.database, self.parent.patient_key, "吃素"
@@ -2010,7 +2011,7 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         self._read_treat_prescript()
 
     # 2023-05-23
-    def _extract_treat(self, treatment=None):
+    def _extract_treat(self, treatment=None, drop_second_treatment=False):
         self.ui.comboBox_treatment.setCurrentIndex(0)
         if treatment is not None:
             self.treatment = treatment
@@ -2018,6 +2019,9 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         primary_treatment, secondary_treatment = case_utils.extract_treatment(
             self.treatment
         )
+        if drop_second_treatment:
+            secondary_treatment = ""
+
         if self.course >= 2 and secondary_treatment in [
             "中度複雜性傷科",
             "高度複雜性傷科",
@@ -2038,6 +2042,8 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         if self.no_massage == "Y":
             if secondary_treatment in ["", None]:
                 self.ui.comboBox_second_treatment.setVisible(False)
+
+        self._hide_second_treatment_if_no_merge()
 
     def _read_treat_prescript(self):
         medicine_groups = nhi_utils.get_medicine_type(self.database, "處置類別")
@@ -3110,7 +3116,9 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
 
         treatment = string_utils.xstr(rows[0]["Treatment"])
         treatment = self._convert_treatment(treatment)
-        self._extract_treat(treatment)
+        self._extract_treat(
+            treatment, drop_second_treatment=(self.no_merge_treat == "Y")
+        )
 
         sql = """
             SELECT * FROM prescript
@@ -3249,7 +3257,9 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
 
         treatment = string_utils.xstr(rows[0]["Treatment"])
         treatment = self._convert_treatment(treatment)
-        self._extract_treat(treatment)
+        self._extract_treat(
+            treatment, drop_second_treatment=(self.no_merge_treat == "Y")
+        )
 
         sql = """
             SELECT * FROM prescript
@@ -3502,6 +3512,18 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             if second_treatment in ["", None]:
                 self.ui.comboBox_second_treatment.setVisible(False)
 
+        self._hide_second_treatment_if_no_merge()
+
+    # 2026-10 不申報針傷合併治療: 沒有合併處置時隱藏下拉選單.
+    # 已存檔(或拷貝來)的資料有合併處置時照常顯示, 避免使用者以為資料不見了.
+    # 注意: 這裡只負責「隱藏」, 不主動 setVisible(True), 以免蓋掉其他隱藏條件.
+    def _hide_second_treatment_if_no_merge(self):
+        if self.no_merge_treat != "Y":
+            return
+
+        if self.ui.comboBox_second_treatment.currentText() in ["", None]:
+            self.ui.comboBox_second_treatment.setVisible(False)
+
     # 設定針灸合併治療
     def set_second_treatment(self):
         treatment = self.ui.comboBox_treatment.currentText()
@@ -3532,6 +3554,8 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
 
         if second_treatment == "一般傷科":
             self.ui.comboBox_second_treatment.setCurrentIndex(1)
+
+        self._hide_second_treatment_if_no_merge()
 
     def _get_second_treatment_model(self):
         ins_treat_list = nhi_utils.MASSAGE_TREAT_2021 + nhi_utils.DISLOCATE_TREAT_2021

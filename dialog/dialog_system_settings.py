@@ -601,6 +601,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self._set_check_box(self.ui.checkBox_calc_treat_drug, "統計針傷給藥人數")
         self._set_check_box(self.ui.checkBox_no_massage, "不申報傷科治療")
+        self._set_check_box(self.ui.checkBox_no_merge_treat, "不申報針傷合併治療")
         self._set_check_box(self.ui.checkBox_check_deposit_fee, "欠卡申報點數檢查")
 
         self._set_radio_button(
@@ -1845,6 +1846,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self._save_check_box(self.ui.checkBox_calc_treat_drug, "統計針傷給藥人數")
         self._save_check_box(self.ui.checkBox_no_massage, "不申報傷科治療")
+        self._save_check_box(self.ui.checkBox_no_merge_treat, "不申報針傷合併治療")
         self._save_check_box(self.ui.checkBox_check_deposit_fee, "欠卡申報點數檢查")
 
         self._save_radio_button(
