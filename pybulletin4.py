@@ -75,6 +75,7 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.period1 = self.system_settings.field("早班時間")
         self.period2 = self.system_settings.field("午班時間")
         self.period3 = self.system_settings.field("晚班時間")
+        self.last_period_check = None  # 換班刷新: 同一分鐘只刷一次
 
         self.rotation_timer = QtCore.QTimer(self)
         self.rotation_timer.timeout.connect(self._rotation_wait_list)
@@ -249,6 +250,9 @@ class PyBulletin4(QtWidgets.QMainWindow):
 
     def _play_images(self):
         self._set_image_list()
+        if len(self.image_list) <= 0:  # 沒設定輪播圖片檔, 不播
+            return
+
         self._set_image_list_timer()
         self._display_image()
 
@@ -331,14 +335,6 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.media_list_player.play()
 
         self.volume_controller.start_media_volume_timer()
-
-    def video_finished(self, data):
-        self.video_index += 1
-        if self.video_index >= len(self.media_list):
-            self.video_index = 0
-
-        filename = self.media_list[self.video_index]
-        self._play_video(filename)
 
     def _is_url(self, source):
         return source.lower().startswith(
@@ -468,11 +464,8 @@ class PyBulletin4(QtWidgets.QMainWindow):
         self.timer.start(9)
         self.timer.timeout.connect(self._timeout)
 
+    # 跑馬燈 (9ms), 只負責移動文字; 換班檢查已移到 _clock_timeout
     def _timeout(self):
-        current_time = datetime.datetime.now().strftime("%H:%M")
-        if current_time in [self.period1, self.period2, self.period3]:
-            self._show_waiting_list()
-
         self.current_x -= 1
         if self.current_x <= -self.marquee_text_width:
             self.current_x = self.marquee_start
@@ -753,6 +746,14 @@ class PyBulletin4(QtWidgets.QMainWindow):
     def _clock_timeout(self):
         current_time = datetime.datetime.now().strftime("%H:%M")
         self.ui.label_clock.setText(current_time)
+
+        # 換班時間到刷新一次 (同一分鐘只刷一次)
+        if (
+            current_time in [self.period1, self.period2, self.period3]
+            and current_time != self.last_period_check
+        ):
+            self.last_period_check = current_time
+            self._show_waiting_list()
 
 
 # 主程式
