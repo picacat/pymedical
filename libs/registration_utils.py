@@ -64,86 +64,6 @@ def get_designate_room_start_no(system_settings, period, room, doctor):
 
 
 # 取得今日最後的診號
-# def get_last_reg_no(
-#     database, system_settings, start_date, end_date, period, room, doctor
-# ):
-#     max_regist_no = system_settings.field("診號累加器最大號")
-#     reg_no_mode = system_settings.field("現場掛號給號模式")
-
-#     if (
-#         max_regist_no not in ["", None]
-#         and max_regist_no.isdigit()
-#         and int(max_regist_no) > 0
-#     ):
-#         max_regist_no_condition = f" And RegistNo <= {max_regist_no}"
-#     else:
-#         max_regist_no_condition = ""
-
-#     sql = f'''
-#         SELECT RegistNo, RegistType FROM cases
-#         WHERE
-#             CaseDate BETWEEN "{start_date}" AND "{end_date}" AND
-#             RegistNo > 0 AND
-#             Position1 IS NULL
-#             {max_regist_no_condition}
-#     '''
-#     # 健保民俗調理不能算診號
-
-#     if system_settings.field("分診") == "Y":
-#         sql += f" AND Room = {room}"
-
-#     if system_settings.field("分班") == "Y":
-#         sql += f' AND Period = "{period}"'
-
-#     rows = database.select_record(sql)
-
-#     last_reg_no_rows = []
-#     reg_no_rows = []  # 使用者可能會把預約報到病人的預約診號手動改成現場的診號
-#     for row in rows:
-#         reg_no_rows.append(row["RegistNo"])
-
-#         # 一定要讀現場號，否則預約報到後，現場號會變成預約號之後, 早成中間許多現場號空號
-#         if (
-#             reg_no_mode in ["單號", "雙號", "預約班表", "連續號"]
-#             and row["RegistType"] != "預約門診"
-#         ):
-#             last_reg_no_rows.append(row["RegistNo"])
-
-#     if len(last_reg_no_rows) > 0:
-#         last_reg_no = last_reg_no_rows[-1]
-#     else:
-#         if system_settings.field("分班") == "Y":
-#             if system_settings.field("分診") == "Y":
-#                 reg_no = get_designate_room_start_no(
-#                     system_settings, period, room, doctor
-#                 )
-#                 if reg_no is None:
-#                     reg_no = system_settings.field(f"{period}起始號")
-#             else:
-#                 reg_no = system_settings.field(f"{period}起始號")
-#         else:
-#             reg_no = system_settings.field("早班起始號")
-
-#         try:
-#             last_reg_no = int(reg_no) - 1
-#         except TypeError:
-#             msg_box = QMessageBox()
-#             msg_box.setIcon(QMessageBox.Critical)
-#             msg_box.setWindowTitle("讀取診號起始號資料失敗")
-#             msg_box.setText("無法取得班別起始號資料, 無法產生診號.")
-#             msg_box.setInformativeText(
-#                 "請檢查[系統設定]->[診號控制]->[給號方式]的早午晚班起始號設定."
-#             )
-#             msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
-#             msg_box.exec_()
-#             return 0
-
-#     if last_reg_no is None:
-#         last_reg_no = 0
-
-
-#     return reg_no_rows, number_utils.get_integer(last_reg_no)
-# 取得今日最後的診號
 def get_last_reg_no(
     database, system_settings, start_date, end_date, period, room, doctor
 ):
@@ -264,51 +184,6 @@ def get_odd_seqauence(
     return reg_no
 
 
-# def get_reg_no_on_site(database, system_settings, doctor, period):
-#     start_date = datetime.datetime.now().strftime("%Y-%m-%d 00:00:00")
-#     end_date = datetime.datetime.now().strftime("%Y-%m-%d 23:59:59")
-#     start_no = number_utils.get_integer(system_settings.field(f"{period}起始號"))
-#     site_no_mode = system_settings.field("現場掛號給號模式")
-
-#     sql = f'''
-#         SELECT RegistNo FROM cases
-#         WHERE
-#             CaseDate BETWEEN "{start_date}" AND "{end_date}"
-#     '''
-
-#     if system_settings.field("分班") == "Y":
-#         sql += f' AND Period = "{period}"'
-
-#     if system_settings.field("分診") == "Y":
-#         sql += f' AND Doctor = "{doctor}"'
-
-#     sql += "ORDER BY RegistNo DESC LIMIT 1"
-
-#     rows = database.select_record(sql)
-#     if len(rows) <= 0:
-#         regist_no = start_no
-#         # if regist_no % 2 == 1:
-#         #     regist_no += 1
-#     else:
-#         last_reg_no = rows[0]["RegistNo"]
-#         if site_no_mode == "連續號":
-#             regist_no = last_reg_no + 1
-#         elif site_no_mode == "單號":
-#             if last_reg_no % 2 == 1:
-#                 regist_no = last_reg_no + 2
-#             else:
-#                 regist_no = last_reg_no + 1
-#         elif site_no_mode == "雙號":
-#             if last_reg_no % 2 == 1:
-#                 regist_no = last_reg_no + 1
-#             else:
-#                 regist_no = last_reg_no + 2
-#         else:
-#             regist_no += 1
-
-#     return regist_no
-
-
 def get_reg_no_on_site(database, system_settings, doctor, period):
     start_date = datetime.datetime.now().strftime("%Y-%m-%d 00:00:00")
     end_date = datetime.datetime.now().strftime("%Y-%m-%d 23:59:59")
@@ -374,14 +249,16 @@ def get_reg_no_by_even_sequence(database, system_settings, doctor, period):
     if system_settings.field("分診") == "Y":
         sql += f' AND Doctor = "{doctor}"'
 
-    sql += "ORDER BY RegistNo"
+    # 不需要 ORDER BY：MAX() 只回一列
 
     rows = database.select_record(sql)
-    if len(rows) <= 0:
-        regist_no = start_no + 1
+    max_regist_no = rows[0]["MaxRegistNo"] if rows else None
+
+    if max_regist_no is None:
+        # 今日尚無雙號：從起始號開始的第一個雙號
+        regist_no = start_no if start_no % 2 == 0 else start_no + 1
     else:
-        row = rows[0]
-        regist_no = number_utils.get_integer(row["MaxRegistNo"]) + 2
+        regist_no = number_utils.get_integer(max_regist_no) + 2
 
     return regist_no
 
@@ -426,48 +303,40 @@ def get_next_number(numbers):
 
 # 取得雙號順序遞補現場號
 def get_reg_no_by_even_sequence_fill_reg_no(database, system_settings, doctor, period):
-    sql = """
-        SELECT RegistNo FROM wait
-        WHERE
-            DoctorDone = "False"
-    """
-
+    conditions = ["RegistNo > 0"]
     if system_settings.field("分班") == "Y":
-        sql += f' AND Period = "{period}"'
-
+        conditions.append(f'Period = "{period}"')
     if system_settings.field("分診") == "Y":
-        sql += f' AND Doctor = "{doctor}"'
+        conditions.append(f'Doctor = "{doctor}"')
+    where = " AND ".join(conditions)
 
-    sql += "ORDER BY RegistNo"
-
-    rows = database.select_record(sql)
-    if len(rows) > 0:
-        regist_no_list = []
-        for row in rows:
-            regist_no_list.append(row["RegistNo"])
-
-        regist_no = get_next_number(regist_no_list)
-        return regist_no
-
-    sql = """
-        SELECT RegistNo FROM wait
-        WHERE
-            DoctorDone = "True"
-    """
-
-    if system_settings.field("分班") == "Y":
-        sql += f' AND Period = "{period}"'
-
-    if system_settings.field("分診") == "Y":
-        sql += f' AND Doctor = "{doctor}"'
-
-    sql += "ORDER BY RegistNo DESC LIMIT 1"
-    rows = database.select_record(sql)
+    # 所有已使用的號碼（候診中 + 已看完）
+    rows = database.select_record(f"""
+        SELECT RegistNo, DoctorDone FROM wait
+        WHERE {where}
+        ORDER BY RegistNo
+    """)
     if not rows:
         return 1
 
-    row = rows[0]
-    regist_no = number_utils.get_integer(row["RegistNo"]) + 1
+    used_numbers = set()
+    waiting_numbers = []
+    for row in rows:
+        reg_no = number_utils.get_integer(row["RegistNo"])
+        used_numbers.add(reg_no)
+        if string_utils.xstr(row["DoctorDone"]) == "False":
+            waiting_numbers.append(reg_no)
+
+    if waiting_numbers:
+        # 從候診中最小號往後，找第一個沒人用過的號碼（遞補缺號）
+        regist_no = min(waiting_numbers) + 1
+    else:
+        # 全部看完，接在最後一號之後
+        regist_no = max(used_numbers) + 1
+
+    while regist_no in used_numbers:
+        regist_no += 1
+
     return regist_no
 
 
@@ -488,14 +357,13 @@ def get_reg_no_by_sequence(database, system_settings, doctor, period):
     if system_settings.field("分診") == "Y":
         sql += f' AND Doctor = "{doctor}"'
 
-    sql += "ORDER BY RegistNo"
-
     rows = database.select_record(sql)
-    if len(rows) <= 0:
+    max_regist_no = rows[0]["MaxRegistNo"] if rows else None
+
+    if max_regist_no is None:
         regist_no = start_no
     else:
-        row = rows[0]
-        regist_no = number_utils.get_integer(row["MaxRegistNo"]) + 1
+        regist_no = number_utils.get_integer(max_regist_no) + 1
 
     return regist_no
 
