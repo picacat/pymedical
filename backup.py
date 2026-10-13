@@ -84,6 +84,16 @@ ENGINE_INNODB = "innodb"
 ENGINE_MYISAM = "myisam"
 ENGINE_MIXED = "mixed"
 
+# 只備份結構、不備份資料的表（紀錄性質，量大且還原後不需要）
+SCHEMA_ONLY_TABLES = {
+    "address_list",
+    "backup_records",
+    "drug",
+    "event_log",
+    "hospid",
+    "icdmap",
+}
+
 
 class BackupCancelled(Exception):
     """使用者於備份過程中按下取消."""
@@ -691,14 +701,29 @@ class Backup(QtWidgets.QDialog):
 
         return verified
 
+    # def _dump_table(self, backup_path, table_name):
+    #     self._check_cancelled()
+
+    #     filename = f"{table_name}.sql"
+    #     return self._dump_and_verify(
+    #         filename,
+    #         os.path.join(backup_path, filename),
+    #         [self._database_name, table_name],
+    #     )
+
     def _dump_table(self, backup_path, table_name):
         self._check_cancelled()
+
+        extra_args = [self._database_name, table_name]
+        if table_name.lower() in SCHEMA_ONLY_TABLES:
+            # 只匯出 CREATE TABLE（含 triggers），不匯出資料
+            extra_args = ["--no-data", *extra_args]
 
         filename = f"{table_name}.sql"
         return self._dump_and_verify(
             filename,
             os.path.join(backup_path, filename),
-            [self._database_name, table_name],
+            extra_args,
         )
 
     def _dump_object_file(self, name, backup_path, arg_variants):
