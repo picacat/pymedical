@@ -3212,7 +3212,7 @@ class MedicalRecordCheck(QtWidgets.QDialog):
             if disease_code == "":
                 continue
 
-            if gender == "男" and ("N7" <= disease_code[:2] <= "P9"):
+            if gender == "男" and ("N7" <= disease_code[:2] <= "N9"):
                 error_message.append(f"男性病患輸入女性病患診斷碼: {disease_code}")
             elif gender == "女" and ("N4" <= disease_code[:2] <= "N5"):
                 error_message.append(f"女性病患輸入男性病患診斷碼: {disease_code}")
