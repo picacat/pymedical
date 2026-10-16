@@ -849,7 +849,9 @@ class PyMedical(QtWidgets.QMainWindow):
         self.ui.action_import_all_database.triggered.connect(
             self.import_all_database
         )  # 匯出整個資料庫
-
+        self.ui.action_export_medical_record_json_by_date.triggered.connect(
+            self.export_medical_record_json_by_date
+        )  # 依日期匯出JSON病歷
         self.ui.action_ins_check.triggered.connect(self._open_subroutine)  # 申報檢查
         self.ui.action_ins_apply.triggered.connect(self._open_subroutine)  # 健保申報
         self.ui.action_ins_judge.triggered.connect(self._open_subroutine)  # 健保抽審
@@ -1832,6 +1834,74 @@ class PyMedical(QtWidgets.QMainWindow):
         dialog = module_utils.get_convert(self, self.database, self.system_settings)
         dialog.exec_()
         dialog.deleteLater()
+
+    # 依日期區間匯出JSON病歷
+    def export_medical_record_json_by_date(self):
+        from dialog.dialog_export_json_by_date import DialogExportJsonByDate
+
+        today = QtCore.QDate.currentDate()
+        dialog = DialogExportJsonByDate(
+            self,
+            start_date=QtCore.QDate(today.year(), today.month(), 1),
+            end_date=today,
+        )
+        try:
+            if dialog.exec_() != QtWidgets.QDialog.Accepted:
+                return
+
+            # dialog 關閉前, 把需要的值全部取出來
+            start_date = dialog.start_date()
+            end_date = dialog.end_date()
+            json_file_name = dialog.file_name()
+            mask_sensitive = dialog.mask_sensitive()  # ← 在這裡取值
+        finally:
+            dialog.deleteLater()
+
+        case_key_list = db_utils.get_case_keys_by_date_range(
+            self.database, start_date, end_date
+        )
+        if len(case_key_list) <= 0:
+            system_utils.show_message_box(
+                QMessageBox.Information,
+                "查無資料",
+                f"<h3>{start_date}至{end_date} 沒有病歷資料.</h3>",
+                "請重新指定日期區間.",
+            )
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "確認匯出",
+            f"{start_date}至{end_date} 共 {len(case_key_list)} 筆病歷, 確定匯出?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes,
+        )
+        if reply != QMessageBox.Yes:
+            return
+
+        completed = db_utils.export_medical_record_to_json(
+            self,
+            self.database,
+            json_file_name,
+            case_key_list,
+            mask_sensitive=mask_sensitive,  # ← 在這裡傳進去
+        )
+        if not completed:
+            return
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "JSON資料匯出完成",
+            f"<h3>病歷資料 {json_file_name}匯出完成.</h3>",
+            f"共 {len(case_key_list)} 筆, 此為敏感性資料，請小心使用，切勿外洩.",
+        )
+
+        log = (
+            f"{date_utils.now_to_str()}依日期匯出JSON檔案, "
+            f"日期: {start_date}至{end_date}, 筆數: {len(case_key_list)}, "
+            f"遮蔽個資: {'是' if mask_sensitive else '否'}, "
+            f"檔案名稱: {json_file_name}"
+        )
 
     def export_emr_xml(self):
         dialog = dialog_utils.get_dialog_export_emr_xml(

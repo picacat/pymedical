@@ -1,6 +1,7 @@
 # libs/db_utils.py
 
 import datetime
+import re
 import traceback
 
 from libs import class_utils, string_utils
@@ -573,83 +574,6 @@ def get_pres_extend_row(database, prescript_key):
     return rows
 
 
-def export_medical_record_to_json(parent, database, filename, case_key_list):
-    import json
-    import os
-
-    from PyQt5 import QtCore, QtWidgets
-
-    case_key_list = list(case_key_list)
-    if len(case_key_list) <= 0:
-        return
-
-    BATCH_SIZE = 200
-    total = len(case_key_list)
-
-    progress_dialog = QtWidgets.QProgressDialog(
-        "正在匯出JSON病歷資料中, 請稍後...", "取消", 0, total, parent
-    )
-    progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-    progress_dialog.setValue(0)
-
-    patient_cache = {}  # 同一病患只查一次
-    memo_cache = {}
-    done = 0
-    canceled = False
-
-    with open(filename, "w", encoding="utf8") as f:
-        f.write("[\n")
-        first = True
-
-        for start in range(0, total, BATCH_SIZE):
-            chunk = case_key_list[start : start + BATCH_SIZE]
-            keys = ", ".join(str(int(k)) for k in chunk)
-            sql = f"""
-                SELECT * FROM cases
-                WHERE
-                    CaseKey IN ({keys})
-                ORDER BY CaseKey
-            """
-            rows = database.select_record(sql)
-
-            for row in rows:
-                case_key = row["CaseKey"]
-                patient_key = row["PatientKey"]
-
-                if patient_key not in patient_cache:
-                    patient_cache[patient_key] = get_patient_row(database, patient_key)
-                    memo_cache[patient_key] = get_memo_row(database, patient_key)
-
-                row["PatientJSON"] = patient_cache[patient_key]
-                row["TreatJSON"] = get_pres_extend_treat_row(database, case_key)
-                row["DosageJSON"] = get_dosage_row(database, case_key)
-                row["PrescriptJSON"] = get_prescript_row(database, case_key)
-                row["MemoJson"] = memo_cache[patient_key]
-
-                if not first:
-                    f.write(",\n")
-                json.dump(row, f, ensure_ascii=False, default=str_converter)
-                first = False
-
-                done += 1
-                progress_dialog.setValue(done)
-                if progress_dialog.wasCanceled():
-                    canceled = True
-                    break
-
-            del rows
-            if canceled:
-                break
-
-        f.write("\n]\n")
-
-    progress_dialog.setValue(total)
-    progress_dialog.deleteLater()
-
-    if canceled:
-        os.remove(filename)  # 不留半份檔案
-
-
 # 更新TimeStamp
 def update_timestamp(database, table_name, primary_key_field, primary_key):
     if primary_key in [None, ""]:
@@ -726,3 +650,336 @@ def with_transaction(func):
 def in_placeholders(values):
     """產生 IN 子句的佔位符字串, 如 3 個值回傳 '%s, %s, %s'"""
     return ", ".join(["%s"] * len(values))
+
+
+def get_case_keys_by_date_range(database, start_date, end_date):
+    """
+    取得日期區間內的病歷 CaseKey 清單
+    start_date / end_date: 'yyyy-MM-dd' 字串 (含結束日當天)
+    """
+    end_next_day = (
+        datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)
+    ).strftime("%Y-%m-%d")
+
+    sql = """
+        SELECT CaseKey FROM cases
+        WHERE
+            CaseDate >= %s AND
+            CaseDate < %s
+        ORDER BY CaseKey
+    """
+    rows = database.select_record(sql, (start_date, end_next_day))
+
+    return [row["CaseKey"] for row in rows]
+
+
+def _group_rows(rows, key_field):
+    """依指定欄位分組, 保留原本的排序"""
+    grouped = {}
+    for row in rows:
+        grouped.setdefault(row[key_field], []).append(row)
+
+    return grouped
+
+
+def _fetch_export_children(database, case_keys, patient_keys, mask_sensitive=False):
+    """
+    一次撈回一個 chunk 所需的所有子表資料, 回傳分組後的 dict
+    排序與原本單筆查詢 (get_dosage_row 等) 一致
+    """
+    case_params = tuple(case_keys)
+    case_in = in_placeholders(case_keys)
+
+    # 病患資料
+    patient_dict = {}
+    memo_dict = {}
+    if patient_keys:
+        patient_params = tuple(patient_keys)
+        patient_in = in_placeholders(patient_keys)
+
+        sql = f"""
+            SELECT * FROM patient
+            WHERE
+                PatientKey IN ({patient_in})
+        """
+        patient_rows = database.select_record(sql, patient_params)
+        if mask_sensitive:
+            for row in patient_rows:
+                mask_sensitive_fields(row)
+
+        patient_dict = _group_rows(patient_rows, "PatientKey")
+
+        # 遮蔽模式不匯出 Memo, 連查都不用查
+        if not mask_sensitive:
+            sql = f"""
+                SELECT * FROM patient_extension
+                WHERE
+                    PatientKey IN ({patient_in}) AND
+                    ExtensionType = "Memo"
+                ORDER BY PatientExtensionKey DESC
+            """
+            for row in database.select_record(sql, patient_params):
+                memo_dict.setdefault(row["PatientKey"], [row])
+
+    # 處置簽章: presextend.PrescriptKey 存的是 CaseKey, 每筆病歷取第一筆
+    treat_dict = {}
+    if not mask_sensitive:  # 遮蔽模式不匯出處置簽章, 連查都不用查
+        sql = f"""
+            SELECT * FROM presextend
+            WHERE
+                PrescriptKey IN ({case_in}) AND
+                ExtendType = "處置簽章"
+            ORDER BY PresExtendKey
+        """
+        for row in database.select_record(sql, case_params):
+            treat_dict.setdefault(row["PrescriptKey"], [row])
+
+    # 劑量
+    sql = f"""
+        SELECT * FROM dosage
+        WHERE
+            CaseKey IN ({case_in})
+        ORDER BY CaseKey, MedicineSet
+    """
+    dosage_dict = _group_rows(database.select_record(sql, case_params), "CaseKey")
+
+    # 處方
+    sql = f"""
+        SELECT * FROM prescript
+        WHERE
+            CaseKey IN ({case_in})
+        ORDER BY PrescriptKey
+    """
+    prescript_rows = database.select_record(sql, case_params)
+
+    # 處方簽章
+    pres_extend_dict = {}
+    prescript_keys = [row["PrescriptKey"] for row in prescript_rows]
+    if prescript_keys:
+        sql = f"""
+            SELECT * FROM presextend
+            WHERE
+                PrescriptKey IN ({in_placeholders(prescript_keys)}) AND
+                ExtendType = "處方簽章"
+            ORDER BY PresExtendKey
+        """
+        pres_extend_dict = _group_rows(
+            database.select_record(sql, tuple(prescript_keys)), "PrescriptKey"
+        )
+
+    for row in prescript_rows:
+        if mask_sensitive:
+            continue  # 遮蔽模式不輸出處方簽章 (PresExtendJSON)
+
+        row["PresExtendJSON"] = pres_extend_dict.get(row["PrescriptKey"], [])
+
+    prescript_dict = _group_rows(prescript_rows, "CaseKey")
+
+    return {
+        "patient": patient_dict,
+        "memo": memo_dict,
+        "treat": treat_dict,
+        "dosage": dosage_dict,
+        "prescript": prescript_dict,
+    }
+
+
+def export_medical_record_to_json(
+    parent, database, filename, case_key_list, mask_sensitive=False
+):
+    import json
+    import os
+
+    from PyQt5 import QtCore, QtWidgets
+
+    case_key_list = [int(k) for k in case_key_list]
+    if len(case_key_list) <= 0:
+        return False
+
+    BATCH_SIZE = 200
+    total = len(case_key_list)
+
+    progress_dialog = QtWidgets.QProgressDialog(
+        "正在匯出JSON病歷資料中, 請稍後...", "取消", 0, total, parent
+    )
+    progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
+    progress_dialog.setValue(0)
+
+    done = 0
+    canceled = False
+
+    with open(filename, "w", encoding="utf8") as f:
+        f.write("[\n")
+        first = True
+
+        for start in range(0, total, BATCH_SIZE):
+            chunk = case_key_list[start : start + BATCH_SIZE]
+            sql = f"""
+                SELECT * FROM cases
+                WHERE
+                    CaseKey IN ({in_placeholders(chunk)})
+                ORDER BY CaseKey
+            """
+            rows = database.select_record(sql, tuple(chunk))
+            if not rows:
+                continue
+
+            case_keys = [row["CaseKey"] for row in rows]
+            patient_keys = list(
+                {row["PatientKey"] for row in rows if row["PatientKey"] is not None}
+            )
+            children = _fetch_export_children(
+                database, case_keys, patient_keys, mask_sensitive
+            )
+
+            for row in rows:
+                if mask_sensitive:
+                    mask_sensitive_fields(row)  # cases 本身也有 Name 等欄位
+
+                case_key = row["CaseKey"]
+                patient_key = row["PatientKey"]
+
+                row["PatientJSON"] = children["patient"].get(patient_key, [])
+                if not mask_sensitive:
+                    row["TreatJSON"] = children["treat"].get(case_key, [])
+
+                row["DosageJSON"] = children["dosage"].get(case_key, [])
+                row["PrescriptJSON"] = children["prescript"].get(case_key, [])
+
+                if not mask_sensitive:
+                    row["MemoJson"] = children["memo"].get(patient_key, [])
+
+                if not first:
+                    f.write(",\n")
+                json.dump(row, f, ensure_ascii=False, default=str_converter)
+                first = False
+
+                done += 1
+                progress_dialog.setValue(done)
+                if progress_dialog.wasCanceled():
+                    canceled = True
+                    break
+
+            del rows, children
+            if canceled:
+                break
+
+        f.write("\n]\n")
+
+    progress_dialog.setValue(total)
+    progress_dialog.deleteLater()
+
+    if canceled:
+        os.remove(filename)  # 不留半份檔案
+        return False
+
+    return True
+
+
+def _to_text(value):
+    if isinstance(value, bytes):
+        try:
+            return value.decode("utf8")
+        except UnicodeDecodeError:
+            return value.decode("big5")
+    return str(value)
+
+
+def mask_name(value):
+    """王小明 → 王○明, 王明 → 王○, 歐陽小明 → 歐○○明"""
+    s = _to_text(value).strip()
+    n = len(s)
+    if n <= 1:
+        return s
+    if n == 2:
+        return s[0] + "○"
+    return s[0] + "○" * (n - 2) + s[-1]
+
+
+def mask_id(value):
+    """A123456789 → A12****789"""
+    s = _to_text(value).strip()
+    n = len(s)
+    if n <= 4:
+        return "*" * n
+    if n <= 7:
+        return s[0] + "*" * (n - 1)
+    return s[:3] + "*" * (n - 6) + s[-3:]
+
+
+def mask_phone(value):
+    """0912345678 → 0912***678"""
+    s = _to_text(value).strip()
+    n = len(s)
+    if n <= 4:
+        return "*" * n
+    if n <= 7:
+        return s[:2] + "*" * (n - 2)
+    return s[:4] + "*" * (n - 7) + s[-3:]
+
+
+_ADDRESS_PREFIX = re.compile(r"^(\d*\s*.*?[縣市])?(.*?[區鄉鎮市])?")
+
+
+def mask_address(value):
+    """保留縣市與鄉鎮區: 台北市中正區忠孝西路一段100號 → 台北市中正區○○○○"""
+    s = _to_text(value).strip()
+    match = _ADDRESS_PREFIX.match(s)
+    prefix = match.group(0) if match else ""
+    if not prefix:
+        prefix = s[:3]
+    return prefix + "○○○○"
+
+
+def mask_birthday(value):
+    """只保留出生年 (年齡在醫療資料上常用得到): 1980-05-12 → 1980-**-**"""
+    s = _to_text(value).strip()
+    return s[:4] + "-**-**" if len(s) >= 4 else "****"
+
+
+def mask_email(value):
+    """abc@gmail.com → a***@gmail.com"""
+    s = _to_text(value).strip()
+    if "@" not in s:
+        return "***"
+    local, domain = s.split("@", 1)
+    return f"{local[:1]}***@{domain}"
+
+
+# 欄位名稱 → 遮蔽函式; 依實際資料表欄位調整
+SENSITIVE_FIELD_MASKERS = {
+    "Name": mask_name,
+    "Doctor": mask_name,
+    "Pharmacist": mask_name,
+    "Massager": mask_name,
+    "Register": mask_name,
+    "Cashier": mask_name,
+    "MassageReferrer": mask_name,
+    "NursingAssistant": mask_name,
+    "ID": mask_id,
+    "Birthday": mask_birthday,
+    "Telephone": mask_phone,
+    "Cellphone": mask_phone,
+    "Address": mask_address,
+    "Email": mask_email,
+}
+
+
+# 遮蔽模式下直接移除的欄位
+EXCLUDED_FIELDS_WHEN_MASKED = [
+    "Security",  # IC卡安全簽章
+]
+
+
+# 遮蔽模式下直接移除的欄位
+def mask_sensitive_fields(row):
+    for field in EXCLUDED_FIELDS_WHEN_MASKED:
+        row.pop(field, None)
+
+    for field, masker in SENSITIVE_FIELD_MASKERS.items():
+        value = row.get(field)
+        if value in (None, "", b""):
+            continue
+        row[field] = masker(value)
+
+    return row

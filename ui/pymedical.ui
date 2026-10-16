@@ -1069,6 +1069,7 @@
     <addaction name="action_database_repair"/>
     <addaction name="action_export_all_database"/>
     <addaction name="action_import_all_database"/>
+    <addaction name="action_export_medical_record_json_by_date"/>
     <addaction name="separator"/>
     <addaction name="action_event_log"/>
     <addaction name="separator"/>
@@ -2295,6 +2296,18 @@
    </property>
    <property name="toolTip">
     <string>病患優待身份統計</string>
+   </property>
+  </action>
+  <action name="action_export_medical_record_json_by_date">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-save-as.svg</normaloff>../icons/document-save-as.svg</iconset>
+   </property>
+   <property name="text">
+    <string>匯出資料庫至JSON (敏感資料保護)</string>
+   </property>
+   <property name="toolTip">
+    <string>匯出資料庫至JSON，為了個資保護，不會揭露敏感性資料</string>
    </property>
   </action>
  </widget>
