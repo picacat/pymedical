@@ -125,10 +125,6 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         else:
             check_ok = self._check_general()
 
-        # regist_type = self.parent.tab_registration.comboBox_reg_type.currentText()
-        # if regist_type in nhi_utils.SPECIAL_PHARMACY_TYPE:
-        #     check_ok = self._check_special_pharmacy_type(regist_type)
-
         return check_ok
 
     # 檢查主診斷碼
@@ -329,10 +325,17 @@ class MedicalRecordCheck(QtWidgets.QDialog):
 
     # 檢查開藥日數
     @staticmethod
-    def _check_pres_days_error(treat_type, pres_days):
+    def _check_pres_days_error(treat_type, pres_days, regist_type=None):
         error_message = None
 
         if (
+            regist_type is not None
+            and regist_type in nhi_utils.SPECIAL_PHARMACY_TYPE
+            and pres_days > 0
+            and pres_days < 56
+        ):
+            error_message = "* 慢性病連續處方箋, 請開立內服藥至少56天 (建議56天或60天)"
+        elif (
             treat_type in nhi_utils.PREGNANT_CARE_TREAT
             and pres_days < 7
             or treat_type in nhi_utils.CANCER_CARE_TREAT
@@ -1042,7 +1045,15 @@ class MedicalRecordCheck(QtWidgets.QDialog):
             if not self._check_fracture():
                 return False
 
-        if self.system_settings.field("慢性病開藥檢查") == "Y":
+        try:
+            regist_type = self.parent.tab_registration.comboBox_reg_type.currentText()
+        except Exception:
+            regist_type = self.medical_record["RegistType"]
+
+        if regist_type in nhi_utils.SPECIAL_PHARMACY_TYPE:
+            if not self._check_special_pharmacy_type(regist_type):
+                return False
+        elif self.system_settings.field("慢性病開藥檢查") == "Y":
             if not self._check_strict_special_code():
                 return False
         else:

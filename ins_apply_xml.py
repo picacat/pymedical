@@ -1566,19 +1566,15 @@ class InsApplyXML(QtWidgets.QMainWindow):
 
         case_type = string_utils.xstr(row["CaseType"])
         if case_type in ["24", "29"] and pres_days > 30:
-            if pres_days == 60:
+            if pres_days >= 58:
                 pres_days = 30  # 拆成兩筆
-            elif pres_days == 56:
+            else:
                 pres_days = 28  # 拆成兩筆
-            else:
-                pres_days = 30
         elif case_type in ["28"]:
-            if pres_days == 60:
+            if pres_days >= 58:
                 pres_days -= 30
-            elif pres_days == 56:
-                pres_days -= 28
             else:
-                pres_days -= 30
+                pres_days -= 28
 
         # 新特約院所新增虛擬碼 R005 2019.08.10
         if row["Card"] is not None and string_utils.xstr(row["Card"][:4]) == "G000":

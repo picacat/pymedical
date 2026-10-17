@@ -709,12 +709,11 @@ class InsApplyGenerateFile(QtWidgets.QMainWindow):
             first_visit = None
         elif case_28:
             case_type = "28"
-            if pres_days == 60:
+            if pres_days >= 58:  # 58天以上拆成第一筆30天，第二筆pres_days - 30天
                 pres_days -= 30
-            elif pres_days == 56:
-                pres_days -= 28
             else:
-                pres_days -= 30
+                pres_days -= 28
+
             diag_code = None
             pharmacy_code = "000000"
             card = "IC02"
@@ -732,12 +731,11 @@ class InsApplyGenerateFile(QtWidgets.QMainWindow):
                 self.database, self.system_settings, row, diag_fee, ins_total_fee
             )
             if case_type == "24" and pres_days > 30:  # 2024.05.18 慢性病連續處方箋
-                if pres_days == 56:
-                    pres_days = 28  # 拆成兩筆
-                elif pres_days == 60:
+                if pres_days >= 58:
                     pres_days = 30
                 else:
-                    pres_days = 30
+                    pres_days = 28
+
                 ins_total_fee -= drug_fee  # 調整慢箋首次的藥費
                 drug_fee = charge_utils.get_ins_drug_fee(
                     self.database, pres_days, case_date=case_start_date
