@@ -21,6 +21,8 @@ from libs import (
     validator_utils,
 )
 
+INTEGRATE_CARE_MONTHLY_LIMIT = 4  # 每月 >= 5 次會加強抽審
+
 
 # 欄位錯誤檢查 2018.01.31
 class CheckErrors(QtWidgets.QMainWindow):
@@ -359,20 +361,6 @@ class CheckErrors(QtWidgets.QMainWindow):
             error_messages.append("申報類別有誤")
         elif row["ApplyType"] is None:
             error_messages.append("申報類別空白")
-
-        if case_utils.get_case_extend(self.database, case_key, "整合醫療照護") == "Y":
-            if course >= 2:
-                error_messages.append("療程2-6次不可申報整合醫療照護")
-
-            symptom = string_utils.get_str(row["Symptom"], "utf-8")
-            check_list = ["診療及衛教時間", "衛教方式", "衛教內容"]
-            error_list = []
-            for keyword in check_list:
-                if keyword not in symptom:
-                    error_list.append(keyword)
-
-            if len(error_list) > 0:
-                error_messages.append(f"整合醫療照護缺少{', '.join(error_list)}")
 
         if row["RegistType"] in nhi_utils.TOUR_FAR and row["TourArea"] is None:
             error_messages.append("巡迴醫療無巡迴地區")
@@ -1830,19 +1818,39 @@ class CheckErrors(QtWidgets.QMainWindow):
         return error_messages
 
     def _check_integrate_care(self, row):
+        """整合醫療照護的所有檢查集中在這裡"""
         error_messages = []
 
-        if (
-            case_utils.get_case_extend(self.database, row["CaseKey"], "整合醫療照護")
-            != "Y"
-        ):
+        seq = self._integrate_care_month(row["CaseDate"]).get(row["CaseKey"])
+        if seq is None:  # 不是整合醫療照護
             return error_messages
 
+        # 不得併報的案件類別
         treat_type = string_utils.xstr(row["TreatType"])
         if treat_type in nhi_utils.IMPROVE_CARE_TREAT + nhi_utils.AUXILIARY_CARE_TREAT:
             error_messages.append("加強照護專案不得申報整合醫療照護")
         elif treat_type in nhi_utils.HOME_CARE:
             error_messages.append("居家醫療不得申報整合醫療照護")
+
+        # 療程限制
+        if number_utils.get_integer(row["Continuance"]) >= 2:
+            error_messages.append("療程2-6次不可申報整合醫療照護")
+
+        # 主訴必須記載衛教內容
+        symptom = string_utils.get_str(row["Symptom"], "utf-8")
+        missing = [
+            keyword
+            for keyword in ("診療及衛教時間", "衛教方式", "衛教內容")
+            if keyword not in symptom
+        ]
+        if missing:
+            error_messages.append(f"整合醫療照護缺少{', '.join(missing)}")
+
+        # 每月次數上限
+        if seq > INTEGRATE_CARE_MONTHLY_LIMIT:
+            error_messages.append(
+                f"整合醫療照護本月第{seq}次(超過{INTEGRATE_CARE_MONTHLY_LIMIT}次易加強抽審)"
+            )
 
         return error_messages
 
@@ -1954,3 +1962,42 @@ class CheckErrors(QtWidgets.QMainWindow):
             error_messages.append(f"{treat_code} {limit_text} (已於 {date_list} 申報)")
 
         return error_messages
+
+    def _integrate_care_month(self, case_date):
+        """回傳該月 {CaseKey: 該病患本月第幾次整合醫療照護}。
+
+        以 CaseDate 所在的整個月計算（不受檢查日期範圍影響），
+        一個月只查一次，快取到整批檢查結束。
+        """
+        key = f"integrate:{case_date.year}-{case_date.month}"
+        if key not in self._run_cache:
+            start_date = date_utils.get_start_date_by_year_month(
+                case_date.year, case_date.month
+            )
+            end_date = date_utils.get_end_date_by_year_month(
+                case_date.year, case_date.month
+            )
+            rows = self.database.select_record(
+                """
+                SELECT DISTINCT cases.CaseKey, cases.PatientKey, cases.CaseDate
+                FROM cases
+                    INNER JOIN caseextend ON caseextend.CaseKey = cases.CaseKey
+                WHERE
+                    cases.CaseDate BETWEEN %s AND %s AND
+                    cases.InsType = "健保" AND
+                    caseextend.ExtendType = "整合醫療照護" AND
+                    caseextend.Content = "Y"
+                ORDER BY cases.PatientKey, cases.CaseDate, cases.CaseKey
+                """,
+                params=(start_date, end_date),
+            )
+
+            seq = {}
+            counter = Counter()
+            for r in rows:
+                counter[r["PatientKey"]] += 1
+                seq[r["CaseKey"]] = counter[r["PatientKey"]]
+
+            self._run_cache[key] = seq
+
+        return self._run_cache[key]
