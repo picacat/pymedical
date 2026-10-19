@@ -197,6 +197,151 @@ class StatisticsDoctorAchievement(QtWidgets.QMainWindow):
         '''
         self.table_widget_doctor_summary.set_db_data(sql, self._set_table_data)
 
+    # def _set_table_data(self, row_no, row):
+    #     case_key = string_utils.xstr(row["CaseKey"])
+
+    #     diag_with_nurse_fee = charge_utils.get_ins_diag_fee(
+    #         self.database,
+    #         self.system_settings,
+    #         diag_code="A01",
+    #     )
+    #     diag_fee = number_utils.get_integer(row["DiagFee"])
+    #     if diag_fee == diag_with_nurse_fee:
+    #         diag_fee = self.diag_fee
+
+    #     diag_fee_rate = self.ui.spinBox_ins_diag_rate.value()
+    #     if self.ui.label_ins_diag_rate_type.text() == "$":
+    #         if diag_fee > 0:
+    #             diag_fee_commission = diag_fee_rate
+    #         else:
+    #             diag_fee_commission = 0
+    #     else:
+    #         diag_fee_commission = number_utils.round_up_ex(
+    #             diag_fee * diag_fee_rate / 100, ".1"
+    #         )
+
+    #     ins_treat_fee = (
+    #         number_utils.get_integer(row["AcupunctureFee"])
+    #         + number_utils.get_integer(row["MassageFee"])
+    #         + number_utils.get_integer(row["DislocateFee"])
+    #         + number_utils.get_integer(row["ExamFee"])
+    #     )
+    #     ins_treat_fee_rate = self.ui.spinBox_ins_treat_rate.value()
+    #     if self.ui.label_ins_treat_rate_type.text() == "$":
+    #         if ins_treat_fee > 0:
+    #             ins_treat_fee_commission = ins_treat_fee_rate
+    #         else:
+    #             ins_treat_fee_commission = 0
+    #     else:
+    #         ins_treat_fee_commission = number_utils.round_up_ex(
+    #             ins_treat_fee * ins_treat_fee_rate / 100, ".1"
+    #         )
+
+    #     self_drug_fee = self._get_self_treat_fee(case_key, treat_type="藥品")
+    #     self_drug_fee_rate = self.ui.spinBox_self_drug_rate.value()
+
+    #     self_treat_fee = self._get_self_treat_fee(case_key)
+    #     self_treat_fee_rate = self.ui.spinBox_self_treat_rate.value()
+
+    #     beauty_fee = self._get_self_treat_fee(case_key, beauty_type=True)
+    #     beauty_rate = 40
+    #     beauty_commission = number_utils.round_up_ex(
+    #         beauty_fee * beauty_rate / 100, ".1"
+    #     )
+
+    #     total_fee = number_utils.get_integer(row["TotalFee"])
+    #     if self_treat_fee > 0 and self_drug_fee == 0 and self_treat_fee != total_fee:
+    #         self_treat_fee = total_fee
+
+    #     if (
+    #         self_drug_fee > 0
+    #         and self_treat_fee == 0
+    #         and beauty_fee == 0
+    #         and self_drug_fee != total_fee
+    #     ):
+    #         self_drug_fee = total_fee
+
+    #     if self.ui.label_self_drug_rate_type.text() == "$":
+    #         if self_drug_fee > 0:
+    #             self_drug_fee_commission = self_drug_fee_rate
+    #         else:
+    #             self_drug_fee_commission = 0
+    #     else:
+    #         self_drug_fee_commission = number_utils.round_up_ex(
+    #             self_drug_fee * self_drug_fee_rate / 100, ".1"
+    #         )
+
+    #     if self.ui.label_self_treat_rate_type.text() == "$":
+    #         if self_treat_fee > 0:
+    #             self_treat_fee_commission = self_treat_fee_rate
+    #         else:
+    #             self_treat_fee_commission = 0
+    #     else:
+    #         self_treat_fee_commission = number_utils.round_up_ex(
+    #             self_treat_fee * self_treat_fee_rate / 100, ".1"
+    #         )
+
+    #     total_commission = (
+    #         diag_fee_commission
+    #         + ins_treat_fee_commission
+    #         + self_drug_fee_commission
+    #         + self_treat_fee_commission
+    #         + beauty_commission
+    #     )
+
+    #     medical_record_row = [
+    #         case_key,
+    #         row["CaseDate"].date().strftime("%Y-%m-%d"),
+    #         string_utils.xstr(row["RegistNo"]),
+    #         string_utils.xstr(row["PatientKey"]),
+    #         string_utils.xstr(row["Name"]),
+    #         string_utils.xstr(row["InsType"]),
+    #         diag_fee,
+    #         f"{diag_fee_rate}{self.ui.label_ins_diag_rate_type.text()}",
+    #         number_utils.get_float(diag_fee_commission),
+    #         ins_treat_fee,
+    #         f"{ins_treat_fee_rate}{self.ui.label_ins_treat_rate_type.text()}",
+    #         number_utils.get_float(ins_treat_fee_commission),
+    #         self_drug_fee,
+    #         f"{self_drug_fee_rate}{self.ui.label_self_drug_rate_type.text()}",
+    #         number_utils.get_float(self_drug_fee_commission),
+    #         self_treat_fee,
+    #         f"{self_treat_fee_rate}{self.ui.label_self_treat_rate_type.text()}",
+    #         number_utils.get_float(self_treat_fee_commission),
+    #         number_utils.get_float(beauty_fee),
+    #         f"{beauty_rate}%",
+    #         number_utils.get_float(beauty_commission),
+    #         number_utils.get_float(total_commission),
+    #         string_utils.xstr(row["Doctor"]),
+    #     ]
+
+    #     for col_no in range(len(medical_record_row)):
+    #         item = QtWidgets.QTableWidgetItem()
+    #         item.setData(QtCore.Qt.EditRole, medical_record_row[col_no])
+    #         self.ui.tableWidget_doctor_summary.setItem(row_no, col_no, item)
+
+    #         if col_no in [2, 3] or (col_no >= 6 and col_no <= 21):
+    #             self.ui.tableWidget_doctor_summary.item(
+    #                 row_no, col_no
+    #             ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+    #         elif col_no in [5, 19]:
+    #             self.ui.tableWidget_doctor_summary.item(
+    #                 row_no, col_no
+    #             ).setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+
+    #         if (
+    #             row["InsType"] == "自費"
+    #             or number_utils.get_integer(row["TotalFee"]) > 0
+    #         ):
+    #             self.ui.tableWidget_doctor_summary.item(row_no, col_no).setForeground(
+    #                 QtGui.QColor("blue")
+    #             )
+
+    #         if col_no in [8, 11, 14, 17, 20, 21]:
+    #             font = QtGui.QFont()
+    #             font.setBold(True)
+    #             self.ui.tableWidget_doctor_summary.item(row_no, col_no).setFont(font)
+
     def _set_table_data(self, row_no, row):
         case_key = string_utils.xstr(row["CaseKey"])
 
@@ -237,7 +382,13 @@ class StatisticsDoctorAchievement(QtWidgets.QMainWindow):
                 ins_treat_fee * ins_treat_fee_rate / 100, ".1"
             )
 
-        self_drug_fee = self._get_self_treat_fee(case_key, treat_type="藥品")
+        # ---------- 修改開始 ----------
+        # 自費藥費以 cases 為準 (醫師會直接修改這三個欄位)
+        self_drug_fee = (
+            number_utils.get_integer(row["SDrugFee"])
+            + number_utils.get_integer(row["SHerbFee"])
+            + number_utils.get_integer(row["SExpensiveFee"])
+        )
         self_drug_fee_rate = self.ui.spinBox_self_drug_rate.value()
 
         self_treat_fee = self._get_self_treat_fee(case_key)
@@ -250,16 +401,14 @@ class StatisticsDoctorAchievement(QtWidgets.QMainWindow):
         )
 
         total_fee = number_utils.get_integer(row["TotalFee"])
-        if self_treat_fee > 0 and self_drug_fee == 0 and self_treat_fee != total_fee:
-            self_treat_fee = total_fee
-
         if (
-            self_drug_fee > 0
-            and self_treat_fee == 0
+            self_treat_fee > 0
+            and self_drug_fee == 0
             and beauty_fee == 0
-            and self_drug_fee != total_fee
+            and self_treat_fee != total_fee
         ):
-            self_drug_fee = total_fee
+            self_treat_fee = total_fee
+        # ---------- 修改結束 ----------
 
         if self.ui.label_self_drug_rate_type.text() == "$":
             if self_drug_fee > 0:
