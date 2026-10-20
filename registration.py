@@ -1562,10 +1562,8 @@ class Registration(QtWidgets.QMainWindow):
             if card == "欠卡":
                 pass
             elif card in ["自動取得", "IC"]:
-                if (
-                    self.ui.comboBox_treat_type.currentText()
-                    not in nhi_utils.CARE_TREAT
-                ):
+                treat = self.ui.comboBox_treat_type.currentText()
+                if treat not in nhi_utils.CARE_TREAT + nhi_utils.HOME_CARE:
                     self.ui.comboBox_treat_type.setCurrentText(self.default_treat_type)
 
                 self.ui.comboBox_course.setCurrentText(None)
@@ -2254,6 +2252,13 @@ class Registration(QtWidgets.QMainWindow):
             in nhi_utils.TOUR_TYPE + nhi_utils.LONG_TERM_CARE
         ):  # 巡迴醫療及中醫長照除外
             return default_card, None
+
+        # 本次為居家醫療，不自動續其他療程
+        if (
+            self.system_settings.field("掛號類別") == "居家醫療"
+            or self.ui.comboBox_treat_type.currentText() in nhi_utils.HOME_CARE
+        ):
+            return self.ui.comboBox_card.currentText(), None
 
         today = datetime.date.today()
         if (
