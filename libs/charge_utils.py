@@ -1799,7 +1799,9 @@ def get_ins_special_care_fee(
 
 
 # 重新批價
-def calculate_ins_fee(database, system_settings, case_key, ins_type=None):
+def calculate_ins_fee(
+    database, system_settings, case_key, ins_type=None, treat_type=None, share_type=None
+):
     sql = f"""
         SELECT
             CaseKey, InsType, RegistType, Share, Continuance, TreatType, PharmacyType, Treatment
@@ -1820,7 +1822,11 @@ def calculate_ins_fee(database, system_settings, case_key, ins_type=None):
     if ins_type is None:
         ins_type = string_utils.xstr(row["InsType"])
 
-    share = string_utils.xstr(row["Share"])
+    if share_type is not None:
+        share = share_type
+    else:
+        share = string_utils.xstr(row["Share"])
+
     course = number_utils.get_integer(row["Continuance"])
     pharmacy_type = string_utils.xstr(row["PharmacyType"])
     treatment = string_utils.xstr(row["Treatment"])
@@ -1886,6 +1892,8 @@ def calculate_ins_fee(database, system_settings, case_key, ins_type=None):
     ]
 
     database.update_record("cases", fields, "CaseKey", case_key, data)
+
+    return ins_fee
 
 
 # 自費批價

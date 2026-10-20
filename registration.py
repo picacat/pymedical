@@ -4762,8 +4762,12 @@ class Registration(QtWidgets.QMainWindow):
         case_key = self.ui.groupBox_registration.title().split("-")[-1]
         ins_type = self.ui.comboBox_ins_type.currentText()
 
-        charge_utils.calculate_ins_fee(
-            self.database, self.system_settings, case_key, ins_type=ins_type
+        ins_fee = charge_utils.calculate_ins_fee(
+            self.database,
+            self.system_settings,
+            case_key,
+            ins_type=ins_type,
+            share_type=self.ui.comboBox_share_type.currentText(),
         )  # 自費也要將健保批價歸零 2023.09.13 太初
 
         if case_key in ["", None]:
@@ -4879,6 +4883,11 @@ class Registration(QtWidgets.QMainWindow):
             remark,
             payment_type,
         ]
+
+        if self.system_settings.field("部份負擔連動") == "Y":
+            drug_share_fee = number_utils.get_integer(ins_fee["drug_share_fee"])
+            fields.append("SDrugShareFee")
+            data.append(drug_share_fee)
 
         self.database.update_record("cases", fields, "CaseKey", case_key, data)
 
