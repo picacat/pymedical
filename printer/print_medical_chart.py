@@ -1,17 +1,13 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtPrintSupport import QPrinter
 import html
 import os
 
-from libs import printer_utils
-from libs import system_utils
-from libs import string_utils
-from libs import nhi_utils
-from libs import patient_utils
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+from PyQt5.QtPrintSupport import QPrinter
+from PyQt5.QtWidgets import QFileDialog
+
+from libs import nhi_utils, patient_utils, printer_utils, string_utils, system_utils
 
 
 # 列印病歷表
@@ -26,8 +22,8 @@ class PrintMedicalChart:
         self.apply_date = args[3]
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '報表印表機')
-        self.ins_apply_path = nhi_utils.get_dir(self.system_settings, '申報路徑')
+        self.printer = printer_utils.get_printer(self.system_settings, "報表印表機")
+        self.ins_apply_path = nhi_utils.get_dir(self.system_settings, "申報路徑")
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
 
@@ -57,28 +53,32 @@ class PrintMedicalChart:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
     def save_to_pdf(self):
-        export_dir = f'{self.ins_apply_path}/emr{self.apply_date}'
+        export_dir = f"{self.ins_apply_path}/emr{self.apply_date}"
         if not os.path.exists(export_dir):
             os.mkdir(export_dir)
 
-        pdf_file_name = f'{export_dir}/chart_{self.patient_key:0>6}.pdf'
+        pdf_file_name = f"{export_dir}/chart_{self.patient_key:0>6}.pdf"
         self.printer.setOutputFormat(QPrinter.PdfFormat)
         self.printer.setOutputFileName(pdf_file_name)
         self.print_html(True)
 
     def save_to_pdf_by_dialog(self):
-        pdf_file_name = f'病歷首頁_{self.patient_key:0>6}.pdf'
+        pdf_file_name = f"病歷首頁_{self.patient_key:0>6}.pdf"
 
         options = QFileDialog.Options()
         filename, _ = QFileDialog.getSaveFileName(
-            self.parent, "匯出病歷首頁pdf",
+            self.parent,
+            "匯出病歷首頁pdf",
             pdf_file_name,
-            "所有檔案 (*);;pdf檔 (*.pdf)", options=options
+            "所有檔案 (*);;pdf檔 (*.pdf)",
+            options=options,
         )
         if not filename:
             return
@@ -94,8 +94,8 @@ class PrintMedicalChart:
         painter = QtGui.QPainter()
         painter.setFont(self.font)
         painter.begin(self.printer)
-        painter.drawText(0, 10, 'print test line1 中文測試')
-        painter.drawText(0, 30, 'print test line2 中文測試')
+        painter.drawText(0, 10, "print test line1 中文測試")
+        painter.drawText(0, 30, "print test line2 中文測試")
         painter.end()
 
     def print_html(self, printing):
@@ -111,76 +111,85 @@ class PrintMedicalChart:
 
     def _get_html(self):
         patient_row = patient_utils.get_patient_row(self.database, self.patient_key)
-        ins_judge_init_date = self.system_settings.field('電子化抽審初診日期')
+        ins_judge_init_date = self.system_settings.field("電子化抽審初診日期")
 
-        if ins_judge_init_date != '':
+        if ins_judge_init_date != "":
             end_date_script = f' AND CaseDate >= "{ins_judge_init_date}"'
         else:
-            end_date_script = ''
+            end_date_script = ""
 
-        sql = f'''
+        sql = f"""
             SELECT * FROM cases
             WHERE
                 InsType = "健保" AND
                 PatientKey = {self.patient_key}
                 {end_date_script}
             ORDER BY CaseDate LIMIT 1
-        '''
+        """
         rows = self.database.select_record(sql)
         if len(rows) <= 0:
-            return ''
+            return ""
 
         case_row = rows[0]
 
-        if ins_judge_init_date != '':
-            init_date = case_row['CaseDate'].date()
+        if ins_judge_init_date != "":
+            init_date = case_row["CaseDate"].date()
         else:
-            init_date = patient_utils.get_init_date(self.database, self.system_settings, self.patient_key)
+            init_date = patient_utils.get_init_date(
+                self.database, self.system_settings, self.patient_key
+            )
 
         prescript_record = printer_utils.get_prescript_html(
-            self.database, self.system_settings, case_row['CaseKey'], 1, '病歷表', blocks=2)
+            self.database,
+            self.system_settings,
+            case_row["CaseKey"],
+            1,
+            "病歷表",
+            blocks=2,
+            print_direction=False,
+        )
         instruction = printer_utils.get_instruction_html(
-            self.database, self.system_settings, case_row['CaseKey'], medicine_set=1
+            self.database, self.system_settings, case_row["CaseKey"], medicine_set=1
         )
 
-        clinic_name = self.system_settings.field('院所名稱')
-        patient_key = string_utils.xstr(patient_row['PatientKey'])
-        name = string_utils.xstr(patient_row['Name'])
-        gender = string_utils.xstr(patient_row['Gender'])
-        birthday = string_utils.xstr(patient_row['Birthday'])
-        patient_id = string_utils.xstr(patient_row['ID'])
-        telephone = string_utils.xstr(patient_row['Telephone'])
-        cellphone = string_utils.xstr(patient_row['Cellphone'])
-        address = string_utils.xstr(patient_row['Address'])
-        occupation = string_utils.xstr(patient_row['Occupation'])
-        education = string_utils.xstr(patient_row['Education'])
-        marriage = string_utils.xstr(patient_row['Marriage'])
-        history = string_utils.get_str(patient_row['History'], 'utf-8')
-        symptom = html.escape(string_utils.get_str(case_row['Symptom'], 'utf-8'))
-        tongue = string_utils.get_str(case_row['Tongue'], 'utf-8')
-        pulse = string_utils.get_str(case_row['Pulse'], 'utf-8')
-        distinct = string_utils.get_str(case_row['Distincts'], 'utf-8')
+        clinic_name = self.system_settings.field("院所名稱")
+        patient_key = string_utils.xstr(patient_row["PatientKey"])
+        name = string_utils.xstr(patient_row["Name"])
+        gender = string_utils.xstr(patient_row["Gender"])
+        birthday = string_utils.xstr(patient_row["Birthday"])
+        patient_id = string_utils.xstr(patient_row["ID"])
+        telephone = string_utils.xstr(patient_row["Telephone"])
+        cellphone = string_utils.xstr(patient_row["Cellphone"])
+        address = string_utils.xstr(patient_row["Address"])
+        occupation = string_utils.xstr(patient_row["Occupation"])
+        education = string_utils.xstr(patient_row["Education"])
+        marriage = string_utils.xstr(patient_row["Marriage"])
+        history = string_utils.get_str(patient_row["History"], "utf-8")
+        symptom = html.escape(string_utils.get_str(case_row["Symptom"], "utf-8"))
+        tongue = string_utils.get_str(case_row["Tongue"], "utf-8")
+        pulse = string_utils.get_str(case_row["Pulse"], "utf-8")
+        distinct = string_utils.get_str(case_row["Distincts"], "utf-8")
 
-        disease_line = ''
+        disease_line = ""
 
-        disease_code1 = string_utils.xstr(case_row['DiseaseCode1'])
-        if disease_code1 != '':
-            disease_name1 = string_utils.xstr(case_row['DiseaseName1'])
-            disease_line += f'主診斷碼: {disease_code1}  病名: {disease_name1}<br>'
+        disease_code1 = string_utils.xstr(case_row["DiseaseCode1"])
+        if disease_code1 != "":
+            disease_name1 = string_utils.xstr(case_row["DiseaseName1"])
+            disease_line += f"主診斷碼: {disease_code1}  病名: {disease_name1}<br>"
 
-        disease_code2 = string_utils.xstr(case_row['DiseaseCode2'])
-        if disease_code2 != '':
-            disease_name2 = string_utils.xstr(case_row['DiseaseName2'])
-            disease_line += f'次診斷碼1: {disease_code2}  病名: {disease_name2}<br>'
+        disease_code2 = string_utils.xstr(case_row["DiseaseCode2"])
+        if disease_code2 != "":
+            disease_name2 = string_utils.xstr(case_row["DiseaseName2"])
+            disease_line += f"次診斷碼1: {disease_code2}  病名: {disease_name2}<br>"
 
-        disease_code3 = string_utils.xstr(case_row['DiseaseCode3'])
-        if disease_code3 != '':
-            disease_name3 = string_utils.xstr(case_row['DiseaseName3'])
-            disease_line += f'次診斷碼1: {disease_code3}  病名: {disease_name3}<br>'
+        disease_code3 = string_utils.xstr(case_row["DiseaseCode3"])
+        if disease_code3 != "":
+            disease_name3 = string_utils.xstr(case_row["DiseaseName3"])
+            disease_line += f"次診斷碼1: {disease_code3}  病名: {disease_name3}<br>"
 
-        cure = string_utils.xstr(case_row['Cure'])
+        cure = string_utils.xstr(case_row["Cure"])
 
-        html_str = f'''
+        html_str = f"""
             <html>
               <body>
                 <h2 style="text-align: center">{clinic_name} 病歷表</h2>
@@ -271,6 +280,6 @@ class PrintMedicalChart:
                     </tr>
               </body>
             </html>
-        '''
+        """
 
         return html_str

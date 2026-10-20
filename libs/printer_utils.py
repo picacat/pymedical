@@ -2683,6 +2683,14 @@ def get_prescript_html(
                 "separator_width": 0,
             },
         }
+    # import traceback
+
+    # print(
+    #     f"print_direction={print_direction}, print_type={print_type}, "
+    #     f"medicine_set={medicine_set}, case_key={case_key}"
+    # )
+    # if print_direction:
+    #     traceback.print_stack(limit=4)
 
     if print_direction and system_setting.field("處方列印方向") == "垂直列印":
         rows = set_vertical_direction(rows)

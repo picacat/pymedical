@@ -216,6 +216,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         ui_utils.set_combo_box(self.ui.comboBox_ins_diag_rate_type, rate_type)
         ui_utils.set_combo_box(self.ui.comboBox_ins_treat_rate_type, rate_type)
         ui_utils.set_combo_box(self.ui.comboBox_self_drug_rate_type, rate_type)
+        ui_utils.set_combo_box(self.ui.comboBox_herb_rate_type, rate_type)
         ui_utils.set_combo_box(self.ui.comboBox_self_treat_rate_type, rate_type)
 
     def _set_table_widget_width(self):
@@ -719,6 +720,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self.ui.spinBox_self_drug_rate.setValue(
             number_utils.get_integer(self.system_settings.field("自費藥品抽成率"))
         )
+        self.ui.spinBox_herb_rate.setValue(
+            number_utils.get_integer(self.system_settings.field("自費水藥抽成率"))
+        )
         self.ui.spinBox_self_treat_rate.setValue(
             number_utils.get_integer(self.system_settings.field("自費針傷抽成率"))
         )
@@ -731,6 +735,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self.ui.comboBox_self_drug_rate_type.setCurrentText(
             self.system_settings.field("自費藥品抽成類別")
+        )
+        self.ui.comboBox_herb_rate_type.setCurrentText(
+            self.system_settings.field("自費水藥抽成類別")
         )
         self.ui.comboBox_self_treat_rate_type.setCurrentText(
             self.system_settings.field("自費針傷抽成類別")
@@ -1951,6 +1958,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self.system_settings.post(
             "自費藥品抽成率", self.ui.spinBox_self_drug_rate.value()
         )
+        self.system_settings.post("自費水藥抽成率", self.ui.spinBox_herb_rate.value())
         self.system_settings.post(
             "自費針傷抽成率", self.ui.spinBox_self_treat_rate.value()
         )
@@ -1963,6 +1971,9 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self.system_settings.post(
             "自費藥品抽成類別", self.ui.comboBox_self_drug_rate_type.currentText()
+        )
+        self.system_settings.post(
+            "自費水藥抽成類別", self.ui.comboBox_herb_rate_type.currentText()
         )
         self.system_settings.post(
             "自費針傷抽成類別", self.ui.comboBox_self_treat_rate_type.currentText()

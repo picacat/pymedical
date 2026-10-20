@@ -1,20 +1,21 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QtWidgets
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
-from PyQt5.QtPrintSupport import QPrinter
 import datetime
 import os
-import html
 
-from libs import printer_utils
-from libs import system_utils
-from libs import string_utils
-from libs import number_utils
-from libs import nhi_utils
-from libs import patient_utils
-from libs import prescript_utils
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+from PyQt5.QtPrintSupport import QPrinter
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+
+from libs import (
+    nhi_utils,
+    number_utils,
+    patient_utils,
+    prescript_utils,
+    printer_utils,
+    string_utils,
+    system_utils,
+)
 
 
 # 病歷表
@@ -34,13 +35,13 @@ class PrintMedicalRecords:
         self.ui = None
 
         if self.start_date is not None:
-            apply_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d %H:%M:%S')
-            self.apply_date = f'{apply_date.year-1911:0>3}{apply_date.month:0>2}'
+            apply_date = datetime.datetime.strptime(self.end_date, "%Y-%m-%d %H:%M:%S")
+            self.apply_date = f"{apply_date.year - 1911:0>3}{apply_date.month:0>2}"
         else:
             self.apply_date = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '報表印表機')
-        self.ins_apply_path = nhi_utils.get_dir(self.system_settings, '申報路徑')
+        self.printer = printer_utils.get_printer(self.system_settings, "報表印表機")
+        self.ins_apply_path = nhi_utils.get_dir(self.system_settings, "申報路徑")
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
         self.current_print = None
 
@@ -70,35 +71,39 @@ class PrintMedicalRecords:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
     def save_to_pdf(self):
-        export_dir = f'{self.ins_apply_path}/emr{self.apply_date}'
+        export_dir = f"{self.ins_apply_path}/emr{self.apply_date}"
         if not os.path.exists(export_dir):
             os.mkdir(export_dir)
 
-        pdf_file_name = f'{export_dir}/case_{self.patient_key:0>6}.pdf'
+        pdf_file_name = f"{export_dir}/case_{self.patient_key:0>6}.pdf"
         self.printer.setOutputFormat(QPrinter.PdfFormat)
         self.printer.setOutputFileName(pdf_file_name)
         self.print_html(True)
 
     def save_to_pdf_by_dialog(self):
-        export_dir = f'{self.ins_apply_path}'
+        export_dir = f"{self.ins_apply_path}"
         if not os.path.exists(export_dir):
             os.mkdir(export_dir)
 
         if self.patient_key is not None:
-            pdf_file_name = f'{export_dir}/病歷號{self.patient_key}病歷表.pdf'
+            pdf_file_name = f"{export_dir}/病歷號{self.patient_key}病歷表.pdf"
         else:
-            pdf_file_name = '病歷表.pdf'
+            pdf_file_name = "病歷表.pdf"
 
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(
-            self.parent, "匯出實體病歷表",
+            self.parent,
+            "匯出實體病歷表",
             pdf_file_name,
-            "所有檔案 (*);;pdf檔 (*.pdf)", options=options
+            "所有檔案 (*);;pdf檔 (*.pdf)",
+            options=options,
         )
         if not file_name:
             return
@@ -108,9 +113,9 @@ class PrintMedicalRecords:
         self.print_html(True)
         system_utils.show_message_box(
             QMessageBox.Information,
-            '匯出完成',
+            "匯出完成",
             '<font size="5" color="red"><b>實體病歷pdf檔案已匯出完成</b></font>',
-            '',
+            "",
         )
 
     def print_html(self, printing):
@@ -131,23 +136,25 @@ class PrintMedicalRecords:
         if patient_row is None:
             html_str = medical_record_html
         else:
-            init_date = patient_utils.get_init_date(self.database, self.system_settings, self.patient_key)
-            telephone = string_utils.xstr(patient_row['Telephone'])
-            if telephone == '':
-                telephone = string_utils.xstr(patient_row['Cellphone'])
+            init_date = patient_utils.get_init_date(
+                self.database, self.system_settings, self.patient_key
+            )
+            telephone = string_utils.xstr(patient_row["Telephone"])
+            if telephone == "":
+                telephone = string_utils.xstr(patient_row["Cellphone"])
 
-            clinic_name = self.system_settings.field('院所名稱')
-            clinic_id = self.system_settings.field('院所代號')
-            clinic_telephone = self.system_settings.field('院所電話')
-            clinic_address = self.system_settings.field('院所地址')
-            patient_key = string_utils.xstr(patient_row['PatientKey'])
-            name = string_utils.xstr(patient_row['Name'])
-            gender = string_utils.xstr(patient_row['Gender'])
-            birthday = string_utils.xstr(patient_row['Birthday'])
-            patient_id = string_utils.xstr(patient_row['ID'])
-            address = string_utils.xstr(patient_row['Address'])
+            clinic_name = self.system_settings.field("院所名稱")
+            clinic_id = self.system_settings.field("院所代號")
+            clinic_telephone = self.system_settings.field("院所電話")
+            clinic_address = self.system_settings.field("院所地址")
+            patient_key = string_utils.xstr(patient_row["PatientKey"])
+            name = string_utils.xstr(patient_row["Name"])
+            gender = string_utils.xstr(patient_row["Gender"])
+            birthday = string_utils.xstr(patient_row["Birthday"])
+            patient_id = string_utils.xstr(patient_row["ID"])
+            address = string_utils.xstr(patient_row["Address"])
 
-            html_str = f'''
+            html_str = f"""
                 <html>
                   <body>
                     <h3 style="text-align: center">{clinic_name} 病歷表</h3>
@@ -172,7 +179,7 @@ class PrintMedicalRecords:
                     <h4>院所名稱: ({clinic_id}) {clinic_name} 電話: {clinic_telephone} 院址: {clinic_address}</h4>
                   </body>
                 </html>
-            '''
+            """
 
         return html_str
 
@@ -190,7 +197,9 @@ class PrintMedicalRecords:
             sql = self.sql
 
         if self.end_date is not None:
-            current_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d %H:%M:%S')
+            current_date = datetime.datetime.strptime(
+                self.end_date, "%Y-%m-%d %H:%M:%S"
+            )
         else:
             current_date = None
 
@@ -198,51 +207,61 @@ class PrintMedicalRecords:
         if len(rows) <= 0:
             return None
 
-        medical_record_html = ''
+        medical_record_html = ""
         for row in rows:
-            case_key = row['CaseKey']
-            ins_type = string_utils.xstr(row['InsType'])
-            total_fee = number_utils.get_integer(row['TotalFee'])
-            if ins_type == '健保':
+            case_key = row["CaseKey"]
+            ins_type = string_utils.xstr(row["InsType"])
+            total_fee = number_utils.get_integer(row["TotalFee"])
+            if ins_type == "健保":
                 medicine_set = 1
             else:
                 medicine_set = 2
 
-            if (current_date is not None and
-                    row['CaseDate'].year == current_date.year and
-                    row['CaseDate'].month == current_date.month):
-                color = 'yellow'
+            if (
+                current_date is not None
+                and row["CaseDate"].year == current_date.year
+                and row["CaseDate"].month == current_date.month
+            ):
+                color = "yellow"
             else:
                 color = None
 
             case_record = printer_utils.get_case_html_1(
-                self.database, case_key, ins_type,
-                background_color=color
+                self.database, case_key, ins_type, background_color=color
             )
-            symptom_record = printer_utils.get_symptom_html(self.database, self.system_settings, case_key, colspan=5)
+            symptom_record = printer_utils.get_symptom_html(
+                self.database, self.system_settings, case_key, colspan=5
+            )
             disease_record = printer_utils.get_disease(self.database, case_key)
             prescript_record = printer_utils.get_prescript_html(
-                self.database, self.system_settings, case_key, medicine_set, '過去病歷', blocks=3,
-                print_treat_item=self.print_treat_item)
+                self.database,
+                self.system_settings,
+                case_key,
+                medicine_set,
+                "病歷表",
+                blocks=3,
+                print_treat_item=self.print_treat_item,
+                print_direction=False,
+            )
 
-            total_fee_str = ''
+            total_fee_str = ""
             if self.print_self_prescript:
-                if ins_type == '健保':
+                if ins_type == "健保":
                     prescript_record += self._get_self_prescript(case_key)
 
                 if total_fee > 0:
-                    total_fee_str = f'自費金額: {total_fee}<br>'
+                    total_fee_str = f"自費金額: {total_fee}<br>"
 
             instruction = printer_utils.get_instruction_html(
                 self.database, self.system_settings, case_key, medicine_set
             )
 
-            if self.system_settings.field('列印報表雙色印刷') == 'Y':
+            if self.system_settings.field("列印報表雙色印刷") == "Y":
                 self.html_bg_color = ' bgcolor="LightGray"'
             else:
-                self.html_bg_color = ''
+                self.html_bg_color = ""
 
-            medical_record_html += f'''
+            medical_record_html += f"""
                 <table width="98%" cellspacing="0">
                   <tbody>
                     {case_record}
@@ -262,16 +281,24 @@ class PrintMedicalRecords:
                 {instruction}
                 {total_fee_str}
                 <hr>
-            '''
+            """
 
         return medical_record_html
 
     def _get_self_prescript(self, case_key):
-        prescript_record = ''
+        prescript_record = ""
 
-        medicine_set_list = prescript_utils.get_medicine_set_list(self.database, case_key)
+        medicine_set_list = prescript_utils.get_medicine_set_list(
+            self.database, case_key
+        )
         for medicine_set in medicine_set_list:
             prescript_record += printer_utils.get_prescript_html(
-                self.database, self.system_settings, case_key, medicine_set, '過去病歷', blocks=3)
+                self.database,
+                self.system_settings,
+                case_key,
+                medicine_set,
+                "過去病歷",
+                blocks=3,
+            )
 
         return prescript_record
