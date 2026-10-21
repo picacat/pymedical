@@ -1,30 +1,66 @@
-
 # 系統設定 指定診別起始號 2021-11-04
 # 2026-01-01 改成web 2.0
+# 2026-10-21 依「主動提示功能 Web API 介接說明書 v1.0」強化錯誤處理與簽章檢查
 # -*- coding: UTF-8 -*-
 
 import json
+import logging
 
 import requests
-from libs import (class_utils, date_utils, prescript_utils, string_utils, patient_utils,
-                  system_utils, ui_utils)
-from PyQt5 import QtWidgets
+import urllib3
+from PyQt5 import QtCore, QtWidgets
+
+from libs import (
+    class_utils,
+    date_utils,
+    patient_utils,
+    prescript_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
+
+logger = logging.getLogger(__name__)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 HEADERS = {
-    "Content-Type": "application/json",  # 根據 API 要求的 Content-Type 設定
+    "Content-Type": "application/json",
+}
+
+REQUEST_TIMEOUT = 20  # 秒，避免 VPN 卡住時整個畫面凍結
+
+URL_CSHIS5 = "https://medcloudws2.nhi.gov.tw/api/imie5000/GetMedPrtData"
+URL_CSHIS6 = "https://medcloudws2.nhi.gov.tw/api/imie5000/GetMedPrtInfo"
+
+SERVICE_TYPE = "91"  # 健保醫療資訊雲端查詢系統主動提示功能 Web API
+DATA_TYPE_CHINESE_TO_WESTERN = "09"  # 藥品交互作用資料(中/西藥)
+
+DEFAULT_MESSAGE = "無交互作用"
+
+# 主動提示功能 Web API v1.0 異常碼
+RTN_CODE_MESSAGES = {
+    "01": "參數解析失敗",
+    "02": "個案驗章失敗（實體健保卡驗證失敗）",
+    "03": "連線數過多，請稍候再試",
+    "04": "雲端系統發生異常",
+    "05": "處方內含非適用之醫令代碼，整筆不處理",
+    "06": "資料類別錯誤",
+    "07": "個案驗章失敗（虛擬健保卡驗證失敗）",
+    "08": "資料筆數過多",
+    "09": "非院所的專兼任醫師",
 }
 
 
-# 主視窗
+# 中西藥交互查詢
 class DialogConflictDrug(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogConflictDrug, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
-        self.doctor_id = args[2]
-        self.patient_id = args[3]
+        self.doctor_id = string_utils.xstr(args[2]).strip()
+        self.patient_id = string_utils.xstr(args[3]).strip()
         self.table_widget_prescript = args[4]
         self.ui = None
 
@@ -63,186 +99,379 @@ class DialogConflictDrug(QtWidgets.QDialog):
     def accepted_button_clicked(self):
         pass
 
-    def _show_connection_error(self, error_message):
-        for row_no in range(self.ui.tableWidget_conflict_drug.rowCount()):
-            self.ui.tableWidget_conflict_drug.setItem(
-                row_no, 2, QtWidgets.QTableWidgetItem(error_message)
-            )
-
+    # ------------------------------------------------------------------
+    # 主流程
+    # ------------------------------------------------------------------
     def start_check(self):
         self._set_table_widget_prescript()
-        error_code, response_content = self._get_request()
-        if error_code is None:
-            self._show_connection_error('無法連線至健保醫療資訊雲端查詢系統')
+        if self.ui.tableWidget_conflict_drug.rowCount() <= 0:
             return
 
-        if error_code != 200:
-            self._show_connection_error(f'HTTP 錯誤: 代碼: {error_code}')
-            return
-
-        if response_content['rtnCode'] != '00':
-            return
-
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         try:
-            return_number = response_content['sub'][0]['rtnNum']
-        except Exception:
-            # 結構和預期不同
+            error_message, response_content = self._get_request()
+        finally:
+            QtWidgets.QApplication.restoreOverrideCursor()
+
+        if error_message is not None:
+            self._show_error_message(error_message)
             return
 
-        if return_number == 0:
+        rtn_code = string_utils.xstr(
+            self._get_field(response_content, "rtnCode", "RtnCode")
+        ).strip()
+        if rtn_code != "00":
+            logger.warning("中西藥交互作用查詢失敗: %s", response_content)
+            message = RTN_CODE_MESSAGES.get(rtn_code, "未定義的錯誤")
+            self._show_error_message(f"雲端查詢失敗 (錯誤碼 {rtn_code}): {message}")
             return
 
-        result_list = response_content['sub'][0]['sub']
+        result_list = self._get_result_list(response_content)
+        if result_list is None:
+            logger.warning("中西藥交互作用回傳結構異常: %s", response_content)
+            self._show_error_message("雲端回傳資料格式異常")
+            return
+
+        if len(result_list) == 0:
+            return
+
         self._display_order_message(result_list)
-
         self.ui.tableWidget_conflict_drug.resizeRowsToContents()
 
-    def _display_order_message(self, result_list):
-        for result_dict in result_list:
-            ins_code = result_dict['oOrder']
-            effect = result_dict['effect']
-            mechanism = result_dict['mechanism']
-            management = result_dict['management']
-            try:
-                sub = self._extract_sub(result_dict['sub'])
-            except Exception:
-                sub = ''
-
-            order_message = f'交互作用結果: {effect}\n機轉: {mechanism}\n處置方式: {management}\n{sub}'
-
-            self._set_message_item(ins_code, order_message)
-
-    def _extract_sub(self, sub_list):
-        result = '開立藥品機構\t開立日期\t藥品名稱'
-        for sub in sub_list:
-            func_date = date_utils.nhi_date_to_west_date(sub["funcDT"])
-            result += f'\n{sub["hospName"]}\t{func_date}\t{sub["ddiatC7Name"]}'
-
-        return result
-
-    def _set_message_item(self, in_ins_code, order_message):
-        for row_no in range(self.ui.tableWidget_conflict_drug.rowCount()):
-            ins_code = self.ui.tableWidget_conflict_drug.item(row_no, 0).text()
-            if in_ins_code == ins_code:
-                self.ui.tableWidget_conflict_drug.setItem(
-                    row_no, 2, QtWidgets.QTableWidgetItem(string_utils.xstr(order_message))
-                )
-                break
-
-    def _get_cshis5_signature(self):
-        signature = "UGqD+rMIFwwJFmyGePEBqEIvmi0eVU/AhSYTzwToSFFHQEvDdNl0L4z+LSihxhts5AnWbVf1mJ4F8H3Xr4EpN1aix4mjIwjzM4vC5pvAlSc6vAsKfwLTLJgkgzIJJemFYOqq1K0IDDO7/Jd1XHZO24/wi9zgpa9wLDCuOZmrnziDRlFeNgiCbPN1fRZPYe+orF7i/HipThloESbkwtDkS8g9s2pjL4thUqyppV8de2G0RVKVshk4RfPeCpFNy7uSEG7mZCTI1kLmV0DMJn4GjgGGv3ru5XRDidFlNqUv7jLJX0XbAAPMUuI6Grtzp3S5pRhNP4Hli7WFjLmHwlEEqA=="
-        return signature 
-
-    def _get_cshis5_client_random(self):
-        client_random = "4je+oJUz/Yc="
-        return client_random
-
-    def _get_cshis6_verify(self):
-        ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
-        hpchc_signature = ic_card.get_hpchc_signature(service_type='91')
-        if hpchc_signature is None or hpchc_signature['clientRandom'] is None:
-            return None
-
-        verify = {
-            'signature': hpchc_signature['signature'],
-            'clientRandom': hpchc_signature['clientRandom'],
-            'samId': hpchc_signature['samId'],
-            'hospitalId': hpchc_signature['hospitalId'],
-            'serviceType': '91',
-            'hpcId': hpchc_signature['hpcId'],
-            'hcIdNo': hpchc_signature['hcIdNo'],
-            'hcId': hpchc_signature['hcId'],
-            'hpcIdNo': hpchc_signature['hpcIdNo'],
-        }
-
-        return verify
-
-    def _get_cshis6_json(self):
-        json_data = {}
-        json_data["sHospId"] = self.system_settings.field('院所代號')
-        json_data["sHpcId"] = self.doctor_id
-        json_data["sPatId"] = self.patient_id
-
-        json_data["sVerify"] = self._get_cshis6_verify()
-        json_data["sub"] = self._get_sub()
-
-        return json_data
-
-    def _get_cshis5_json(self):
-        cshis_x = class_utils.get_cshisx(self.database, self.system_settings)
-        random_number, signature = cshis_x.VPNH_SignX(card_type='4', service_type='91')
-
-        sam_card_info = cshis_x.GetSAMCardInfoInCS()
-        sam_card_json = json.loads(sam_card_info)
-
-        sSamId = sam_card_json['SAMCardInfoInCS']['SAM'][0]['CARD_ID']
-        patient_card_no = patient_utils.get_card_no(self.database, self.patient_id)
-        ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
-        hpc_card_no = ic_card.read_hpc_card_no()
-
-        json_data = {}
-        json_data["sHospId"] = self.system_settings.field('院所代號')
-        json_data["sHcaId"] = self.doctor_id
-        json_data["sPatId"] = self.patient_id
-        json_data["sPatCardType"] = "2"  # 1:虛擬卡 2:實體卡
-        json_data["sHcaCardId"] = hpc_card_no
-        json_data["sPatCardId"] = patient_card_no  # 健保卡卡號
-        json_data["sClientRandom"] = random_number
-        json_data["sSignature"] = signature
-        json_data["vhcCloudToken"] = ''
-        json_data["sSamId"] = sSamId
-        json_data["sub"] = self._get_sub()
-
-        return json_data
-
-    def _get_request(self):
-        if self.system_settings.field('讀卡機控制軟體版本') == 'cshis6':
-            url = 'https://medcloudws2.nhi.gov.tw/api/imie5000/GetMedPrtInfo'
-            json_data = self._get_cshis6_json()
-        else:
-            url = 'https://medcloudws2.nhi.gov.tw/api/imie5000/GetMedPrtData'
-            json_data = self._get_cshis5_json()
-
-        response = requests.post(
-            url, json=json_data, headers=HEADERS, verify=False)
-
-        error_code = response.status_code
-
-        return error_code, response.json()
-
+    # ------------------------------------------------------------------
+    # 處方 → 查詢表格
+    # ------------------------------------------------------------------
     def _set_table_widget_prescript(self):
         self.ui.tableWidget_conflict_drug.setRowCount(0)
+        ins_code_set = set()
+
         for row_no in range(self.table_widget_prescript.rowCount()):
             ins_code_item = self.table_widget_prescript.item(
-                row_no, prescript_utils.INS_PRESCRIPT_COL_NO['InsCode'])
+                row_no, prescript_utils.INS_PRESCRIPT_COL_NO["InsCode"]
+            )
             if ins_code_item is None:
                 continue
 
             ins_code = ins_code_item.text().strip()
-            if ins_code == '':
+            if ins_code == "" or ins_code in ins_code_set:
                 continue
 
-            medicine_name = self.table_widget_prescript.item(
-                row_no, prescript_utils.INS_PRESCRIPT_COL_NO['MedicineName']).text()
-            medicine = [ins_code, medicine_name, '無交互作用']
+            ins_code_set.add(ins_code)
+
+            medicine_name_item = self.table_widget_prescript.item(
+                row_no, prescript_utils.INS_PRESCRIPT_COL_NO["MedicineName"]
+            )
+            medicine_name = (
+                medicine_name_item.text() if medicine_name_item is not None else ""
+            )
+
+            medicine = [ins_code, medicine_name, DEFAULT_MESSAGE]
 
             index = self.ui.tableWidget_conflict_drug.rowCount()
             self.ui.tableWidget_conflict_drug.setRowCount(index + 1)
             for col_no in range(len(medicine)):
                 self.ui.tableWidget_conflict_drug.setItem(
-                    index, col_no, QtWidgets.QTableWidgetItem(string_utils.xstr(medicine[col_no]))
+                    index,
+                    col_no,
+                    QtWidgets.QTableWidgetItem(string_utils.xstr(medicine[col_no])),
                 )
 
     def _get_sub(self):
         sub_list = []
         for row_no in range(self.ui.tableWidget_conflict_drug.rowCount()):
-            ins_code = self.ui.tableWidget_conflict_drug.item(row_no, 0).text()
-            ord_dict = {}
-            ord_dict['sOrder'] = ins_code
-            sub_list.append(ord_dict)
+            item = self.ui.tableWidget_conflict_drug.item(row_no, 0)
+            if item is None:
+                continue
 
-        sub_dict = {}
-        sub_dict["sType"] = "09"  # 中藥 -> 西醫
-        sub_dict["sub"] = sub_list
+            ins_code = item.text().strip()
+            if ins_code == "":
+                continue
 
-        return [sub_dict]
+            sub_list.append({"sOrder": ins_code})
+
+        return [
+            {
+                "sType": DATA_TYPE_CHINESE_TO_WESTERN,  # 中藥 -> 西藥
+                "sub": sub_list,
+            }
+        ]
+
+    # ------------------------------------------------------------------
+    # 呼叫 Web API
+    # ------------------------------------------------------------------
+    # 回傳 (error_message, response_json)，成功時 error_message 為 None
+    def _get_request(self):
+        if self.system_settings.field("讀卡機控制軟體版本") == "cshis6":
+            url = URL_CSHIS6
+            get_json = self._get_cshis6_json
+        else:
+            url = URL_CSHIS5
+            get_json = self._get_cshis5_json
+
+        try:
+            json_data, error_message = get_json()
+        except Exception as e:
+            logger.exception("取得卡片資料或簽章失敗")
+            return f"讀取卡片或取得簽章失敗: {e}", None
+
+        if error_message is not None:
+            return error_message, None
+
+        logger.info(
+            "中西藥交互作用查詢: url=%s orders=%s",
+            url,
+            [sub["sOrder"] for sub in json_data["sub"][0]["sub"]],
+        )
+
+        try:
+            response = requests.post(
+                url,
+                json=json_data,
+                headers=HEADERS,
+                verify=False,
+                timeout=REQUEST_TIMEOUT,
+            )
+        except requests.Timeout:
+            return "連線健保醫療資訊雲端查詢系統逾時，請稍後再試", None
+        except requests.ConnectionError:
+            logger.exception("連線健保雲端失敗")
+            return "無法連線至健保醫療資訊雲端查詢系統，請確認健保 VPN 連線", None
+        except requests.RequestException as e:
+            logger.exception("連線健保雲端失敗")
+            return f"無法連線至健保醫療資訊雲端查詢系統: {e}", None
+
+        if response.status_code != 200:
+            logger.warning(
+                "中西藥交互作用 HTTP %s: %s",
+                response.status_code,
+                response.text[:2000],
+            )
+            return f"HTTP 錯誤: 代碼 {response.status_code}", None
+
+        try:
+            response_content = response.json()
+        except ValueError:
+            logger.warning("中西藥交互作用回傳非 JSON: %s", response.text[:2000])
+            return "雲端回傳非 JSON 資料", None
+
+        if not isinstance(response_content, dict):
+            logger.warning("中西藥交互作用回傳格式異常: %s", response_content)
+            return "雲端回傳資料格式異常", None
+
+        return None, response_content
+
+    # 讀卡機控制軟體 6.0
+    def _get_cshis6_json(self):
+        ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
+        signature = ic_card.get_hpchc_signature(service_type=SERVICE_TYPE)
+
+        if (
+            not signature
+            or not signature.get("signature")
+            or not signature.get("clientRandom")
+        ):
+            return None, "三卡簽章失敗，請確認醫事人員卡已認證且病人健保卡已插入"
+
+        # 讀卡機上的健保卡必須是目前這位病人
+        hc_id_no = string_utils.xstr(signature.get("hcIdNo")).strip().upper()
+        if hc_id_no != "" and hc_id_no != self.patient_id.upper():
+            return None, "讀卡機上的健保卡不是目前這位病人，請更換健保卡後重新查詢"
+
+        # 醫事人員身分證號以簽章的醫事人員卡為準，避免與病歷醫師不一致造成驗章失敗
+        hpc_id_no = string_utils.xstr(signature.get("hpcIdNo")).strip()
+        if hpc_id_no == "":
+            hpc_id_no = self.doctor_id
+
+        verify = {
+            "signature": signature.get("signature"),
+            "clientRandom": signature.get("clientRandom"),
+            "samId": signature.get("samId"),
+            "hospitalId": signature.get("hospitalId"),
+            "serviceType": SERVICE_TYPE,
+            "hpcId": signature.get("hpcId"),
+            "hcIdNo": signature.get("hcIdNo"),
+            "hcId": signature.get("hcId"),
+            "hpcIdNo": signature.get("hpcIdNo"),
+        }
+
+        json_data = {
+            "sHospId": self.system_settings.field("院所代號"),
+            "sHpcId": hpc_id_no,
+            "sPatId": self.patient_id,
+            "sVerify": verify,
+            "sub": self._get_sub(),
+        }
+
+        return json_data, None
+
+    # 讀卡機控制軟體 5.x
+    def _get_cshis5_json(self):
+        cshis_x = class_utils.get_cshisx(self.database, self.system_settings)
+
+        try:
+            random_number, signature = cshis_x.VPNH_SignX(
+                card_type="4", service_type=SERVICE_TYPE
+            )
+        except Exception:
+            logger.exception("VPNH_SignX 失敗")
+            return None, "VPN 三卡簽章失敗，請確認醫事人員卡已認證且病人健保卡已插入"
+
+        if not random_number or not signature:
+            return None, "VPN 三卡簽章失敗，請確認醫事人員卡已認證且病人健保卡已插入"
+
+        try:
+            sam_card_json = json.loads(cshis_x.GetSAMCardInfoInCS())
+            sam_id = sam_card_json["SAMCardInfoInCS"]["SAM"][0]["CARD_ID"]
+        except Exception:
+            logger.exception("讀取 SAM 卡資訊失敗")
+            return None, "讀取安全模組卡號失敗"
+
+        if not sam_id:
+            return None, "讀取安全模組卡號失敗"
+
+        ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
+        hpc_card_no = string_utils.xstr(ic_card.read_hpc_card_no()).strip()
+        if hpc_card_no == "":
+            return None, "讀取醫事人員卡卡號失敗，請確認醫事人員卡已插入"
+
+        patient_card_no = string_utils.xstr(
+            patient_utils.get_card_no(self.database, self.patient_id)
+        ).strip()
+        if patient_card_no == "":
+            return None, "病人健保卡卡號空白，請先讀取病人健保卡"
+
+        json_data = {
+            "sHospId": self.system_settings.field("院所代號"),
+            "sHcaId": self.doctor_id,
+            "sPatId": self.patient_id,
+            "sPatCardType": "2",  # 1:虛擬卡 2:實體卡
+            "sHcaCardId": hpc_card_no,
+            "sPatCardId": patient_card_no,  # 健保卡卡號
+            "sClientRandom": random_number,
+            "sSignature": signature,
+            "vhcCloudToken": "",
+            "sSamId": sam_id,
+            "sub": self._get_sub(),
+        }
+
+        return json_data, None
+
+    # ------------------------------------------------------------------
+    # 解析回傳資料
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _get_field(data, *keys):
+        if not isinstance(data, dict):
+            return None
+
+        for key in keys:
+            if key in data:
+                return data[key]
+
+        return None
+
+    # 取出資料類別 09 的結果；結構異常時回傳 None
+    def _get_result_list(self, response_content):
+        type_list = self._get_field(response_content, "sub")
+        if type_list is None:
+            return []
+
+        if not isinstance(type_list, list):
+            return None
+
+        result_list = []
+        for type_dict in type_list:
+            if not isinstance(type_dict, dict):
+                continue
+
+            o_type = string_utils.xstr(self._get_field(type_dict, "oType")).strip()
+            if o_type not in ("", DATA_TYPE_CHINESE_TO_WESTERN):
+                continue
+
+            items = self._get_field(type_dict, "sub") or []
+            if not isinstance(items, list):
+                return None
+
+            result_list.extend(item for item in items if isinstance(item, dict))
+
+        return result_list
+
+    def _display_order_message(self, result_list):
+        message_dict = {}
+        for result_dict in result_list:
+            ins_code = string_utils.xstr(result_dict.get("oOrder")).strip()
+            if ins_code == "":
+                continue
+
+            message_dict.setdefault(ins_code, []).append(
+                self._format_result(result_dict)
+            )
+
+        for ins_code, message_list in message_dict.items():
+            self._set_message_item(ins_code, "\n\n".join(message_list))
+
+    def _format_result(self, result_dict):
+        lines = []
+
+        c_drug_name = string_utils.xstr(result_dict.get("cDrugName")).strip()
+        if c_drug_name != "":
+            lines.append(f"藥材名稱: {c_drug_name}")
+
+        lines.append(f"交互作用結果: {string_utils.xstr(result_dict.get('effect'))}")
+        lines.append(f"機轉: {string_utils.xstr(result_dict.get('mechanism'))}")
+        lines.append(f"處置方式: {string_utils.xstr(result_dict.get('management'))}")
+
+        detail = self._extract_sub(result_dict.get("sub"))
+        if detail != "":
+            lines.append(detail)
+
+        return "\n".join(lines)
+
+    def _extract_sub(self, sub_list):
+        if not isinstance(sub_list, list) or len(sub_list) == 0:
+            return ""
+
+        lines = ["開立藥品機構\t開立日期\t交互作用藥品"]
+        for sub in sub_list:
+            if not isinstance(sub, dict):
+                continue
+
+            hosp_name = string_utils.xstr(self._get_field(sub, "hospName", "HospName"))
+            func_dt = string_utils.xstr(self._get_field(sub, "funcDT", "FuncDT"))
+            try:
+                func_date = date_utils.nhi_date_to_west_date(func_dt)
+            except Exception:
+                func_date = func_dt
+
+            # 規格範例中此欄位可能為空字串，西藥名稱另見「機轉」說明
+            drug_name = string_utils.xstr(
+                self._get_field(sub, "ddiatC7Name", "DDIATC7Name")
+            ).strip()
+            if drug_name == "":
+                drug_name = "-"
+
+            lines.append(f"{hosp_name}\t{func_date}\t{drug_name}")
+
+        return "\n".join(lines)
+
+    # ------------------------------------------------------------------
+    # 表格顯示
+    # ------------------------------------------------------------------
+    def _set_message_item(self, in_ins_code, order_message):
+        for row_no in range(self.ui.tableWidget_conflict_drug.rowCount()):
+            item = self.ui.tableWidget_conflict_drug.item(row_no, 0)
+            if item is None:
+                continue
+
+            if item.text().strip() == in_ins_code:
+                self.ui.tableWidget_conflict_drug.setItem(
+                    row_no,
+                    2,
+                    QtWidgets.QTableWidgetItem(string_utils.xstr(order_message)),
+                )
+
+    def _show_error_message(self, error_message):
+        for row_no in range(self.ui.tableWidget_conflict_drug.rowCount()):
+            self.ui.tableWidget_conflict_drug.setItem(
+                row_no, 2, QtWidgets.QTableWidgetItem(error_message)
+            )
