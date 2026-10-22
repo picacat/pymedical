@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import datetime
 
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
 from libs import (
@@ -21,6 +20,14 @@ from libs import (
     ui_utils,
 )
 
+# 作用中表格的外框
+# 直接設在表格自己的 stylesheet 上, 優先權最高, 不會被 .ui 或 set_css 的樣式蓋掉
+ACTIVE_TABLE_CSS = """
+    QTableWidget {
+        border: 4px solid #FF8C00;
+    }
+"""
+
 
 # 自費銷售記錄 2021.10.01
 class PurchaseRecordList(QtWidgets.QMainWindow):
@@ -28,13 +35,15 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(PurchaseRecordList, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
         self.dialog = args[2]
         self.no_zero_bonus = args[3]
         self.ui = None
+        self.tables = ()
+        self.active_table = None
 
         self.start_date = self.dialog.ui.dateEdit_start_date.date().toString(
             "yyyy-MM-dd 00:00:00"
@@ -71,12 +80,20 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         system_utils.set_css(self, self.system_settings)
         system_utils.center_window(self)
 
-        purchase_utils.set_purchase_list_table(
-            self.database, self.ui.tableWidget_self_prescript
+        self.tables = (
+            self.ui.tableWidget_self_prescript,
+            self.ui.tableWidget_self_prescript_agent,
         )
-        purchase_utils.set_purchase_list_table(
-            self.database, self.ui.tableWidget_self_prescript_agent
-        )
+        # 記住各表格原本的 stylesheet, 切換時在它後面加上/拿掉外框
+        self._table_base_css = {table: table.styleSheet() for table in self.tables}
+        for table in self.tables:
+            purchase_utils.set_purchase_list_table(self.database, table)
+            table.installEventFilter(self)  # 鍵盤 Tab 進入
+            table.viewport().installEventFilter(self)  # 滑鼠點擊
+
+        # 代收的設定欠款已併入「設定欠款」按鈕 (依作用中表格處理)
+        self.ui.toolButton_set_agent_debt.hide()
+
         self._set_text_edit_remark()
         if (
             personnel_utils.get_permission(
@@ -85,6 +102,8 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
             == "Y"
         ):
             self.ui.toolButton_export_agent.setEnabled(False)
+
+        self._set_active_table(self.ui.tableWidget_self_prescript)
 
     def _set_text_edit_remark(self):
         html = """
@@ -103,6 +122,7 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
                         <li>換貨時，須注意金額是否沖銷平衡</li>
                         <li>未付清品項不得換貨</li>
                         <li>產品名稱若包含「代收」關鍵字，該筆記錄不會列在銷售記錄內，而是列在代收費用。</li>
+                        <li>上方按鈕作用於<font color="#FF8C00"><b>橘色外框</b></font>的表格，點選表格即可切換。</li>
                     </ol>
                 </body>
             </html>
@@ -111,12 +131,10 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        self.ui.tableWidget_self_prescript.doubleClicked.connect(
-            self._open_medical_record
-        )
-        self.ui.tableWidget_self_prescript.itemSelectionChanged.connect(
-            self._prescript_item_changed
-        )
+        for table in self.tables:
+            table.doubleClicked.connect(self._open_medical_record)
+            table.itemSelectionChanged.connect(self._prescript_item_changed)
+
         self.ui.toolButton_return.clicked.connect(self._return_button_pressed)
         self.ui.toolButton_return_course.clicked.connect(self._return_course)
         self.ui.toolButton_set_discount.clicked.connect(self._set_discount)
@@ -125,19 +143,84 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         self.ui.toolButton_set_person.clicked.connect(self._set_person)
         self.ui.toolButton_set_single_person.clicked.connect(self._set_single_person)
         self.ui.toolButton_set_debt.clicked.connect(self._set_debt)
-        self.ui.toolButton_set_agent_debt.clicked.connect(self._set_agent_debt)
         self.ui.toolButton_repayment.clicked.connect(self._set_repayment)
+
         self.ui.toolButton_export_agent.clicked.connect(self._export_agent)
 
-    def _open_medical_record(self):
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        case_key_item = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
+    # ------------------------------------------------------------------
+    # 作用中表格
+    # ------------------------------------------------------------------
+    def eventFilter(self, obj, event):
+        if event.type() in (QEvent.FocusIn, QEvent.MouseButtonPress):
+            for table in self.tables:
+                if obj is table or obj is table.viewport():
+                    if table is not self.active_table:
+                        self._set_active_table(table)
+                    break
+
+        return super().eventFilter(obj, event)
+
+    def _set_active_table(self, table):
+        self.active_table = table
+        for t in self.tables:
+            is_active = t is table
+            base_css = self._table_base_css.get(t, "")
+            t.setStyleSheet(base_css + ACTIVE_TABLE_CSS if is_active else base_css)
+            if not is_active:
+                t.setCurrentCell(-1, -1)
+                t.clearSelection()
+
+        self._prescript_item_changed()
+
+    def _cell(self, table, row_no, col_name):
+        if row_no < 0:
+            return ""
+
+        item = table.item(row_no, purchase_utils.PURCHASE_COL_NO[col_name])
+        if item is None:
+            return ""
+
+        return item.text()
+
+    def _get_current_row(self, show_message=True):
+        """回傳 (作用中表格, 列號)；沒選到資料列時列號為 None"""
+        table = self.active_table
+        row_no = table.currentRow()
+        if row_no < 0 or self._cell(table, row_no, "prescript_key") == "":
+            if show_message:
+                system_utils.show_message_box(
+                    QMessageBox.Information,
+                    "注意",
+                    '<font size="5" color="red"><b>請選擇銷售資料.</b></font>',
+                    "未選擇任何資料.",
+                )
+            return table, None
+
+        return table, row_no
+
+    def _calculate_total(self, table):
+        if table is self.ui.tableWidget_self_prescript:
+            no_zero_bonus = self.no_zero_bonus
+        else:
+            no_zero_bonus = False
+
+        purchase_utils.calculate_purchase_list_total(
+            table,
+            self.start_date[:10],
+            self.end_date[:10],
+            no_zero_bonus=no_zero_bonus,
         )
-        if case_key_item is None:
+
+    # ------------------------------------------------------------------
+    # 讀取資料
+    # ------------------------------------------------------------------
+    def _open_medical_record(self):
+        table = self.active_table
+        case_key = self._cell(table, table.currentRow(), "case_key")
+        if case_key == "":
             return
 
-        self.parent.parent.open_medical_record(case_key_item.text())
+        self.parent.parent.open_medical_record(case_key)
 
     def start_calculate(self):
         rows = self._read_prescript()
@@ -218,8 +301,7 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         return sql_condition
 
     def _read_prescript(self, prescript_key=None):
-        sql_condition = ""
-
+        """給 prescript_key 時讀單筆 (兩個表格共用)，否則依查詢條件讀銷售記錄"""
         if prescript_key is not None:
             sql_condition = f"prescript.PrescriptKey = {prescript_key}"
         else:
@@ -239,11 +321,8 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
             GROUP BY prescript.PrescriptKey
             ORDER BY prescript.CaseKey, prescript.PrescriptNo, PrescriptKey
         """
-        # ORDER BY prescript.CaseKey, prescript.TimeStamp
 
-        rows = self.database.select_record(sql)
-
-        return rows
+        return self.database.select_record(sql)
 
     def _is_herb_or_powder(self, case_key):
         sql = f"""
@@ -287,12 +366,13 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         return False
 
     def _set_prescript_table(self, rows):
-        self.ui.tableWidget_self_prescript.setRowCount(0)
+        table = self.ui.tableWidget_self_prescript
+        table.setRowCount(0)
         row_no = 0
         for row in rows:
             if not purchase_utils.set_purchase_list_data(
                 self.database,
-                self.ui.tableWidget_self_prescript,
+                table,
                 row,
                 row_no,
                 query_start_date=self.start_date[:10],
@@ -305,29 +385,23 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         if self.no_zero_bonus:
             self._filter_zero_bonus()
 
-        purchase_utils.calculate_purchase_list_total(
-            self.ui.tableWidget_self_prescript,
-            self.start_date[:10],
-            self.end_date[:10],
-            no_zero_bonus=self.no_zero_bonus,
-        )
+        self._calculate_total(table)
 
     def _filter_zero_bonus(self):
-        for row_no in range(self.ui.tableWidget_self_prescript.rowCount(), -1, -1):
-            bonus = self.ui.tableWidget_self_prescript.item(
+        table = self.ui.tableWidget_self_prescript
+        for row_no in range(table.rowCount() - 1, -1, -1):
+            bonus = table.item(
                 row_no, purchase_utils.PURCHASE_COL_NO["doctor_commission"]
             )
             if bonus is None or number_utils.get_integer(bonus.text()) == 0:
-                self.ui.tableWidget_self_prescript.hideRow(row_no)
+                table.hideRow(row_no)
 
-    def _get_return_quantity(self, row_no):
-        medicine_name = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_name"]
-        ).text()
-        quantity = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["quantity"]
-        ).text()
-        quantity = number_utils.get_integer(quantity)
+    # ------------------------------------------------------------------
+    # 退貨
+    # ------------------------------------------------------------------
+    def _get_return_quantity(self, table, row_no):
+        medicine_name = self._cell(table, row_no, "medicine_name")
+        quantity = number_utils.get_integer(self._cell(table, row_no, "quantity"))
 
         input_dialog = QInputDialog()
         input_dialog.setOkButtonText("確定")
@@ -362,19 +436,14 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         return dealer
 
     def _return_button_pressed(self):
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        case_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
-        ).text()
-        medicine_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_key"]
-        ).text()
-        medicine_name = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_name"]
-        ).text()
-        invoice_no = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["invoice_no"]
-        ).text()
+        table, row_no = self._get_current_row()
+        if row_no is None:
+            return
+
+        case_key = self._cell(table, row_no, "case_key")
+        medicine_key = self._cell(table, row_no, "medicine_key")
+        medicine_name = self._cell(table, row_no, "medicine_name")
+        invoice_no = self._cell(table, row_no, "invoice_no")
 
         dialog = dialog_utils.get_dialog_return_goods(
             self,
@@ -393,7 +462,7 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         quantity = dialog.ui.spinBox_quantity.value()
         dealer = dialog.ui.comboBox_dealer.currentText()
 
-        self._return_goods(row_no, return_date, quantity, dealer)
+        self._return_goods(table, row_no, return_date, quantity, dealer)
 
         system_utils.show_message_box(
             QMessageBox.Information,
@@ -403,13 +472,11 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         )
         dialog.deleteLater()
 
-    def _get_start_row_no(self, row_no, invoice_no):
+    def _get_start_row_no(self, table, row_no, invoice_no):
         for i in range(row_no, -1, -1):
             row_no = i
 
-            item = self.ui.tableWidget_self_prescript.item(
-                i - 1, purchase_utils.PURCHASE_COL_NO["invoice_no"]
-            )
+            item = table.item(i - 1, purchase_utils.PURCHASE_COL_NO["invoice_no"])
             if item is None:
                 break
 
@@ -418,13 +485,11 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
 
         return row_no
 
-    def _get_end_row_no(self, row_no, invoice_no):
-        for i in range(row_no, self.ui.tableWidget_self_prescript.rowCount()):
+    def _get_end_row_no(self, table, row_no, invoice_no):
+        for i in range(row_no, table.rowCount()):
             row_no = i
 
-            item = self.ui.tableWidget_self_prescript.item(
-                i + 1, purchase_utils.PURCHASE_COL_NO["invoice_no"]
-            )
+            item = table.item(i + 1, purchase_utils.PURCHASE_COL_NO["invoice_no"])
             if item is None:
                 break
 
@@ -434,15 +499,16 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         return row_no
 
     def _return_course(self):
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        invoice_no = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["invoice_no"]
-        ).text()
-        if invoice_no in ["", None]:
+        table, row_no = self._get_current_row()
+        if row_no is None:
             return
 
-        start_row_no = self._get_start_row_no(row_no, invoice_no)
-        end_row_no = self._get_end_row_no(row_no, invoice_no)
+        invoice_no = self._cell(table, row_no, "invoice_no")
+        if invoice_no == "":
+            return
+
+        start_row_no = self._get_start_row_no(table, row_no, invoice_no)
+        end_row_no = self._get_end_row_no(table, row_no, invoice_no)
 
         dialog = dialog_utils.get_dialog_calendar(
             self, self.database, self.system_settings, "自費銷售記錄"
@@ -459,56 +525,32 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         return_date = dialog.ui.calendarWidget.selectedDate().toString("yyyy-MM-dd")
         dealer = self.system_settings.field("使用者")
         current_row_no = start_row_no
-        for i in range(start_row_no, end_row_no + 1):
+        for _ in range(start_row_no, end_row_no + 1):
             quantity = number_utils.get_integer(
-                self.ui.tableWidget_self_prescript.item(
-                    current_row_no, purchase_utils.PURCHASE_COL_NO["quantity"]
-                ).text()
+                self._cell(table, current_row_no, "quantity")
             )
-            self._return_goods(current_row_no, return_date, quantity, dealer)
-            current_row_no += 2
+            self._return_goods(table, current_row_no, return_date, quantity, dealer)
+            current_row_no += 2  # 每退一筆會在下方插入一列退貨記錄
 
-    def _return_goods(self, row_no, return_date, quantity, dealer):
-        prescript_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-        ).text()
+        dialog.deleteLater()
+
+    def _return_goods(self, table, row_no, return_date, quantity, dealer):
+        prescript_key = self._cell(table, row_no, "prescript_key")
         db_utils.update_timestamp(
             self.database, "prescript", "PrescriptKey", prescript_key
         )
 
-        case_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
-        ).text()
-        medicine_set = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_set"]
-        ).text()
-        medicine_type = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_type"]
-        ).text()
-        medicine_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_key"]
-        ).text()
-        medicine_name = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_name"]
-        ).text()
-        unit = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["unit"]
-        ).text()
-        price = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["price"]
-        ).text()
-        discount = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["discount"]
-        ).text()
-        promotion = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["promotion"]
-        ).text()
-        remark = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["remark"]
-        ).text()
-        debt = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["debt"]
-        ).text()
+        case_key = self._cell(table, row_no, "case_key")
+        medicine_set = self._cell(table, row_no, "medicine_set")
+        medicine_type = self._cell(table, row_no, "medicine_type")
+        medicine_key = self._cell(table, row_no, "medicine_key")
+        medicine_name = self._cell(table, row_no, "medicine_name")
+        unit = self._cell(table, row_no, "unit")
+        price = self._cell(table, row_no, "price")
+        discount = self._cell(table, row_no, "discount")
+        promotion = self._cell(table, row_no, "promotion")
+        remark = self._cell(table, row_no, "remark")
+        debt = self._cell(table, row_no, "debt")
 
         price = number_utils.get_integer(price)
         discount = -number_utils.get_integer(discount)
@@ -551,39 +593,26 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
             remark,
             debt,
         ]
-        prescript_key = self.database.insert_record("prescript", fields, data)
-        self._insert_row(prescript_key, row_no + 1)
+        new_prescript_key = self.database.insert_record("prescript", fields, data)
+        self._insert_row(table, new_prescript_key, row_no + 1)
         self._update_self_fees(case_key, medicine_type, amount)
-
-        purchase_utils.calculate_purchase_list_total(self.ui.tableWidget_self_prescript)
-
-        self.ui.tableWidget_self_prescript.removeRow(
-            self.ui.tableWidget_self_prescript.rowCount() - 1
-        )
+        self._calculate_total(table)
 
     def _update_self_fees(self, case_key, medicine_type, amount):
         field = charge_utils.get_medicine_type_charge_field(
             self.database, medicine_type
         )
         charge_field = charge_utils.get_charge_field(field, medicine_type)
-        if charge_field == "diag_fee":
-            charge_field = "SDiagFee"
-        elif charge_field == "drug_fee":
-            charge_field = "SDrugFee"
-        elif charge_field == "herb_fee":
-            charge_field = "SHerbFee"
-        elif charge_field == "expensive_fee":
-            charge_field = "SExpensiveFee"
-        elif charge_field == "acupuncture_fee":
-            charge_field = "SAcupunctureFee"
-        elif charge_field == "massage_fee":
-            charge_field = "SMassageFee"
-        elif charge_field == "material_fee":
-            charge_field = "SMaterialFee"
-        elif charge_field == "exam_fee":
-            charge_field = "SExamFee"
-        else:
-            charge_field = "SDrugFee"
+        charge_field = {
+            "diag_fee": "SDiagFee",
+            "drug_fee": "SDrugFee",
+            "herb_fee": "SHerbFee",
+            "expensive_fee": "SExpensiveFee",
+            "acupuncture_fee": "SAcupunctureFee",
+            "massage_fee": "SMassageFee",
+            "material_fee": "SMaterialFee",
+            "exam_fee": "SExamFee",
+        }.get(charge_field, "SDrugFee")
 
         sql = f"""
             UPDATE cases SET
@@ -596,18 +625,23 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         """
         self.database.exec_sql(sql)
 
-    def _insert_row(self, prescript_key, row_no):
+    def _insert_row(self, table, prescript_key, row_no):
         rows = self._read_prescript(prescript_key=prescript_key)
         if len(rows) <= 0:
             return
 
-        row = rows[0]
-        self.ui.tableWidget_self_prescript.insertRow(row_no)
-        purchase_utils.set_purchase_list_data(
-            self.database, self.ui.tableWidget_self_prescript, row, row_no
-        )
+        table.insertRow(row_no)
+        # insertRow 已經加了一列, 所以用 refresh_record=True 避免再多加一列空白列
+        if not purchase_utils.set_purchase_list_data(
+            self.database, table, rows[0], row_no, refresh_record=True
+        ):
+            table.removeRow(row_no)
 
     def _delete_prescript(self):
+        table, row_no = self._get_current_row()
+        if row_no is None:
+            return
+
         msg_box = dialog_utils.get_message_box(
             "退貨刪除",
             QMessageBox.Warning,
@@ -618,113 +652,88 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         if not remove_record:
             return
 
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        prescript_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-        ).text()
-        price = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["price"]
-        ).text()
-
-        case_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
-        ).text()
-        medicine_type = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_type"]
-        ).text()
-        amount = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["total_fee"]
-        ).text()
-        amount = abs(number_utils.get_integer(amount))
+        prescript_key = self._cell(table, row_no, "prescript_key")
+        case_key = self._cell(table, row_no, "case_key")
+        medicine_type = self._cell(table, row_no, "medicine_type")
+        amount = abs(number_utils.get_integer(self._cell(table, row_no, "total_fee")))
 
         self.database.exec_sql(
             f"DELETE FROM prescript WHERE PrescriptKey = {prescript_key}"
         )
-        self.ui.tableWidget_self_prescript.removeRow(row_no)
+        table.removeRow(row_no)
         self._update_self_fees(case_key, medicine_type, amount)
+        self._calculate_total(table)
 
-        purchase_utils.calculate_purchase_list_total(self.ui.tableWidget_self_prescript)
+    # ------------------------------------------------------------------
+    # 按鈕狀態
+    # ------------------------------------------------------------------
+    def _set_all_buttons_enabled(self, enabled):
+        for button in (
+            self.ui.toolButton_return,
+            self.ui.toolButton_return_course,
+            self.ui.toolButton_set_discount,
+            self.ui.toolButton_exchange,
+            self.ui.toolButton_set_person,
+            self.ui.toolButton_set_single_person,
+            self.ui.toolButton_delete,
+            self.ui.toolButton_set_debt,
+            self.ui.toolButton_repayment,
+        ):
+            button.setEnabled(enabled)
 
     def _prescript_item_changed(self):
+        table = self.active_table
+        if table is None:
+            return
+
+        row_no = table.currentRow()
+        medicine_name = self._cell(table, row_no, "medicine_name")
+        if row_no < 0 or medicine_name == "":  # 沒選到任何資料列
+            self._set_all_buttons_enabled(False)
+            return
+
+        is_total_row = "合計" in medicine_name
         enabled = True
-        course_enabled = True
-
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        try:
-            medicine_name = self.ui.tableWidget_self_prescript.item(
-                row_no, purchase_utils.PURCHASE_COL_NO["medicine_name"]
-            ).text()
-        except Exception:
-            medicine_name = ""
-
-        invoice_no = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["invoice_no"]
-        )
-        if invoice_no is None or invoice_no.text() == "":
-            course_enabled = False
+        course_enabled = self._cell(table, row_no, "invoice_no") != ""
 
         if (
-            "合計" in medicine_name
+            is_total_row
             or "(退貨)" in medicine_name
             or "(換貨)" in medicine_name
-        ):
-            enabled = False
-        elif purchase_utils.is_returned_goods(
-            self.database, self.ui.tableWidget_self_prescript, row_no
+            or purchase_utils.is_returned_goods(self.database, table, row_no)
         ):
             enabled = False
 
         self.ui.toolButton_return.setEnabled(enabled)
-        self.ui.toolButton_return_course.setEnabled(course_enabled)
+        self.ui.toolButton_return_course.setEnabled(course_enabled and not is_total_row)
         self.ui.toolButton_set_discount.setEnabled(enabled)
         self.ui.toolButton_exchange.setEnabled(enabled)
         self.ui.toolButton_set_person.setEnabled(enabled)
         self.ui.toolButton_set_single_person.setEnabled(enabled)
-        self.ui.toolButton_delete.setEnabled(not enabled)
+        self.ui.toolButton_set_debt.setEnabled(not is_total_row)
+        self.ui.toolButton_delete.setEnabled(not enabled and not is_total_row)
 
-        if "合計" in medicine_name:
-            self.ui.toolButton_delete.setEnabled(enabled)
-
-        debt = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["debt"]
-        )
-
-        if debt is not None and number_utils.get_integer(debt.text()) > 0:
+        debt = number_utils.get_integer(self._cell(table, row_no, "debt"))
+        if debt > 0:
             self.ui.toolButton_exchange.setEnabled(False)
 
-        if (
-            debt is not None
-            and number_utils.get_integer(debt.text()) > 0
-            and "合計" not in medicine_name
-        ):
-            self.ui.toolButton_repayment.setEnabled(True)
-        else:
-            self.ui.toolButton_repayment.setEnabled(False)
+        self.ui.toolButton_repayment.setEnabled(debt > 0 and not is_total_row)
 
+    # ------------------------------------------------------------------
+    # 換貨
+    # ------------------------------------------------------------------
     def _exchange_button_pressed(self):
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        case_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
-        ).text()
-        medicine_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_key"]
-        ).text()
-        medicine_set = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_set"]
-        ).text()
-        medicine_name = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_name"]
-        ).text()
-        quantity = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["quantity"]
-        ).text()
-        quantity = number_utils.get_integer(quantity)
-        invoice_no = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["invoice_no"]
-        ).text()
-        receipt_fee = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["receipt_fee"]
-        ).text()
+        table, row_no = self._get_current_row()
+        if row_no is None:
+            return
+
+        case_key = self._cell(table, row_no, "case_key")
+        medicine_key = self._cell(table, row_no, "medicine_key")
+        medicine_set = self._cell(table, row_no, "medicine_set")
+        medicine_name = self._cell(table, row_no, "medicine_name")
+        quantity = number_utils.get_integer(self._cell(table, row_no, "quantity"))
+        invoice_no = self._cell(table, row_no, "invoice_no")
+        receipt_fee = self._cell(table, row_no, "receipt_fee")
 
         dialog = dialog_utils.get_dialog_exchange_goods(
             self,
@@ -746,61 +755,39 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         exchange_date = dialog.ui.dateEdit_exchange_date.date().toString("yyyy-MM-dd")
         quantity = dialog.ui.spinBox_quantity.value()
         dealer = dialog.ui.comboBox_dealer.currentText()
-        self._return_goods(row_no, exchange_date, quantity, dealer)
+        self._return_goods(table, row_no, exchange_date, quantity, dealer)
 
-        for i in range(dialog.tableWidget_prescript.rowCount()):
-            check_box = dialog.tableWidget_prescript.cellWidget(
-                i, purchase_utils.PRESCRIPT_COL_NO["Promotion"]
+        col = purchase_utils.PRESCRIPT_COL_NO
+        exchange_table = dialog.ui.tableWidget_prescript
+        for i in range(exchange_table.rowCount()):
+            check_box = exchange_table.cellWidget(i, col["Promotion"])
+            promotion = (
+                "是" if check_box is not None and check_box.isChecked() else None
             )
 
-            if check_box.isChecked():
-                promotion = "是"
-            else:
-                promotion = None
-
             medicine_row = {
-                "medicine_key": dialog.ui.tableWidget_prescript.item(
-                    i, purchase_utils.PRESCRIPT_COL_NO["MedicineKey"]
-                ).text(),
-                "medicine_type": dialog.ui.tableWidget_prescript.item(
-                    i, purchase_utils.PRESCRIPT_COL_NO["MedicineType"]
-                ).text(),
-                "medicine_name": dialog.ui.tableWidget_prescript.item(
-                    i, purchase_utils.PRESCRIPT_COL_NO["MedicineName"]
-                ).text(),
-                "unit": dialog.ui.tableWidget_prescript.item(
-                    i, purchase_utils.PRESCRIPT_COL_NO["Unit"]
-                ).text(),
-                "quantity": dialog.ui.tableWidget_prescript.item(
-                    i, purchase_utils.PRESCRIPT_COL_NO["Quantity"]
-                ).text(),
-                "price": dialog.ui.tableWidget_prescript.item(
-                    i, purchase_utils.PRESCRIPT_COL_NO["Price"]
-                ).text(),
-                "amount": dialog.ui.tableWidget_prescript.item(
-                    i, purchase_utils.PRESCRIPT_COL_NO["Amount"]
-                ).text(),
-                "discount_fee": dialog.ui.tableWidget_prescript.item(
-                    i, purchase_utils.PRESCRIPT_COL_NO["DiscountFee"]
-                ).text(),
+                "medicine_key": exchange_table.item(i, col["MedicineKey"]).text(),
+                "medicine_type": exchange_table.item(i, col["MedicineType"]).text(),
+                "medicine_name": exchange_table.item(i, col["MedicineName"]).text(),
+                "unit": exchange_table.item(i, col["Unit"]).text(),
+                "quantity": exchange_table.item(i, col["Quantity"]).text(),
+                "price": exchange_table.item(i, col["Price"]).text(),
+                "amount": exchange_table.item(i, col["Amount"]).text(),
+                "discount_fee": exchange_table.item(i, col["DiscountFee"]).text(),
                 "promotion": promotion,
             }
-            self._exchange_goods(row_no, exchange_date, medicine_row, dealer)
+            self._exchange_goods(table, row_no, exchange_date, medicine_row, dealer)
 
-    def _exchange_goods(self, row_no, exchange_date, medicine_row, dealer):
-        prescript_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-        ).text()
+        dialog.deleteLater()
+
+    def _exchange_goods(self, table, row_no, exchange_date, medicine_row, dealer):
+        prescript_key = self._cell(table, row_no, "prescript_key")
         db_utils.update_timestamp(
             self.database, "prescript", "PrescriptKey", prescript_key
         )
 
-        case_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
-        ).text()
-        medicine_set = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["medicine_set"]
-        ).text()
+        case_key = self._cell(table, row_no, "case_key")
+        medicine_set = self._cell(table, row_no, "medicine_set")
 
         medicine_key = medicine_row["medicine_key"]
         medicine_type = medicine_row["medicine_type"]
@@ -814,11 +801,7 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         price = medicine_row["price"]
         amount = medicine_row["amount"]
         discount_fee = medicine_row["discount_fee"]
-
-        if medicine_row["promotion"]:
-            promotion = "是"
-        else:
-            promotion = None
+        promotion = "是" if medicine_row["promotion"] else None
 
         medicine_name += " (換貨)"
 
@@ -852,13 +835,39 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
             discount_fee,
             dealer,
         ]
-        prescript_key = self.database.insert_record("prescript", fields, data)
-        self._insert_row(prescript_key, row_no + 2)
+        new_prescript_key = self.database.insert_record("prescript", fields, data)
+        self._insert_row(table, new_prescript_key, row_no + 2)
         self._update_self_fees(case_key, medicine_type, amount)
-        purchase_utils.calculate_purchase_list_total(self.ui.tableWidget_self_prescript)
-        self.ui.tableWidget_self_prescript.removeRow(
-            self.ui.tableWidget_self_prescript.rowCount() - 1
-        )
+        self._calculate_total(table)
+
+    # ------------------------------------------------------------------
+    # 匯出 / 列印
+    # ------------------------------------------------------------------
+    def _get_export_columns(self):
+        col = purchase_utils.PURCHASE_COL_NO
+        hidden_columns = [
+            col["prescript_key"],
+            col["case_key"],
+            col["medicine_set"],
+            col["medicine_type"],
+            col["medicine_key"],
+        ]
+        number_columns = [
+            col["patient_key"],
+            col["quantity"],
+            col["price"],
+            col["pres_days"],
+            col["discount"],
+            col["total_fee"],
+            col["receipt_fee"],
+            col["debt"],
+            col["repayment"],
+            col["return_fee"],
+            col["doctor_commission"],
+            col["massager_commission"],
+            col["cashier_commission"],
+        ]
+        return hidden_columns, number_columns
 
     def export_prescript(self):
         options = QFileDialog.Options()
@@ -872,31 +881,12 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         if not excel_file_name:
             return
 
+        hidden_columns, number_columns = self._get_export_columns()
         export_utils.export_table_widget_to_excel(
             excel_file_name,
             self.ui.tableWidget_self_prescript,
-            [
-                purchase_utils.PURCHASE_COL_NO["prescript_key"],
-                purchase_utils.PURCHASE_COL_NO["case_key"],
-                purchase_utils.PURCHASE_COL_NO["medicine_set"],
-                purchase_utils.PURCHASE_COL_NO["medicine_type"],
-                purchase_utils.PURCHASE_COL_NO["medicine_key"],
-            ],
-            [
-                purchase_utils.PURCHASE_COL_NO["patient_key"],
-                purchase_utils.PURCHASE_COL_NO["quantity"],
-                purchase_utils.PURCHASE_COL_NO["price"],
-                purchase_utils.PURCHASE_COL_NO["pres_days"],
-                purchase_utils.PURCHASE_COL_NO["discount"],
-                purchase_utils.PURCHASE_COL_NO["total_fee"],
-                purchase_utils.PURCHASE_COL_NO["receipt_fee"],
-                purchase_utils.PURCHASE_COL_NO["debt"],
-                purchase_utils.PURCHASE_COL_NO["repayment"],
-                purchase_utils.PURCHASE_COL_NO["return_fee"],
-                purchase_utils.PURCHASE_COL_NO["doctor_commission"],
-                purchase_utils.PURCHASE_COL_NO["massager_commission"],
-                purchase_utils.PURCHASE_COL_NO["cashier_commission"],
-            ],
+            hidden_columns,
+            number_columns,
         )
 
         system_utils.show_message_box(
@@ -913,29 +903,21 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
             self.system_settings,
             self.start_date[:10],
             self.end_date[:10],
-            self.tableWidget_self_prescript,
-            self.tableWidget_self_prescript_agent,
+            self.ui.tableWidget_self_prescript,
+            self.ui.tableWidget_self_prescript_agent,
             no_zero_bonus=self.no_zero_bonus,
         )
 
+    # ------------------------------------------------------------------
+    # 銷售設定
+    # ------------------------------------------------------------------
     def _set_person(self):
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        case_key_item = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
-        )
-        if case_key_item is None:
-            system_utils.show_message_box(
-                QMessageBox.Information,
-                "注意",
-                '<font size="5" color="red"><b>請選擇銷售資料.</b></font>',
-                "未選擇任何資料.",
-            )
+        table, row_no = self._get_current_row()
+        if row_no is None:
             return
 
-        case_key = case_key_item.text()
-        prescript_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-        ).text()
+        case_key = self._cell(table, row_no, "case_key")
+        prescript_key = self._cell(table, row_no, "prescript_key")
 
         dialog = dialog_utils.get_dialog_set_person(
             self,
@@ -977,26 +959,17 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
 
         dialog.deleteLater()
 
-        self._refresh_by_cases(case_key)
+        # 同一張單可能同時出現在兩個表格, 兩邊都刷新
+        for t in self.tables:
+            self._refresh_by_cases(t, case_key)
 
     def _set_single_person(self):
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        case_key_item = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
-        )
-        if case_key_item is None:
-            system_utils.show_message_box(
-                QMessageBox.Information,
-                "注意",
-                '<font size="5" color="red"><b>請選擇單一品項資料.</b></font>',
-                "未選擇任何資料.",
-            )
+        table, row_no = self._get_current_row()
+        if row_no is None:
             return
 
-        case_key = case_key_item.text()
-        prescript_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-        ).text()
+        case_key = self._cell(table, row_no, "case_key")
+        prescript_key = self._cell(table, row_no, "prescript_key")
 
         dialog = dialog_utils.get_dialog_set_person(
             self,
@@ -1051,65 +1024,58 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
 
         dialog.deleteLater()
 
-        self._refresh_by_prescript(row_no, prescript_key)
+        self._refresh_by_prescript(table, row_no, prescript_key)
 
-    def _refresh_by_cases(self, in_case_key):
-        for row_no in range(self.ui.tableWidget_self_prescript.rowCount()):
-            case_key_item = self.ui.tableWidget_self_prescript.item(
-                row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
-            )
-            if case_key_item is None:
+    def _refresh_by_cases(self, table, in_case_key):
+        for row_no in range(table.rowCount()):
+            if self._cell(table, row_no, "case_key") != in_case_key:
                 continue
 
-            if in_case_key == case_key_item.text():
-                prescript_key = self.ui.tableWidget_self_prescript.item(
-                    row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-                ).text()
-                rows = self._read_prescript(prescript_key=prescript_key)
-                if len(rows) <= 0:
-                    continue
+            prescript_key = self._cell(table, row_no, "prescript_key")
+            rows = self._read_prescript(prescript_key=prescript_key)
+            if len(rows) <= 0:
+                continue
 
-                row = rows[0]
-                purchase_utils.set_purchase_list_data(
-                    self.database,
-                    self.ui.tableWidget_self_prescript,
-                    row,
-                    row_no,
-                    refresh_record=True,
-                )
+            purchase_utils.set_purchase_list_data(
+                self.database,
+                table,
+                rows[0],
+                row_no,
+                refresh_record=True,
+            )
 
-        purchase_utils.calculate_purchase_list_total(self.ui.tableWidget_self_prescript)
+        self._calculate_total(table)
 
-    def _refresh_by_prescript(self, row_no, in_prescript_key):
+    def _refresh_by_prescript(self, table, row_no, in_prescript_key):
         rows = self._read_prescript(prescript_key=in_prescript_key)
         if len(rows) <= 0:
             return
 
-        row = rows[0]
         purchase_utils.set_purchase_list_data(
             self.database,
-            self.ui.tableWidget_self_prescript,
-            row,
+            table,
+            rows[0],
             row_no,
             refresh_record=True,
         )
-        purchase_utils.calculate_purchase_list_total(self.ui.tableWidget_self_prescript)
+        self._calculate_total(table)
 
+    # ------------------------------------------------------------------
+    # 欠款 / 還款 (兩個表格共用)
+    # ------------------------------------------------------------------
     def _set_debt(self):
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        prescript_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-        ).text()
+        table, row_no = self._get_current_row()
+        if row_no is None:
+            return
 
+        prescript_key = self._cell(table, row_no, "prescript_key")
         rows = self.database.select_record(
             f"SELECT Amount, Debt FROM prescript WHERE PrescriptKey = {prescript_key}"
         )
         if len(rows) <= 0:
             return
 
-        row = rows[0]
-        debt = number_utils.get_integer(row["Debt"])
-        amount = number_utils.get_integer(row["Amount"])
+        debt = number_utils.get_integer(rows[0]["Debt"])
 
         input_dialog = QInputDialog()
         input_dialog.setOkButtonText("確定")
@@ -1120,95 +1086,25 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         if not ok:
             return
 
-        sql = f"""
-            UPDATE prescript
-            SET
-                Debt = {debt}
-            WHERE
-                PrescriptKey = {prescript_key}
-        """
-        self.database.exec_sql(sql)
+        self.database.exec_sql(
+            f"UPDATE prescript SET Debt = {debt} WHERE PrescriptKey = {prescript_key}"
+        )
 
-        self._refresh_by_prescript(row_no, prescript_key)
-        self._insert_debt(row_no, prescript_key, debt)
+        self._insert_debt(table, row_no, prescript_key, debt)
+        self._refresh_by_prescript(table, row_no, prescript_key)
         self._prescript_item_changed()
-        purchase_utils.calculate_purchase_list_total(
-            self.ui.tableWidget_self_prescript, self.start_date[:10], self.end_date[:10]
-        )
 
-    def _set_agent_debt(self):
-        row_no = self.ui.tableWidget_self_prescript_agent.currentRow()
-        prescript_key_item = self.ui.tableWidget_self_prescript_agent.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-        )
-        if prescript_key_item is None:
-            system_utils.show_message_box(
-                QMessageBox.Information,
-                "注意",
-                '<font size="5" color="red"><b>請選擇代收費用的資料.</b></font>',
-                "未選擇任何資料.",
-            )
-            return
-
-        prescript_key = prescript_key_item.text()
-        rows = self.database.select_record(
-            f"SELECT Amount, Debt FROM prescript WHERE PrescriptKey = {prescript_key}"
-        )
-        if len(rows) <= 0:
-            return
-
-        row = rows[0]
-        debt = number_utils.get_integer(row["Debt"])
-
-        input_dialog = QInputDialog()
-        input_dialog.setOkButtonText("確定")
-        input_dialog.setCancelButtonText("取消")
-        debt, ok = input_dialog.getInt(
-            self, "設定欠款", "請輸入欠款", debt, 0, 99999999, 1
-        )
-        if not ok:
-            return
-
-        sql = f"""
-            UPDATE prescript
-            SET
-                Debt = {debt}
-            WHERE
-                PrescriptKey = {prescript_key}
-        """
-        self.database.exec_sql(sql)
-
-        row = self._read_agent_prescript(prescript_key=prescript_key)[0]
-        purchase_utils.set_purchase_list_data(
-            self.database, self.ui.tableWidget_self_prescript_agent, row, row_no
-        )
-        self._insert_debt(row_no, prescript_key, debt)
-
-    def _insert_debt(self, row_no, prescript_key, debt_fee):
-        case_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_key"]
-        ).text()
-        case_date = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["case_date"]
-        ).text()
-        period = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["period"]
-        ).text()
-        patient_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["patient_key"]
-        ).text()
-        name = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["name"]
-        ).text()
-        doctor = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["doctor"]
-        ).text()
+    def _insert_debt(self, table, row_no, prescript_key, debt_fee):
+        case_key = self._cell(table, row_no, "case_key")
+        case_date = self._cell(table, row_no, "case_date")
+        period = self._cell(table, row_no, "period")
+        patient_key = self._cell(table, row_no, "patient_key")
+        name = self._cell(table, row_no, "name")
+        doctor = self._cell(table, row_no, "doctor")
 
         self.database.exec_sql(
             f"DELETE FROM debt WHERE PrescriptKey = {prescript_key}"
         )  # 清除原有的欠款
-        fields = ["DebtFee"]
-        data = [debt_fee]
         self.database.exec_sql(
             f"UPDATE cases SET DebtFee = {debt_fee} WHERE CaseKey = {case_key}"
         )
@@ -1227,7 +1123,6 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
             "Doctor",
             "Fee",
         ]
-
         data = [
             case_key,
             prescript_key,
@@ -1242,6 +1137,10 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         self.database.insert_record("debt", fields, data)
 
     def _set_repayment(self):
+        table, row_no = self._get_current_row()
+        if row_no is None:
+            return
+
         repayment_date = date_utils.get_dialog_date(
             self, self.database, self.system_settings, call_from=self.programe_name
         )
@@ -1258,19 +1157,14 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         if not ok or not period:
             return
 
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        prescript_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-        ).text()
-
+        prescript_key = self._cell(table, row_no, "prescript_key")
         rows = self.database.select_record(
             f"SELECT Debt FROM prescript WHERE PrescriptKey = {prescript_key}"
         )
         if len(rows) <= 0:
             return
 
-        row = rows[0]
-        debt = number_utils.get_integer(row["Debt"])
+        debt = number_utils.get_integer(rows[0]["Debt"])
 
         input_dialog = QInputDialog()
         input_dialog.setOkButtonText("確定")
@@ -1285,7 +1179,7 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
             f"SELECT * FROM debt WHERE PrescriptKey = {prescript_key}"
         )
         if len(rows) <= 0:
-            self._insert_debt(row_no, prescript_key, debt)
+            self._insert_debt(table, row_no, prescript_key, debt)
 
         sql = f'''
             UPDATE debt
@@ -1298,15 +1192,13 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
                 PrescriptKey = {prescript_key}
         '''
         self.database.exec_sql(sql)
-        self._refresh_by_prescript(row_no, prescript_key)
+        self._refresh_by_prescript(table, row_no, prescript_key)
+        self._prescript_item_changed()
 
+    # ------------------------------------------------------------------
+    # 代收費用
+    # ------------------------------------------------------------------
     def _get_agent_sql_condition(self):
-        # sql_condition = '''
-        #     (prescript.MedicineSet >= 2 AND prescript.MedicineSet != 11 AND MedicineName != "民俗調理" AND
-        #      (prescript.Price != 0 OR
-        #      (prescript.Price = 0 AND MedicineType NOT IN ("單方", "複方", "水藥")))
-        #     )
-        # '''
         sql_condition = """
             (prescript.MedicineSet >= 2 AND
              prescript.MedicineSet != 11 AND
@@ -1342,14 +1234,7 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
 
         return sql_condition
 
-    def _read_agent_prescript(self, prescript_key=None):
-        sql_condition = ""
-
-        if prescript_key is not None:
-            sql_condition = f"prescript.PrescriptKey = {prescript_key}"
-        else:
-            sql_condition = self._get_agent_sql_condition()
-
+    def _read_agent_prescript(self):
         sql = f"""
             SELECT
                 prescript.*,
@@ -1360,31 +1245,25 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
                 LEFT JOIN cases ON prescript.CaseKey = cases.CaseKey
                 LEFT JOIN debt ON debt.CaseKey = prescript.CaseKey
             WHERE
-                {sql_condition}
+                {self._get_agent_sql_condition()}
             ORDER BY prescript.CaseKey, prescript.PrescriptNo, PrescriptKey
         """
-        # ORDER BY prescript.CaseKey, prescript.TimeStamp
 
-        rows = self.database.select_record(sql)
-
-        return rows
+        return self.database.select_record(sql)
 
     def _set_agent_prescript_table(self, rows):
-        self.ui.tableWidget_self_prescript_agent.setRowCount(0)
+        table = self.ui.tableWidget_self_prescript_agent
+        table.setRowCount(0)
         row_no = 0
         for row in rows:
             if not purchase_utils.set_purchase_list_data(
-                self.database, self.ui.tableWidget_self_prescript_agent, row, row_no
+                self.database, table, row, row_no
             ):
                 continue
 
             row_no += 1
 
-        purchase_utils.calculate_purchase_list_total(
-            self.ui.tableWidget_self_prescript_agent,
-            self.start_date[:10],
-            self.end_date[:10],
-        )
+        self._calculate_total(table)
 
     def _export_agent(self):
         options = QFileDialog.Options()
@@ -1398,31 +1277,12 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
         if not excel_file_name:
             return
 
+        hidden_columns, number_columns = self._get_export_columns()
         export_utils.export_table_widget_to_excel(
             excel_file_name,
             self.ui.tableWidget_self_prescript_agent,
-            [
-                purchase_utils.PURCHASE_COL_NO["prescript_key"],
-                purchase_utils.PURCHASE_COL_NO["case_key"],
-                purchase_utils.PURCHASE_COL_NO["medicine_set"],
-                purchase_utils.PURCHASE_COL_NO["medicine_type"],
-                purchase_utils.PURCHASE_COL_NO["medicine_key"],
-            ],
-            [
-                purchase_utils.PURCHASE_COL_NO["patient_key"],
-                purchase_utils.PURCHASE_COL_NO["quantity"],
-                purchase_utils.PURCHASE_COL_NO["price"],
-                purchase_utils.PURCHASE_COL_NO["pres_days"],
-                purchase_utils.PURCHASE_COL_NO["discount"],
-                purchase_utils.PURCHASE_COL_NO["total_fee"],
-                purchase_utils.PURCHASE_COL_NO["receipt_fee"],
-                purchase_utils.PURCHASE_COL_NO["debt"],
-                purchase_utils.PURCHASE_COL_NO["repayment"],
-                purchase_utils.PURCHASE_COL_NO["return_fee"],
-                purchase_utils.PURCHASE_COL_NO["doctor_commission"],
-                purchase_utils.PURCHASE_COL_NO["massager_commission"],
-                purchase_utils.PURCHASE_COL_NO["cashier_commission"],
-            ],
+            hidden_columns,
+            number_columns,
         )
 
         system_utils.show_message_box(
@@ -1432,32 +1292,31 @@ class PurchaseRecordList(QtWidgets.QMainWindow):
             "Microsoft Excel 格式.",
         )
 
+    # ------------------------------------------------------------------
+    # 折扣
+    # ------------------------------------------------------------------
     def _set_discount(self):
-        row_no = self.ui.tableWidget_self_prescript.currentRow()
-        item = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["total_fee"]
+        table, row_no = self._get_current_row()
+        if row_no is None:
+            return
+
+        max_discount_fee = number_utils.get_integer(
+            self._cell(table, row_no, "total_fee")
         )
-        if item is not None:
-            max_discount_fee = number_utils.get_integer(item.text())
-        else:
+        if max_discount_fee <= 0:
             max_discount_fee = 100000
 
         input_dialog = QInputDialog()
         input_dialog.setOkButtonText("確定")
         input_dialog.setCancelButtonText("取消")
         discount_fee, ok = input_dialog.getInt(
-            self, "退貨", "請輸入折扣金額", 0, 0, max_discount_fee, 1
+            self, "折扣", "請輸入折扣金額", 0, 0, max_discount_fee, 1
         )
         if not ok:
-            return None
+            return
 
-        prescript_key = self.ui.tableWidget_self_prescript.item(
-            row_no, purchase_utils.PURCHASE_COL_NO["prescript_key"]
-        ).text()
-
-        fields = ["DiscountFee"]
-        data = [discount_fee]
+        prescript_key = self._cell(table, row_no, "prescript_key")
         self.database.update_record(
-            "prescript", fields, "PrescriptKey", prescript_key, data
+            "prescript", ["DiscountFee"], "PrescriptKey", prescript_key, [discount_fee]
         )
-        self._refresh_by_prescript(row_no, prescript_key)
+        self._refresh_by_prescript(table, row_no, prescript_key)
