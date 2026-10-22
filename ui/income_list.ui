@@ -205,6 +205,11 @@
         </column>
         <column>
          <property name="text">
+          <string>收費方式</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
           <string>掛號者</string>
          </property>
         </column>

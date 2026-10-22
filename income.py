@@ -70,9 +70,10 @@ class Income(QtWidgets.QMainWindow):
             "regist_debt": 20,
             "massage_fee": 21,
             "receipt_fee": 22,
-            "registrar": 23,
-            "cashier": 24,
-            "regist_no": 25,
+            "payment_type": 23,
+            "registrar": 24,
+            "cashier": 25,
+            "regist_no": 26,
         }
 
         self.income_date = None

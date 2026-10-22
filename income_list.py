@@ -187,6 +187,7 @@ class IncomeList(QtWidgets.QMainWindow):
             50,
             70,
             80,
+            100,
             80,
             80,
             60,
@@ -220,6 +221,26 @@ class IncomeList(QtWidgets.QMainWindow):
         self._set_check_box()
         self._calculate_total_income()
         self._set_table_widget_total_value()
+        self._set_other_data()
+
+    def _set_other_data(self):
+        for row_no in range(self.ui.tableWidget_income.rowCount()):
+            case_key_item = self.ui.tableWidget_income.item(
+                row_no, self.columns["case_key"]
+            )
+            if case_key_item is None:
+                continue
+
+            case_key = case_key_item.text()
+            if case_key in ["", "None"]:  # 合計列、退貨列沒有 case_key
+                continue
+
+            payment_type = case_utils.get_payment_type(self.database, case_key)
+            self.ui.tableWidget_income.setItem(
+                row_no,
+                self.columns["payment_type"],
+                QtWidgets.QTableWidgetItem(payment_type),
+            )
 
     def _set_check_box(self):
         for row_no in range(self.ui.tableWidget_income.rowCount()):
@@ -511,70 +532,6 @@ class IncomeList(QtWidgets.QMainWindow):
                 row_no, cell[0], QtWidgets.QTableWidgetItem(cell[1])
             )
 
-    # def _insert_registration_item(self, income_row_no, registration_row_no):
-    #     cell_data = self._get_registration_item(registration_row_no)
-
-    #     for cell in cell_data:
-    #         if self.ui.tableWidget_income.item(income_row_no, cell[0]).text() != "0":
-    #             continue
-
-    #         if cell[0] in [
-    #             self.columns["refund_fee"],
-    #             self.columns["repayment"],
-    #         ]:  # 還卡費,還款另外計算 (當天可能還兩筆)
-    #             continue
-
-    #         self.ui.tableWidget_income.setItem(
-    #             income_row_no, cell[0], QtWidgets.QTableWidgetItem(cell[1])
-    #         )
-
-    #     total_regist_fee = number_utils.get_integer(
-    #         self.ui.tableWidget_income.item(
-    #             income_row_no, self.columns["regist_fee"]
-    #         ).text()
-    #     )
-    #     regist_fee = number_utils.get_integer(
-    #         self.tableWidget_registration.item(registration_row_no, 10).text()
-    #     )  # 櫃台結帳分析表
-
-    #     total_refund_fee = number_utils.get_integer(
-    #         self.ui.tableWidget_income.item(
-    #             income_row_no, self.columns["refund_fee"]
-    #         ).text()
-    #     )
-    #     refund_fee = number_utils.get_integer(
-    #         self.tableWidget_registration.item(registration_row_no, 13).text()
-    #     )  # 櫃台結帳分析表
-
-    #     total_regist_fee += regist_fee
-    #     total_refund_fee += refund_fee
-
-    #     self.ui.tableWidget_income.setItem(
-    #         income_row_no,
-    #         self.columns["regist_fee"],
-    #         QtWidgets.QTableWidgetItem(string_utils.xstr(total_regist_fee)),
-    #     )
-    #     self.ui.tableWidget_income.setItem(
-    #         income_row_no,
-    #         self.columns["refund_fee"],
-    #         QtWidgets.QTableWidgetItem(string_utils.xstr(total_refund_fee)),
-    #     )
-
-    #     total_repayment = number_utils.get_integer(
-    #         self.ui.tableWidget_income.item(
-    #             income_row_no, self.columns["repayment"]
-    #         ).text()
-    #     )
-    #     repayment = number_utils.get_integer(
-    #         self.tableWidget_registration.item(registration_row_no, 15).text()
-    #     )  # 櫃台結帳分析表
-
-    #     total_repayment += repayment
-    #     self.ui.tableWidget_income.setItem(
-    #         income_row_no,
-    #         self.columns["repayment"],
-    #         QtWidgets.QTableWidgetItem(string_utils.xstr(total_repayment)),
-    #     )
     def _insert_registration_item(self, income_row_no, registration_row_no):
         # 費用欄位一律累加 (同一人當天可能有多筆掛號 / 還卡 / 還款)
         # key = income 欄號, value = tableWidget_registration 來源欄號

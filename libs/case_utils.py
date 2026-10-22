@@ -5193,3 +5193,13 @@ def calculate_discount_rate(database, case_key):
     discount_rate = 100 - int(round(discount_fee / self_total_fee * 100, 1))
 
     return discount_rate
+
+
+def get_payment_type(database, case_key):
+    payment_type = case_utils.get_case_field_value(
+        database, case_key, "ChargePaymentType"
+    )
+    if payment_type is None:
+        payment_type = "現金"
+
+    return payment_type

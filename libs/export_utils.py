@@ -3003,6 +3003,7 @@ def export_income_list(system_settings, excel_file_name, tableWidget_income, col
         "掛號欠款",
         "民俗調理",
         "實收現金",
+        "收費方式",
         "掛號人員",
         "批價人員",
     ]
@@ -3032,6 +3033,7 @@ def export_income_list(system_settings, excel_file_name, tableWidget_income, col
     sheet.column_dimensions["V"].width = 10
     sheet.column_dimensions["W"].width = 12
     sheet.column_dimensions["X"].width = 12
+    sheet.column_dimensions["Y"].width = 12
 
     cell_no = 2  # 資料從第 3 列開始,2 表示目前還沒有資料列
     serial_no = 0
