@@ -4,7 +4,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QPoint, QSettings, QSize
 
 from libs import (
-    case_utils,
     class_utils,
     cshis_utils,
     date_utils,
@@ -20,7 +19,7 @@ from libs import (
 class DialogPastHistory(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogPastHistory, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -107,9 +106,59 @@ class DialogPastHistory(QtWidgets.QDialog):
     def accepted_button_clicked(self):
         self.close()
 
+    # def show_past_history(self, patient_key, ic_card=None):
+    #     self.read_data(patient_key)
+    #     if len(self.medical_record) <= 0:
+    #         return
+
+    #     name = string_utils.xstr(self.patient["Name"])
+    #     self.ui.groupBox_past_history.setTitle(f"{name}的過去病歷")
+    #     self.ui.groupBox_ic_card.setVisible(False)
+    #     self.show()
+
+    #     if ic_card is not None:
+    #         self._set_ic_card_treatment_data(ic_card)
+
+    # def read_data(self, patient_key):
+    #     sql = f"""
+    #         SELECT * FROM patient
+    #         WHERE
+    #             PatientKey = {patient_key}
+    #     """
+    #     self.patient = self.database.select_record(sql)[0]
+    #     massage_condition = ' AND TreatType NOT IN ("民俗調理") '
+    #     if self.system_settings.field("掛號過去病歷顯示民俗調理") == "Y":
+    #         massage_condition = ""
+
+    #     sql = f"""
+    #         SELECT * FROM cases
+    #         WHERE
+    #             PatientKey = {patient_key}
+    #             {massage_condition}
+    #         ORDER BY CaseDate DESC
+    #         LIMIT 60
+    #     """
+    #     self.medical_record = self.database.select_record(sql)
+    #     self.table_widget_past_history.set_db_data(sql, self._set_table_data)
+    #     self._adjust_column()
+    #     self.ui.tableWidget_past_history.resizeRowsToContents()
+
+    # def _adjust_column(self):
+    #     massager_count = personnel_utils.get_person_count(self.database, "推拿師父")
+    #     doctor_count = personnel_utils.get_person_count(self.database, "全部醫師")
+
+    #     if self.system_settings.field("掛號過去病歷顯示主訴") != "Y":
+    #         self.ui.tableWidget_past_history.setColumnHidden(13, True)
+
+    #     if massager_count <= 0:
+    #         self.ui.tableWidget_past_history.setColumnHidden(10, True)
+
+    #     if doctor_count <= 0:
+    #         self.ui.tableWidget_past_history.setColumnHidden(9, True)
+
     def show_past_history(self, patient_key, ic_card=None):
         self.read_data(patient_key)
-        if len(self.medical_record) <= 0:
+        if self.patient is None or self.table_widget_past_history.row_count() <= 0:
             return
 
         name = string_utils.xstr(self.patient["Name"])
@@ -121,25 +170,40 @@ class DialogPastHistory(QtWidgets.QDialog):
             self._set_ic_card_treatment_data(ic_card)
 
     def read_data(self, patient_key):
-        sql = f"""
-            SELECT * FROM patient
-            WHERE
-                PatientKey = {patient_key}
-        """
-        self.patient = self.database.select_record(sql)[0]
-        massage_condition = ' AND TreatType NOT IN ("民俗調理") '
+        rows = self.database.select_record(
+            "SELECT Name FROM patient WHERE PatientKey = %s", params=(patient_key,)
+        )
+        self.patient = rows[0] if rows else None
+        if self.patient is None:
+            return
+
+        massage_condition = ' AND cases.TreatType NOT IN ("民俗調理") '
         if self.system_settings.field("掛號過去病歷顯示民俗調理") == "Y":
             massage_condition = ""
 
+        self._show_symptom = self.system_settings.field("掛號過去病歷顯示主訴") == "Y"
+        self._roc_date = self.system_settings.field("日期格式") == "民國年"
+
+        symptom_field = "cases.Symptom" if self._show_symptom else "NULL AS Symptom"
+
         sql = f"""
-            SELECT * FROM cases
+            SELECT
+                cases.CaseKey, cases.PatientKey, cases.CaseDate,
+                cases.InsType, cases.Share, cases.TreatType,
+                cases.Card, cases.Continuance, cases.Doctor, cases.Massager,
+                cases.DiseaseName1, cases.DiseaseName2,
+                cases.Remark, cases.ApplyType,
+                {symptom_field},
+                dosage.Days AS PresDays
+            FROM cases
+                LEFT JOIN dosage
+                    ON dosage.CaseKey = cases.CaseKey AND dosage.MedicineSet = 1
             WHERE
-                PatientKey = {patient_key}
+                cases.PatientKey = {int(patient_key)}
                 {massage_condition}
-            ORDER BY CaseDate DESC
+            ORDER BY cases.CaseDate DESC
             LIMIT 60
         """
-        self.medical_record = self.database.select_record(sql)
         self.table_widget_past_history.set_db_data(sql, self._set_table_data)
         self._adjust_column()
         self.ui.tableWidget_past_history.resizeRowsToContents()
@@ -148,17 +212,16 @@ class DialogPastHistory(QtWidgets.QDialog):
         massager_count = personnel_utils.get_person_count(self.database, "推拿師父")
         doctor_count = personnel_utils.get_person_count(self.database, "全部醫師")
 
-        if self.system_settings.field("掛號過去病歷顯示主訴") != "Y":
-            self.ui.tableWidget_past_history.setColumnHidden(13, True)
-
-        if massager_count <= 0:
-            self.ui.tableWidget_past_history.setColumnHidden(10, True)
-
-        if doctor_count <= 0:
-            self.ui.tableWidget_past_history.setColumnHidden(9, True)
+        self.ui.tableWidget_past_history.setColumnHidden(13, not self._show_symptom)
+        self.ui.tableWidget_past_history.setColumnHidden(10, massager_count <= 0)
+        self.ui.tableWidget_past_history.setColumnHidden(9, doctor_count <= 0)
 
     def _set_table_data(self, row_no, row):
-        pres_days = case_utils.get_pres_days(self.database, row["CaseKey"])
+        # pres_days = case_utils.get_pres_days(self.database, row["CaseKey"])
+        # if pres_days == 0:
+        #     pres_days = ""
+
+        pres_days = row["PresDays"] or 0  # 原本: case_utils.get_pres_days(...)
         if pres_days == 0:
             pres_days = ""
 
@@ -170,7 +233,10 @@ class DialogPastHistory(QtWidgets.QDialog):
         treat_type = string_utils.xstr(row["TreatType"])
 
         case_date = string_utils.xstr(row["CaseDate"].date())
-        if self.system_settings.field("日期格式") == "民國年":
+        # if self.system_settings.field("日期格式") == "民國年":
+        #     case_date = date_utils.date_to_zh_tw_date(case_date)
+
+        if self._roc_date:  # 原本: self.system_settings.field("日期格式")
             case_date = date_utils.date_to_zh_tw_date(case_date)
 
         if string_utils.xstr(row["ApplyType"]) == "不申報":

@@ -2051,24 +2051,37 @@ class MySQLDatabase(DatabaseInterface):
         """
         self._assert_not_in_transaction("add_index_if_not_exists")
 
-        # 1. 檢查索引是否存在
         check_sql = """
-            SELECT COUNT(*) as total FROM information_schema.STATISTICS
+            SELECT index_name, index_type,
+                GROUP_CONCAT(column_name ORDER BY seq_in_index) AS cols
+            FROM information_schema.STATISTICS
             WHERE table_schema = DATABASE()
             AND table_name = %s
-            AND index_name = %s
+            GROUP BY index_name, index_type
         """
-        res = self.select_record(check_sql, (table_name, index_name))
+        rows = self.select_record(check_sql, (table_name,)) or []
 
-        # 2. 如果不存在則執行建立
-        if res and res[0].get("total", 0) == 0:
-            # 使用 join 處理欄位，避免 tuple 單一元素時出現的末尾逗號問題
-            field_str = ", ".join([f"`{f}`" for f in fields])
-            create_sql = (
-                f"ALTER TABLE `{table_name}` ADD INDEX `{index_name}` ({field_str})"
-            )
+        # 第一輪：同名索引已存在
+        for row in rows:
+            if row["index_name"].lower() == index_name.lower():
+                return
 
-            print(f"正在建立索引：{index_name} -> {table_name}({field_str})")
-            self._exec_ddl_with_lock_retry(
-                create_sql, f"建立索引 {index_name} -> {table_name}"
-            )
+        # 第二輪：既有 BTREE 索引的最左前綴已涵蓋
+        wanted = [f.lower() for f in fields]
+        for row in rows:
+            if row["index_type"] in ("FULLTEXT", "SPATIAL"):
+                continue
+
+            existing = [c.lower() for c in row["cols"].split(",")]
+            if existing[: len(wanted)] == wanted:
+                return
+
+        field_str = ", ".join(f"`{f}`" for f in fields)
+        create_sql = (
+            f"ALTER TABLE `{table_name}` ADD INDEX `{index_name}` ({field_str})"
+        )
+
+        print(f"正在建立索引：{index_name} -> {table_name}({field_str})")
+        self._exec_ddl_with_lock_retry(
+            create_sql, f"建立索引 {index_name} -> {table_name}"
+        )

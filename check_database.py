@@ -327,12 +327,6 @@ class CheckDatabase(QtWidgets.QDialog):
                 self.database.check_field_exists(
                     "cases",
                     "add",
-                    "DesignatedDoctor",
-                    'ENUM("False", "True") NOT NULL AFTER DrugDone',
-                ),  # 指定醫師
-                self.database.check_field_exists(
-                    "cases",
-                    "add",
                     "DesignatedMassager",
                     'ENUM("False", "True") NOT NULL AFTER DesignatedDoctor',
                 ),  # 指定醫師
@@ -370,9 +364,6 @@ class CheckDatabase(QtWidgets.QDialog):
     def _check_dosage(self):
         if self.call_from == "pymedical":
             process_list = [
-                self.database.check_field_exists(
-                    "dosage", "add", "TotalDosage", "double(6,2) AFTER Days"
-                ),
                 self.database.check_field_exists(
                     "dosage", "add", "TotalDosage", "double(6,2) AFTER Days"
                 ),
@@ -1093,6 +1084,10 @@ class CheckDatabase(QtWidgets.QDialog):
 
         self._exec_process(process_list)
 
+        self.database.add_index_if_not_exists(
+            "system_settings", "idx_station_field", ["StationNo", "Field"]
+        )
+
     def _correct_records(self):
         if not os.path.isfile(UPDATE_RECORD_LOG):
             file = open(UPDATE_RECORD_LOG, "w")
@@ -1144,7 +1139,6 @@ class CheckDatabase(QtWidgets.QDialog):
             self._check_covid_post_icd_10()
             self._check_infectious_share()
             self._check_infectious_drug_share()
-            self._check_infectious_medicine()
             self._check_infectious_ins_charge()
             self._check_infectious_treat_fee()
             self._fix_infectious_card()

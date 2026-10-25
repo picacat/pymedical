@@ -4,6 +4,7 @@
 import base64
 import configparser
 import datetime
+import html
 import os
 import platform
 import random
@@ -584,46 +585,87 @@ def loggin_error(filename, error_message):
     logging.error(error_message)
 
 
+# def send_telegram_alert(json_data, mail_content):
+#     # --- 步驟 1: 配置您的 Token 和 Chat ID ---
+#     BOT_TOKEN = "8602913860:AAEzI1YjTYjLIpGChPTzyDZizxK7NjJoFCw"
+#     CHAT_ID = "7646915984"  # 個人ID，不可改
+
+#     # --- 步驟 2: 組織訊息內容 ---
+
+#     # 建立 Markdown 格式的訊息，更清晰
+#     subject = f"{json_data['院所名稱']} - {json_data['使用者']} pymedical 錯誤"
+
+#     # 使用 Markdown 格式加粗標題和換行
+#     text_message = (
+#         f"🚨 **PyMedical 系統警報** 🚨\n\n"
+#         f"**主旨：** {subject}\n"
+#         f"**詳細錯誤：**\n"
+#         f"```\n{mail_content}\n```"  # 使用三引號讓錯誤訊息格式化
+#     )
+
+#     # Telegram API URL
+#     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+#     # --- 步驟 3: 發送 HTTP 請求 ---
+#     try:
+#         payload = {
+#             "chat_id": CHAT_ID,
+#             "text": text_message,
+#             "parse_mode": "Markdown",  # 告訴 Telegram 啟用 Markdown 格式
+#         }
+
+#         response = requests.post(url, data=payload)
+#         response.raise_for_status()  # 檢查是否有 HTTP 錯誤 (例如 404, 500)
+
+#         # 檢查 Telegram API 是否回傳成功
+#         if response.json().get("ok"):
+#             print("Telegram 訊息發送成功。")
+#         else:
+#             print(f"Telegram API 錯誤: {response.text}")
+
+#     except requests.exceptions.RequestException as e:
+#         print(f"發送 Telegram 訊息時發生連線或 HTTP 錯誤: {e}")
+
+
 def send_telegram_alert(json_data, mail_content):
-    # --- 步驟 1: 配置您的 Token 和 Chat ID ---
-    BOT_TOKEN = "8986203522:AAG4lcwuBW5nHhtHTG2z5H52X84GbWcwFqE"
-    CHAT_ID = "7646915984"  # 個人ID，不可改
+    BOT_TOKEN = "8722260017:AAGOtMIzDPnN6aGRtY49vxU_qCJY3t0NkUE"
+    CHAT_ID = "7646915984"
 
-    # --- 步驟 2: 組織訊息內容 ---
-
-    # 建立 Markdown 格式的訊息，更清晰
     subject = f"{json_data['院所名稱']} - {json_data['使用者']} pymedical 錯誤"
 
-    # 使用 Markdown 格式加粗標題和換行
-    text_message = (
-        f"🚨 **PyMedical 系統警報** 🚨\n\n"
-        f"**主旨：** {subject}\n"
-        f"**詳細錯誤：**\n"
-        f"```\n{mail_content}\n```"  # 使用三引號讓錯誤訊息格式化
+    header = (
+        "🚨 <b>PyMedical 系統警報</b> 🚨\n\n"
+        f"<b>主旨：</b>{html.escape(subject)}\n"
+        "<b>詳細錯誤：</b>\n"
     )
 
-    # Telegram API URL
+    # 4096 上限：預留標頭與 <pre></pre> 的空間，超過就截尾（保留最後面，traceback 重點在尾端）
+    max_body = 4096 - len(header) - 20
+    body = str(mail_content)
+    if len(html.escape(body)) > max_body:
+        body = "...(前略)\n" + body[-(max_body - 200) :]
+
+    text_message = f"{header}<pre>{html.escape(body)}</pre>"
+
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": text_message,
+        "parse_mode": "HTML",
+    }
 
-    # --- 步驟 3: 發送 HTTP 請求 ---
     try:
-        payload = {
-            "chat_id": CHAT_ID,
-            "text": text_message,
-            "parse_mode": "Markdown",  # 告訴 Telegram 啟用 Markdown 格式
-        }
-
-        response = requests.post(url, data=payload)
-        response.raise_for_status()  # 檢查是否有 HTTP 錯誤 (例如 404, 500)
-
-        # 檢查 Telegram API 是否回傳成功
-        if response.json().get("ok"):
+        response = requests.post(url, data=payload, timeout=10)
+        result = response.json()
+        if result.get("ok"):
             print("Telegram 訊息發送成功。")
         else:
-            print(f"Telegram API 錯誤: {response.text}")
-
+            # 這裡會印出真正原因，例如 can't parse entities / message is too long
+            print(
+                f"Telegram API 錯誤 {response.status_code}: {result.get('description')}"
+            )
     except requests.exceptions.RequestException as e:
-        print(f"發送 Telegram 訊息時發生連線或 HTTP 錯誤: {e}")
+        print(f"發送 Telegram 訊息時發生連線錯誤: {e}")
 
 
 def write_loggin_info(clinic_name, user_name, position):
