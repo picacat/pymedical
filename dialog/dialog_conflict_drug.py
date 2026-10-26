@@ -346,6 +346,14 @@ class DialogConflictDrug(QtWidgets.QDialog):
                 card_type="4",  # 安全模組 + 健保卡 + 醫師卡
                 service_type=SERVICE_TYPE,
             )
+            logger.warning(
+                "VPNH_SignX: random len=%s %r / signature len=%s head=%r tail=%r",
+                len(str(random_number)),
+                str(random_number)[:20],
+                len(str(signature)),
+                str(signature)[:16],
+                str(signature)[-16:],
+            )
         except Exception:
             logger.exception("VPNH_SignX 失敗")
             return None, "VPN 三卡簽章失敗，請確認醫事人員卡已認證且病人健保卡已插入"
