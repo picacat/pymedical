@@ -312,6 +312,13 @@ class DialogConflictDrug(QtWidgets.QDialog):
         if not ic_card.read_basic_data(show_message=False):
             return None, "讀取病人健保卡失敗，請確認健保卡已插入讀卡機"
 
+        error_code = ic_card.quick_insurance()
+        logger.warning(
+            "hisQuickInsurence=%s, HC狀態=%s",
+            error_code,
+            ic_card.get_ic_card_status(card_type=2),
+        )
+
         patient_card_no = string_utils.xstr(ic_card.basic_data.get("card_no")).strip()
         patient_id_no = (
             string_utils.xstr(ic_card.basic_data.get("patient_id")).strip().upper()
