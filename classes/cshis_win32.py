@@ -1615,3 +1615,15 @@ class CSHIS:
             return None
 
         return buffer.raw[: buffer_len.value].decode("ascii").strip()
+
+    # 在保狀態查核, 順便完成健保卡與 IDC 認證 (不寫卡、不扣次數)
+    def quick_insurance(self, treat_item="03"):
+        self.open_com()
+        try:
+            error_code = self.cshis.hisQuickInsurence(
+                ctypes.c_char_p(treat_item.encode("ascii"))
+            )
+        finally:
+            self.close_com()
+
+        return error_code
