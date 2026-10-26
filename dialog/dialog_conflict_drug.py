@@ -342,6 +342,12 @@ class DialogConflictDrug(QtWidgets.QDialog):
         # 3. 卡片都確認後再簽章（簽章放最後，避免簽完又被換卡）
         cshis_x = class_utils.get_cshisx(self.database, self.system_settings)
         try:
+            logger.warning(
+                "卡片狀態: HC=%s HPC=%s CS版本=%s",
+                ic_card.get_ic_card_status(card_type=2),
+                ic_card.get_ic_card_status(card_type=3),
+                ic_card.get_cs_version()[0],
+            )
             random_number, signature = cshis_x.VPNH_SignX(
                 card_type="4",  # 安全模組 + 健保卡 + 醫師卡
                 service_type=SERVICE_TYPE,
