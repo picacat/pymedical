@@ -4090,10 +4090,15 @@ class Registration(QtWidgets.QMainWindow):
         ]
 
     def _check_traditional_health_care_fee(self, ins_type, case_key):
+        print_self_items = False
+
         traditional_health_care_fee = number_utils.get_integer(
             self.ui.lineEdit_traditional_health_care_fee.text()
         )
         self_items = self._get_checked_self_items()
+        if len(self_items) > 0:
+            print_self_items = True
+
         base_fee = traditional_health_care_fee - sum(
             item["amount"] for item in self_items
         )
@@ -4178,7 +4183,7 @@ class Registration(QtWidgets.QMainWindow):
                     self.database, self.system_settings, case_key
                 )
 
-            return
+            return print_self_items
 
         # 以下是健保民俗調理
         write_health_care = False
@@ -4210,6 +4215,8 @@ class Registration(QtWidgets.QMainWindow):
                 )
             except ValueError:
                 pass
+
+        return print_self_items
 
     def _check_self_diag_fee(self, ins_type, case_key):
         if ins_type != "自費":
@@ -4414,7 +4421,11 @@ class Registration(QtWidgets.QMainWindow):
         ):  # 居家醫療不寫入民俗調理 2024-10-20 善揚
             self._set_traffic_allowance(case_key)  # 交通費
         else:
-            self._check_traditional_health_care_fee(ins_type, case_key)
+            print_self_items = self._check_traditional_health_care_fee(
+                ins_type, case_key
+            )
+            if print_self_items:
+                self._print_self_items(case_key)
 
         self._check_self_diag_fee(ins_type, case_key)
 
@@ -4844,7 +4855,10 @@ class Registration(QtWidgets.QMainWindow):
 
         case_date = self._get_case_date()
 
-        self._check_traditional_health_care_fee(ins_type, case_key)
+        print_self_items = self._check_traditional_health_care_fee(ins_type, case_key)
+        if print_self_items:
+            self._print_self_items(case_key)
+
         self._check_ins_regist_fee(case_key, regist_fee)
 
         if ins_type == "自費":
@@ -6528,3 +6542,6 @@ class Registration(QtWidgets.QMainWindow):
             return output.returncode == 0
         except subprocess.TimeoutExpired:
             return False
+
+    def _print_self_items(self, case_key):
+        print("print_self_items: ", case_key)

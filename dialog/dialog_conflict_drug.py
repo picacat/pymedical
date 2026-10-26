@@ -13,7 +13,6 @@ from PyQt5 import QtCore, QtWidgets
 from libs import (
     class_utils,
     date_utils,
-    patient_utils,
     prescript_utils,
     string_utils,
     system_utils,
@@ -306,11 +305,46 @@ class DialogConflictDrug(QtWidgets.QDialog):
 
     # 讀卡機控制軟體 5.x
     def _get_cshis5_json(self):
-        cshis_x = class_utils.get_cshisx(self.database, self.system_settings)
+        ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
 
+        # 1. 病人健保卡：即時從讀卡機讀取，不用資料庫卡號
+        #    （病人換卡後資料庫卡號過期 → 錯誤碼 02）
+        if not ic_card.read_basic_data(show_message=False):
+            return None, "讀取病人健保卡失敗，請確認健保卡已插入讀卡機"
+
+        patient_card_no = string_utils.xstr(ic_card.basic_data.get("card_no")).strip()
+        patient_id_no = (
+            string_utils.xstr(ic_card.basic_data.get("patient_id")).strip().upper()
+        )
+        if patient_card_no == "" or patient_id_no == "":
+            return None, "讀取病人健保卡失敗，請確認健保卡已插入讀卡機"
+
+        if patient_id_no != self.patient_id.upper():
+            return None, "讀卡機上的健保卡不是目前這位病人，請更換健保卡後重新查詢"
+
+        # 2. 醫事人員卡：卡號與身分證號都以讀卡機上的卡為準
+        #    （共用醫事人員卡時，病歷醫師 ≠ 插卡醫師 → 錯誤碼 02）
+        hpc_card_no = string_utils.xstr(ic_card.read_hpc_card_no()).strip()
+        if hpc_card_no == "":
+            return None, "讀取醫事人員卡卡號失敗，請確認醫事人員卡已插入"
+
+        # TODO: 驗證完 sHcaCardId 該用序號還是卡號後移除
+        logger.warning(
+            "HPC 序號=%s 卡號=%s",
+            hpc_card_no,
+            ic_card.read_card_no(3),
+        )
+
+        hpc_id_no = string_utils.xstr(ic_card.read_hpc_id_no()).strip().upper()
+        if hpc_id_no == "":
+            hpc_id_no = self.doctor_id
+
+        # 3. 卡片都確認後再簽章（簽章放最後，避免簽完又被換卡）
+        cshis_x = class_utils.get_cshisx(self.database, self.system_settings)
         try:
             random_number, signature = cshis_x.VPNH_SignX(
-                card_type="4", service_type=SERVICE_TYPE
+                card_type="4",  # 安全模組 + 健保卡 + 醫師卡
+                service_type=SERVICE_TYPE,
             )
         except Exception:
             logger.exception("VPNH_SignX 失敗")
@@ -329,30 +363,27 @@ class DialogConflictDrug(QtWidgets.QDialog):
         if not sam_id:
             return None, "讀取安全模組卡號失敗"
 
-        ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
-        hpc_card_no = string_utils.xstr(ic_card.read_hpc_card_no()).strip()
-        if hpc_card_no == "":
-            return None, "讀取醫事人員卡卡號失敗，請確認醫事人員卡已插入"
-
-        patient_card_no = string_utils.xstr(
-            patient_utils.get_card_no(self.database, self.patient_id)
-        ).strip()
-        if patient_card_no == "":
-            return None, "病人健保卡卡號空白，請先讀取病人健保卡"
-
         json_data = {
             "sHospId": self.system_settings.field("院所代號"),
-            "sHcaId": self.doctor_id,
-            "sPatId": self.patient_id,
+            "sHcaId": hpc_id_no,
+            "sPatId": patient_id_no,
             "sPatCardType": "2",  # 1:虛擬卡 2:實體卡
-            "sHcaCardId": hpc_card_no,
-            "sPatCardId": patient_card_no,  # 健保卡卡號
+            "sHcaCardId": hpc_card_no,  # 若驗證後確認要用卡號，改成 ic_card.read_card_no(3)
+            "sPatCardId": patient_card_no,
             "sClientRandom": random_number,
             "sSignature": signature,
             "vhcCloudToken": "",
             "sSamId": sam_id,
             "sub": self._get_sub(),
         }
+
+        logger.info(
+            "中西藥交互作用 5.x 身分欄位: sHcaId=%s sPatId=%s sHcaCardId=%s sPatCardId=%s",
+            hpc_id_no,
+            patient_id_no,
+            hpc_card_no,
+            patient_card_no,
+        )
 
         return json_data, None
 

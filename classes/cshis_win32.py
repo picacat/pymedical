@@ -69,7 +69,7 @@ class CSHIS:
         pass
 
     def open_com(self):
-        com_port = ctypes.c_short(self.ic_com_port)
+        com_port = ctypes.c_int(self.ic_com_port)
         error_code = self.cshis.csOpenCom(com_port)
 
         return error_code
@@ -203,7 +203,7 @@ class CSHIS:
 
     def read_basic_data(self, show_message=True):
         buffer = ctypes.c_buffer(72)  # c: char *
-        buffer_len = ctypes.c_short(72)  # c: int *
+        buffer_len = ctypes.c_int(72)  # c: int *
         self.open_com()
         error_code = self.cshis.hisGetBasicData(buffer, ctypes.byref(buffer_len))
         self.close_com()
@@ -249,7 +249,7 @@ class CSHIS:
 
     def read_register_basic_data(self, show_warning=True):
         buffer = ctypes.create_string_buffer(78)  # c: char *
-        buffer_len = ctypes.c_short(78)  # c: int *
+        buffer_len = ctypes.c_int(78)  # c: int *
         self.open_com()
         error_code = self.cshis.hisGetRegisterBasic(buffer, ctypes.byref(buffer_len))
         self.close_com()
@@ -280,23 +280,25 @@ class CSHIS:
         (error_code, treatment_data) = msg_queue.get()
         msg_box.close()
 
-        if error_code == 0:  # 取得資料成功
-            self.treatment_data = treatment_data
+        if error_code != 0:
+            cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
+            return
+
+        self.treatment_data = treatment_data
 
     def read_treatment_no_need_hpc_thread(self, out_queue):
-        buffer = ctypes.create_string_buffer(498)  # c: char *
-        buffer_len = ctypes.c_short(498)  # c: int *
+        buffer = ctypes.create_string_buffer(498)
+        buffer_len = ctypes.c_int(498)
         self.open_com()
         error_code = self.cshis.hisGetTreatmentNoNeedHPC(
             buffer, ctypes.byref(buffer_len)
         )
         self.close_com()
 
-        if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
-            return False
+        treatment_data = None
+        if error_code == 0:
+            treatment_data = cshis_utils.decode_treatment_data(buffer)
 
-        treatment_data = cshis_utils.decode_treatment_data(buffer)
         out_queue.put((error_code, treatment_data))
 
     # 取得門診資料
@@ -315,14 +317,16 @@ class CSHIS:
         (error_code, disease_data) = msg_queue.get()
         msg_box.close()
 
-        if error_code == 0:  # 取得資料成功
-            self.disease_data = disease_data
+        if error_code != 0:
+            cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
+            return
+
+        self.disease_data = disease_data
 
     def read_treatment_need_hpc_thread(self, out_queue):
-        # length = 372
         length = 540
-        buffer = ctypes.create_string_buffer(length)  # c: char *
-        buffer_len = ctypes.c_short(length)  # c: int *
+        buffer = ctypes.create_string_buffer(length)
+        buffer_len = ctypes.c_int(length)
 
         buffer[0:9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
         buffer[23 : 23 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
@@ -331,47 +335,19 @@ class CSHIS:
         buffer[92 : 92 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
         buffer[115 : 115 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
 
-        # for i in range(6):
-        #     start_no = i * 23
-        #     buffer[start_no:start_no+9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        #     start_no += 9
-        #     buffer[start_no:start_no+7] = struct.pack('7s', ('       ').encode('ascii'))
-        #     start_no += 7
-        #     buffer[start_no:start_no+7] = struct.pack('7s', ('       ').encode('ascii'))
-
-        # for i in range(6):
-        #     start_no = i * 67 + 138
-        #     buffer[start_no:start_no+13] = struct.pack('13s', ('             ').encode('ascii'))
-        #     start_no += 13
-        #     buffer[start_no:start_no+9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        #     start_no += 9
-        #     buffer[start_no:start_no+9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        #     start_no += 9
-        #     buffer[start_no:start_no+9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        #     start_no += 9
-        #     buffer[start_no:start_no+9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        #     start_no += 9
-        #     buffer[start_no:start_no+9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-        #     start_no += 9
-        #     buffer[start_no:start_no+9] = struct.pack('9s', ('[XXXXXXX]').encode('ascii'))
-
         self.open_com()
         error_code = self.cshis.hisGetTreatmentNeedHPC(buffer, ctypes.byref(buffer_len))
         self.close_com()
 
-        if error_code != 0:
-            cshis_utils.show_ic_card_message(error_code, "健保卡讀取")
-            return False
+        disease_data = None
+        if error_code == 0:
+            disease_data = cshis_utils.decode_disease_data(buffer)
 
-        # s = io.BytesIO(buffer)
-        # print(s.read(length).decode('ascii'))
-
-        disease_data = cshis_utils.decode_disease_data(buffer)
         out_queue.put((error_code, disease_data))
 
     def read_critical_illness(self):
         buffer = ctypes.create_string_buffer(138)  # c: char *
-        buffer_len = ctypes.c_short(138)  # c: int *
+        buffer_len = ctypes.c_int(138)  # c: int *
         buffer[0:9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
         buffer[23 : 23 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
         buffer[46 : 46 + 9] = struct.pack("9s", ("[XXXXXXX]").encode("ascii"))
@@ -425,22 +401,22 @@ class CSHIS:
         prescript_len = 61
         prescript_length = prescript_count * prescript_len
         buffer_prescript = ctypes.create_string_buffer(prescript_length)  # c: char *
-        buffer_prescript_len = ctypes.c_short(prescript_length)  # c: int *
+        buffer_prescript_len = ctypes.c_int(prescript_length)  # c: int *
 
         longterm_count = 30
         longterm_length = longterm_count * 44
         buffer_longterm = ctypes.create_string_buffer(longterm_length)  # c: char *
-        buffer_longterm_len = ctypes.c_short(longterm_length)  # c: int *
+        buffer_longterm_len = ctypes.c_int(longterm_length)  # c: int *
 
         important_count = 10
         important_length = important_count * 36
         buffer_important = ctypes.create_string_buffer(important_length)  # c: char *
-        buffer_important_len = ctypes.c_short(important_length)  # c: int *
+        buffer_important_len = ctypes.c_int(important_length)  # c: int *
 
         irritation_count = 3
         irritation_length = irritation_count * 40
         buffer_irritation = ctypes.create_string_buffer(irritation_length)  # c: char *
-        buffer_irritation_len = ctypes.c_short(irritation_length)  # c: int *
+        buffer_irritation_len = ctypes.c_int(irritation_length)  # c: int *
 
         self.open_com()
         error_code = self.cshis.hisReadPrescription(
@@ -476,7 +452,7 @@ class CSHIS:
         available_count = None
         available_date = None
         buffer = ctypes.create_string_buffer(9)  # c: char *
-        buffer_len = ctypes.c_short(9)  # c: int *
+        buffer_len = ctypes.c_int(9)  # c: int *
         self.open_com()
         error_code = self.cshis.hisGetRegisterBasic2(buffer, ctypes.byref(buffer_len))
         self.close_com()
@@ -761,7 +737,7 @@ class CSHIS:
         p_patient_birthday = ctypes.c_char_p(patient_birthday.encode("ascii"))
         p_data_write = ctypes.c_char_p(data_write.encode("ascii"))
 
-        doctor_id = ctypes.create_string_buffer(10)  # c: char *
+        doctor_id = ctypes.create_string_buffer(11)  # c: char *
         self.open_com()
         error_code = self.cshis.hisWriteTreatmentCode(
             p_registration_datetime,
@@ -803,7 +779,8 @@ class CSHIS:
             cshis_utils.show_ic_card_message(error_code, "健保卡寫入診察資料")
             return None
 
-        doctor_id = out_doctor_id[:40].decode("ascii")
+        # doctor_id = out_doctor_id[:40].decode("ascii")
+        doctor_id = out_doctor_id.value.decode("ascii").strip()  # 取到 \0 為止
 
         return doctor_id
 
@@ -837,7 +814,7 @@ class CSHIS:
         p_data_write = ctypes.c_char_p(data_write.encode("ascii"))
 
         buffer = ctypes.create_string_buffer(40)  # c: char *
-        buffer_len = ctypes.c_short(40)  # c: int *
+        buffer_len = ctypes.c_int(40)  # c: int *
         self.open_com()
         error_code = self.cshis.hisWritePrescriptionSign(
             p_registration_datetime,
@@ -1249,14 +1226,14 @@ class CSHIS:
             sql = f'''
                 UPDATE patient
                 SET
-                    ID = "{patient_id}"
+                    ID = "{self.basic_data["patient_id"]}"
                 WHERE
                     PatientKey = {patient_key}
             '''
             self.database.exec_sql(sql)
 
-        if string_utils.xstr(row["CardNo"]) == "":
-            card_no = self.basic_data["card_no"]
+        card_no = string_utils.xstr(self.basic_data["card_no"]).strip()
+        if card_no != "" and string_utils.xstr(row["CardNo"]) != card_no:
             sql = f'''
                 UPDATE patient
                 SET
@@ -1594,3 +1571,47 @@ class CSHIS:
             self.write_medicine_signature(
                 case_row, patient_row, prescript_rows, dosage_row
             )
+
+    def read_hpc_id_no(self, show_message=False):
+        max_len = 32
+        buffer = ctypes.create_string_buffer(max_len)
+        buffer_len = ctypes.c_int(max_len)
+
+        try:
+            hpc_get_hpcssn = self.cshis.hpcGetHPCSSN
+        except AttributeError:  # 舊版 CsHis 無此函式
+            return None
+
+        self.open_com()
+        try:
+            error_code = hpc_get_hpcssn(buffer, ctypes.byref(buffer_len))
+        finally:
+            self.close_com()
+
+        if error_code != 0:
+            if show_message:
+                cshis_utils.show_ic_card_message(error_code, "醫事卡讀取")
+            return None
+
+        return buffer.raw[: buffer_len.value].decode("ascii").strip()
+
+    # card_type: 1=安全模組 2=健保卡 3=醫事人員卡
+    def read_card_no(self, card_type, show_message=False):
+        max_len = 32
+        buffer = ctypes.create_string_buffer(max_len)
+        buffer_len = ctypes.c_int(max_len)
+
+        self.open_com()
+        try:
+            error_code = self.cshis.csGetCardNo(
+                ctypes.c_int(card_type), buffer, ctypes.byref(buffer_len)
+            )
+        finally:
+            self.close_com()
+
+        if error_code != 0:
+            if show_message:
+                cshis_utils.show_ic_card_message(error_code, "讀取卡片號碼")
+            return None
+
+        return buffer.raw[: buffer_len.value].decode("ascii").strip()

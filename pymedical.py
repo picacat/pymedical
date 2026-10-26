@@ -21,8 +21,10 @@ if sys.platform == "linux":
     os.environ["QT_FONT_FAMILY"] = "Noto Sans"
 
 
+import logging
 import traceback
 from ctypes import wintypes
+from logging.handlers import RotatingFileHandler
 from queue import Queue
 from threading import Thread
 
@@ -3042,8 +3044,31 @@ def check_smart_app_control():
         )
 
 
+def setup_logging():
+    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+        handler = RotatingFileHandler(
+            os.path.join(log_dir, "pymedical.log"),
+            maxBytes=5 * 1024 * 1024,
+            backupCount=5,
+            encoding="utf-8",
+        )
+    except OSError:
+        return  # 目錄不可寫就放棄, 不要讓 log 設定擋住程式啟動
+
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+    )
+
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    root.addHandler(handler)
+
+
 # 主程式
 def main(config):
+    setup_logging()
     set_high_dpi_attributes()
     if sys.platform == "win32":
         set_windows_scale_factor()
