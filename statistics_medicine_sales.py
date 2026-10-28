@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import re
 
 from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
@@ -21,15 +19,16 @@ from libs import (
 class StatisticsMedicineSales(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsMedicineSales, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
         self.start_date = args[2]
         self.end_date = args[3]
-        self.ins_type = args[4]
-        self.doctor = args[5]
-        self.medicine_type = args[6]
+        self.period = args[4]
+        self.ins_type = args[5]
+        self.doctor = args[6]
+        self.medicine_type = args[7]
         self.ui = None
 
         self._set_ui()
@@ -169,9 +168,12 @@ class StatisticsMedicineSales(QtWidgets.QMainWindow):
                 f'AND prescript.MedicineName = "{assign_medicine}" '
             )
 
-        doctor_condition = ""
-        if self.doctor != "全部":
-            doctor_condition = f'AND cases.Doctor = "{self.doctor}"'
+        doctor_condition = (
+            f'AND cases.Doctor = "{self.doctor}"' if self.doctor != "全部" else ""
+        )
+        period_condition = (
+            f'AND cases.Period = "{self.period}"' if self.period != "全部" else ""
+        )
 
         if assign_medicine is not None:
             dosage_condition = ""
@@ -196,6 +198,7 @@ class StatisticsMedicineSales(QtWidgets.QMainWindow):
                 cases.CaseDate BETWEEN "{self.start_date}" AND "{self.end_date}" AND
                 prescript.MedicineType = "{self.medicine_type}" AND
                 (dosage.MedicineSet = prescript.MedicineSet)
+                {period_condition}
                 {ins_type_condition}
                 {medicine_name_condition}
                 {doctor_condition}

@@ -1,22 +1,23 @@
-
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 
-from libs import ui_utils
-from libs import system_utils
-from libs import string_utils
-from libs import export_utils
-from libs import dialog_utils
-from libs import module_utils
-from libs import number_utils
+from libs import (
+    dialog_utils,
+    export_utils,
+    module_utils,
+    number_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 用藥統計 2019.08.02
 class StatisticsMedicine(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsMedicine, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -26,6 +27,7 @@ class StatisticsMedicine(QtWidgets.QMainWindow):
             "dialog_executed": False,
             "start_date": None,
             "end_date": None,
+            "period": None,
             "ins_type": None,
             "therapist": None,
         }
@@ -52,7 +54,9 @@ class StatisticsMedicine(QtWidgets.QMainWindow):
         self.ui.action_close.triggered.connect(self.close_form)
         self.ui.action_open_dialog.triggered.connect(self.open_dialog)
         self.ui.action_export_excel.triggered.connect(self._export_to_excel)
-        self.ui.action_export_detail_excel.triggered.connect(self._export_detail_to_excel)
+        self.ui.action_export_detail_excel.triggered.connect(
+            self._export_detail_to_excel
+        )
         self.ui.action_export_excel_all.triggered.connect(self._export_to_excel_all)
 
     def close_tab(self):
@@ -66,21 +70,28 @@ class StatisticsMedicine(QtWidgets.QMainWindow):
     # 讀取病歷
     def open_dialog(self):
         dialog = dialog_utils.get_dialog_statistics_therapist(
-            self, self.database, self.system_settings, '用藥統計', '醫師',
+            self,
+            self.database,
+            self.system_settings,
+            "用藥統計",
+            "醫師",
         )
 
-        if self.dialog_setting['dialog_executed']:
-            dialog.ui.dateEdit_start_date.setDate(self.dialog_setting['start_date'])
-            dialog.ui.dateEdit_end_date.setDate(self.dialog_setting['end_date'])
+        if self.dialog_setting["dialog_executed"]:
+            dialog.ui.dateEdit_start_date.setDate(self.dialog_setting["start_date"])
+            dialog.ui.dateEdit_end_date.setDate(self.dialog_setting["end_date"])
+            dialog.ui.comboBox_period.setCurrentText(self.dialog_setting["period"])
 
-            if self.dialog_setting['ins_type'] == '全部':
+            if self.dialog_setting["ins_type"] == "全部":
                 dialog.ui.radioButton_all.setChecked(True)
-            elif self.dialog_setting['ins_type'] == '健保':
+            elif self.dialog_setting["ins_type"] == "健保":
                 dialog.ui.radioButton_ins.setChecked(True)
-            elif self.dialog_setting['ins_type'] == '自費':
+            elif self.dialog_setting["ins_type"] == "自費":
                 dialog.ui.radioButton_self.setChecked(True)
 
-            dialog.ui.comboBox_therapist.setCurrentText(self.dialog_setting['therapist'])
+            dialog.ui.comboBox_therapist.setCurrentText(
+                self.dialog_setting["therapist"]
+            )
 
         if not dialog.exec_():
             dialog.deleteLater()
@@ -88,20 +99,22 @@ class StatisticsMedicine(QtWidgets.QMainWindow):
 
         start_date = dialog.start_date()
         end_date = dialog.end_date()
+        period = dialog.period()
         ins_type = dialog.ins_type()
         therapist = dialog.ui.comboBox_therapist.currentText()
 
-        self.dialog_setting['dialog_executed'] = True
-        self.dialog_setting['start_date'] = dialog.ui.dateEdit_start_date.date()
-        self.dialog_setting['end_date'] = dialog.ui.dateEdit_end_date.date()
-        self.dialog_setting['ins_type'] = ins_type
-        self.dialog_setting['therapist'] = therapist
+        self.dialog_setting["dialog_executed"] = True
+        self.dialog_setting["start_date"] = dialog.ui.dateEdit_start_date.date()
+        self.dialog_setting["end_date"] = dialog.ui.dateEdit_end_date.date()
+        self.dialog_setting["period"] = period
+        self.dialog_setting["ins_type"] = ins_type
+        self.dialog_setting["therapist"] = therapist
 
         dialog.deleteLater()
-        self._set_tab_widget(start_date, end_date, ins_type, therapist)
+        self._set_tab_widget(start_date, end_date, period, ins_type, therapist)
 
     def _get_total_discount_fee(self, ins_type, start_date, end_date, doctor):
-        doctor_type_condition = f' AND Doctor = "{doctor}"' if doctor != '全部' else ''
+        doctor_type_condition = f' AND Doctor = "{doctor}"' if doctor != "全部" else ""
         sql = f'''
             SELECT SUM(DiscountFee) AS total_discount_fee FROM cases
             WHERE
@@ -110,27 +123,30 @@ class StatisticsMedicine(QtWidgets.QMainWindow):
         '''
         rows = self.database.select_record(sql)
         if rows:
-            total_discount_fee = number_utils.get_integer(rows[0]['total_discount_fee'])
+            total_discount_fee = number_utils.get_integer(rows[0]["total_discount_fee"])
         else:
             total_discount_fee = 0
-            
+
         return total_discount_fee
 
-    def _set_tab_widget(self, start_date, end_date, ins_type, doctor):
-        total_discount_fee = self._get_total_discount_fee(ins_type, start_date, end_date, doctor)
+    def _set_tab_widget(self, start_date, end_date, period, ins_type, doctor):
+        total_discount_fee = self._get_total_discount_fee(
+            ins_type, start_date, end_date, doctor
+        )
         self.ui.statusbar.showMessage(
-            f' 統計期間: 從 {start_date[:10]} 至 {end_date[:10]} 保險: {ins_type} 醫師: {doctor} 總折扣金額: {total_discount_fee}'
+            f" 統計期間: 從 {start_date[:10]} 至 {end_date[:10]} {period} 保險: {ins_type} 醫師: {doctor} 總折扣金額: {total_discount_fee}"
         )
 
         # ins_type_condition = f' AND InsType = "{ins_type}"' if ins_type != '全部' else ''
-        if ins_type == '健保':
-            ins_type_condition = 'AND MedicineSet = 1'
-        elif ins_type == '自費':
-            ins_type_condition = 'AND MedicineSet >=2'
+        if ins_type == "健保":
+            ins_type_condition = "AND MedicineSet = 1"
+        elif ins_type == "自費":
+            ins_type_condition = "AND MedicineSet >=2"
         else:
-            ins_type_condition = ''
+            ins_type_condition = ""
 
-        doctor_type_condition = f' AND Doctor = "{doctor}"' if doctor != '全部' else ''
+        period_condition = f' AND Period = "{period}" ' if period != "全部" else ""
+        doctor_type_condition = f' AND Doctor = "{doctor}"' if doctor != "全部" else ""
 
         sql = f'''
             SELECT MedicineType FROM prescript
@@ -139,6 +155,7 @@ class StatisticsMedicine(QtWidgets.QMainWindow):
                 cases.CaseDate BETWEEN "{start_date}" AND "{end_date}" AND
                 MedicineType IS NOT NULL AND
                 MedicineType NOT IN ("穴道")
+                {period_condition}
                 {ins_type_condition}
                 {doctor_type_condition}
             GROUP BY MedicineType
@@ -149,16 +166,33 @@ class StatisticsMedicine(QtWidgets.QMainWindow):
         self.ui.tabWidget_statistics_medicine.clear()
         for row in rows:
             self._add_statistic_medicine_sales(
-                start_date, end_date, ins_type, doctor, string_utils.xstr(row['MedicineType'])
+                start_date,
+                end_date,
+                period,
+                ins_type,
+                doctor,
+                string_utils.xstr(row["MedicineType"]),
             )
 
     # 用藥統計內容
-    def _add_statistic_medicine_sales(self, start_date, end_date, ins_type, doctor, medicine_type):
+    def _add_statistic_medicine_sales(
+        self, start_date, end_date, period, ins_type, doctor, medicine_type
+    ):
         self.tab_statistics_medicine_sales = module_utils.get_statistics_medicine_sales(
-            self, self.database, self.system_settings, start_date, end_date, ins_type, doctor, medicine_type,
+            self,
+            self.database,
+            self.system_settings,
+            start_date,
+            end_date,
+            period,
+            ins_type,
+            doctor,
+            medicine_type,
         )
         self.tab_statistics_medicine_sales.start_calculate()
-        self.ui.tabWidget_statistics_medicine.addTab(self.tab_statistics_medicine_sales, medicine_type)
+        self.ui.tabWidget_statistics_medicine.addTab(
+            self.tab_statistics_medicine_sales, medicine_type
+        )
 
     def _export_to_excel(self):
         current_index = self.ui.tabWidget_statistics_medicine.currentIndex()
@@ -173,18 +207,19 @@ class StatisticsMedicine(QtWidgets.QMainWindow):
         current_tab.export_detail_to_excel()
 
     def _export_to_excel_all(self):
-        start_date = self.dialog_setting['start_date'].toString('yyyy-MM-dd')
-        end_date = self.dialog_setting['end_date'].toString('yyyy-MM-dd')
-        doctor = self.dialog_setting['therapist']
-        if doctor == '全部':
-            doctor = ''
+        start_date = self.dialog_setting["start_date"].toString("yyyy-MM-dd")
+        end_date = self.dialog_setting["end_date"].toString("yyyy-MM-dd")
+        doctor = self.dialog_setting["therapist"]
+        if doctor == "全部":
+            doctor = ""
 
         options = QtWidgets.QFileDialog.Options()
         excel_file_name, _ = QtWidgets.QFileDialog.getSaveFileName(
             self.parent,
             "匯出用藥統計",
-            f'{start_date}至{end_date}{doctor}全部用藥統計表.xlsx',
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            f"{start_date}至{end_date}{doctor}全部用藥統計表.xlsx",
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
@@ -195,7 +230,7 @@ class StatisticsMedicine(QtWidgets.QMainWindow):
 
         system_utils.show_message_box(
             QtWidgets.QMessageBox.Information,
-            '資料匯出完成',
-            f'<h3>用藥統計統計檔{excel_file_name}匯出完成.</h3>',
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            f"<h3>用藥統計統計檔{excel_file_name}匯出完成.</h3>",
+            "Microsoft Excel 格式.",
         )
