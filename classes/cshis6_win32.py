@@ -44,6 +44,9 @@ LOCAL_URL = "https://localhost:5066"
 NHI_URL = "https://medvpndc.nhi.gov.tw"
 NHI_TEST_URL = "https://medvpndct.nhi.gov.tw"  # 測試用
 
+# 診斷碼格式: "0" 未特別定義 / "1" ICD-9 CM / "2" ICD-10
+ICD_FORMAT_ICD10 = "2"
+
 HEADERS = {
     "Content-Type": "application/json",  # 根據 API 要求的 Content-Type 設定
 }
@@ -1139,7 +1142,7 @@ class CSHIS:
 
     def read_critical_illness(self):
         hpchc_signature = self.get_hpchc_signature(service_type="01")
-        request_data = self._signature_data(hpchc_signature, format="0")
+        request_data = self._signature_data(hpchc_signature, format=ICD_FORMAT_ICD10)
         if request_data is None:
             return False
 
@@ -1363,7 +1366,7 @@ class CSHIS:
 
     def read_treatment_need_hpc_thread(self, out_queue):
         error_code, hpchc_signature = self._hpchc_signature("01")
-        request_data = self._signature_data(hpchc_signature, format="0")
+        request_data = self._signature_data(hpchc_signature, format=ICD_FORMAT_ICD10)
         if request_data is None:
             out_queue.put((error_code or -1, {}))
             return
@@ -1906,6 +1909,7 @@ class CSHIS:
             hc_signature,
             afterCheck=treat_after_check,
             treatmentDateTime=registration_datetime,
+            format=ICD_FORMAT_ICD10,
             mainCode=disease_code1,
             subCode1=disease_code2,
             subCode2=disease_code3,
