@@ -122,6 +122,7 @@ class Registration(QtWidgets.QMainWindow):
         }
 
         self.default_treat_type = self.system_settings.field("預設就醫類別")
+        self.new_opening = self.system_settings.field("新特約期間")
         if self.default_treat_type is None:
             self.default_treat_type = "內科"
 
@@ -133,10 +134,7 @@ class Registration(QtWidgets.QMainWindow):
         self._set_signal()
         self._set_permission()
 
-        if (
-            self.system_settings.field("使用讀卡機") == "N"
-            and self.system_settings.field("新特約期間使用晶片讀卡機") == "Y"
-        ):
+        if self.system_settings.field("使用讀卡機") == "N" and self.new_opening == "Y":
             self._init_smart_card()
 
     # 解構
@@ -2244,7 +2242,7 @@ class Registration(QtWidgets.QMainWindow):
     def _auto_completion_course(self, patient_key):
         default_card = self._get_card_sequence()
 
-        if self.system_settings.field("新特約期間") == "Y":
+        if self.new_opening == "Y":
             default_card = case_utils.get_new_opening_card(self.database, patient_key)
 
         if (
@@ -2371,13 +2369,17 @@ class Registration(QtWidgets.QMainWindow):
             return default_card, None
 
         card = string_utils.xstr(row["Card"])
+        if self.new_opening == "Y" and "G000" not in card:
+            card = case_utils.get_new_opening_card(self.database, patient_key)
+            course = None
+            return card, course
+
         if (
             card[:4] in nhi_utils.MANUAL_CARD_LIST
             and number_utils.get_integer(row["Continuance"]) >= 6
         ):  # 異常卡序療程已滿
             if (
-                self.system_settings.field("新特約期間") != "Y"
-                and card[:4] in nhi_utils.ABNORMAL_CARD
+                self.new_opening != "Y" and card[:4] in nhi_utils.ABNORMAL_CARD
             ):  # 非特約期間異常卡序不傲自動連號
                 return default_card, None
             else:

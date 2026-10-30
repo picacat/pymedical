@@ -2325,7 +2325,8 @@ def get_new_opening_card(database, patient_key):
         WHERE
             (CaseDate >= "{last_treat_date}") AND
             (PatientKey = {patient_key}) AND
-            (InsType = "健保")
+            (InsType = "健保") AND
+            (Card LIKE "G000%")
         ORDER BY CaseDate DESC LIMIT 1
     '''
     rows = database.select_record(sql)
