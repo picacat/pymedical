@@ -79,6 +79,48 @@ class PrintRegistrationForm19:
         if printing:
             document.print(self.printer)
 
+    def _get_treat_items(self, clinic_name):
+        treat_items = [
+            "熏蒸",
+            "傷科",
+            "針灸",
+            "電針",
+            "滑罐",
+            "電療",
+            "藥",
+        ]
+        if clinic_name in ["日青中醫診所"]:
+            treat_items = [
+                "針刀",
+                "結構",
+                "針灸",
+                "火針",
+                "火罐",
+                "雷射",
+                "藥",
+            ]
+
+        td = ""
+        for item in treat_items:
+            td += f'<td width="14%" align="center" vertival-align="middle">{item}</td>'
+
+        tr = f"""
+            <table style="border-collapse: collapse; border:1px #cccccc solid;" cellpadding="0" border="1">
+                <tr>{td}</tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        """
+
+        return tr
+
     def _html(self):
         sql = f"""
             SELECT * FROM cases
@@ -107,12 +149,12 @@ class PrintRegistrationForm19:
         doctor = string_utils.xstr(row["Doctor"])
         regist_no = string_utils.xstr(row["RegistNo"])
 
+        treat_items = self._get_treat_items()
+
         if card == "欠卡":
-            total_label = (
-                f"<br>欠卡費: {str(deposit_fee)}元 實收金額: {str(total_fee)}元"
-            )
+            total_label = f"<br>欠卡費: {deposit_fee!s}元 實收金額: {total_fee!s}元"
         else:
-            total_label = f"<br>實收金額: {str(total_fee)}元"
+            total_label = f"<br>實收金額: {total_fee!s}元"
 
         html = f'''
             <html>
@@ -122,32 +164,13 @@ class PrintRegistrationForm19:
                     病患姓名: {name}<br>
                     掛號時間: {case_date}<br>
                     保險類別: {ins_type} - {treat_type}<br>
-                    掛號費: {str(regist_fee)}元 門診負擔: {str(diag_share_fee)}元
+                    掛號費: {regist_fee!s}元 門診負擔: {diag_share_fee!s}元
                     {total_label}
                     <center style="font-size:20px">{room}診 {doctor}醫師</b></center>
                     <center style="font-size:20px">{regist_no:0>3}號</b></center>
                     <center>本單據僅供叫號，不作報稅證明</center>
                     <br><br>
-                    <table style="border-collapse: collapse; border:1px #cccccc solid;" cellpadding="0" border="1">
-                        <tr>
-                            <td width="14%" align="center" vertival-align="middle">熏蒸</td>
-                            <td width="14%" align="center" vertival-align="middle">傷科</td>
-                            <td width="15%" align="center" vertival-align="middle">針灸</td>
-                            <td width="14%" align="center" vertival-align="middle">電針</td>
-                            <td width="14%" align="center" vertival-align="middle">滑罐</td>
-                            <td width="15%" align="center" vertival-align="middle">電療</td>
-                            <td width="14%" align="center" vertival-align="middle">藥</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                    </table>
+                    {treat_items}
                     <img src="{"./images/physical.jpg"}" height="200" width="200">
                 </body>
             </html>
