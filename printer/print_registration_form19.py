@@ -149,7 +149,7 @@ class PrintRegistrationForm19:
         doctor = string_utils.xstr(row["Doctor"])
         regist_no = string_utils.xstr(row["RegistNo"])
 
-        treat_items = self._get_treat_items()
+        treat_items = self._get_treat_items(clinic_name)
 
         if card == "欠卡":
             total_label = f"<br>欠卡費: {deposit_fee!s}元 實收金額: {total_fee!s}元"
