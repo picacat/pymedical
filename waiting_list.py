@@ -637,6 +637,29 @@ class WaitingList(QtWidgets.QMainWindow):
 
         return room
 
+    def _get_current_wait_case_key(self):
+        table = self.ui.tableWidget_waiting_list
+        row_no = table.currentRow()
+        if row_no < 0:
+            return None
+
+        item = table.item(row_no, WAITING_LIST_COL_NO["CaseKey"])
+        if item is None:
+            return None
+
+        return item.text()
+
+    def _restore_wait_selection(self, case_key):
+        if case_key in (None, ""):
+            return
+
+        table = self.ui.tableWidget_waiting_list
+        for row_no in range(table.rowCount()):
+            item = table.item(row_no, WAITING_LIST_COL_NO["CaseKey"])
+            if item is not None and item.text() == case_key:
+                table.setCurrentCell(row_no, WAITING_LIST_COL_NO["Name"])
+                return
+
     def read_wait(self):
         if self.combo_box_doctor is not None:
             doctor = self.combo_box_doctor.currentText()
@@ -657,7 +680,9 @@ class WaitingList(QtWidgets.QMainWindow):
                 {room_script}
                 {order_script}
         """
+        case_key = self._get_current_wait_case_key()  # ← 新增
         self.table_widget_waiting_list.set_db_data(sql, self._set_table_data)
+        self._restore_wait_selection(case_key)  # ← 新增
 
         row_count = self.table_widget_waiting_list.row_count()
         if row_count > 0:
@@ -2113,100 +2138,6 @@ class WaitingList(QtWidgets.QMainWindow):
         current_row = self.ui.tableWidget_wait_completed.currentRow()
         self._set_wait_completed_data(current_row, row)
 
-    def _set_late(self):
-        msg_box = dialog_utils.get_message_box(
-            "設定為過號",
-            QMessageBox.Warning,
-            '<font size="5" color="red"><b>確定設定此筆病歷為過號?</b></font>',
-            "注意！資料設定後, 將無法回復!",
-        )
-        set_late = msg_box.exec_()
-        if not set_late:
-            return
-
-        case_key = self.table_widget_waiting_list.field_value(
-            WAITING_LIST_COL_NO["CaseKey"]
-        )
-        remark = self.table_widget_waiting_list.field_value(
-            WAITING_LIST_COL_NO["Remark"]
-        )
-
-        if remark in ["", None]:
-            remark = LATE_KEYWROD
-        else:
-            remark += LATE_KEYWROD
-
-        sql = f'''
-            UPDATE cases
-            SET
-                Remark = "{remark}"
-            WHERE
-                CaseKey = {case_key}
-        '''
-        self.database.exec_sql(sql)
-
-        sql = f'''
-            UPDATE wait
-            SET
-                Remark = "{remark}"
-            WHERE
-                CaseKey = {case_key}
-        '''
-        self.database.exec_sql(sql)
-
-        self.read_wait()
-        self.notification_client.broadcast(
-            notification_utils.CHANNEL_BULLETIN, "refresh_wait"
-        )
-
-    def _cancel_late(self):
-        msg_box = dialog_utils.get_message_box(
-            "取消過號",
-            QMessageBox.Warning,
-            '<font size="5" color="red"><b>確定取消此筆過號病歷?</b></font>',
-            "注意！資料設定後, 將無法回復!",
-        )
-        clear_late = msg_box.exec_()
-        if not clear_late:
-            return
-
-        case_key = self.table_widget_waiting_list.field_value(
-            WAITING_LIST_COL_NO["CaseKey"]
-        )
-        remark = self.table_widget_waiting_list.field_value(
-            WAITING_LIST_COL_NO["Remark"]
-        )
-
-        if "過號" not in remark:
-            self.notification_client.broadcast(
-                notification_utils.CHANNEL_BULLETIN, "refresh_wait"
-            )
-            return
-
-        remark = remark.replace(LATE_KEYWROD, "")
-        sql = f'''
-            UPDATE cases
-            SET
-                Remark = "{remark}"
-            WHERE
-                CaseKey = {case_key}
-        '''
-        self.database.exec_sql(sql)
-
-        sql = f'''
-            UPDATE wait
-            SET
-                Remark = "{remark}"
-            WHERE
-                CaseKey = {case_key}
-        '''
-        self.database.exec_sql(sql)
-
-        self.read_wait()
-        self.notification_client.broadcast(
-            notification_utils.CHANNEL_BULLETIN, "refresh_wait"
-        )
-
     def _change_ins_type(self):
         case_key = self.table_widget_waiting_list.field_value(
             WAITING_LIST_COL_NO["CaseKey"]
@@ -2343,4 +2274,112 @@ class WaitingList(QtWidgets.QMainWindow):
             case_key,
             patient_key,
             patient_name,
+        )
+
+    def _get_selected_wait(self):
+        """跳出對話框之前先快照選取列"""
+        case_key = self.table_widget_waiting_list.field_value(
+            WAITING_LIST_COL_NO["CaseKey"]
+        )
+        if case_key in ("", None):
+            return None
+
+        return {
+            "case_key": case_key,
+            "name": self.table_widget_waiting_list.field_value(
+                WAITING_LIST_COL_NO["Name"]
+            ),
+        }
+
+    def _get_wait_remark(self, case_key):
+        """從資料庫讀最新備註; 掛號資料已不存在時回傳 None"""
+        rows = self.database.select_record(
+            "SELECT Remark FROM wait WHERE CaseKey = %s",
+            params=(case_key,),
+        )
+        if len(rows) <= 0:
+            return None
+
+        return string_utils.xstr(rows[0]["Remark"])
+
+    def _update_remark(self, case_key, remark):
+        self.database.exec_sql(
+            "UPDATE cases SET Remark = %s WHERE CaseKey = %s",
+            params=(remark, case_key),
+        )
+        self.database.exec_sql(
+            "UPDATE wait SET Remark = %s WHERE CaseKey = %s",
+            params=(remark, case_key),
+        )
+
+    def _set_late(self):
+        selected = self._get_selected_wait()
+        if selected is None:
+            return
+
+        case_key = selected["case_key"]
+        name = selected["name"]
+
+        msg_box = dialog_utils.get_message_box(
+            "設定為過號",
+            QMessageBox.Warning,
+            f'<font size="5" color="red"><b>確定將 <font color="blue">{name}</font> 設定為過號?</b></font>',
+            "注意！資料設定後, 將無法回復!",
+        )
+        if not msg_box.exec_():
+            return
+
+        remark = self._get_wait_remark(case_key)
+        if remark is None:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "資料已變更",
+                f'<font size="5" color="red"><b>{name}的掛號資料已被刪除, 未設定過號.</b></font>',
+                "請重新選取後再操作.",
+            )
+            self.read_wait()
+            return
+
+        if LATE_KEYWROD not in remark:  # 避免重複加上(過號)
+            self._update_remark(case_key, remark + LATE_KEYWROD)
+
+        self.read_wait()
+        self.notification_client.broadcast(
+            notification_utils.CHANNEL_BULLETIN, "refresh_wait"
+        )
+
+    def _cancel_late(self):
+        selected = self._get_selected_wait()
+        if selected is None:
+            return
+
+        case_key = selected["case_key"]
+        name = selected["name"]
+
+        msg_box = dialog_utils.get_message_box(
+            "取消過號",
+            QMessageBox.Warning,
+            f'<font size="5" color="red"><b>確定取消 <font color="blue">{name}</font> 的過號?</b></font>',
+            "注意！資料設定後, 將無法回復!",
+        )
+        if not msg_box.exec_():
+            return
+
+        remark = self._get_wait_remark(case_key)
+        if remark is None:
+            system_utils.show_message_box(
+                QMessageBox.Critical,
+                "資料已變更",
+                f'<font size="5" color="red"><b>{name}的掛號資料已被刪除, 未取消過號.</b></font>',
+                "請重新選取後再操作.",
+            )
+            self.read_wait()
+            return
+
+        if LATE_KEYWROD in remark:
+            self._update_remark(case_key, remark.replace(LATE_KEYWROD, ""))
+
+        self.read_wait()
+        self.notification_client.broadcast(
+            notification_utils.CHANNEL_BULLETIN, "refresh_wait"
         )

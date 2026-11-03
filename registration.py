@@ -4,9 +4,10 @@ import platform
 import re
 import subprocess
 import sys
+from contextlib import contextmanager
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QPushButton
+from PyQt5.QtWidgets import QInputDialog, QMessageBox, QPushButton
 
 from libs import (
     alleypin_utils,
@@ -66,6 +67,9 @@ class Registration(QtWidgets.QMainWindow):
         self.smart_card_reader = None
         self.base_health_care_fee = 0
         self.check_box_self_items_list = []
+
+        self._wait_busy = 0
+        self._wait_refresh_pending = False
 
         self.pregnant_treat_type_list = ["助孕照護", "保胎照護"]
         self.temp_card_list = ["XX1", "XX2", "XX3", "XX4", "XX5"]
@@ -867,7 +871,68 @@ class Registration(QtWidgets.QMainWindow):
         if not self.ui.tabWidget_list.isEnabled():
             return
 
+        if self._wait_busy > 0:  # 正在刪除/退掛, 先記著, 結束後再補讀
+            self._wait_refresh_pending = True
+            return
+
         self.read_wait()
+
+    @contextmanager
+    def _hold_wait_refresh(self):
+        """刪除/退掛期間暫停候診名單自動更新 (可巢狀)"""
+        self._wait_busy += 1
+        try:
+            yield
+        finally:
+            self._wait_busy -= 1
+            if self._wait_busy == 0 and self._wait_refresh_pending:
+                self._wait_refresh_pending = False
+                self.read_wait()
+
+    def _selected_wait_info(self):
+        """快照目前選取列, 之後一律用快照值, 不再讀 currentRow"""
+        tab_name = self.ui.tabWidget_list.tabText(self.ui.tabWidget_list.currentIndex())
+        if tab_name == "候診名單":
+            tw, cols = self.table_widget_wait, self.wait_column
+        else:
+            tw, cols = self.table_widget_wait_completed, self.wait_done_column
+
+        wait_key = tw.field_value(cols["WaitKey"])
+        if wait_key in (None, ""):
+            return None
+
+        return {
+            "tab_name": tab_name,
+            "wait_key": wait_key,
+            "case_key": tw.field_value(cols["CaseKey"]),
+            "name": tw.field_value(cols["Name"]),
+            "card": tw.field_value(cols["Card"]),
+            "room": tw.field_value(cols["Room"]),
+            "doctor": tw.field_value(cols["Doctor"]),
+        }
+
+    def _get_current_wait_case_key(self):
+        table = self.ui.tableWidget_wait
+        row_no = table.currentRow()
+        if row_no < 0:
+            return None
+
+        item = table.item(row_no, self.wait_column["CaseKey"])
+        if item is None:
+            return None
+
+        return item.text()
+
+    def _restore_wait_selection(self, case_key):
+        if case_key in (None, ""):
+            return
+
+        table = self.ui.tableWidget_wait
+        for row_no in range(table.rowCount()):
+            item = table.item(row_no, self.wait_column["CaseKey"])
+            if item is not None and item.text() == case_key:
+                table.setCurrentCell(row_no, self.wait_column["Name"])
+                return
 
     def read_wait(self):
         order_type = self.system_settings.field("掛號候診名單排序方式")
@@ -889,7 +954,10 @@ class Registration(QtWidgets.QMainWindow):
                 wait.DoctorDone = "False"
             {order_by_script}
         """
+        case_key = self._get_current_wait_case_key()  # ← 新增
         self.table_widget_wait.set_db_data(sql, self._set_wait_data)
+        self._restore_wait_selection(case_key)  # ← 新增
+
         row_count = self.table_widget_wait.row_count()
 
         if row_count > 0:
@@ -3266,106 +3334,104 @@ class Registration(QtWidgets.QMainWindow):
         return card
 
     # 刪除候診名單
-    def delete_wait_list(self, show_warning=None):
-        tab_name = self.ui.tabWidget_list.tabText(self.ui.tabWidget_list.currentIndex())
+    def delete_wait_list(self, show_warning=None, info=None):
+        if info is None:
+            info = self._selected_wait_info()
+        if info is None:
+            return False
+
+        wait_key = info["wait_key"]
+        case_key = info["case_key"]
+        name = info["name"]
+        card = info["card"]
+        room = info["room"]
+        doctor = info["doctor"]
         now = date_utils.now_to_str()
-        if tab_name == "候診名單":
-            wait_key = self.table_widget_wait.field_value(self.wait_column["WaitKey"])
-            case_key = self.table_widget_wait.field_value(self.wait_column["CaseKey"])
-            name = self.table_widget_wait.field_value(self.wait_column["Name"])
-            card = self.table_widget_wait.field_value(self.wait_column["Card"])
-            room = self.table_widget_wait.field_value(self.wait_column["Room"])
-            doctor = self.table_widget_wait.field_value(self.wait_column["Doctor"])
-            table_widget = self.ui.tableWidget_wait
-        else:
-            wait_key = self.table_widget_wait_completed.field_value(
-                self.wait_done_column["WaitKey"]
-            )
-            case_key = self.table_widget_wait_completed.field_value(
-                self.wait_done_column["CaseKey"]
-            )
-            name = self.table_widget_wait_completed.field_value(
-                self.wait_done_column["Name"]
-            )
-            card = self.table_widget_wait_completed.field_value(
-                self.wait_done_column["Card"]
-            )
-            room = self.table_widget_wait_completed.field_value(
-                self.wait_done_column["Room"]
-            )
-            doctor = self.table_widget_wait_completed.field_value(
-                self.wait_done_column["Doctor"]
-            )
-            table_widget = self.ui.tableWidget_wait_completed
 
-        if show_warning:
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Warning)
-            msg_box.setWindowTitle("刪除掛號資料")
-            msg_box.setText(f"""
-                <font size='4' color='red'>
-                    <b>確定刪除 <font color='blue'>{name}</font> 的掛號資料?</b>
-                </font>
-            """)
-            msg_box.setInformativeText("注意！掛號資料刪除後無法回復!")
-            msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
-            msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
-            delete_record = msg_box.exec_()
-            if not delete_record:
-                return
+        with self._hold_wait_refresh():
+            if show_warning:
+                msg_box = QMessageBox()
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setWindowTitle("刪除掛號資料")
+                msg_box.setText(f"""
+                    <font size='4' color='red'>
+                        <b>確定刪除 <font color='blue'>{name}</font> 的掛號資料?</b>
+                    </font>
+                """)
+                msg_box.setInformativeText("注意！掛號資料刪除後無法回復!")
+                msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+                msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+                delete_record = msg_box.exec_()
+                if not delete_record:
+                    return False
 
-            if self.user_name == "超級使用者":
-                pass
-            elif not system_utils.verify_confirm_code():
-                return
+                if self.user_name == "超級使用者":
+                    pass
+                elif not system_utils.verify_confirm_code():
+                    return False
 
-        self.database.delete_record("wait", "WaitKey", wait_key)
-
-        if (
-            self.system_settings.field("alleypin") == "Y"
-        ):  # 在刪除病歷檔前推播，否則資料會找不到
-            try:
-                alleypin_utils.cancel_outpatient_alleypin_appointments(
-                    self.database, self.system_settings, case_key
-                )
-                alleypin_utils.update_progresses(
-                    self.database, self.system_settings, case_key
-                )
-            except Exception:
+            # 防呆: 確認 WaitKey 與 CaseKey 仍是同一筆
+            rows = self.database.select_record(
+                "SELECT WaitKey FROM wait WHERE WaitKey = %s AND CaseKey = %s",
+                params=(wait_key, case_key),
+            )
+            if len(rows) <= 0:
                 system_utils.show_message_box(
                     QMessageBox.Critical,
-                    "翔評主機連線錯誤",
-                    '<font size="5" color="red"><b>翔評伺服器連線發生錯誤, 請聯絡翔評客服.</b></font>',
-                    "翔評主機網路不通.",
+                    "資料已變更",
+                    f'<font size="5" color="red"><b>{name}的掛號資料已被變更或刪除, 未執行刪除.</b></font>',
+                    "請重新選取後再操作.",
+                )
+                return False
+
+            self.database.delete_record("wait", "WaitKey", wait_key)
+
+            if (
+                self.system_settings.field("alleypin") == "Y"
+            ):  # 在刪除病歷檔前推播，否則資料會找不到
+                try:
+                    alleypin_utils.cancel_outpatient_alleypin_appointments(
+                        self.database, self.system_settings, case_key
+                    )
+                    alleypin_utils.update_progresses(
+                        self.database, self.system_settings, case_key
+                    )
+                except Exception:
+                    system_utils.show_message_box(
+                        QMessageBox.Critical,
+                        "翔評主機連線錯誤",
+                        '<font size="5" color="red"><b>翔評伺服器連線發生錯誤, 請聯絡翔評客服.</b></font>',
+                        "翔評主機網路不通.",
+                    )
+
+            self.database.delete_record("deposit", "CaseKey", case_key)
+            self.database.delete_record("debt", "CaseKey", case_key)
+            self.database.delete_record("cases", "CaseKey", case_key)
+            case_utils.delete_traditional_health_care(self.database, case_key)
+
+            log = f"{name}於{now}執行掛號刪除, 卡序:{card}, 主治醫師: {room}診{doctor}醫師"
+            self._write_event_log("資料刪除", log)
+
+            rows = self.database.select_record(
+                "SELECT PrescriptKey FROM prescript WHERE CaseKey = %s",
+                params=(case_key,),
+            )
+            for row in rows:
+                self.database.delete_record(
+                    "presextend", "PrescriptKey", row["PrescriptKey"]
                 )
 
-        self.database.delete_record("deposit", "CaseKey", case_key)
-        self.database.delete_record("debt", "CaseKey", case_key)
-        self.database.delete_record("cases", "CaseKey", case_key)
-        case_utils.delete_traditional_health_care(self.database, case_key)
+            self.database.delete_record("prescript", "CaseKey", case_key)
 
-        log = f"{name}於{now}執行掛號刪除, 卡序:{card}, 主治醫師: {room}診{doctor}醫師"
-        self._write_event_log("資料刪除", log)
-
-        sql = f"""
-            SELECT PrescriptKey FROM prescript
-            WHERE
-                CaseKey = {case_key}
-        """
-        rows = self.database.select_record(sql)
-        for row in rows:
-            prescript_key = row["PrescriptKey"]
-            self.database.delete_record("presextend", "PrescriptKey", prescript_key)
-
-        self.database.delete_record("prescript", "CaseKey", case_key)
-
-        table_widget.removeRow(table_widget.currentRow())
-        if self.ui.tableWidget_wait.rowCount() <= 0:
-            self._set_wait_tool_button(False)
-        if self.ui.tableWidget_wait_completed.rowCount() <= 0:
-            self._set_wait_completed_tool_button(False)
+        # 不用 removeRow(currentRow()), 直接重讀 (工具按鈕狀態也會一起更新)
+        if info["tab_name"] == "候診名單":
+            self.read_wait()
+        else:
+            self._read_wait_completed()
 
         self._send_broadcast_data(doctor, room)
+
+        return True
 
     def _send_broadcast_data(self, doctor, room):
         message = ",".join(
@@ -3381,142 +3447,118 @@ class Registration(QtWidgets.QMainWindow):
 
     # IC卡退掛
     def cancel_ic_card(self):
-        tab_name = self.ui.tabWidget_list.tabText(self.ui.tabWidget_list.currentIndex())
-        if tab_name == "候診名單":
-            table_widget_wait = self.ui.tableWidget_wait
-            # case_key = self.table_widget_wait.field_value(self.wait_column['CaseKey'])  # 2022-11-11
-            # name = self.table_widget_wait.field_value(self.wait_column['Name'])
-        else:
-            table_widget_wait = self.ui.tableWidget_wait_completed
-            # case_key = self.table_widget_wait_completed.field_value(self.wait_done_column['CaseKey'])
-            # name = self.table_widget_wait_completed.field_value(self.wait_done_column['Name'])
-
-        row_no = table_widget_wait.currentRow()
-        try:
-            case_key = table_widget_wait.item(
-                row_no, self.wait_column["CaseKey"]
-            ).text()
-            wait_key = table_widget_wait.item(
-                row_no, self.wait_column["WaitKey"]
-            ).text()
-            name = table_widget_wait.item(row_no, self.wait_column["Name"]).text()
-        except Exception:
+        info = self._selected_wait_info()
+        if info is None:
             return
 
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("健保IC卡退掛")
-        msg_box.setText(f"""
-            <font size='4' color='red'>
-                <b>確定將<font color='blue'>{name}</font>的IC卡掛號資料退掛?</b>
-            </font>
-        """)
-        msg_box.setInformativeText("注意！IC卡退掛後, 將回復原來健保卡序!")
-        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
-        msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
-        cancel_ic_card = msg_box.exec_()
-        if not cancel_ic_card:
-            return
+        case_key = info["case_key"]
+        wait_key = info["wait_key"]
+        name = info["name"]
 
-        if self.user_name == "超級使用者":
-            pass
-        elif not system_utils.verify_confirm_code():
-            return
+        with self._hold_wait_refresh():
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle("健保IC卡退掛")
+            msg_box.setText(f"""
+                <font size='4' color='red'>
+                    <b>確定將<font color='blue'>{name}</font>的IC卡掛號資料退掛?</b>
+                </font>
+            """)
+            msg_box.setInformativeText("注意！IC卡退掛後, 將回復原來健保卡序!")
+            msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+            msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+            confirmed = msg_box.exec_()
+            if not confirmed:
+                return
 
-        sql = f"""
-            SELECT Continuance, Share, Security FROM cases
-            WHERE
-                CaseKey = {case_key}
-        """
-        rows = self.database.select_record(sql)
-        if len(rows) <= 0:
-            system_utils.show_message_box(
-                QMessageBox.Critical,
-                "查無資料",
-                '<font size="5" color="red"><b>找不到病歷資料, 無法執行IC卡退掛作業.</b></font>',
-                "請確定資料是否存在, 如不存在, 請直接刪除掛號資料.",
+            if self.user_name == "超級使用者":
+                pass
+            elif not system_utils.verify_confirm_code():
+                return
+
+            rows = self.database.select_record(
+                "SELECT Continuance, Share, Security FROM cases WHERE CaseKey = %s",
+                params=(case_key,),
             )
-            return
+            if len(rows) <= 0:
+                system_utils.show_message_box(
+                    QMessageBox.Critical,
+                    "查無資料",
+                    '<font size="5" color="red"><b>找不到病歷資料, 無法執行IC卡退掛作業.</b></font>',
+                    "請確定資料是否存在, 如不存在, 請直接刪除掛號資料.",
+                )
+                return
 
-        row = rows[0]
-        course = number_utils.get_integer(row["Continuance"])
-        share_type = string_utils.xstr(row["Share"])
-        if course >= 2 or share_type == "職業傷害":  # 療程不須退掛, 直接刪除
-            self.delete_wait_list(show_warning=True)
-            tab_name = self.ui.tabWidget_list.tabText(
-                self.ui.tabWidget_list.currentIndex()
-            )
-            if tab_name == "候診名單":
-                self.read_wait()
-            else:
-                self._read_wait_completed()
-            return
+            row = rows[0]
+            course = number_utils.get_integer(row["Continuance"])
+            share_type = string_utils.xstr(row["Share"])
+            if course >= 2 or share_type == "職業傷害":  # 療程不須退掛, 直接刪除
+                self.delete_wait_list(show_warning=True, info=info)
+                return
 
-        ic_card_type = case_utils.get_ic_card_type(self.database, case_key)
-        if ic_card_type == "虛擬健保卡":
-            qrcode = None
-            vhc_req_code = vhc_utils.get_vhc_req_code_from_wait(self.database, wait_key)
-            if vhc_req_code is not None:
-                self._request_req_code(show_message=False)
+            ic_card_type = case_utils.get_ic_card_type(self.database, case_key)
+            if ic_card_type == "虛擬健保卡":
+                qrcode = None
                 vhc_req_code = vhc_utils.get_vhc_req_code_from_wait(
                     self.database, wait_key
                 )
+                if vhc_req_code is not None:
+                    self._request_req_code(show_message=False)
+                    vhc_req_code = vhc_utils.get_vhc_req_code_from_wait(
+                        self.database, wait_key
+                    )
 
-                msg_box = QMessageBox()
-                msg_box.setIcon(QMessageBox.Warning)
-                msg_box.setWindowTitle("取得病患授權")
-                msg_box.setText(
-                    """
-                    <font size="5" color="blue">
-                    <b>請問病患是否已在健保快易通授權?<br>
-                    </font>
-                    """
+                    msg_box = QMessageBox()
+                    msg_box.setIcon(QMessageBox.Warning)
+                    msg_box.setWindowTitle("取得病患授權")
+                    msg_box.setText(
+                        """
+                        <font size="5" color="blue">
+                        <b>請問病患是否已在健保快易通授權?<br>
+                        </font>
+                        """
+                    )
+                    msg_box.setInformativeText("取得虛擬健保卡授權")
+                    msg_box.addButton(QPushButton("尚未取得"), QMessageBox.NoRole)
+                    msg_box.addButton(QPushButton("病患已經授權"), QMessageBox.YesRole)
+                    get_response = msg_box.exec_()
+                    if not get_response:
+                        return
+
+                    ic_card = class_utils.get_cshis(
+                        self, self.database, self.system_settings
+                    )
+                    qrcode = ic_card.get_response_token(vhc_req_code)
+                    if qrcode is None:
+                        system_utils.show_message_box(
+                            QMessageBox.Critical,
+                            "無法寫卡",
+                            '<font size="5" color="red"><b>無法使用虛擬健保卡寫卡, 無法取得授權.</b></font>',
+                            "請重新取得授權.",
+                        )
+                        return
+
+                ic_card = class_utils.get_vhccshis(
+                    self, self.database, self.system_settings, qrcode
                 )
-                msg_box.setInformativeText("取得虛擬健保卡授權")
-                msg_box.addButton(QPushButton("尚未取得"), QMessageBox.NoRole)
-                msg_box.addButton(QPushButton("病患已經授權"), QMessageBox.YesRole)
-                get_response = msg_box.exec_()
-                if not get_response:
-                    return
-
+            else:
                 ic_card = class_utils.get_cshis(
                     self, self.database, self.system_settings
                 )
-                qrcode = ic_card.get_response_token(vhc_req_code)
-                if qrcode is None:
-                    system_utils.show_message_box(
-                        QMessageBox.Critical,
-                        "無法寫卡",
-                        '<font size="5" color="red"><b>無法使用虛擬健保卡寫卡, 無法取得授權.</b></font>',
-                        "請重新取得授權.",
-                    )
-                    return
 
-            ic_card = class_utils.get_vhccshis(
-                self, self.database, self.system_settings, qrcode
-            )
-        else:
-            ic_card = class_utils.get_cshis(self, self.database, self.system_settings)
+            card_datetime = case_utils.extract_security_xml(row["Security"], "寫卡時間")
+            if string_utils.xstr(card_datetime) == "":
+                system_utils.show_message_box(
+                    QMessageBox.Critical,
+                    "查無資料",
+                    '<font size="5" color="red"><b>找不到健保IC卡讀卡資料, 無法執行IC卡退掛作業.</b></font>',
+                    "請確定此筆病歷是否成功的讀卡, 如不成功, 請直接刪除掛號資料.",
+                )
+                return
 
-        card_datetime = case_utils.extract_security_xml(row["Security"], "寫卡時間")
-        if string_utils.xstr(card_datetime) == "":
-            system_utils.show_message_box(
-                QMessageBox.Critical,
-                "查無資料",
-                '<font size="5" color="red"><b>找不到健保IC卡讀卡資料, 無法執行IC卡退掛作業.</b></font>',
-                "請確定此筆病歷是否成功的讀卡, 如不成功, 請直接刪除掛號資料.",
-            )
-            return
-
-        nhi_datetime = date_utils.west_datetime_to_nhi_datetime(card_datetime)
-        if ic_card.return_seq_number(nhi_datetime):
-            self.delete_wait_list(show_warning=False)
-
-        tab_name = self.ui.tabWidget_list.tabText(self.ui.tabWidget_list.currentIndex())
-        if tab_name == "候診名單":
-            self.read_wait()
-        else:
-            self._read_wait_completed()
+            nhi_datetime = date_utils.west_datetime_to_nhi_datetime(card_datetime)
+            if ic_card.return_seq_number(nhi_datetime):
+                self.delete_wait_list(show_warning=False, info=info)
 
     def _check_ins_ok_before_save(self):
         ins_type = self.ui.comboBox_ins_type.currentText()
@@ -6232,17 +6274,11 @@ class Registration(QtWidgets.QMainWindow):
             self.wait_done_column["ShareType"]
         )
 
-        card = self._get_card(
-            self.table_widget_wait_completed.field_value(self.wait_done_column["Card"])
+        card = self.table_widget_wait_completed.field_value(
+            self.wait_done_column["Card"]
         )
-        course = number_utils.get_integer(
-            self.table_widget_wait_completed.field_value(
-                self.wait_done_column["Continuance"]
-            )
-        )
-
-        if course == 0:
-            course = None
+        course = self._get_course(card)
+        card = self._get_card(card)
 
         if qrcode is None:
             qrcode = system_utils.get_qrcode_from_file(self)

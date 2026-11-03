@@ -1,6 +1,8 @@
 # 批價作業 2018.12.10
 # -*- coding: UTF-8 -*-
 
+from contextlib import contextmanager
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QPushButton
 
@@ -42,7 +44,7 @@ class Cashier(QtWidgets.QMainWindow):
             database=self.database,
             station=self.program_name,
         )
-
+        self._refresh_pending = False
         self._set_ui()
         self._set_signal()
         self._set_permission()
@@ -167,31 +169,80 @@ class Cashier(QtWidgets.QMainWindow):
             self.ui.radioButton_period3.setChecked(True)
 
     def read_wait(self):
+        """手動重讀 (切換篩選條件、批價完成後): 金額欄位全部重載"""
+        self._reload(keep_detail=False)
+
+    def refresh_wait(self):
+        """收到通知的自動更新: 選取的病人還在名單上, 就不動右邊金額"""
+        if not self.allow_refresh_wait_list:
+            self._refresh_pending = True
+            return
+
+        self._reload(keep_detail=True)
+
+    def _reload(self, keep_detail):
+        current_case_key = self._get_current_case_key()
+
+        table = self.ui.tableWidget_charge_list
+        table.blockSignals(True)  # 重填期間不要觸發 _pharmacy_list_changed
+        try:
+            if self.ui.radioButton_unpaid.isChecked():
+                payment = "未批價"
+            elif self.ui.radioButton_paid.isChecked():
+                payment = "已批價"
+            else:
+                payment = ""
+
+            self.ui.pushButton_modify.setVisible(payment == "已批價")
+            self._read_pharmacy_list(payment)
+        finally:
+            table.blockSignals(False)
+
+        found = self._restore_selection(current_case_key)
+        if keep_detail and found:
+            return  # 同一位病人, 保留櫃台正在輸入的金額
+
         self.ui.label_fee_error.setVisible(False)
-        self.ui.pushButton_modify.setVisible(False)
-
-        if self.ui.radioButton_unpaid.isChecked():
-            payment = "未批價"
-        elif self.ui.radioButton_paid.isChecked():
-            payment = "已批價"
-        else:
-            payment = ""
-
-        if payment == "已批價":
-            self.ui.pushButton_modify.setVisible(True)
-
-        self._read_pharmacy_list(payment)
-
-        if self.ui.tableWidget_charge_list.rowCount() > 0:
-            action_enabled = True
-        else:
-            action_enabled = False
-
-        self.ui.action_print_prescription.setEnabled(action_enabled)
-        self.ui.action_print_receipt.setEnabled(action_enabled)
-        self.ui.action_print_misc.setEnabled(action_enabled)
-
         self._pharmacy_list_changed()
+
+    def _get_current_case_key(self):
+        table = self.ui.tableWidget_charge_list
+        row_no = table.currentRow()
+        if row_no < 0:
+            return None
+
+        item = table.item(row_no, 1)
+        if item is None:
+            return None
+
+        return item.text()
+
+    def _restore_selection(self, case_key):
+        if case_key in (None, ""):
+            return False
+
+        table = self.ui.tableWidget_charge_list
+        for row_no in range(table.rowCount()):
+            item = table.item(row_no, 1)
+            if item is not None and item.text() == case_key:
+                table.blockSignals(True)
+                table.setCurrentCell(row_no, 4)
+                table.blockSignals(False)
+                return True
+
+        return False
+
+    @contextmanager
+    def _hold_refresh(self):
+        """批價/修正期間暫停自動更新, 結束後一定還原並補做"""
+        self.allow_refresh_wait_list = False
+        try:
+            yield
+        finally:
+            self.allow_refresh_wait_list = True
+            if self._refresh_pending:
+                self._refresh_pending = False
+                self.refresh_wait()
 
     def _get_period_script(self, table_name):
         period_script = ""
@@ -234,7 +285,7 @@ class Cashier(QtWidgets.QMainWindow):
 
         self.table_widget_charge_list.set_db_data(sql, self._set_table_data)
 
-        self._pharmacy_list_changed()
+        # self._pharmacy_list_changed()
         if self.table_widget_charge_list.row_count() <= 0:
             enabled = False
         else:
@@ -544,101 +595,94 @@ class Cashier(QtWidgets.QMainWindow):
         )
         self._calculate_receipt_fee2()
 
-    def refresh_wait(self):
-        if not self.allow_refresh_wait_list:
-            return
-
-        self.read_wait()
-
     def _apply_charge(self):
-        self.allow_refresh_wait_list = False
+        with self._hold_refresh():
+            sender_name = self.sender().objectName()
+            wait_key = self.table_widget_charge_list.field_value(0)
+            case_key = self.table_widget_charge_list.field_value(1)
+            room = self.table_widget_charge_list.field_value(2)
+            patient_key = self.table_widget_charge_list.field_value(3)
+            patient_name = self.table_widget_charge_list.field_value(4)
+            doctor = self.table_widget_charge_list.field_value(10)
 
-        sender_name = self.sender().objectName()
-        wait_key = self.table_widget_charge_list.field_value(0)
-        case_key = self.table_widget_charge_list.field_value(1)
-        room = self.table_widget_charge_list.field_value(2)
-        patient_key = self.table_widget_charge_list.field_value(3)
-        patient_name = self.table_widget_charge_list.field_value(4)
-        doctor = self.table_widget_charge_list.field_value(10)
-
-        debt_message = ""
-        debt_fee = number_utils.get_integer(self.ui.lineEdit_debt.text())
-        if debt_fee > 0:
-            debt_message = f'<font color="red"><b>此人有欠款{debt_fee}元</b></font>'
-
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("批價存檔")
-        msg_box.setText(
-            f"<font size='4' color='red'><b>確定將病患 {patient_name} 批價存檔?</b></font>"
-        )
-        msg_box.setInformativeText(
-            f"注意！批價存檔後, 此筆資料將歸檔至已批價名單!<br>{debt_message}"
-        )
-        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
-        msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
-        apply_charge = msg_box.exec_()
-        if not apply_charge:
-            self.allow_refresh_wait_list = True
-            return
-
-        ic_card = None
-        need_write_ic_card = cshis_utils.need_write_ic_card(
-            self.database, self.system_settings, case_key, "批價"
-        )
-        if need_write_ic_card:
-            ic_card_type = case_utils.get_ic_card_type(self.database, case_key)
-            if ic_card_type == "虛擬健保卡":
-                ic_card = class_utils.get_vhccshis(
-                    self, self.database, self.system_settings, None
-                )
-            else:
-                ic_card = class_utils.get_cshis(
-                    self, self.database, self.system_settings
-                )
-
-            if not ic_card.insert_correct_ic_card(patient_key):
+            if case_key in ["", None]:
                 return
 
-        self._save_records(wait_key, case_key)
-        if sender_name == "action_save":  # 批價列印
-            print_order = self.system_settings.field("病歷存檔列印順序")
-            if print_order == "列印順序1":
-                self._print_prescript(case_key)
-                self._print_receipt(case_key)
-                self._print_misc(case_key)
-                self._print_misc2(case_key)
-                self._print_misc3(case_key)
-            elif print_order == "列印順序2":
-                self._print_misc(case_key)
-                self._print_misc2(case_key)
-                self._print_misc3(case_key)
-                self._print_prescript(case_key)
-                self._print_receipt(case_key)
-            elif print_order == "列印順序3":
-                self._print_misc(case_key)
-                self._print_misc2(case_key)
-                self._print_misc3(case_key)
-                self._print_receipt(case_key)
-                self._print_prescript(case_key)
-            else:
-                self._print_receipt(case_key)
-                self._print_misc(case_key)
-                self._print_misc2(case_key)
-                self._print_misc3(case_key)
-                self._print_prescript(case_key)
+            debt_message = ""
+            debt_fee = number_utils.get_integer(self.ui.lineEdit_debt.text())
+            if debt_fee > 0:
+                debt_message = f'<font color="red"><b>此人有欠款{debt_fee}元</b></font>'
 
-            if self.system_settings.field("電子處方箋路徑") not in ["", None]:
-                prescript_utils.save_electrical_prescript(
-                    self.database, self.system_settings, case_key
-                )
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle("批價存檔")
+            msg_box.setText(
+                f"<font size='4' color='red'><b>確定將病患 {patient_name} 批價存檔?</b></font>"
+            )
+            msg_box.setInformativeText(
+                f"注意！批價存檔後, 此筆資料將歸檔至已批價名單!<br>{debt_message}"
+            )
+            msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+            msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+            if not msg_box.exec_():
+                return
 
-        if need_write_ic_card and ic_card is not None:
-            ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
+            ic_card = None
+            need_write_ic_card = cshis_utils.need_write_ic_card(
+                self.database, self.system_settings, case_key, "批價"
+            )
+            if need_write_ic_card:
+                ic_card_type = case_utils.get_ic_card_type(self.database, case_key)
+                if ic_card_type == "虛擬健保卡":
+                    ic_card = class_utils.get_vhccshis(
+                        self, self.database, self.system_settings, None
+                    )
+                else:
+                    ic_card = class_utils.get_cshis(
+                        self, self.database, self.system_settings
+                    )
 
-        self._send_broadcast_data(doctor, room)
-        self.read_wait()
-        self.allow_refresh_wait_list = True
+                if not ic_card.insert_correct_ic_card(patient_key):
+                    return  # finally 會把 allow_refresh_wait_list 設回 True
+
+            self._save_records(wait_key, case_key)
+            if sender_name == "action_save":  # 批價列印
+                print_order = self.system_settings.field("病歷存檔列印順序")
+                if print_order == "列印順序1":
+                    self._print_prescript(case_key)
+                    self._print_receipt(case_key)
+                    self._print_misc(case_key)
+                    self._print_misc2(case_key)
+                    self._print_misc3(case_key)
+                elif print_order == "列印順序2":
+                    self._print_misc(case_key)
+                    self._print_misc2(case_key)
+                    self._print_misc3(case_key)
+                    self._print_prescript(case_key)
+                    self._print_receipt(case_key)
+                elif print_order == "列印順序3":
+                    self._print_misc(case_key)
+                    self._print_misc2(case_key)
+                    self._print_misc3(case_key)
+                    self._print_receipt(case_key)
+                    self._print_prescript(case_key)
+                else:
+                    self._print_receipt(case_key)
+                    self._print_misc(case_key)
+                    self._print_misc2(case_key)
+                    self._print_misc3(case_key)
+                    self._print_prescript(case_key)
+
+                if self.system_settings.field("電子處方箋路徑") not in ["", None]:
+                    prescript_utils.save_electrical_prescript(
+                        self.database, self.system_settings, case_key
+                    )
+
+            if need_write_ic_card and ic_card is not None:
+                ic_card.write_ic_medical_record(case_key, cshis_utils.NORMAL_CARD)
+
+            self._send_broadcast_data(doctor, room)
+            self.read_wait()
 
     def _calculate_receipt_fee(self):
         receipt_drug_share_fee = number_utils.get_integer(
@@ -911,7 +955,14 @@ class Cashier(QtWidgets.QMainWindow):
         self.database.exec_sql(sql)
 
     def _modify_income(self):
+        with self._hold_refresh():
+            self._do_modify_income()
+
+    def _do_modify_income(self):
         case_key = self.table_widget_charge_list.field_value(1)
+        if case_key in ["", None]:
+            return
+
         patient_name = self.table_widget_charge_list.field_value(4)
 
         msg_box = QMessageBox()
