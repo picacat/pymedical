@@ -2260,27 +2260,6 @@ class Registration(QtWidgets.QMainWindow):
         if len(rows) > 0:
             row = rows[0]
 
-            # current_period = registration_utils.get_current_period(self.system_settings)
-            # reserve_period = string_utils.xstr(row['Period'])
-            # if reserve_period != current_period:
-            #     title = '預約報到逾時'
-            #     message = f'<font size="5" color="red"><b>今日預約為{reserve_period}已經逾時, 即將改為現場預約.</b></font>'
-
-            #     if (current_period == '早班' and reserve_period in ['午班', '晚班']) or \
-            #             (current_period == '午班' and reserve_period == '晚班'):
-            #         title = '預約報到提早'
-            #         message = f'<font size="5" color="red"><b>今日預約為{reserve_period}無法提早報到，即將改為現場預約.</b></font>'
-
-            #     if title in ['預約報到逾時']:
-            #         system_utils.show_message_box(
-            #             QMessageBox.Critical,
-            #             title,
-            #             message,
-            #             '請提醒病人注意預約報到時間.'
-            #         )
-
-            #         return False
-
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Information)
             msg_box.setWindowTitle("今日已有預約掛號")
@@ -5279,7 +5258,10 @@ class Registration(QtWidgets.QMainWindow):
         self.vhc_ic_card = vhc_ic_card
         self.reserve_key = reserve_key
         row = rows[0]
+
         doctor = string_utils.xstr(row["Doctor"])
+        doctor = doctor.replace("自費門診", "")  # 日青中醫自費門診
+
         period = string_utils.xstr(row["Period"])
         remark = string_utils.xstr(row["Remark"])
         patient_key = string_utils.xstr(row["PatientKey"])
