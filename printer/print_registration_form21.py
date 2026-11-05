@@ -104,11 +104,18 @@ class PrintRegistrationForm21:
         else:
             total_label = f"<br>實收金額: {total_fee!s}元"
 
+        notice = """
+            <ol>
+                <li>看完診請至櫃台批價領取藥號單，再至針灸區做針灸、電療等治療。</li>
+                <li>掛完號後為避免久候，請掃QRCode使用看診進度APP，提前4-6個號碼報到。</li>
+            </ol>
+        """
         url = "https://www.mainpi.com/query?i=2120"
         line_url = "https://liff.line.me/1645278921-kWRPP32q/?accountId=yus0352i"
         doctor_line = f"{room}診 {doctor}醫師"
 
         if clinic_name in ["厚德堂中醫診所"]:
+            notice = "<br>"
             url = "https://www.mainpi.com/query?i=2674"
             line_url = "https://lin.ee/YER4nq3"
             doctor_line = f"{doctor}醫師"
@@ -140,10 +147,7 @@ class PrintRegistrationForm21:
                     </div>
                     <center style="font-size:20px">{doctor_line}</center>
                     <center style="font-size:20px">診號: {regist_no:0>3}</center>
-                    <ol>
-                        <li>看完診請至櫃台批價領取藥號單，再至針灸區做針灸、電療等治療。</li>
-                        <li>掛完號後為避免久候，請掃QRCode使用看診進度APP，提前4-6個號碼報到。</li>
-                    </ol>
+                    {notice}
                     <br>
                     <img src="data:;base64,{app_qrcode}" alt="" height="80" width="80">
                     &nbsp;&nbsp;&nbsp;&nbsp;
