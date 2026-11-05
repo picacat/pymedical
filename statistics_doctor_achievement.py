@@ -214,26 +214,20 @@ class StatisticsDoctorAchievement(QtWidgets.QMainWindow):
     def _set_table_data(self, row_no, row):
         case_key = string_utils.xstr(row["CaseKey"])
 
-        diag_with_nurse_fee = charge_utils.get_ins_diag_fee(
-            self.database,
-            self.system_settings,
-            diag_code="A01",
-        )
+        # ---------- 健保診察費 ----------
         diag_fee = number_utils.get_integer(row["DiagFee"])
-        if diag_fee == diag_with_nurse_fee:
+        if diag_fee == self.diag_with_nurse_fee:
             diag_fee = self.diag_fee
 
         diag_fee_rate = self.ui.spinBox_ins_diag_rate.value()
         if self.ui.label_ins_diag_rate_type.text() == "$":
-            if diag_fee > 0:
-                diag_fee_commission = diag_fee_rate
-            else:
-                diag_fee_commission = 0
+            diag_fee_commission = diag_fee_rate if diag_fee > 0 else 0
         else:
             diag_fee_commission = number_utils.round_up_ex(
                 diag_fee * diag_fee_rate / 100, ".1"
             )
 
+        # ---------- 健保診療費 ----------
         ins_treat_fee = (
             number_utils.get_integer(row["AcupunctureFee"])
             + number_utils.get_integer(row["MassageFee"])
@@ -242,17 +236,13 @@ class StatisticsDoctorAchievement(QtWidgets.QMainWindow):
         )
         ins_treat_fee_rate = self.ui.spinBox_ins_treat_rate.value()
         if self.ui.label_ins_treat_rate_type.text() == "$":
-            if ins_treat_fee > 0:
-                ins_treat_fee_commission = ins_treat_fee_rate
-            else:
-                ins_treat_fee_commission = 0
+            ins_treat_fee_commission = ins_treat_fee_rate if ins_treat_fee > 0 else 0
         else:
             ins_treat_fee_commission = number_utils.round_up_ex(
                 ins_treat_fee * ins_treat_fee_rate / 100, ".1"
             )
 
-        # ---------- 修改開始 ----------
-        # 自費藥費以 cases 為準 (醫師會直接修改這三個欄位)
+        # ---------- 自費金額 (以 cases 為準，醫師會直接修改) ----------
         self_drug_fee = number_utils.get_integer(
             row["SDrugFee"]
         ) + number_utils.get_integer(row["SExpensiveFee"])
@@ -266,48 +256,67 @@ class StatisticsDoctorAchievement(QtWidgets.QMainWindow):
 
         beauty_fee = self._get_self_treat_fee(case_key, beauty_type=True)
         beauty_rate = 40
-        beauty_commission = number_utils.round_up_ex(
-            beauty_fee * beauty_rate / 100, ".1"
-        )
 
         total_fee = number_utils.get_integer(row["TotalFee"])
+        discount_fee = number_utils.get_integer(row["DiscountFee"])
+
+        # 只有針傷時，以批價總額為準（還原成折扣前，下面再統一扣折扣）
+        original_total_fee = (
+            total_fee + discount_fee
+        )  # ★ TotalFee 若為折扣前，拿掉 + discount_fee
         if (
             self_treat_fee > 0
             and self_drug_fee == 0
             and herb_fee == 0
             and beauty_fee == 0
-            and self_treat_fee != total_fee
+            and self_treat_fee != original_total_fee
         ):
-            self_treat_fee = total_fee
-        # ---------- 修改結束 ----------
+            self_treat_fee = original_total_fee
 
-        if self.ui.label_self_drug_rate_type.text() == "$":
-            if self_drug_fee > 0:
-                self_drug_fee_commission = self_drug_fee_rate
+        # ---------- 折扣歸屬 ----------
+        discount_uncertain = False
+        if discount_fee > 0:
+            fees = {
+                "drug": self_drug_fee,
+                "herb": herb_fee,
+                "treat": self_treat_fee,
+                "beauty": beauty_fee,
+            }
+            target = self._get_discount_target(fees, discount_fee)
+            if target == "drug":
+                self_drug_fee -= discount_fee
+            elif target == "herb":
+                herb_fee -= discount_fee
+            elif target == "treat":
+                self_treat_fee -= discount_fee
+            elif target == "beauty":
+                beauty_fee -= discount_fee
             else:
-                self_drug_fee_commission = 0
+                discount_uncertain = True
+
+        # ---------- 自費抽成 (折扣後才計算) ----------
+        if self.ui.label_self_drug_rate_type.text() == "$":
+            self_drug_fee_commission = self_drug_fee_rate if self_drug_fee > 0 else 0
         else:
             self_drug_fee_commission = number_utils.round_up_ex(
                 self_drug_fee * self_drug_fee_rate / 100, ".1"
             )
 
         if self.ui.label_herb_rate_type.text() == "$":
-            if herb_fee > 0:
-                herb_commission = herb_rate
-            else:
-                herb_commission = 0
+            herb_commission = herb_rate if herb_fee > 0 else 0
         else:
             herb_commission = number_utils.round_up_ex(herb_fee * herb_rate / 100, ".1")
 
         if self.ui.label_self_treat_rate_type.text() == "$":
-            if self_treat_fee > 0:
-                self_treat_fee_commission = self_treat_fee_rate
-            else:
-                self_treat_fee_commission = 0
+            self_treat_fee_commission = self_treat_fee_rate if self_treat_fee > 0 else 0
         else:
             self_treat_fee_commission = number_utils.round_up_ex(
                 self_treat_fee * self_treat_fee_rate / 100, ".1"
             )
+
+        beauty_commission = number_utils.round_up_ex(
+            beauty_fee * beauty_rate / 100, ".1"
+        )
 
         total_commission = (
             diag_fee_commission
@@ -318,6 +327,7 @@ class StatisticsDoctorAchievement(QtWidgets.QMainWindow):
             + beauty_commission
         )
 
+        # ---------- 填入表格 ----------
         medical_record_row = [
             case_key,
             row["CaseDate"].date().strftime("%Y-%m-%d"),
@@ -347,32 +357,51 @@ class StatisticsDoctorAchievement(QtWidgets.QMainWindow):
             string_utils.xstr(row["Doctor"]),
         ]
 
+        is_self_pay = row["InsType"] == "自費" or total_fee > 0
+        bold_font = QtGui.QFont()
+        bold_font.setBold(True)
+
         for col_no in range(len(medical_record_row)):
             item = QtWidgets.QTableWidgetItem()
             item.setData(QtCore.Qt.EditRole, medical_record_row[col_no])
-            self.ui.tableWidget_doctor_summary.setItem(row_no, col_no, item)
 
-            if col_no in [2, 3] or (col_no >= 6 and col_no <= 24):
-                self.ui.tableWidget_doctor_summary.item(
-                    row_no, col_no
-                ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            if col_no in [2, 3] or (6 <= col_no <= 24):
+                item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             elif col_no == 5:
-                self.ui.tableWidget_doctor_summary.item(
-                    row_no, col_no
-                ).setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+                item.setTextAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
 
-            if (
-                row["InsType"] == "自費"
-                or number_utils.get_integer(row["TotalFee"]) > 0
-            ):
-                self.ui.tableWidget_doctor_summary.item(row_no, col_no).setForeground(
-                    QtGui.QColor("blue")
-                )
+            if is_self_pay:
+                item.setForeground(QtGui.QColor("blue"))
+
+            if discount_uncertain:
+                item.setBackground(QtGui.QColor("#ffd6d6"))  # 折扣無法判斷，需人工核對
 
             if col_no in [8, 11, 14, 17, 20, 23, 24]:
-                font = QtGui.QFont()
-                font.setBold(True)
-                self.ui.tableWidget_doctor_summary.item(row_no, col_no).setFont(font)
+                item.setFont(bold_font)
+
+            self.ui.tableWidget_doctor_summary.setItem(row_no, col_no, item)
+
+    # 判斷折扣屬於哪一個自費類別，無法判斷傳回 None
+    def _get_discount_target(self, fees, discount_fee):
+        # 1. 金額要夠扣
+        candidates = [k for k, v in fees.items() if v > 0 and v >= discount_fee]
+        if len(candidates) == 1:
+            return candidates[0]
+        if len(candidates) == 0:
+            return None
+
+        # 2. 扣完後尾數為 0 或 5 (診所折扣通常是為了抹零)
+        rounded = [k for k in candidates if (fees[k] - discount_fee) % 5 == 0]
+        if len(rounded) == 1:
+            return rounded[0]
+
+        # 3. 還是有多個 → 藥品、水藥優先
+        pool = rounded if rounded else candidates
+        prioritized = [k for k in pool if k in ("drug", "herb")]
+        if len(prioritized) == 1:
+            return prioritized[0]
+
+        return None
 
     def _get_self_treat_fee(self, case_key, treat_type="處置", beauty_type=False):
         sql = f"""
