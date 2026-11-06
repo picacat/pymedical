@@ -139,7 +139,7 @@ class PrintRegistrationForm21:
                         </center>
                     </div>
                     <div>
-                        病患姓名: {name}<br>
+                        病患姓名: {name} ({patient_key:0>6})<br>
                         掛號時間: {case_date}<br>
                         保險類別: {ins_type} - {treat_type}<br>
                         掛號費: {regist_fee!s}元 門診負擔: {diag_share_fee!s}元
