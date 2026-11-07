@@ -97,25 +97,22 @@ class PrintRegistrationForm19:
                 "火針",
                 "火罐",
                 "雷射",
-                "藥",
+                "外膏",
+                "內膏",
             ]
 
         td = ""
         for item in treat_items:
-            td += f'<td width="14%" align="center" vertival-align="middle">{item}</td>'
+            td += f'<td width="13%" align="center" vertival-align="middle">{item}</td>'
+
+        filler = ""
+        for _ in range(len(treat_items)):
+            filler += "<td></td>"
 
         tr = f"""
-            <table style="border-collapse: collapse; border:1px #cccccc solid;" cellpadding="0" border="1">
+            <table style="font-size: 9px; border-collapse: collapse; border:1px #cccccc solid;" cellpadding="0" border="1">
                 <tr>{td}</tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
+                <tr>{filler}</tr>
             </table>
         """
 
@@ -169,7 +166,7 @@ class PrintRegistrationForm19:
                     <center style="font-size:20px">{room}診 {doctor}醫師</b></center>
                     <center style="font-size:20px">{regist_no:0>3}號</b></center>
                     <center>本單據僅供叫號，不作報稅證明</center>
-                    <br><br>
+                    <br>
                     {treat_items}
                     <img src="{"./images/physical.jpg"}" height="200" width="200">
                 </body>
