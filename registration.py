@@ -202,6 +202,7 @@ class Registration(QtWidgets.QMainWindow):
 
         period = registration_utils.get_current_period(self.system_settings)
         self._set_radio_button_period(period)
+        self.ui.radioButton_wait_period_all.setChecked(True)
 
         if (
             personnel_utils.get_permission(
@@ -470,7 +471,7 @@ class Registration(QtWidgets.QMainWindow):
         )
         self.ui.spinBox_reg_no.valueChanged.connect(self._spin_box_reg_no_changed)
 
-        self.ui.radioButton_wait_all.clicked.connect(self.read_wait)
+        self.ui.radioButton_wait_period_all.clicked.connect(self.read_wait)
         self.ui.radioButton_wait_period1.clicked.connect(self.read_wait)
         self.ui.radioButton_wait_period2.clicked.connect(self.read_wait)
         self.ui.radioButton_wait_period3.clicked.connect(self.read_wait)
