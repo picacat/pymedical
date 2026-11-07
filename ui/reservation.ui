@@ -1267,12 +1267,12 @@
     <property name="title">
      <string>班表設定</string>
     </property>
-    <addaction name="action_save_general_table"/>
     <addaction name="action_save_assigned_table"/>
     <addaction name="action_save_assigned_date_table"/>
     <addaction name="separator"/>
-    <addaction name="action_copy_general_table"/>
-    <addaction name="action_remove_general_table"/>
+    <addaction name="action_copy_assigned_table"/>
+    <addaction name="action_copy_assigned_table_to_doctor"/>
+    <addaction name="separator"/>
     <addaction name="action_remove_assigned_table"/>
     <addaction name="action_save_assigned_null_table"/>
     <addaction name="separator"/>
@@ -1293,15 +1293,6 @@
    </property>
    <property name="text">
     <string>關閉視窗</string>
-   </property>
-  </action>
-  <action name="action_save_general_table">
-   <property name="icon">
-    <iconset>
-     <normaloff>../icons/gtk-save.svg</normaloff>../icons/gtk-save.svg</iconset>
-   </property>
-   <property name="text">
-    <string>儲存一般班表</string>
    </property>
   </action>
   <action name="action_cancel_reservation">
@@ -1430,18 +1421,6 @@
     <string>暫停預約</string>
    </property>
   </action>
-  <action name="action_copy_general_table">
-   <property name="icon">
-    <iconset>
-     <normaloff>../icons/edit-copy.svg</normaloff>../icons/edit-copy.svg</iconset>
-   </property>
-   <property name="text">
-    <string>複製一般班表</string>
-   </property>
-   <property name="toolTip">
-    <string>複製一般班表</string>
-   </property>
-  </action>
   <action name="action_print_reservation_list">
    <property name="icon">
     <iconset>
@@ -1482,18 +1461,6 @@
    </property>
    <property name="toolTip">
     <string>指定班表不預約</string>
-   </property>
-  </action>
-  <action name="action_remove_general_table">
-   <property name="icon">
-    <iconset>
-     <normaloff>../icons/dialog-cancel.svg</normaloff>../icons/dialog-cancel.svg</iconset>
-   </property>
-   <property name="text">
-    <string>刪除一般班表</string>
-   </property>
-   <property name="toolTip">
-    <string>刪除一般班表</string>
    </property>
   </action>
   <action name="action_auto_reservation_table">
@@ -1653,6 +1620,30 @@
    </property>
    <property name="toolTip">
     <string>儲存指定日期班表</string>
+   </property>
+  </action>
+  <action name="action_copy_assigned_table">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-copy.svg</normaloff>../icons/edit-copy.svg</iconset>
+   </property>
+   <property name="text">
+    <string>複製指定班表</string>
+   </property>
+   <property name="toolTip">
+    <string>複製指定班表</string>
+   </property>
+  </action>
+  <action name="action_copy_assigned_table_to_doctor">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/edit-copy.svg</normaloff>../icons/edit-copy.svg</iconset>
+   </property>
+   <property name="text">
+    <string>複製指定班表至其他醫師</string>
+   </property>
+   <property name="toolTip">
+    <string>複製指定班表至其他醫師</string>
    </property>
   </action>
  </widget>

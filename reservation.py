@@ -73,6 +73,7 @@ class Reservation(QtWidgets.QMainWindow):
 
         self.user_name = system_utils.get_user_name(self.system_settings)
 
+        self._purge_general_table()  # 一般班表已作廢, 開啟時清除殘留資料
         self._set_ui()
         self._set_signal()
         self._set_permission()
@@ -241,7 +242,6 @@ class Reservation(QtWidgets.QMainWindow):
     # 設定信號
     def _set_signal(self):
         self.ui.action_close.triggered.connect(self.close_reservation)
-        self.ui.action_save_general_table.triggered.connect(self._save_general_table)
         self.ui.action_save_assigned_table.triggered.connect(self._save_assigned_table)
         self.ui.action_save_assigned_date_table.triggered.connect(
             self._save_assigned_date_table
@@ -249,12 +249,12 @@ class Reservation(QtWidgets.QMainWindow):
         self.ui.action_save_assigned_null_table.triggered.connect(
             self._save_assigned_null_table
         )
-        self.ui.action_copy_general_table.triggered.connect(self._copy_general_table)
+        self.ui.action_copy_assigned_table.triggered.connect(self._copy_assigned_table)
+        self.ui.action_copy_assigned_table_to_doctor.triggered.connect(
+            self._copy_assigned_table_to_doctor
+        )
         self.ui.action_remove_assigned_table.triggered.connect(
             self._remove_assigned_table
-        )
-        self.ui.action_remove_general_table.triggered.connect(
-            self._remove_general_table
         )
         self.ui.action_modify_reservation.triggered.connect(self._modify_reservation)
         self.ui.action_cancel_reservation.triggered.connect(self._cancel_reservation)
@@ -693,26 +693,14 @@ class Reservation(QtWidgets.QMainWindow):
             WHERE
                 Doctor=%s AND
                 Period = %s AND
-                Weekday = %s
+                Weekday = %s AND
+                ReservationDate IS NULL
             ORDER BY RowNo, ColumnNo
         """
         params = (doctor, period, weekday_name)
         rows = self.database.select_record(sql, params=params)
-        if len(rows) > 0:
-            return rows
 
-        sql = """
-            SELECT * FROM reservation_table
-            WHERE
-                Doctor = %s AND
-                Period = %s AND
-                ReserveNo IS NOT NULL AND
-                Weekday IS NULL
-            ORDER BY RowNo, ColumnNo
-        """
-        params = (doctor, period)
-        rows = self.database.select_record(sql, params=params)
-
+        # 一般班表已作廢: 沒有指定日期/指定星期班表 = 該診次沒有班表
         return rows
 
     def _get_reserve_table_rows(self, start_date, end_date, period, doctor):
@@ -937,16 +925,24 @@ class Reservation(QtWidgets.QMainWindow):
                         row_no, col_no + i
                     ).setForeground(QtGui.QColor("red"))
 
-    def _save_general_table(self):
-        doctor = self.ui.comboBox_doctor.currentText()
-        self._save_table(doctor)
-        self.read_reservation()
-
+    # 儲存指定班表: 清除該星期班表 + 一般班表, 再寫入
     def _save_assigned_table(self):
         doctor = self.ui.comboBox_doctor.currentText()
         weekday_name = self._get_week_day_name()
-        self._save_table(doctor, weekday_name)
+        self._purge_general_table()
+        self._save_table(doctor, weekday_name)  # 內含清除該星期班表
         self.read_reservation()
+
+    # 一般班表已作廢, 不允許存在 (Weekday 與 ReservationDate 皆為 NULL)
+    # 指定日期班表 (ReservationDate 有值) 不受影響
+    def _purge_general_table(self):
+        sql = """
+            DELETE FROM reservation_table
+            WHERE
+                Weekday IS NULL AND
+                ReservationDate IS NULL
+        """
+        self.database.exec_sql(sql)
 
     def _save_assigned_date_table(self):
         doctor = self.ui.comboBox_doctor.currentText()
@@ -979,28 +975,6 @@ class Reservation(QtWidgets.QMainWindow):
         self._save_null_table(doctor, weekday_name, period)
         self.read_reservation()
 
-    def _remove_general_table(self):
-        doctor = self.ui.comboBox_doctor.currentText()
-        period = self._get_period()
-
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle("刪除指定班表")
-        msg_box.setText(f"""
-            <font size='4' color='red'>
-                <b>確定刪除{doctor}醫師{period}的預約班表表格(不含指定班表)?</b>
-            </font>
-        """)
-        msg_box.setInformativeText("注意！資料刪除後, 將無法回復!")
-        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
-        msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
-        delete_record = msg_box.exec_()
-        if not delete_record:
-            return
-
-        self._remove_reservation_table(doctor, period, "NULL")
-        self.read_reservation()
-
     def _remove_assigned_table(self):
         doctor = self.ui.comboBox_doctor.currentText()
         period = self._get_period()
@@ -1024,32 +998,146 @@ class Reservation(QtWidgets.QMainWindow):
         self._remove_reservation_table(doctor, period, weekday_name)
         self.read_reservation()
 
-    def _copy_general_table(self):
-        table_doctor = self.ui.comboBox_doctor.currentText()
-        doctor_list = personnel_utils.get_person(
-            self.database, "醫師", exclude_person=table_doctor
-        )
-        assign_doctor, ok = QInputDialog.getItem(
-            self, "複製預約班表", "請選擇要複製給哪位醫師?", doctor_list, 0, False
-        )
+    # 畫面上有沒有可存的班表 (避免空白畫面複製過去, 把目標班表清空)
+    def _has_table_data(self):
+        for row_no in range(self.ui.tableWidget_reservation.rowCount()):
+            for i in range(1, self.max_reservation_table_times + 1):
+                col_no = (i - 1) * len(self.table_header)
+                if not self.ui.verticalFrame.isVisible():
+                    col_no = self.col_no_dict[col_no]
 
+                time = self.ui.tableWidget_reservation.item(row_no, col_no)
+                reserve_no = self.ui.tableWidget_reservation.item(row_no, col_no + 1)
+                if (
+                    time is not None
+                    and reserve_no is not None
+                    and time.text().strip() != ""
+                    and reserve_no.text().strip() != ""
+                ):
+                    return True
+
+        return False
+
+    def _confirm_overwrite(self, title, message):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(f"""
+            <font size='4' color='red'>
+                <b>{message}</b>
+            </font>
+        """)
+        msg_box.setInformativeText("注意！原有班表將被覆蓋, 無法回復!")
+        msg_box.addButton(QPushButton("取消"), QMessageBox.NoRole)
+        msg_box.addButton(QPushButton("確定"), QMessageBox.YesRole)
+
+        return bool(msg_box.exec_())
+
+    # 複製畫面上的班表至同一醫師的其他星期
+    def _copy_assigned_table(self):
+        doctor = self.ui.comboBox_doctor.currentText()
+        period = self._get_period()
+        current_weekday = self._get_week_day_name()
+
+        if not self._has_table_data():
+            system_utils.show_message_box(
+                QMessageBox.Warning,
+                "複製預約班表",
+                '<font color="red"><h3>目前畫面沒有班表可以複製.</h3></font>',
+                "請先設定或讀取班表.",
+            )
+            return
+
+        # 必須與 _get_week_day_name() 存檔格式一致 (zh_TW), 並排除目前的星期
+        weekday_list = [
+            date_utils.get_weekday_name(i, "zh_TW")
+            for i in [6, 0, 1, 2, 3, 4, 5]  # 星期日排第一
+        ]
+        weekday_list = [w for w in weekday_list if w != current_weekday]
+
+        weekday, ok = QInputDialog.getItem(
+            self,
+            "複製預約班表",
+            f"請選擇要將{doctor}醫師{current_weekday}{period}的班表複製至哪一天?",
+            weekday_list,
+            0,
+            False,
+        )
         if not ok:
             return
 
-        self._save_table(assign_doctor)
+        if not self._confirm_overwrite(
+            "複製預約班表",
+            f"{doctor}醫師{weekday}{period}原有的指定班表將被覆蓋, 確定複製?",
+        ):
+            return
+
+        self._save_table(doctor=doctor, weekday=weekday)
 
         system_utils.show_message_box(
             QMessageBox.Information,
             "複製班表完成",
             f"""
                 <font color="red">
-                    <h3>已經將{table_doctor}醫師的預約班表複製給{assign_doctor}醫師.</h3>
+                    <h3>已經將{doctor}醫師{current_weekday}{period}的預約班表複製至{weekday}.</h3>
                 </font>
             """,
-            "請選擇預約醫師欄位確認資料是否正確.",
+            "設定完成.",
+        )
+
+    # 複製畫面上的班表至其他醫師的同一星期
+    def _copy_assigned_table_to_doctor(self):
+        table_doctor = self.ui.comboBox_doctor.currentText()
+        period = self._get_period()
+        weekday_name = self._get_week_day_name()
+
+        if not self._has_table_data():
+            system_utils.show_message_box(
+                QMessageBox.Warning,
+                "複製預約班表",
+                '<font color="red"><h3>目前畫面沒有班表可以複製.</h3></font>',
+                "請先設定或讀取班表.",
+            )
+            return
+
+        doctor_list = personnel_utils.get_person(
+            self.database, "醫師", exclude_person=table_doctor
+        )
+        assign_doctor, ok = QInputDialog.getItem(
+            self,
+            "複製預約班表",
+            f"請選擇要將{table_doctor}醫師{weekday_name}{period}的班表複製給哪位醫師?",
+            doctor_list,
+            0,
+            False,
+        )
+        if not ok:
+            return
+
+        if not self._confirm_overwrite(
+            "複製預約班表",
+            f"{assign_doctor}醫師{weekday_name}{period}原有的指定班表將被覆蓋, 確定複製?",
+        ):
+            return
+
+        self._save_table(doctor=assign_doctor, weekday=weekday_name)
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "複製班表完成",
+            f"""
+                <font color="red">
+                    <h3>已經將{table_doctor}醫師{weekday_name}{period}的預約班表複製給{assign_doctor}醫師.</h3>
+                </font>
+            """,
+            "設定完成.",
         )
 
     def _save_table(self, doctor, weekday=None, reservation_date=None):
+        if weekday is None and reservation_date is None:
+            # 通用班表已作廢; 舊版這裡會 DELETE 該醫師該班別「全部」班表
+            raise ValueError("通用班表已作廢, 必須指定星期或日期")
+
         period = self._get_period()
 
         self._remove_reservation_table(
@@ -1058,7 +1146,12 @@ class Reservation(QtWidgets.QMainWindow):
 
         for row_no in range(self.ui.tableWidget_reservation.rowCount()):
             for i in range(1, self.max_reservation_table_times + 1):
-                col_no = (i - 1) * len(self.table_header)
+                store_col_no = (i - 1) * len(self.table_header)  # 資料庫存窄版座標
+                if self.ui.verticalFrame.isVisible():
+                    col_no = store_col_no
+                else:  # 月曆收合(寬版)時, 畫面欄位要換算
+                    col_no = self.col_no_dict[store_col_no]
+
                 reserve_no = self.ui.tableWidget_reservation.item(row_no, col_no + 1)
                 if reserve_no is None:
                     continue
@@ -1076,7 +1169,7 @@ class Reservation(QtWidgets.QMainWindow):
                         weekday,
                         doctor,
                         row_no,
-                        col_no,
+                        store_col_no,
                         time.text().strip(),
                         reserve_no.text().strip(),
                         reservation_date=reservation_date,
@@ -1094,30 +1187,30 @@ class Reservation(QtWidgets.QMainWindow):
                     period, weekday, doctor, row_no, col_no, time, reserve_no
                 )
 
+    # 只刪「一份」班表: 指定日期 或 指定星期, 兩者都沒給就拒絕 (避免整批刪除)
     def _remove_reservation_table(self, doctor, period, weekday, reservation_date=None):
-        if reservation_date is None:
-            reservation_date_condition = ""
-        elif reservation_date == "NULL":
-            reservation_date_condition = f"AND ReservationDate IS {reservation_date}"
+        if reservation_date is not None:
+            sql = """
+                DELETE FROM reservation_table
+                WHERE
+                    Doctor = %s AND
+                    Period = %s AND
+                    ReservationDate = %s
+            """
+            params = (doctor, period, reservation_date)
+        elif weekday is not None:
+            sql = """
+                DELETE FROM reservation_table
+                WHERE
+                    Doctor = %s AND
+                    Period = %s AND
+                    Weekday = %s AND
+                    ReservationDate IS NULL
+            """
+            params = (doctor, period, weekday)
         else:
-            reservation_date_condition = f'AND Weekday = "{reservation_date}"'
+            raise ValueError("必須指定星期或日期")
 
-        if weekday is None:
-            weekday_condition = ""
-        elif weekday == "NULL":
-            weekday_condition = f"AND Weekday IS {weekday}"
-        else:
-            weekday_condition = f'AND Weekday = "{weekday}"'
-
-        sql = f"""
-            DELETE FROM reservation_table
-            WHERE
-                Doctor = %s AND
-                Period = %s
-                {reservation_date_condition}
-                {weekday_condition}
-        """
-        params = (doctor, period)
         self.database.exec_sql(sql, params=params)
 
     def _insert_reservation_table(
@@ -1405,7 +1498,6 @@ class Reservation(QtWidgets.QMainWindow):
         self.tab_name = self.ui.tabWidget_reservation.tabText(i)
 
         if self.tab_name == "預約一覽表":
-            self.ui.action_save_general_table.setEnabled(True)
             self.ui.action_save_assigned_table.setEnabled(True)
             self.ui.action_remove_assigned_table.setEnabled(True)
 
@@ -1419,7 +1511,6 @@ class Reservation(QtWidgets.QMainWindow):
 
             self.ui.action_add_reservation.setEnabled(False)
             self.ui.action_reserve_reservation.setEnabled(False)
-            self.ui.action_save_general_table.setEnabled(False)
             self.ui.action_save_assigned_table.setEnabled(False)
             self.ui.action_remove_assigned_table.setEnabled(False)
             # database.ui.action_reservation_arrival.setEnabled(False)
@@ -2779,27 +2870,52 @@ class Reservation(QtWidgets.QMainWindow):
     def _get_reservation_remain(self, reservation_date, period, doctor):
         # 1. 取得星期
         date_obj = datetime.datetime.strptime(reservation_date, "%Y-%m-%d")
-        weekday_name = date_utils.get_weekday_name(date_obj.weekday())
+        # 與 _get_week_day_name() 存檔時用的格式一致
+        weekday_name = date_utils.get_weekday_name(date_obj.weekday(), "zh_TW")
 
         # 2. 用一條 SQL 搞定：計算「時段表中有」但「預約表中沒有」的數量
         # 我們利用 LEFT JOIN 結合 IS NULL 來過濾
-        sql = f'''
+        # 班表優先序與 _get_reservation_table_rows 一致:
+        # 指定日期 > 指定星期
+        scope_list = [
+            ("ReservationDate = %s", (reservation_date,)),
+            ("Weekday = %s AND ReservationDate IS NULL", (weekday_name,)),
+        ]
+        scope_condition, scope_params = None, None
+        for condition, condition_params in scope_list:
+            sql = f"""
+                SELECT 1 FROM reservation_table
+                WHERE Doctor = %s AND Period = %s AND {condition}
+                LIMIT 1
+            """
+            if self.database.select_record(
+                sql, params=(doctor, period) + condition_params
+            ):
+                scope_condition, scope_params = condition, condition_params
+                break
+
+        if scope_condition is None:  # 沒有班表
+            return 0
+
+        sql = f"""
             SELECT COUNT(T.Time) as remain_count
             FROM (
-                -- 這是你的時段樣板子查詢
                 SELECT Time FROM reservation_table
-                WHERE Doctor = "{doctor}" 
-                AND Period = "{period}"
-                AND (Weekday = "{weekday_name}" OR (Weekday IS NULL AND ReserveNo IS NOT NULL))
+                WHERE
+                    Doctor = %s AND
+                    Period = %s AND
+                    ReserveNo IS NOT NULL AND
+                    {scope_condition}
             ) AS T
-            LEFT JOIN reserve AS R ON 
-                R.ReserveDate = CONCAT("{reservation_date} ", T.Time, ":00") AND
-                R.Period = "{period}" AND
-                R.Doctor = "{doctor}"
+            LEFT JOIN reserve AS R ON
+                R.ReserveDate = CONCAT(%s, ' ', T.Time, ':00') AND
+                R.Period = %s AND
+                R.Doctor = %s
             WHERE R.ReserveKey IS NULL
-        '''
+        """
+        params = (doctor, period) + scope_params + (reservation_date, period, doctor)
 
-        result = self.database.select_record(sql)
+        result = self.database.select_record(sql, params=params)
 
         if result and len(result) > 0:
             return result[0]["remain_count"]
@@ -3307,7 +3423,8 @@ class Reservation(QtWidgets.QMainWindow):
             UPDATE reservation_table
                 SET ReserveType = {reserve_type}
             WHERE
-                (Weekday = "{weekday}" OR Weekday IS NULL) AND
+                Weekday = "{weekday}" AND
+                ReservationDate IS NULL AND
                 Period = "{period}" AND
                 Doctor = "{doctor}" AND
                 ReserveNo = "{reserve_no}"
