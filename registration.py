@@ -77,26 +77,27 @@ class Registration(QtWidgets.QMainWindow):
             "WaitKey": 0,
             "CaseKey": 1,
             "Progress": 2,
-            "CaseTime": 3,
-            "PatientKey": 4,
-            "Name": 5,
-            "Room": 6,
-            "RegistNo": 7,
-            "Gender": 8,
-            "InsType": 9,
-            "RegistType": 10,
-            "ShareType": 11,
-            "TreatType": 12,
-            "Visit": 13,
-            "Card": 14,
-            "Doctor": 15,
-            "RegistFee": 16,
-            "DiagShareFee": 17,
-            "DepositFee": 18,
-            "SelfMassageFee": 19,
-            "ReqCode": 20,
-            "Massager": 21,
-            "Remark": 22,
+            "Period": 3,
+            "CaseTime": 4,
+            "PatientKey": 5,
+            "Name": 6,
+            "Room": 7,
+            "RegistNo": 8,
+            "Gender": 9,
+            "InsType": 10,
+            "RegistType": 11,
+            "ShareType": 12,
+            "TreatType": 13,
+            "Visit": 14,
+            "Card": 15,
+            "Doctor": 16,
+            "RegistFee": 17,
+            "DiagShareFee": 18,
+            "DepositFee": 19,
+            "SelfMassageFee": 20,
+            "ReqCode": 21,
+            "Massager": 22,
+            "Remark": 23,
         }
         self.wait_done_column = {
             "WaitKey": 0,
@@ -468,6 +469,11 @@ class Registration(QtWidgets.QMainWindow):
             self._wait_table_item_changed
         )
         self.ui.spinBox_reg_no.valueChanged.connect(self._spin_box_reg_no_changed)
+
+        self.ui.radioButton_wait_all.clicked.connect(self.read_wait)
+        self.ui.radioButton_wait_period1.clicked.connect(self.read_wait)
+        self.ui.radioButton_wait_period2.clicked.connect(self.read_wait)
+        self.ui.radioButton_wait_period3.clicked.connect(self.read_wait)
 
         self.ui.radioButton_all.clicked.connect(self._read_wait_completed)
         self.ui.radioButton_period1.clicked.connect(self._read_wait_completed)
@@ -943,6 +949,14 @@ class Registration(QtWidgets.QMainWindow):
         else:
             order_by_script = "ORDER BY wait.Room, wait.RegistNo"
 
+        period_condition = ""
+        if self.ui.radioButton_wait_period1.isChecked():
+            period_condition = ' AND wait.Period = "早班" '
+        elif self.ui.radioButton_wait_period2.isChecked():
+            period_condition = ' AND wait.Period = "午班" '
+        elif self.ui.radioButton_wait_period3.isChecked():
+            period_condition = ' AND wait.Period = "晚班" '
+
         sql = f"""
             SELECT
                 wait.*, patient.Gender, patient.ChartNo,
@@ -952,6 +966,7 @@ class Registration(QtWidgets.QMainWindow):
                 LEFT JOIN cases ON wait.CaseKey = cases.CaseKey
             WHERE
                 wait.DoctorDone = "False"
+                {period_condition}
             {order_by_script}
         """
         case_key = self._get_current_wait_case_key()  # ← 新增
@@ -1068,6 +1083,7 @@ class Registration(QtWidgets.QMainWindow):
             string_utils.xstr(row["WaitKey"]),
             case_key,
             None,
+            string_utils.xstr(row["Period"]),
             case_time,
             patient_key,
             string_utils.xstr(row["Name"]),
@@ -1115,6 +1131,7 @@ class Registration(QtWidgets.QMainWindow):
                 )
             elif col_no in [
                 self.wait_column["Progress"],
+                self.wait_column["Period"],
                 self.wait_column["CaseTime"],
                 self.wait_column["Room"],
                 self.wait_column["Gender"],

@@ -1207,6 +1207,64 @@
              </layout>
             </item>
             <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_17">
+              <property name="leftMargin">
+               <number>6</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_39">
+                <property name="text">
+                 <string>班別</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_wait_all">
+                <property name="text">
+                 <string>全部</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_wait_period1">
+                <property name="text">
+                 <string>早班</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_wait_period2">
+                <property name="text">
+                 <string>午班</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_wait_period3">
+                <property name="text">
+                 <string>晚班</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
              <widget class="QTableWidget" name="tableWidget_wait">
               <property name="contextMenuPolicy">
                <enum>Qt::DefaultContextMenu</enum>
@@ -1233,6 +1291,11 @@
               <column>
                <property name="text">
                 <string>診療</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>班別</string>
                </property>
               </column>
               <column>
