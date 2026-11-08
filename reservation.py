@@ -73,7 +73,7 @@ class Reservation(QtWidgets.QMainWindow):
 
         self.user_name = system_utils.get_user_name(self.system_settings)
 
-        self._purge_general_table()  # 一般班表已作廢, 開啟時清除殘留資料
+        # self._purge_general_table()  # 一般班表已作廢, 開啟時清除殘留資料
         self._set_ui()
         self._set_signal()
         self._set_permission()
