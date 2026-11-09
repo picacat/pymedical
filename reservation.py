@@ -73,7 +73,6 @@ class Reservation(QtWidgets.QMainWindow):
 
         self.user_name = system_utils.get_user_name(self.system_settings)
 
-        # self._purge_general_table()  # 一般班表已作廢, 開啟時清除殘留資料
         self._set_ui()
         self._set_signal()
         self._set_permission()
@@ -699,8 +698,23 @@ class Reservation(QtWidgets.QMainWindow):
         """
         params = (doctor, period, weekday_name)
         rows = self.database.select_record(sql, params=params)
+        if len(rows) > 0:
+            return rows
 
-        # 一般班表已作廢: 沒有指定日期/指定星期班表 = 該診次沒有班表
+        # 沒有指定班表時顯示一般班表 (舊資料, 已不能新增)
+        # 必須排除 ReservationDate, 否則會撈到其他日期的指定日期班表
+        sql = """
+            SELECT * FROM reservation_table
+            WHERE
+                Doctor = %s AND
+                Period = %s AND
+                ReserveNo IS NOT NULL AND
+                Weekday IS NULL AND
+                ReservationDate IS NULL
+            ORDER BY RowNo, ColumnNo
+        """
+        rows = self.database.select_record(sql, params=(doctor, period))
+
         return rows
 
     def _get_reserve_table_rows(self, start_date, end_date, period, doctor):
@@ -925,24 +939,12 @@ class Reservation(QtWidgets.QMainWindow):
                         row_no, col_no + i
                     ).setForeground(QtGui.QColor("red"))
 
-    # 儲存指定班表: 清除該星期班表 + 一般班表, 再寫入
+    # 儲存指定班表: 只清除該醫師/班別/星期的指定班表再寫入, 一般班表保留
     def _save_assigned_table(self):
         doctor = self.ui.comboBox_doctor.currentText()
         weekday_name = self._get_week_day_name()
-        self._purge_general_table()
         self._save_table(doctor, weekday_name)  # 內含清除該星期班表
         self.read_reservation()
-
-    # 一般班表已作廢, 不允許存在 (Weekday 與 ReservationDate 皆為 NULL)
-    # 指定日期班表 (ReservationDate 有值) 不受影響
-    def _purge_general_table(self):
-        sql = """
-            DELETE FROM reservation_table
-            WHERE
-                Weekday IS NULL AND
-                ReservationDate IS NULL
-        """
-        self.database.exec_sql(sql)
 
     def _save_assigned_date_table(self):
         doctor = self.ui.comboBox_doctor.currentText()
@@ -2876,10 +2878,11 @@ class Reservation(QtWidgets.QMainWindow):
         # 2. 用一條 SQL 搞定：計算「時段表中有」但「預約表中沒有」的數量
         # 我們利用 LEFT JOIN 結合 IS NULL 來過濾
         # 班表優先序與 _get_reservation_table_rows 一致:
-        # 指定日期 > 指定星期
+        # 指定日期 > 指定星期 > 一般班表
         scope_list = [
             ("ReservationDate = %s", (reservation_date,)),
             ("Weekday = %s AND ReservationDate IS NULL", (weekday_name,)),
+            ("Weekday IS NULL AND ReservationDate IS NULL", ()),
         ]
         scope_condition, scope_params = None, None
         for condition, condition_params in scope_list:
@@ -3423,7 +3426,7 @@ class Reservation(QtWidgets.QMainWindow):
             UPDATE reservation_table
                 SET ReserveType = {reserve_type}
             WHERE
-                Weekday = "{weekday}" AND
+                (Weekday = "{weekday}" OR Weekday IS NULL) AND
                 ReservationDate IS NULL AND
                 Period = "{period}" AND
                 Doctor = "{doctor}" AND
