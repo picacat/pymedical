@@ -24,6 +24,7 @@ class Communicate(QObject):
 # 2025.11.24 掛號機繳費頁面
 class KioskPay(QtWidgets.QDialog):
     finished = pyqtSignal()
+    program_name = "批價作業"
 
     # 初始化
     def __init__(self, parent=None, *args):
