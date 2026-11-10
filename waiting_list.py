@@ -990,7 +990,11 @@ class WaitingList(QtWidgets.QMainWindow):
         reserve_key = string_utils.xstr(row["ReserveKey"])
         reserve_date = string_utils.xstr(row["ReserveDate"].time().strftime("%H:%M"))
         period = string_utils.xstr(row["Period"])
-        room = row["Room"]
+        doctor = string_utils.xstr(row["Doctor"])
+        # room = row["Room"]
+        room = string_utils.xstr(
+            registration_utils.get_room(self.database, period, doctor)
+        )
         reserve_no = row["ReserveNo"]
         patient_key = row["PatientKey"]
         name = string_utils.xstr(row["Name"])
