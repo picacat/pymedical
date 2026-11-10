@@ -3,7 +3,14 @@ import os
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 
-from libs import cshis_utils, number_utils, string_utils, system_utils, ui_utils
+from libs import (
+    cshis_utils,
+    number_utils,
+    registration_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
 # 輸入分院資料
@@ -20,7 +27,7 @@ class DialogMessageBox(QtWidgets.QDialog):
 
     # 初始化
     def __init__(self, parent=None, *args):
-        super(DialogMessageBox, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -532,8 +539,11 @@ class DialogMessageBox(QtWidgets.QDialog):
         reserve_date = reserve_row["ReserveDate"].strftime("%Y-%m-%d")
         name = string_utils.get_mask_name(reserve_row["Name"])
         doctor = string_utils.xstr(reserve_row["Doctor"])
+        period = string_utils.xstr(reserve_row["Period"])
         reserve_no = number_utils.get_integer(reserve_row["ReserveNo"])
-        room = number_utils.get_integer(reserve_row["Room"])
+
+        # room = number_utils.get_integer(reserve_row["Room"])
+        room = registration_utils.get_room(self.database, period, doctor)
 
         x, y, height = 100, self.TITLE_Y, self.parent.BUTTON_HEIGHT
         font_color = self.parent.DARK_GREEN

@@ -286,6 +286,9 @@ class PrintReceiptSelfForm23:
             """
 
         time = datetime.datetime.now().strftime("%H:%M:%S")
+        time_label = f"[{time}]"
+        if clinic_name in ["穗安中醫診所"]:
+            time_label = ""
 
         html = f"""
             <html>
@@ -302,7 +305,7 @@ class PrintReceiptSelfForm23:
                 代號:{clinic_id}<br>
                 院址:{clinic_address}<br>
                 電話:{clinic_telephone}<br>
-                [{time}]
+                {time_label}
               </b>
               </body>
             </html>
