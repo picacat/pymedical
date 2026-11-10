@@ -3,7 +3,7 @@
 from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
 
-from libs import number_utils, printer_utils, string_utils, system_utils
+from libs import date_utils, number_utils, printer_utils, string_utils, system_utils
 
 
 # 掛號收據格式19 80mm 熱感紙 人形圖
@@ -132,6 +132,7 @@ class PrintRegistrationForm19:
 
         clinic_name = self.system_settings.field("院所名稱")
         case_date = row["CaseDate"]
+        case_date = date_utils.date_to_zh_tw_date(string_utils.xstr(case_date))
         patient_key = number_utils.get_integer(row["PatientKey"])
         name = string_utils.xstr(row["Name"])
         ins_type = string_utils.xstr(row["InsType"])
@@ -158,7 +159,7 @@ class PrintRegistrationForm19:
                 <body>
                     <center style="font-size:16px"><b>{clinic_name}</b></center>
                     <center style="font-size:16px"><b>門診掛號單</b></center>
-                    病患姓名: {name}<br>
+                    病患姓名: {name} ({patient_key:0>6})<br>
                     掛號時間: {case_date}<br>
                     保險類別: {ins_type} - {treat_type}<br>
                     掛號費: {regist_fee!s}元 門診負擔: {diag_share_fee!s}元
