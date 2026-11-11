@@ -17,6 +17,8 @@ from libs import (
 
 # 2024.06.24 掛號機掛號頁面
 class KioskRegistration(QtWidgets.QMainWindow):
+    program_name = "門診掛號"
+
     # 初始化
     def __init__(self, parent=None, *args):
         super().__init__(parent)
