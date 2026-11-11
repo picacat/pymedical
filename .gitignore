@@ -19,6 +19,7 @@ mingi.conf
 pybulletin.bat
 pybulletin.win32.bat
 pymedical.json
+kiosk_count_data.json
 PortableGit.exe
 sync_dropbox
 version.txt
