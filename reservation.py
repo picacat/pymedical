@@ -666,6 +666,7 @@ class Reservation(QtWidgets.QMainWindow):
             self.ui.tableWidget_reservation.blockSignals(False)
             self.ui.tableWidget_reservation.setUpdatesEnabled(True)
 
+    # 取得預約班表資料
     def _get_reservation_table_rows(self):
         doctor = self.ui.comboBox_doctor.currentText()
         period = self._get_period()
