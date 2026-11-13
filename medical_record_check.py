@@ -1270,6 +1270,8 @@ class MedicalRecordCheck(QtWidgets.QDialog):
             except ValueError:
                 error_message.append(f"{medicine_name} 劑量有誤")
 
+        total_dosage = round(total_dosage, 2)  # 消除浮點累加誤差
+
         if (
             self.medical_record["Injury"] in nhi_utils.INFECTIOUS_TYPE
             or self.medical_record["Share"] in nhi_utils.INFECTIOUS_TYPE

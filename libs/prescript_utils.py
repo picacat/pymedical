@@ -663,7 +663,7 @@ def get_total_dosage(table_widget_prescript, database=None, medicine_set=None):
 
         total_dosage += dosage
 
-    return total_dosage, infectious_drug
+    return round(total_dosage, 1), infectious_drug
 
 
 def is_folk_massage(database, system_settings, case_key):
