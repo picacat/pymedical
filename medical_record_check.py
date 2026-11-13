@@ -21,7 +21,7 @@ from libs import (
 )
 
 
-# 存檔前檢查 2018.03.19
+# 存檔前檢查 2018.03.20
 class MedicalRecordCheck(QtWidgets.QDialog):
     # 初始化
     def __init__(self, parent=None, **kwargs):
