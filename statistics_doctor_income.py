@@ -22,7 +22,7 @@ from libs import (
 class StatisticsDoctorIncome(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsDoctorIncome, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -224,17 +224,15 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
     def _read_data(self, group_by_doctor=False):
         period_condition = ""
         if self.period != "全部":
-            period_condition = ' AND Period = "{0}"'.format(self.period)
+            period_condition = f' AND Period = "{self.period}"'
 
         ins_type_condition = ""
         if self.ins_type != "全部":
-            ins_type_condition = ' AND InsType = "{0}"'.format(self.ins_type)
+            ins_type_condition = f' AND InsType = "{self.ins_type}"'
 
         doctor_condition = ""
         if self.doctor != "全部":
-            doctor_condition = (
-                f' AND (cases.Doctor = "{self.doctor}" and cases.TreatType != "自購")'
-            )
+            doctor_condition = f' AND (cases.Doctor = "{self.doctor}")'
 
         weekday_condition = ""
         if len(self.weekday_list) > 0:
@@ -406,12 +404,12 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
             self._set_doctor_item_data(row_no, 5, string_utils.xstr(refund))
 
     def _get_refund(self, return_date):
-        start_date = "{0} 00:00:00".format(return_date)
-        end_date = "{0} 23:59:59".format(return_date)
+        start_date = f"{return_date} 00:00:00"
+        end_date = f"{return_date} 23:59:59"
 
         doctor_condition = ""
         if self.doctor != "全部":
-            doctor_condition = 'AND cases.Doctor = "{0}"'.format(self.doctor)
+            doctor_condition = f'AND cases.Doctor = "{self.doctor}"'
 
         weekday_condition = ""
         if len(self.weekday_list) > 0:
@@ -489,8 +487,8 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
             self._set_doctor_item_data(row_no, 6, string_utils.xstr(debt))
 
     def _get_debt(self, case_date):
-        start_date = "{0} 00:00:00".format(case_date)
-        end_date = "{0} 23:59:59".format(case_date)
+        start_date = f"{case_date} 00:00:00"
+        end_date = f"{case_date} 23:59:59"
 
         doctor_condition = ""
         if self.doctor != "全部":
@@ -572,8 +570,8 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
             self._set_doctor_item_data(row_no, 7, string_utils.xstr(repayment))
 
     def _get_repayment(self, case_date):
-        start_date = "{0} 00:00:00".format(case_date)
-        end_date = "{0} 23:59:59".format(case_date)
+        start_date = f"{case_date} 00:00:00"
+        end_date = f"{case_date} 23:59:59"
 
         doctor_condition = ""
         if self.doctor != "全部":
@@ -755,9 +753,7 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            "{0}至{1}{2}醫師門診收入統計表.xlsx".format(
-                self.start_date[:10], self.end_date[:10], self.doctor
-            ),
+            f"{self.start_date[:10]}至{self.end_date[:10]}{self.doctor}醫師門診收入統計表.xlsx",
             "excel檔案 (*.xlsx);;Text Files (*.txt)",
             options=options,
         )
@@ -772,7 +768,7 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
         system_utils.show_message_box(
             QMessageBox.Information,
             "資料匯出完成",
-            "<h3>醫師收入統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            f"<h3>醫師收入統計檔{excel_file_name}匯出完成.</h3>",
             "Microsoft Excel 格式.",
         )
 
@@ -894,9 +890,7 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            "{0}至{1}{2}醫師門診收入統計表.xlsx".format(
-                self.start_date[:10], self.end_date[:10], self.doctor
-            ),
+            f"{self.start_date[:10]}至{self.end_date[:10]}{self.doctor}醫師門診收入統計表.xlsx",
             "excel檔案 (*.xlsx);;Text Files (*.txt)",
             options=options,
         )
@@ -913,7 +907,7 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
         system_utils.show_message_box(
             QMessageBox.Information,
             "資料匯出完成",
-            "<h3>醫師收入統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            f"<h3>醫師收入統計檔{excel_file_name}匯出完成.</h3>",
             "Microsoft Excel 格式.",
         )
 
@@ -922,9 +916,7 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "QFileDialog.getSaveFileName()",
-            "{0}至{1}{2}個別醫師門診收入統計表.xlsx".format(
-                self.start_date[:10], self.end_date[:10], self.doctor
-            ),
+            f"{self.start_date[:10]}至{self.end_date[:10]}{self.doctor}個別醫師門診收入統計表.xlsx",
             "excel檔案 (*.xlsx);;Text Files (*.txt)",
             options=options,
         )
@@ -941,6 +933,6 @@ class StatisticsDoctorIncome(QtWidgets.QMainWindow):
         system_utils.show_message_box(
             QMessageBox.Information,
             "資料匯出完成",
-            "<h3>個別醫師收入統計檔{0}匯出完成.</h3>".format(excel_file_name),
+            f"<h3>個別醫師收入統計檔{excel_file_name}匯出完成.</h3>",
             "Microsoft Excel 格式.",
         )
