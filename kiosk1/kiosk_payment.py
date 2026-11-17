@@ -642,7 +642,7 @@ class KioskPayment(QtWidgets.QMainWindow):
         message = ",".join(
             [
                 self.system_settings.field("院所名稱"),
-                "掛號作業",
+                "門診掛號",
                 doctor,
                 room,
             ]
