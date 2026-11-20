@@ -67,7 +67,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-274</y>
+              <y>0</y>
               <width>1301</width>
               <height>1066</height>
              </rect>
@@ -2230,9 +2230,9 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-475</y>
               <width>1301</width>
-              <height>1267</height>
+              <height>1298</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_65">
@@ -2855,6 +2855,13 @@
                    <widget class="QCheckBox" name="checkBox_no_first_reservation">
                     <property name="text">
                      <string>不開放初診網路預約</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_booking_app_show_time">
+                    <property name="text">
+                     <string>月顯示版本顯示時間表</string>
                     </property>
                    </widget>
                   </item>

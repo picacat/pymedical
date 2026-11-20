@@ -718,6 +718,9 @@ class CheckErrors(QtWidgets.QMainWindow):
         if packages > 8:
             return ["給藥包數超過8包"]
 
+        if 0 < pres_days < 3:
+            return ["給藥天數不足3日"]
+
         acupuncture_treat = 0
         massage_treat = 0
 
