@@ -261,65 +261,39 @@ def get_nationality(gender_code):
 
 # 檢查兩年內未就診
 def is_two_years_ago_visit(database, patient_key):
-    two_year_ago_visit = False
-    today = datetime.datetime.now()
+    today = datetime.date.today()
+    try:
+        start_date = today.replace(year=today.year - 2)
+    except ValueError:  # 2/29 → 兩年前沒有閏日
+        start_date = today.replace(year=today.year - 2, day=28)
 
-    two_years_ago = today.replace(year=today.year - 2)
-    last_month_year = two_years_ago.year
-    last_month = two_years_ago.month - 1
-    if last_month <= 0:
-        last_month = 12
-        last_month_year -= 1
-
-    start_date = two_years_ago.replace(
-        year=last_month_year, month=last_month, day=1
-    ).strftime("%Y-%m-%d")
-
-    # start_date = (today - datetime.timedelta(days=2*365)).replace(day=1).date()  # 健保規定兩年內未就診是指兩年內未就診的整月, 要從上月初開始算
-
-    # sql = f'''
-    #     SELECT CaseKey FROM cases
-    #     WHERE
-    #         PatientKey = {patient_key}
-    # '''
-    # rows = database.select_record(sql)
-    # if len(rows) <= 0:  # 從來沒來過，不算兩年內未就診
-    #     return False
-
-    # 讀取start_date以後的病歷
-    sql = f'''
+    sql = """
         SELECT CaseKey FROM cases
         WHERE
-            PatientKey = {patient_key} AND
-            DATE(CaseDate) >= "{start_date}"
+            PatientKey = %s AND
+            CaseDate >= %s
         LIMIT 1
-    '''
-    rows = database.select_record(sql)
-    if len(rows) <= 0:
-        two_year_ago_visit = True
+    """
+    params = (patient_key, start_date)
+    rows = database.select_record(sql, params)
 
-    return two_year_ago_visit
+    return len(rows) <= 0
 
 
-# 檢查兩年內未就診
+# 檢查指定天數內未就診
 def is_no_return_days(database, patient_key, no_return_days):
-    no_return = False
-    start_date = (
-        datetime.datetime.now() - datetime.timedelta(days=no_return_days)
-    ).date()
+    start_date = datetime.date.today() - datetime.timedelta(days=no_return_days)
 
-    sql = f'''
+    sql = """
         SELECT CaseKey FROM cases
         WHERE
-            PatientKey = {patient_key} AND
-            DATE(CaseDate) >= "{start_date}"
+            PatientKey = %s AND
+            CaseDate >= %s
         LIMIT 1
-    '''
-    rows = database.select_record(sql)
-    if len(rows) <= 0:
-        no_return = True
+    """
+    rows = database.select_record(sql, (patient_key, start_date))
 
-    return no_return
+    return len(rows) <= 0
 
 
 # 取得初複診

@@ -2959,12 +2959,18 @@ class Registration(QtWidgets.QMainWindow):
             last_treat_type = registration_utils.get_last_treat_type(
                 self.database, patient_key
             )
-            if (
+
+            auto_last_treat = (
                 self.system_settings.field("掛號新療程自動帶出上次就醫類別") == "Y"
-                or last_treat_type in nhi_utils.IMPROVE_CARE_TREAT
+            )
+            is_improve_care = last_treat_type in nhi_utils.IMPROVE_CARE_TREAT
+
+            if (
+                treat_type == "內科"
+                and last_treat_type
+                and (auto_last_treat or is_improve_care)
             ):
-                if treat_type == "內科":
-                    treat_type = last_treat_type
+                treat_type = last_treat_type
 
             today = datetime.datetime.today().strftime("%Y-%m-%d")
             agent_doctor = registration_utils.get_temporary_agent_doctor(
@@ -3150,37 +3156,31 @@ class Registration(QtWidgets.QMainWindow):
 
     # 檢查掛號費是否需要多退少補 2025-03-06 恆德
     def _check_ins_regist_fee(self, case_key, current_regist_fee):
-        sql = f'''
-            SELECT
-                RegistFee FROM cases
-            WHERE
-                CaseKey = "{case_key}"
-        '''
-        rows = self.database.select_record(sql)
+        sql = "SELECT RegistFee FROM cases WHERE CaseKey = %s"
+        rows = self.database.select_record(sql, (case_key,))
         if len(rows) <= 0:
             return
 
         regist_fee = number_utils.get_integer(rows[0]["RegistFee"])
         current_regist_fee = number_utils.get_integer(current_regist_fee)
+        diff = current_regist_fee - regist_fee
+        if diff == 0:
+            return
 
-        if current_regist_fee > regist_fee:
-            system_utils.show_message_box(
-                QMessageBox.Warning,
-                "應補掛號費",
-                f"""<font size="5" color="red"><b>原本掛號費為 {regist_fee}，現在掛號費為 {current_regist_fee}<br>
-                                                  請補足掛號費差額 {current_regist_fee - regist_fee}<br>
-                </b></font>""",
-                "請補足掛號費差額.",
-            )
-        elif current_regist_fee < regist_fee:
-            system_utils.show_message_box(
-                QMessageBox.Warning,
-                "應退掛號費",
-                f"""<font size="5" color="red"><b>原本掛號費為 {regist_fee}，現在掛號費為 {current_regist_fee}<br>
-                                                  請退還掛號費差額 {regist_fee - current_regist_fee}元<br>
-                </b></font>""",
-                "請退還掛號費差額.",
-            )
+        if diff > 0:
+            title, action = "應補掛號費", "補足"
+        else:
+            title, action = "應退掛號費", "退還"
+
+        system_utils.show_message_box(
+            QMessageBox.Warning,
+            title,
+            f'<font size="5" color="red"><b>'
+            f"原本掛號費為 {regist_fee}，現在掛號費為 {current_regist_fee}<br>"
+            f"請{action}掛號費差額 {abs(diff)} 元"
+            f"</b></font>",
+            f"請{action}掛號費差額.",
+        )
 
     # 設定門診負擔
     def _set_diag_share_fee(self):
