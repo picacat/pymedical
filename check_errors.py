@@ -697,14 +697,6 @@ class CheckErrors(QtWidgets.QMainWindow):
         # 共用查詢是整張病歷的所有 set。
         prescript_rows = self._prescript_rows_of_set(case_key, 1)
 
-        # sql = f"""
-        #     SELECT MedicineType, MedicineName, InsCode, Dosage FROM prescript
-        #     WHERE
-        #         CaseKey = {case_key} AND
-        #         MedicineSet = 1
-        # """
-        # prescript_rows = self.database.select_record(sql)
-
         if (
             len(prescript_rows) <= 0
             and string_utils.xstr(row["TreatType"]) != "醫療諮詢"
