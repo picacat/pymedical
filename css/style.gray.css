@@ -8,7 +8,7 @@
 **************************************************************************************/
 * {
 	font-size: 18px;
-	font-weight: normal; /* system */
+	font-weight: bold; /* system */
 
     /* !!! 關鍵修正：明確指定一個簡單的字體名稱 !!! */
     font-family: "Noto Sans", "Hack", "sans-serif"; 

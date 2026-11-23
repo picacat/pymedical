@@ -22,6 +22,28 @@ from libs import (
 
 CHUNK_SIZE = 500  # 批次預取時每一句 IN (...) 的 CaseKey 數量
 
+# 115年 提升中醫護理人員照護品質獎勵方案: 看診時聘有護理人員在場之診察費
+NURSE_DIAG_CODES = {
+    "A82",
+    "A83",
+    "A41",
+    "A86",
+    "A87",
+    "A43",
+    "A01",
+    "A11",
+    "A45",
+    "A03",
+    "A13",
+    "A47",
+    "A05",
+    "A15",
+    "A49",
+    "A09",
+    "A19",
+    "A53",
+}
+
 
 # 健保申報格式xml 2023.10.31
 class InsApplyXML(QtWidgets.QMainWindow):
@@ -72,6 +94,11 @@ class InsApplyXML(QtWidgets.QMainWindow):
         except Exception:
             self.dict_icd_map = None
 
+        self._nurse_schedule_cache = (
+            None  # {('yyyy-mm-dd', doctor): nurse_schedule row}
+        )
+        self._nurse_schedule_range = (self.start_date[:10], self.end_date[:10])
+
         self._set_ui()
         self._set_signal()
 
@@ -98,6 +125,89 @@ class InsApplyXML(QtWidgets.QMainWindow):
     # 設定信號
     def _set_signal(self):
         pass
+
+    @staticmethod
+    def _is_cnp_treat_code(treat_code):
+        """針灸 D01-D08, 傷科 E01-E14, 針灸合併傷科 F01-F84"""
+        m = re.fullmatch(r"([DEF])(\d{2})", string_utils.xstr(treat_code))
+        if m is None:
+            return False
+
+        no = int(m.group(2))
+        limit = {"D": 8, "E": 14, "F": 84}[m.group(1)]
+        return 1 <= no <= limit
+
+    def _load_nurse_schedule(self):
+        if self._nurse_schedule_cache is not None:
+            return
+
+        self._nurse_schedule_cache = {}
+        sql = f'''
+            SELECT * FROM nurse_schedule
+            WHERE
+                ScheduleDate BETWEEN "{self.start_date[:10]}" AND "{self.end_date[:10]}"
+        '''
+        try:
+            rows = self.database.select_record(sql)
+        except Exception:  # 沒有 nurse_schedule 資料表的院所
+            return
+
+        for row in rows:
+            key = (
+                string_utils.xstr(row["ScheduleDate"])[:10],
+                string_utils.xstr(row["Doctor"]),
+            )
+            if (
+                key not in self._nurse_schedule_cache
+            ):  # 同日同醫師只取第一筆, 等同原本 rows[0]
+                self._nurse_schedule_cache[key] = row
+
+    def _nurse_schedule_row(self, schedule_date, doctor):
+        self._load_nurse_schedule()
+
+        key = (schedule_date, doctor)
+        if key in self._nurse_schedule_cache:
+            return self._nurse_schedule_cache[key]
+
+        start, end = self._nurse_schedule_range
+        if start <= schedule_date <= end:  # 已預載過的範圍, 查不到就是沒排班
+            return None
+
+        # 申報期間以外 (療程跨月), 逐筆補查並記錄結果
+        sql = f'''
+            SELECT * FROM nurse_schedule
+            WHERE
+                ScheduleDate = "{schedule_date}" AND
+                Doctor = "{doctor}"
+        '''
+        try:
+            rows = self.database.select_record(sql)
+        except Exception:
+            rows = []
+
+        self._nurse_schedule_cache[key] = rows[0] if len(rows) > 0 else None
+
+        return self._nurse_schedule_cache[key]
+
+    # nhi_utils.nurse_schedule_on_duty 的快取版
+    def _nurse_on_duty(self, case_row):
+        if case_row is None or case_row["CaseDate"] is None:
+            return False
+
+        row = self._nurse_schedule_row(
+            case_row["CaseDate"].strftime("%Y-%m-%d"),
+            string_utils.xstr(case_row["Doctor"]),
+        )
+        if row is None:
+            return False
+
+        field = {"早班": "Nurse1", "午班": "Nurse2", "晚班": "Nurse3"}.get(
+            string_utils.xstr(case_row["Period"])
+        )
+        if field is None:  # 與原函式相同: 班別不明視為無護理人員
+            return False
+
+        return string_utils.xstr(row[field]) != ""
 
     # ==================================================================
     # 系統設定值快取 (system_settings.field() 每次呼叫都會真的查資料庫)
@@ -1458,16 +1568,25 @@ class InsApplyXML(QtWidgets.QMainWindow):
         p20 = ET.SubElement(pdata, "p20")
         p20.text = string_utils.xstr(row["Class"])
 
-        if self.apply_date >= "11504":
-            diag_code = row["DiagCode"]
-            if diag_code in [
-                "A01",
-                "A03",
-                "A05",
-                "A09",
-            ]:  # 有護理人員 2026-04-14  護理人員跟診獎勵
-                p21 = ET.SubElement(pdata, "p21")
-                p21.text = "CNP"
+        # if self.apply_date >= "11504":
+        #     diag_code = row["DiagCode"]
+        #     if diag_code in [
+        #         "A01",
+        #         "A03",
+        #         "A05",
+        #         "A09",
+        #     ]:  # 有護理人員 2026-04-14  護理人員跟診獎勵
+        #         p21 = ET.SubElement(pdata, "p21")
+        #         p21.text = "CNP"
+
+        if (
+            self.apply_date >= "11504"
+            and number_utils.get_integer(amount) > 0
+            and self._is_cnp_treat_code(treat_code)
+            and self._nurse_on_duty(case_row)
+        ):
+            p21 = ET.SubElement(pdata, "p21")
+            p21.text = "CNP"
 
         if identifier not in [None, ""]:
             p26 = ET.SubElement(pdata, "p26")
