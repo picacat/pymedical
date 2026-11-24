@@ -80,12 +80,17 @@
               </column>
               <column>
                <property name="text">
+                <string>金額</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
                 <string>天數</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>金額</string>
+                <string>小計</string>
                </property>
               </column>
               <column>

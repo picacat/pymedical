@@ -24,7 +24,6 @@ class StatisticsStoreRevenueAmount(QtWidgets.QMainWindow):
         self.end_date = args[3]
         self.ui = None
 
-        print(self.start_date, self.end_date)
         self._set_ui()
         self._set_signal()
 
@@ -55,11 +54,12 @@ class StatisticsStoreRevenueAmount(QtWidgets.QMainWindow):
             150,
             110,
             300,
-            70,
             80,
             80,
             50,
-            100,
+            80,
+            50,
+            80,
             110,
         ]
         self.table_widget_amount.set_table_heading_width(width)
@@ -80,16 +80,21 @@ class StatisticsStoreRevenueAmount(QtWidgets.QMainWindow):
         self.ui.tableWidget_amount.setRowCount(0)
 
         self._read_data()
+        self._calculate_total()
 
     def _read_data(self):
         sql = """
-            SELECT prescript.*, cases.Name, cases.Cashier FROM prescript
-                LEFT JOIN cases ON prescript.CaseKey = cases.CaseKey
+            SELECT prescript.*, dosage.Days, cases.Name, cases.Cashier
+            FROM prescript
+                INNER JOIN cases ON prescript.CaseKey = cases.CaseKey
+                INNER JOIN dosage ON dosage.CaseKey = prescript.CaseKey
+                                AND dosage.MedicineSet = prescript.MedicineSet
             WHERE
-                cases.CaseDate BETWEEN %s AND %s AND
-                (cases.Doctor IS NULL OR LENGTH(cases.Doctor) = 0) AND
-                MedicineSet >= 2 AND
-                Amount > 0
+                cases.CaseDate >= %s AND
+                cases.CaseDate < DATE_ADD(%s, INTERVAL 1 DAY) AND
+                COALESCE(cases.Doctor, '') = '' AND
+                prescript.MedicineSet >= 2 AND
+                prescript.Amount > 0
             ORDER BY cases.CaseDate, cases.PatientKey, prescript.PrescriptKey
         """
         params = (self.start_date, self.end_date)
@@ -100,16 +105,22 @@ class StatisticsStoreRevenueAmount(QtWidgets.QMainWindow):
         quantity = number_utils.get_float(row["Dosage"])
         price = number_utils.get_float(row["Price"])
         amount = number_utils.get_float(row["Amount"])
+        pres_days = number_utils.get_integer(row["Days"])
+        if pres_days <= 0:
+            pres_days = 1
+
+        subtotal = round(amount * pres_days, 2)
         amount_row = [
             case_key,
-            string_utils.xstr(row["CaseDate"].strftime("%Y-%m-%d")),
+            row["CaseDate"].strftime("%Y-%m-%d"),
             string_utils.xstr(row["Name"]),
             string_utils.xstr(row["MedicineName"]),
             string_utils.xstr(row["Unit"]),
-            round(quantity, 2),
             round(price, 2),
-            None,
+            round(quantity, 2),
             round(amount, 2),
+            pres_days,
+            subtotal,
             string_utils.xstr(row["Cashier"]),
         ]
 
@@ -118,11 +129,42 @@ class StatisticsStoreRevenueAmount(QtWidgets.QMainWindow):
             item.setData(QtCore.Qt.EditRole, amount_row[col_no])
             self.ui.tableWidget_amount.setItem(row_no, col_no, item)
 
-            if col_no in [1, 2, 4, 9]:
+            if col_no in [1, 2, 4, 10]:
                 self.ui.tableWidget_amount.item(row_no, col_no).setTextAlignment(
                     QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter
                 )
-            elif col_no in [5, 6, 7, 8]:
+            elif col_no in [5, 6, 7, 8, 9]:
                 self.ui.tableWidget_amount.item(row_no, col_no).setTextAlignment(
                     QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
                 )
+
+    def _calculate_total(self):
+        table = self.ui.tableWidget_amount
+        row_count = table.rowCount()
+        if row_count <= 0:
+            return
+
+        total = 0.0
+        for row_no in range(row_count):
+            item = table.item(row_no, 9)
+            if item is not None:
+                total += number_utils.get_float(item.data(QtCore.Qt.EditRole))
+
+        table.insertRow(row_count)
+
+        font = table.font()
+        font.setBold(True)
+
+        total_row = {
+            3: "合計",
+            9: round(total, 2),
+        }
+        for col_no in range(table.columnCount()):
+            item = QtWidgets.QTableWidgetItem()
+            if col_no in total_row:
+                item.setData(QtCore.Qt.EditRole, total_row[col_no])
+            item.setFont(font)
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+            if col_no == 9:
+                item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            table.setItem(row_count, col_no, item)
