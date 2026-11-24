@@ -60,6 +60,7 @@ def get_module_name(tab_name):
         "回診率統計": ["statistics_return_rate", "StatisticsReturnRate"],
         "未回診統計": ["statistics_no_return_rate", "StatisticsNoReturnRate"],
         "用藥統計": ["statistics_medicine", "StatisticsMedicine"],
+        "門市收入統計": ["statistics_store_revenue", "StatisticsStoreRevenue"],
         "健保申報業績": ["statistics_ins_performance", "StatisticsInsPerformance"],
         "醫師銷售業績統計": [
             "statistics_doctor_performance",
@@ -1648,6 +1649,28 @@ def get_statistics_branch_daily_person(
     module = importlib.reload(statistics_branch_daily_person)
     widget = module.StatisticsBranchDailyPerson(
         parent, database, system_settings, database_list, year, month, day
+    )
+
+    return widget
+
+
+# 分院日報表-人數統計
+def get_statistics_store_revenue_amount(
+    parent,
+    database,
+    system_settings,
+    start_date,
+    end_date,
+):
+    import statistics_store_revenue_amount
+
+    module = importlib.reload(statistics_store_revenue_amount)
+    widget = module.StatisticsStoreRevenueAmount(
+        parent,
+        database,
+        system_settings,
+        start_date,
+        end_date,
     )
 
     return widget

@@ -951,6 +951,7 @@ class PyMedical(QtWidgets.QMainWindow):
         )
         self.ui.action_statistics_growth_rate.triggered.connect(self._open_subroutine)
         self.ui.action_business_income.triggered.connect(self._open_subroutine)
+        self.ui.action_statistics_store_revenue.triggered.connect(self._open_subroutine)
 
         self.ui.action_statistics_massager.triggered.connect(self._open_subroutine)
         self.ui.action_statistics_period_count.triggered.connect(
@@ -1295,6 +1296,7 @@ class PyMedical(QtWidgets.QMainWindow):
             "健保申報分列項目表",
             "年度診次統計",
             "銷貨",
+            "門市收入統計",
         ]:
             widget.open_dialog()
         elif widget_name == "醫師看診作業":
@@ -2107,6 +2109,7 @@ class PyMedical(QtWidgets.QMainWindow):
             self.ui.action_statistics_growth_rate,
             self.ui.action_statistics_massager,
             self.ui.action_business_income,
+            self.ui.action_statistics_store_revenue,
         ]
 
         for action in action_list:
@@ -2329,6 +2332,8 @@ class PyMedical(QtWidgets.QMainWindow):
                 item.append(self.ui.action_statistics_massager)
             elif string_utils.xstr(item[1]) == "執行執行業務所得統計":
                 item.append(self.ui.action_business_income)
+            elif string_utils.xstr(item[1]) == "執行門市收入統計":
+                item.append(self.ui.action_statistics_store_revenue)
 
             else:
                 item.append(None)

@@ -1,24 +1,27 @@
 # -*- coding: UTF-8 -*-
 
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
 import datetime
 
-from libs import class_utils
-from libs import ui_utils
-from libs import string_utils
-from libs import number_utils
-from libs import export_utils
-from libs import system_utils
-from libs import case_utils
-from libs import printer_utils
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+
+from libs import (
+    case_utils,
+    class_utils,
+    export_utils,
+    number_utils,
+    printer_utils,
+    string_utils,
+    system_utils,
+    ui_utils,
+)
 
 
-# 門診收入總覽 2021.07.15
+# 門診收入總覽 2022.07.15
 class StatisticsDoctorSummary(QtWidgets.QMainWindow):
     # 初始化
     def __init__(self, parent=None, *args):
-        super(StatisticsDoctorSummary, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.database = args[0]
         self.system_settings = args[1]
@@ -54,16 +57,30 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
     def _set_table_width(self):
         width = [
             130,
-            100, 100, 100, 120, 100, 100, 100, 100, 100, 100,
-            100, 100,
+            100,
+            100,
+            100,
+            120,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
         ]
         self.table_widget_doctor_summary.set_table_heading_width(width)
 
     # 設定信號
     def _set_signal(self):
         self.ui.toolButton_export_to_excel.clicked.connect(self._export_to_excel)
-        self.ui.toolButton_print.clicked.connect(lambda: self._print_doctor_summary(print_type=None))
-        self.ui.toolButton_print_to_pdf.clicked.connect(lambda: self._print_doctor_summary(print_type='pdf'))
+        self.ui.toolButton_print.clicked.connect(
+            lambda: self._print_doctor_summary(print_type=None)
+        )
+        self.ui.toolButton_print_to_pdf.clicked.connect(
+            lambda: self._print_doctor_summary(print_type="pdf")
+        )
 
     def close_tab(self):
         current_tab = self.parent.ui.tabWidget_window.currentIndex()
@@ -80,8 +97,10 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
         self._calculate_total()
 
     def _set_statistics_table_heading(self):
-        start_date = datetime.datetime.strptime(self.start_date, '%Y-%m-%d %H:%M:%S').date()
-        end_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d %H:%M:%S').date()
+        start_date = datetime.datetime.strptime(
+            self.start_date, "%Y-%m-%d %H:%M:%S"
+        ).date()
+        end_date = datetime.datetime.strptime(self.end_date, "%Y-%m-%d %H:%M:%S").date()
         day_count = (end_date - start_date).days + 1
 
         calendar_list = []
@@ -99,34 +118,35 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
             )
 
         self.ui.tableWidget_doctor_summary.setItem(
-            row_count, 0, QtWidgets.QTableWidgetItem('總計')
+            row_count, 0, QtWidgets.QTableWidgetItem("總計")
         )
 
         for row_no in range(self.ui.tableWidget_doctor_summary.rowCount()):
             for col_no in range(1, self.ui.tableWidget_doctor_summary.columnCount()):
                 self.ui.tableWidget_doctor_summary.setItem(
-                    row_no, col_no, QtWidgets.QTableWidgetItem('0')
+                    row_no, col_no, QtWidgets.QTableWidgetItem("0")
                 )
                 self.ui.tableWidget_doctor_summary.item(
-                    row_no, col_no).setTextAlignment(
-                    QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-                )
+                    row_no, col_no
+                ).setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
     def _read_data(self):
-        period_condition = ''
+        period_condition = ""
 
-        if self.period != '全部':
+        if self.period != "全部":
             period_condition = f' AND Period = "{self.period}"'
 
-        doctor_condition = ''
-        if self.doctor != '全部':
+        doctor_condition = ""
+        if self.doctor != "全部":
             doctor_condition = f' AND cases.Doctor = "{self.doctor}"'
 
         regist_condition = case_utils.get_regist_type_exclude_sql(self.option)
 
-        weekday_condition = ''
+        weekday_condition = ""
         if len(self.weekday_list) > 0:
-            weekday_condition = f' AND WEEKDAY(CaseDate) IN({",".join(self.weekday_list)})'
+            weekday_condition = (
+                f" AND WEEKDAY(CaseDate) IN({','.join(self.weekday_list)})"
+            )
 
         sql = f'''
             SELECT * FROM cases
@@ -161,21 +181,21 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
             return
 
         progress_dialog = QtWidgets.QProgressDialog(
-            '門診收入統計中, 請稍後...', '取消', 0, row_count, self
+            "門診收入統計中, 請稍後...", "取消", 0, row_count, self
         )
 
         progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
         progress_dialog.setValue(0)
         for i, row in enumerate(rows):
-            case_date = row['CaseDate'].strftime('%Y-%m-%d')
-            ins_type = string_utils.xstr(row['InsType'])
+            case_date = row["CaseDate"].strftime("%Y-%m-%d")
+            ins_type = string_utils.xstr(row["InsType"])
             progress_dialog.setValue(i)
             row_no = self._get_row_no(case_date)
             if row_no is None:
                 continue
 
             self._set_person_count(row, row_no)
-            if ins_type == '健保':
+            if ins_type == "健保":
                 self._set_toll_free(row, row_no)
 
             self._set_income(row, row_no)
@@ -185,8 +205,8 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
 
     def _is_duplicate_patient(self, row):
         duplicate_patient = False
-        case_date = row['CaseDate'].strftime('%Y-%m-%d')
-        patient_key = string_utils.xstr(row['PatientKey'])
+        case_date = row["CaseDate"].strftime("%Y-%m-%d")
+        patient_key = string_utils.xstr(row["PatientKey"])
 
         sql = f'''
             SELECT CaseKey FROM cases
@@ -203,7 +223,7 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
     def _set_person_count(self, row, row_no):
         person_count = 1
 
-        if string_utils.xstr(row['InsType']) == '健保':
+        if string_utils.xstr(row["InsType"]) == "健保":
             col_no = 1
         else:
             if self._is_duplicate_patient(row):
@@ -230,18 +250,22 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
         free_drug_share_fee_col_no = 6
         free_drug_share_fee_count = 0
 
-        if number_utils.get_integer(row['RegistFee']) <= 0:
+        if number_utils.get_integer(row["RegistFee"]) <= 0:
             free_regist_fee_count = 1
 
-        if number_utils.get_integer(row['SDiagShareFee']) <= 0:
+        if number_utils.get_integer(row["SDiagShareFee"]) <= 0:
             free_diag_share_fee_count = 1
 
-        if number_utils.get_integer(row['SDrugShareFee']) <= 0:
+        if number_utils.get_integer(row["SDrugShareFee"]) <= 0:
             free_drug_share_fee_count = 1
 
         self._set_item_data(row_no, free_regist_fee_col_no, free_regist_fee_count)
-        self._set_item_data(row_no, free_diag_share_fee_col_no, free_diag_share_fee_count)
-        self._set_item_data(row_no, free_drug_share_fee_col_no, free_drug_share_fee_count)
+        self._set_item_data(
+            row_no, free_diag_share_fee_col_no, free_diag_share_fee_count
+        )
+        self._set_item_data(
+            row_no, free_drug_share_fee_col_no, free_drug_share_fee_count
+        )
 
     def _set_income(self, row, row_no):
         regist_fee_col_no = 7
@@ -251,13 +275,13 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
         total_fee_col_no = 11
         subtotal_fee_col_no = 12
 
-        regist_fee = number_utils.get_integer(row['RegistFee'])
-        diag_share_fee = number_utils.get_integer(row['SDiagShareFee'])
-        drug_share_fee = number_utils.get_integer(row['SDrugShareFee'])
-        total_fee = number_utils.get_integer(row['TotalFee'])
+        regist_fee = number_utils.get_integer(row["RegistFee"])
+        diag_share_fee = number_utils.get_integer(row["SDiagShareFee"])
+        drug_share_fee = number_utils.get_integer(row["SDrugShareFee"])
+        total_fee = number_utils.get_integer(row["TotalFee"])
 
         self._set_item_data(row_no, regist_fee_col_no, regist_fee)
-        if number_utils.get_integer(row['Continuance']) <= 1:
+        if number_utils.get_integer(row["Continuance"]) <= 1:
             self._set_item_data(row_no, first_regist_fee_col_no, regist_fee)
 
         subtotal = regist_fee + diag_share_fee + drug_share_fee + total_fee
@@ -278,8 +302,7 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
         item = QtWidgets.QTableWidgetItem()
         item.setData(QtCore.Qt.EditRole, value)
         self.ui.tableWidget_doctor_summary.setItem(row_no, col_no, item)
-        self.ui.tableWidget_doctor_summary.item(
-            row_no, col_no).setTextAlignment(
+        self.ui.tableWidget_doctor_summary.item(row_no, col_no).setTextAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         )
 
@@ -290,33 +313,46 @@ class StatisticsDoctorSummary(QtWidgets.QMainWindow):
         excel_file_name, _ = QFileDialog.getSaveFileName(
             self.parent,
             "資料匯出",
-            f'{start_date}至{end_date}{self.doctor}門診收入一覽表.xlsx',
-            "excel檔案 (*.xlsx);;Text Files (*.txt)", options=options
+            f"{start_date}至{end_date}{self.doctor}門診收入一覽表.xlsx",
+            "excel檔案 (*.xlsx);;Text Files (*.txt)",
+            options=options,
         )
         if not excel_file_name:
             return
 
         export_utils.export_table_widget_to_excel(
-            excel_file_name, self.ui.tableWidget_doctor_summary, None, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+            excel_file_name,
+            self.ui.tableWidget_doctor_summary,
+            None,
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
         )
 
         system_utils.show_message_box(
             QMessageBox.Information,
-            '資料匯出完成',
-            f'<h3>門診收入一覽檔{excel_file_name}匯出完成.</h3>',
-            'Microsoft Excel 格式.'
+            "資料匯出完成",
+            f"<h3>門診收入一覽檔{excel_file_name}匯出完成.</h3>",
+            "Microsoft Excel 格式.",
         )
 
     def _calculate_total(self):
         total_field_row_no = self.ui.tableWidget_doctor_summary.rowCount() - 1
 
         row_count = self.ui.tableWidget_doctor_summary.rowCount()
-        for row_no in range(row_count-1):
+        for row_no in range(row_count - 1):
             for col_no in range(1, self.ui.tableWidget_doctor_summary.columnCount()):
-                value = number_utils.get_integer(self.ui.tableWidget_doctor_summary.item(row_no, col_no).text())
+                value = number_utils.get_integer(
+                    self.ui.tableWidget_doctor_summary.item(row_no, col_no).text()
+                )
                 self._set_item_data(total_field_row_no, col_no, value)
 
     def _print_doctor_summary(self, print_type=None):
         printer_utils.print_doctor_summary(
-            self, self.database, self.system_settings, self.start_date, self.end_date, self.doctor,
-            self.ui.tableWidget_doctor_summary, print_type)
+            self,
+            self.database,
+            self.system_settings,
+            self.start_date,
+            self.end_date,
+            self.doctor,
+            self.ui.tableWidget_doctor_summary,
+            print_type,
+        )

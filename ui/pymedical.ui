@@ -1161,6 +1161,7 @@
     <addaction name="action_statistics_return_rate"/>
     <addaction name="action_statistics_no_return_rate"/>
     <addaction name="action_statistics_medicine"/>
+    <addaction name="action_statistics_store_revenue"/>
     <addaction name="separator"/>
     <addaction name="action_statistics_ins_performance"/>
     <addaction name="action_statistics_multiple_performance"/>
@@ -2308,6 +2309,18 @@
    </property>
    <property name="toolTip">
     <string>匯出資料庫至JSON，為了個資保護，不會揭露敏感性資料</string>
+   </property>
+  </action>
+  <action name="action_statistics_store_revenue">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/xcalc.png</normaloff>../icons/xcalc.png</iconset>
+   </property>
+   <property name="text">
+    <string>門市收入統計</string>
+   </property>
+   <property name="toolTip">
+    <string>門市收入</string>
    </property>
   </action>
  </widget>

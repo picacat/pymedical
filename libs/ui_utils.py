@@ -165,6 +165,8 @@ UI_STATISTICS_DOCTOR_SALE_SUMMARY = "statistics_doctor_sale_summary.ui"
 UI_STATISTICS_DOCTOR_PROJECT_SALE = "statistics_doctor_project_sale.ui"
 
 UI_STATISTICS_COMMISSION_SALE = "statistics_commission_sale.ui"
+UI_STATISTICS_STORE_REVENUE = "statistics_store_revenue.ui"
+UI_STATISTICS_STORE_REVENUE_AMOUNT = "statistics_store_revenue_amount.ui"
 
 UI_STATISTICS_STAMP_DUTY = "statistics_stamp_duty.ui"
 UI_STATISTICS_STAMP_DUTY_LIST = "statistics_stamp_duty_list.ui"

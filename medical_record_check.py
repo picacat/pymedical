@@ -3123,14 +3123,14 @@ class MedicalRecordCheck(QtWidgets.QDialog):
         if self.packages < 1:
             error_message.append("給藥包數不足1包")
 
-        if self.pres_days < 3:
+        if self.pres_days < 2:
             if (
                 self.medical_record["Share"] in nhi_utils.INFECTIOUS_TYPE
                 or self.medical_record["Injury"] in nhi_utils.INFECTIOUS_TYPE
             ):
                 pass
             else:
-                error_message.append("給藥天數不足3日")
+                error_message.append("給藥天數不足2日")
         elif self.pres_days > 30:
             regist_type = self.parent.tab_registration.comboBox_reg_type.currentText()
             if (
