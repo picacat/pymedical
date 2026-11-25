@@ -148,6 +148,7 @@
    <addaction name="action_remove_certificate"/>
    <addaction name="separator"/>
    <addaction name="action_print_certificate"/>
+   <addaction name="action_print_certificate2"/>
    <addaction name="action_print_certificate_proof"/>
    <addaction name="action_print_diagnosis_proof"/>
    <addaction name="action_print_certificate_summary"/>
@@ -213,10 +214,10 @@
      <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
    </property>
    <property name="text">
-    <string>列印診斷證明</string>
+    <string>印乙種診斷書</string>
    </property>
    <property name="toolTip">
-    <string>列印診斷證明</string>
+    <string>列印乙種診斷證明，會加註「本證明訴訟無效」</string>
    </property>
   </action>
   <action name="action_query_certificate">
@@ -234,7 +235,7 @@
      <normaloff>../icons/document-export.svg</normaloff>../icons/document-export.svg</iconset>
    </property>
    <property name="text">
-    <string>產生醫療費用證明書</string>
+    <string>產生醫療費用證明</string>
    </property>
    <property name="toolTip">
     <string>產生醫療費用證明書</string>
@@ -258,7 +259,7 @@
      <normaloff>../icons/document-print.svg</normaloff>../icons/document-print.svg</iconset>
    </property>
    <property name="text">
-    <string>列印醫療收據</string>
+    <string>印醫療收據</string>
    </property>
   </action>
   <action name="action_print_certificate_pdf">
@@ -291,7 +292,7 @@
      <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
    </property>
    <property name="text">
-    <string>列印就醫證明</string>
+    <string>印就醫證明</string>
    </property>
    <property name="toolTip">
     <string>列印就醫證明</string>
@@ -303,7 +304,7 @@
      <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
    </property>
    <property name="text">
-    <string>列印就醫證明2</string>
+    <string>印就醫證明2</string>
    </property>
    <property name="toolTip">
     <string>列印就醫證明</string>
@@ -315,7 +316,7 @@
      <normaloff>../icons/printer.png</normaloff>../icons/printer.png</iconset>
    </property>
    <property name="text">
-    <string>列印病歷摘要</string>
+    <string>印病歷摘要</string>
    </property>
    <property name="toolTip">
     <string>列印病歷摘要</string>
@@ -327,10 +328,10 @@
      <normaloff>../icons/accessories-text-editor.png</normaloff>../icons/accessories-text-editor.png</iconset>
    </property>
    <property name="text">
-    <string>修改開立日期</string>
+    <string>修改日期</string>
    </property>
    <property name="toolTip">
-    <string>修改開立日期</string>
+    <string>修改日期</string>
    </property>
   </action>
   <action name="action_export_to_excel">
@@ -352,6 +353,18 @@
    </property>
    <property name="toolTip">
     <string>匯出今年度診斷證明至excel</string>
+   </property>
+  </action>
+  <action name="action_print_certificate2">
+   <property name="icon">
+    <iconset>
+     <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
+   </property>
+   <property name="text">
+    <string>印甲種診斷書</string>
+   </property>
+   <property name="toolTip">
+    <string>列印乙種診斷證明，不會加註「本證明訴訟無效」</string>
    </property>
   </action>
  </widget>

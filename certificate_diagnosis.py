@@ -78,7 +78,12 @@ class CertificateDiagnosis(QtWidgets.QMainWindow):
         self.ui.action_remove_certificate.triggered.connect(
             lambda: self.remove_certificate(show_warning=True)
         )
-        self.ui.action_print_certificate.triggered.connect(self._print_certificate)
+        self.ui.action_print_certificate.triggered.connect(
+            lambda: self._print_certificate(no_litigation=True)
+        )
+        self.ui.action_print_certificate2.triggered.connect(
+            lambda: self._print_certificate(no_litigation=False)
+        )
         self.ui.action_print_certificate_proof.triggered.connect(
             self._print_certificate_proof
         )
@@ -279,13 +284,14 @@ class CertificateDiagnosis(QtWidgets.QMainWindow):
         current_row = self.ui.tableWidget_certificate_list.currentRow()
         self.ui.tableWidget_certificate_list.removeRow(current_row)
 
-    def _print_certificate(self):
+    def _print_certificate(self, no_litigation=True):
         printer_utils.print_form_certificate_diagnosis(
             self,
             self.database,
             self.system_settings,
             self.table_widget_certificate_list.field_value(0),
             "診斷證明書",
+            no_litigation=no_litigation,
         )
 
     def _print_certificate_proof(self):

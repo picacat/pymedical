@@ -27,6 +27,7 @@ class PrintCertificateDiagnosis:
         self.system_settings = args[1]
         self.certificate_key = args[2]
         self.title = args[3]
+        self.no_litigation = args[4]
 
         self.ui = None
 
@@ -414,17 +415,22 @@ class PrintCertificateDiagnosis:
 
         return html
 
-    @staticmethod
-    def _get_html_remark():
-        html = """
+    def _get_html_remark(self):  # 拿掉 @staticmethod
+        litigation_row = ""
+        if self.no_litigation:
+            litigation_row = """
+                        <tr>
+                            <td>本證明書訴訟無效</td>
+                        </tr>
+            """
+
+        html = f"""
             <table align=center width="98%" cellspacing="0">
                 <tbody>
                     <tr>
                         <td>本證明書經塗改或未加蓋本院印章者無效</td>
                     </tr>
-                    <tr>
-                        <td>本證明書訴訟無效</td>
-                    </tr>
+                    {litigation_row}
                 </tbody>
             </table>
         """

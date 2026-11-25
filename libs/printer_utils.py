@@ -6457,13 +6457,18 @@ def print_form_diagnosis_proof(
 
 
 def get_print_certificate_diagnosis(
-    parent, database, system_settings, certificate_key, title
+    parent, database, system_settings, certificate_key, title, no_litigation=True
 ):
     from printer import print_certificate_diagnosis
 
     module = importlib.reload(print_certificate_diagnosis)
     print_module = module.PrintCertificateDiagnosis(
-        parent, database, system_settings, certificate_key, title
+        parent,
+        database,
+        system_settings,
+        certificate_key,
+        title,
+        no_litigation,
     )
 
     return print_module
@@ -6471,12 +6476,27 @@ def get_print_certificate_diagnosis(
 
 # 列印診斷證明書
 def print_form_certificate_diagnosis(
-    parent, database, system_settings, certificate_key, title, print_type=None
+    parent,
+    database,
+    system_settings,
+    certificate_key,
+    title,
+    print_type=None,
+    no_litigation=True,
 ):
     print_certificate_diagnosis = get_print_certificate_diagnosis(
-        parent, database, system_settings, certificate_key, title
+        parent,
+        database,
+        system_settings,
+        certificate_key,
+        title,
+        no_litigation=no_litigation,
     )
-    print_form(system_settings, print_certificate_diagnosis, print_type)
+    print_form(
+        system_settings,
+        print_certificate_diagnosis,
+        print_type,
+    )
 
 
 def get_print_certificate_payment(
