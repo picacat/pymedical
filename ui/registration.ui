@@ -1250,6 +1250,23 @@
                </widget>
               </item>
               <item>
+               <widget class="QLabel" name="label_40">
+                <property name="text">
+                 <string>醫師</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboBox_wait_doctor">
+                <property name="minimumSize">
+                 <size>
+                  <width>120</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
                <spacer name="horizontalSpacer_2">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
@@ -1775,6 +1792,23 @@
                <widget class="QRadioButton" name="radioButton_period3">
                 <property name="text">
                  <string>晚班</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_41">
+                <property name="text">
+                 <string>醫師</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboBox_wait_done_doctor">
+                <property name="minimumSize">
+                 <size>
+                  <width>120</width>
+                  <height>0</height>
+                 </size>
                 </property>
                </widget>
               </item>

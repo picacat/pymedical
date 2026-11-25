@@ -231,6 +231,57 @@ class Registration(QtWidgets.QMainWindow):
             self._set_tab_widget_corner_widget()
 
         self._set_self_items()
+        self._set_wait_doctor_combo(self.ui.comboBox_wait_doctor)
+        self._set_wait_doctor_combo(self.ui.comboBox_wait_done_doctor)
+
+    def _set_wait_doctor_combo(self, combo_box):
+        original_show_popup = combo_box.showPopup
+
+        def show_popup():
+            try:
+                self._refresh_wait_doctor_items(combo_box)
+            except Exception:
+                logging.exception("更新醫師下拉清單失敗")
+
+            original_show_popup()  # 更新失敗也照樣打開舊清單
+
+        combo_box.showPopup = show_popup
+
+    def _refresh_wait_doctor_items(self, combo):
+        current = combo.currentText()
+
+        if combo is self.ui.comboBox_wait_doctor:
+            conditions = []
+            period = self._get_period()
+            if period:
+                conditions.append(f'wait.Period = "{period}"')
+            where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+        else:
+            where = "WHERE DoctorDone = 'True'"
+
+        sql = f"SELECT Doctor FROM wait {where} GROUP BY Doctor ORDER BY MIN(Room)"
+
+        combo.blockSignals(True)
+        try:
+            combo.clear()
+            combo.addItem("全部")
+            rows = self.database.select_record(sql)
+            combo.addItems([row["Doctor"] for row in rows if row["Doctor"]])
+
+            index = combo.findText(current)
+            combo.setCurrentIndex(max(index, 0))
+        finally:
+            combo.blockSignals(False)
+
+    def _get_period(self):
+        if self.ui.radioButton_wait_period1.isChecked():
+            return "早班"
+        if self.ui.radioButton_wait_period2.isChecked():
+            return "午班"
+        if self.ui.radioButton_wait_period3.isChecked():
+            return "晚班"
+
+        return ""
 
     def _set_self_items(self):
         self._clear_charge_layout()
@@ -475,11 +526,15 @@ class Registration(QtWidgets.QMainWindow):
         self.ui.radioButton_wait_period1.clicked.connect(self.read_wait)
         self.ui.radioButton_wait_period2.clicked.connect(self.read_wait)
         self.ui.radioButton_wait_period3.clicked.connect(self.read_wait)
+        self.ui.comboBox_wait_doctor.currentIndexChanged.connect(self.read_wait)
 
         self.ui.radioButton_all.clicked.connect(self._read_wait_completed)
         self.ui.radioButton_period1.clicked.connect(self._read_wait_completed)
         self.ui.radioButton_period2.clicked.connect(self._read_wait_completed)
         self.ui.radioButton_period3.clicked.connect(self._read_wait_completed)
+        self.ui.comboBox_wait_done_doctor.currentIndexChanged.connect(
+            self._read_wait_completed
+        )
 
         self.ui.dateEdit_case_date.dateChanged.connect(self._case_date_changed)
         self.ui.checkBox_easy_mode.clicked.connect(self._set_easy_mode)
@@ -941,6 +996,25 @@ class Registration(QtWidgets.QMainWindow):
                 table.setCurrentCell(row_no, self.wait_column["Name"])
                 return
 
+    def _get_period_condition(self):
+        period_condition = ""
+        if self.ui.radioButton_wait_period1.isChecked():
+            period_condition = ' AND wait.Period = "早班" '
+        elif self.ui.radioButton_wait_period2.isChecked():
+            period_condition = ' AND wait.Period = "午班" '
+        elif self.ui.radioButton_wait_period3.isChecked():
+            period_condition = ' AND wait.Period = "晚班" '
+
+        return period_condition
+
+    def _get_doctor_condition(self):
+        doctor_condition = ""
+        doctor = self.ui.comboBox_wait_doctor.currentText()
+        if doctor != "全部":
+            doctor_condition = f' AND wait.Doctor = "{doctor}" '
+
+        return doctor_condition
+
     def read_wait(self):
         order_type = self.system_settings.field("掛號候診名單排序方式")
         if order_type == "時間排序":
@@ -950,13 +1024,8 @@ class Registration(QtWidgets.QMainWindow):
         else:
             order_by_script = "ORDER BY wait.Room, wait.RegistNo"
 
-        period_condition = ""
-        if self.ui.radioButton_wait_period1.isChecked():
-            period_condition = ' AND wait.Period = "早班" '
-        elif self.ui.radioButton_wait_period2.isChecked():
-            period_condition = ' AND wait.Period = "午班" '
-        elif self.ui.radioButton_wait_period3.isChecked():
-            period_condition = ' AND wait.Period = "晚班" '
+        period_condition = self._get_period_condition()
+        doctor_condition = self._get_doctor_condition()
 
         sql = f"""
             SELECT
@@ -968,6 +1037,7 @@ class Registration(QtWidgets.QMainWindow):
             WHERE
                 wait.DoctorDone = "False"
                 {period_condition}
+                {doctor_condition}
             {order_by_script}
         """
         case_key = self._get_current_wait_case_key()  # ← 新增
@@ -1302,6 +1372,8 @@ class Registration(QtWidgets.QMainWindow):
         )
         ui_utils.set_combo_box(self.ui.comboBox_ins_type, nhi_utils.INS_TYPE)
         ui_utils.set_combo_box(self.ui.comboBox_visit, nhi_utils.VISIT)
+        ui_utils.set_combo_box(self.ui.comboBox_wait_doctor, ["全部"])
+        ui_utils.set_combo_box(self.ui.comboBox_wait_done_doctor, ["全部"])
 
         ui_utils.set_combo_box(
             self.ui.comboBox_reg_type, nhi_utils.REG_TYPE, "一般門診"
@@ -5330,47 +5402,15 @@ class Registration(QtWidgets.QMainWindow):
 
     def _read_wait_completed(self):
         period_script = self._get_period_script("cases")
+        doctor = self.ui.comboBox_wait_done_doctor.currentText()
+        if doctor not in [None, "", "全部"]:
+            period_script += f' AND cases.Doctor = "{doctor}" '
+
         if self.system_settings.field("掛號已就診名單顯示自購藥病歷") == "Y":
             purchase_script = ""
         else:
             purchase_script = ' AND wait.TreatType NOT IN ("自購")'
 
-        # sql = f"""
-        #     SELECT
-        #         wait.WaitKey,
-        #         cases.CaseKey, cases.PatientKey, cases.Name,
-        #         cases.InsType, cases.Share, cases.TreatType,
-        #         cases.Visit, cases.Card, cases.XCard, cases.Continuance,
-        #         cases.Security,
-        #         cases.Room, cases.RegistNo, cases.Doctor, cases.DrugNo,
-        #         cases.RegistFee, cases.SDiagShareFee, cases.SDrugShareFee,
-        #         cases.DepositFee, cases.TotalFee,
-        #         cases.Remark,
-        #         patient.Gender,
-        #         dosage.Days AS PresDays,
-        #         thc.THCFee
-        #     FROM wait
-        #         LEFT JOIN patient ON wait.PatientKey = patient.PatientKey
-        #         LEFT JOIN cases ON wait.CaseKey = cases.CaseKey
-        #         LEFT JOIN dosage ON dosage.CaseKey = cases.CaseKey AND dosage.MedicineSet = 1
-        #         LEFT JOIN (
-        #             SELECT Position1, MAX(TotalFee) AS THCFee
-        #             FROM cases
-        #             WHERE
-        #                 TreatType = "民俗調理" AND
-        #                 IFNULL(Position1, "") != ""
-        #             GROUP BY Position1
-        #         ) thc ON thc.Position1 = CAST(cases.CaseKey AS CHAR)
-        #     WHERE
-        #         cases.DoctorDone = "True"
-        #         AND NOT (
-        #             cases.TreatType = "民俗調理"
-        #             AND IFNULL(cases.Position1, "") != ""
-        #         )
-        #         {purchase_script}
-        #         {period_script}
-        #     ORDER BY FIELD(cases.Period, "晚班", "午班", "早班"), cases.RegistNo DESC
-        # """
         sql = f"""
             SELECT
                 wait.WaitKey,
