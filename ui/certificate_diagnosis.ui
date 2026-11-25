@@ -148,7 +148,6 @@
    <addaction name="action_remove_certificate"/>
    <addaction name="separator"/>
    <addaction name="action_print_certificate"/>
-   <addaction name="action_print_certificate2"/>
    <addaction name="action_print_certificate_proof"/>
    <addaction name="action_print_diagnosis_proof"/>
    <addaction name="action_print_certificate_summary"/>
@@ -176,7 +175,21 @@
     <addaction name="action_export_certificate_list_excel"/>
     <addaction name="action_export_table_to_excel"/>
    </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>列印</string>
+    </property>
+    <addaction name="action_print_certificate"/>
+    <addaction name="action_print_certificate2"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_certificate_proof"/>
+    <addaction name="action_print_diagnosis_proof"/>
+    <addaction name="separator"/>
+    <addaction name="action_print_receipt"/>
+    <addaction name="action_print_certificate_summary"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menu_2"/>
   </widget>
   <action name="action_add_certificate">
    <property name="icon">
@@ -214,7 +227,7 @@
      <normaloff>../icons/document-print.png</normaloff>../icons/document-print.png</iconset>
    </property>
    <property name="text">
-    <string>印乙種診斷書</string>
+    <string>印診斷證明書</string>
    </property>
    <property name="toolTip">
     <string>列印乙種診斷證明，會加註「本證明訴訟無效」</string>
