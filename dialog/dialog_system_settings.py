@@ -1382,6 +1382,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         )
         self._set_check_box(self.ui.checkBox_print_massager, "列印推拿師父")
         self._set_check_box(self.ui.checkBox_print_reservation_no, "列印預約號碼")
+        self._set_check_box(self.ui.checkBox_print_reservation_time, "列印預約時間")
         self._set_check_box(self.ui.checkBox_print_treat, "列印穴道處置")
         self._set_check_box(
             self.ui.checkBox_print_no_treat_fee, "費用總表合併處置費至藥費"
@@ -2593,6 +2594,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
         self._save_check_box(self.ui.checkBox_print_clinic_name, "列印院所名稱")
         self._save_check_box(self.ui.checkBox_print_massager, "列印推拿師父")
         self._save_check_box(self.ui.checkBox_print_reservation_no, "列印預約號碼")
+        self._save_check_box(self.ui.checkBox_print_reservation_time, "列印預約時間")
         self._save_check_box(self.ui.checkBox_print_treat, "列印穴道處置")
         self._save_check_box(
             self.ui.checkBox_print_no_treat_fee, "費用總表合併處置費至藥費"

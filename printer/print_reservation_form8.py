@@ -1,11 +1,11 @@
-
 # -*- coding: UTF-8 -*-
 
 import datetime
 
-from libs import date_utils, printer_utils, string_utils, system_utils
 from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from PyQt5.QtPrintSupport import QPrinter
+
+from libs import date_utils, printer_utils, string_utils, system_utils
 
 
 # 預約單 熱感 80mm
@@ -19,7 +19,9 @@ class PrintReservationForm8:
         self.reservation_key = args[2]
         self.ui = None
 
-        self.printer = printer_utils.get_printer(self.system_settings, '預約掛號單印表機')
+        self.printer = printer_utils.get_printer(
+            self.system_settings, "預約掛號單印表機"
+        )
         self.preview_dialog = QtPrintSupport.QPrintPreviewDialog(self.printer)
 
         self.current_print = None
@@ -50,13 +52,17 @@ class PrintReservationForm8:
         geometry = QtWidgets.QApplication.desktop().screenGeometry()
 
         self.preview_dialog.paintRequested.connect(self.print_html)
-        self.preview_dialog.resize(geometry.width(), geometry.height())  # for use in Linux
+        self.preview_dialog.resize(
+            geometry.width(), geometry.height()
+        )  # for use in Linux
         self.preview_dialog.setWindowState(QtCore.Qt.WindowMaximized)
         self.preview_dialog.exec_()
 
     def print_html(self, printing=None):
         self.current_print = self.print_html
-        printer_utils.set_paper_size(self.printer, self.system_settings, 74, 148, QPrinter.Millimeter, '預約單')
+        printer_utils.set_paper_size(
+            self.printer, self.system_settings, 74, 148, QPrinter.Millimeter, "預約單"
+        )
 
         document = printer_utils.get_document(self.printer, self.font)
         document.setDocumentMargin(printer_utils.get_document_margin())
@@ -65,11 +71,11 @@ class PrintReservationForm8:
             document.print(self.printer)
 
     def _html(self):
-        sql = f'''
+        sql = f"""
             SELECT * FROM reserve
             WHERE
                 ReserveKey = {self.reservation_key}
-        '''
+        """
         rows = self.database.select_record(sql)
 
         if len(rows) <= 0:
@@ -77,48 +83,53 @@ class PrintReservationForm8:
 
         row = rows[0]
 
-        clinic_name = self.system_settings.field('院所名稱')
-        clinic_id = self.system_settings.field('院所代號')
-        clinic_telephone = self.system_settings.field('院所電話')
-        clinic_address = self.system_settings.field('院所地址')
-        print_reservation_no = self.system_settings.field('列印預約號碼')
+        clinic_name = self.system_settings.field("院所名稱")
+        clinic_id = self.system_settings.field("院所代號")
+        clinic_telephone = self.system_settings.field("院所電話")
+        clinic_address = self.system_settings.field("院所地址")
+        print_reservation_no = self.system_settings.field("列印預約號碼")
 
-        name = string_utils.xstr(row['Name'])
-        patient_key = string_utils.xstr(row['PatientKey'])
+        name = string_utils.xstr(row["Name"])
+        patient_key = string_utils.xstr(row["PatientKey"])
 
-        reservation_date = string_utils.xstr(row['ReserveDate'].date())
+        reservation_date = string_utils.xstr(row["ReserveDate"].date())
         reservation_date = date_utils.date_to_zh_tw_date(reservation_date)
 
-        reservation_time = string_utils.xstr(row['ReserveDate'].time())
-        reservation_no = string_utils.xstr(row['ReserveNo'])
-        period = string_utils.xstr(row['Period'])
-        period = period.replace('班', '診')
-        
-        doctor = string_utils.xstr(row['Doctor'])
+        reservation_time = string_utils.xstr(row["ReserveDate"].time())
+        reservation_no = string_utils.xstr(row["ReserveNo"])
+        period = string_utils.xstr(row["Period"])
+        period = period.replace("班", "診")
 
-        if self.system_settings.field('預約班表不顯示時間') == 'Y':
-            reservation_time = ''
+        doctor = string_utils.xstr(row["Doctor"])
+
+        if self.system_settings.field("列印預約時間") == "Y":
+            reservation_time = " - " + string_utils.xstr(row["ReserveDate"].time())[:5]
         else:
-            reservation_time = ' - ' + string_utils.xstr(row['ReserveDate'].time())[:5]
+            reservation_time = ""
 
-        reserve_date = row['ReserveDate']
+        if reservation_time == " - 00:00":
+            reservation_time = ""
+
+        reserve_date = row["ReserveDate"]
         weekday = datetime.datetime(
             reserve_date.year, reserve_date.month, reserve_date.day
         ).weekday()
         weekday_name = date_utils.get_weekday_name(weekday)
 
-        if print_reservation_no == 'Y':
-            label_reservation_no = f'<tr><td>預約號碼: <b>{reservation_no}</b></td></tr>'
-            reservation_time = ''
+        if print_reservation_no == "Y":
+            label_reservation_no = (
+                f"<tr><td>預約號碼: <b>{reservation_no}</b></td></tr>"
+            )
+            reservation_time = ""
         else:
-            label_reservation_no = ''
+            label_reservation_no = ""
 
-        if string_utils.xstr(row['Remark']).strip() != '':
-            remark = f'<tr><td>備註: {string_utils.xstr(row["Remark"])} </td></tr>'
+        if string_utils.xstr(row["Remark"]).strip() != "":
+            remark = f"<tr><td>備註: {string_utils.xstr(row['Remark'])} </td></tr>"
         else:
-            remark = ''
+            remark = ""
 
-        html = f'''
+        html = f"""
             <html>
               <body>
                 <center>
@@ -154,6 +165,6 @@ class PrintReservationForm8:
                 </ul>
               </body>
             </html>
-        '''
+        """
 
         return html
