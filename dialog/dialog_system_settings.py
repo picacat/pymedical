@@ -731,7 +731,7 @@ class DialogSystemSettings(QtWidgets.QDialog):
             self.system_settings.field("診察費抽成類別")
         )
         self.ui.comboBox_ins_treat_rate_type.setCurrentText(
-            self.system_settings.field("診察費抽成類別")
+            self.system_settings.field("診療費抽成類別")
         )
         self.ui.comboBox_self_drug_rate_type.setCurrentText(
             self.system_settings.field("自費藥品抽成類別")

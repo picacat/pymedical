@@ -2898,6 +2898,9 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
     # 新增自費病歷
     def save_new_self_medical_record(self):
+        if not self.validate_prescripts():
+            return False
+
         self.record_saved = True
         self._set_doctor()
 
@@ -3057,6 +3060,9 @@ class MedicalRecord(QtWidgets.QMainWindow):
 
         if self.call_from in ["新增自費病歷", "加購自費病歷"]:
             self.save_new_self_medical_record()
+            return
+
+        if not force_save and not self.validate_prescripts():
             return
 
         if self.tab_past_exists("備忘錄"):
@@ -3986,34 +3992,43 @@ class MedicalRecord(QtWidgets.QMainWindow):
             del data[0]
             self.database.update_record("cases", fields, "CaseKey", case_key, data)
 
-    def save_prescript(self, check_prescript=True):
-        check_ok = True
-
+    def _iter_prescript_tabs(self):
         if self.call_from == "病歷查詢健保病歷":
             max_tab = 1
         else:
             max_tab = self.max_tab
 
         for medicine_set, tab_prescript in zip(range(1, max_tab + 1), self.tab_list):
-            if tab_prescript is not None:
-                try:
-                    if not tab_prescript.save_prescript(
-                        check_prescript=check_prescript
-                    ):
-                        self.ui.tabWidget_prescript.setCurrentIndex(medicine_set - 1)
-                        check_ok = False
-                        system_utils.show_message_box(
-                            QMessageBox.Critical,
-                            "劑量檢查結果提醒",
-                            '<h3><font color="red">劑量檢查有誤，請更改劑量</font></h3>',
-                            "請重新調整劑量.",
-                        )
-                except RuntimeError:  # 關閉處方頁, 刪除整個處方
-                    self.remove_prescript(medicine_set)
-            else:
-                self.remove_prescript(medicine_set)
+            if tab_prescript is not None and sip.isdeleted(tab_prescript):
+                tab_prescript = None  # 分頁已關閉
+            yield medicine_set, tab_prescript
 
-        return check_ok
+    def validate_prescripts(self):
+        for _, tab_prescript in self._iter_prescript_tabs():
+            if tab_prescript is None:
+                continue
+            if not hasattr(tab_prescript, "validate_prescript"):
+                continue
+            if not tab_prescript.validate_prescript():
+                self.ui.tabWidget_prescript.setCurrentWidget(tab_prescript)
+                return False
+        return True
+
+    def save_prescript(self, check_prescript=True):
+        for medicine_set, tab_prescript in self._iter_prescript_tabs():
+            if tab_prescript is None:
+                self.remove_prescript(medicine_set)
+                continue
+
+            # 有 validate_prescript 的分頁已在存檔前檢查過, 不重複檢查
+            need_check = check_prescript and not hasattr(
+                tab_prescript, "validate_prescript"
+            )
+            if not tab_prescript.save_prescript(check_prescript=need_check):
+                self.ui.tabWidget_prescript.setCurrentWidget(tab_prescript)
+                return False
+
+        return True
 
     def remove_prescript(self, medicine_set):
         if self.case_key is None:

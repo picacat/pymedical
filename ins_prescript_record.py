@@ -2322,20 +2322,18 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
 
         return True
 
+    def validate_prescript(self):
+        # 每個 check 自己會跳訊息, 這裡只回傳結果
+        return (
+            self.check_total_dosage(check_type="save")
+            and self.check_powder_divider_dosage()
+            and self.check_total_costs(check_type="save")
+            and self._check_dosage_limitation()
+        )
+
     def save_prescript(self, check_prescript=True):
-        if check_prescript:
-            if not self.check_total_dosage(check_type="save"):
-                return False
-
-            if not self.check_powder_divider_dosage():
-                return False
-
-            if not self.check_total_costs(check_type="save"):
-                return False
-
-            # 2026-09 原本整段包在 except Exception: pass 裡, 真的出錯會靜默跳過檢查
-            if not self._check_dosage_limitation():
-                return False
+        if check_prescript and not self.validate_prescript():
+            return False
 
         if (
             self.system_settings.field("調整庫存量") == "即時調整"
@@ -4376,6 +4374,8 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
             return False
 
     def check_total_dosage(self, current_row=None, check_type="input"):
+        self.check_total_dosage_event = "存檔時檢查"
+
         if check_type == "input" and self.check_total_dosage_event == "存檔時檢查":
             return True
 
@@ -4460,6 +4460,8 @@ class InsPrescriptRecord(QtWidgets.QMainWindow):
         return False
 
     def check_total_costs(self, current_row=None, check_type="input"):
+        self.check_total_costs_event = "存檔時檢查"
+
         if check_type == "input" and self.check_total_costs_event == "存檔時檢查":
             return True
 
