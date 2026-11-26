@@ -2,9 +2,11 @@
 
 
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from libs import (
     class_utils,
+    export_utils,
     number_utils,
     string_utils,
     system_utils,
@@ -66,7 +68,7 @@ class StatisticsStoreRevenueAmount(QtWidgets.QMainWindow):
 
     # 設定信號
     def _set_signal(self):
-        pass
+        self.ui.tableWidget_amount.doubleClicked.connect(self._open_medical_record)
 
     def close_tab(self):
         current_tab = self.parent.ui.tabWidget_window.currentIndex()
@@ -168,3 +170,31 @@ class StatisticsStoreRevenueAmount(QtWidgets.QMainWindow):
             if col_no == 9:
                 item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             table.setItem(row_count, col_no, item)
+
+    def export_to_excel(self):
+        options = QFileDialog.Options()
+        excel_file_name, _ = QFileDialog.getSaveFileName(
+            self.parent,
+            "匯出Excel檔案",
+            f"{self.start_date}至{self.end_date}門市收入統計表.xlsx",
+            "excel檔案 (*.xlsx)",
+            options=options,
+        )
+
+        if not excel_file_name:
+            return
+
+        export_utils.export_table_widget_to_excel(
+            excel_file_name, self.ui.tableWidget_amount, [0], [5, 6, 7, 8, 9]
+        )
+
+        system_utils.show_message_box(
+            QMessageBox.Information,
+            "Excel資料匯出完成",
+            f"<h3>{excel_file_name}匯出完成.</h3>",
+            "Excel檔案格式.",
+        )
+
+    def _open_medical_record(self):
+        case_key = self.table_widget_amount.field_value(0)
+        self.parent.parent.open_medical_record(case_key, "病歷查詢")

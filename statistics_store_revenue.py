@@ -5,7 +5,6 @@ from PyQt5 import QtWidgets
 from libs import (
     dialog_utils,
     module_utils,
-    personnel_utils,
     system_utils,
     ui_utils,
 )
@@ -46,13 +45,6 @@ class StatisticsStoreRevenue(QtWidgets.QMainWindow):
     def _set_ui(self):
         self.ui = ui_utils.load_ui_file(ui_utils.UI_STATISTICS_STORE_REVENUE, self)
         system_utils.set_css(self, self.system_settings)
-        if (
-            personnel_utils.get_permission(
-                self.database, "門市收入統計", "執行門市收入統計", self.user_name
-            )
-            == "Y"
-        ):
-            self.ui.action_export_excel.setEnabled(False)
 
     # 設定信號
     def _set_signal(self):
